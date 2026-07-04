@@ -1,0 +1,72 @@
+# PROGRESS.md — Beacon
+
+> Live state of the build. Update at the end of every session. Newest entries on top within each section.
+
+## Current status
+
+**Active slice:** 1 — Greenhouse → SQLite → /jobs → JobTable (not started)
+**Next action:** Slice-1 task 0 — manually verify 2–3 greenhouse seed slugs in a browser, record fixtures to `backend/tests/fixtures/greenhouse/`, then RED: `test_greenhouse_normalize`.
+**Baseline:** Slice 0 committed; `make verify` green on both stacks.
+
+## Slice tracker
+
+| # | Slice | Status | Done date |
+|---|---|---|---|
+| 0 | Skeleton & verify gate | ✅ done | 2026-07-04 |
+| 1 | Greenhouse → SQLite → /jobs → JobTable | ⬜ | |
+| 2 | Sponsor registries → registry_inferred | ⬜ | |
+| 3 | Heuristic category/level classifier | ⬜ | |
+| 4 | Lever + Ashby adapters | ⬜ | |
+| 5 | Cross-source dedup | ⬜ | |
+| 5.5 | Per-job user status (seen/hidden/starred) | ⬜ | |
+| 6 | Explicit sponsorship text tiers | ⬜ | |
+| 7 | HN Who's Hiring + JobTech adapters | ⬜ | |
+| 8 | Saved searches + Telegram digest | ⬜ | |
+| 9 | LLM fallback classifier | ⬜ | |
+| 10 | CountryPanel + RemoteOK/WWR + scheduler | ⬜ | |
+| 11 | Source health & recovery | ⬜ | |
+
+Legend: ⬜ not started · 🟨 in progress · ✅ done (acceptance boxes checked)
+
+## Decisions log
+
+- **2026-07-04** — **Slice 0 shipped; two scaffold deviations from the pinned recipe:** (1) Makefile backend commands are prefixed `uv run` (pinned recipe assumed an activated venv; `uv run` auto-syncs, which is what makes "verify passes from clean clone" actually true) — frontend recipe unchanged; a `make setup` convenience target added. (2) The python conventions skill installed at `.claude/skills/modern-python-conventions/` (its frontmatter `name:` is `modern-python-conventions`, and skill dir must match frontmatter) — other three match their filenames. Also: `db.py` migration runner placed at `beacon/adapters/persistence/db.py` (sqlite is IO → adapters layer), migrations dir at `backend/migrations/` per CLAUDE.md; launchd plist stub at `deploy/com.beacon.scheduler.plist` (Disabled, unloaded).
+- **2026-07-04** — **Pre-dev consistency pass, five corrections applied:** (1) seed ATS counts corrected everywhere to match the actual CSV — greenhouse **24**, lever **10**, ashby **11** (45 supported), **8** awaiting adapters across 5 types (smartrecruiters 3, workday 2, workable/gem/bendingspoons 1 each); SPEC §5.1, PLAN slice 11 seed line, DESIGN §3 updated, with a note that UI counts are computed from the companies table, never hardcoded; (2) stale `MigrationsverketRegistry` removed from SPEC §7 architecture tree (registry dropped 2026-07-04, tree missed); (3) PLAN slice-2 `test_registry_flags_bitmask` rewritten UK+NL → UK|NL — it still referenced the nonexistent SE bit; (4) DESIGN.md header note corrected: the zip's SPEC.md is byte-identical to canonical (verified by diff), not "an older snapshot"; (5) `uk_sponsors_fixture.csv` re-saved with CRLF line endings so the slice-2 "survives CRLF" test actually exercises the real register's format (was LF-only). Known gaps left open, tracked below: no ATS response fixtures yet (recorded after slice-1 task 0), and `frontend-design`/`typescript-conventions` skills referenced by PLAN's UI build note were never delivered.
+- **2026-07-04** — **Design v2 update** — single change from v1: drawer registry-evidence section now explicitly specifies rendering the **MANUAL** flag (confidence 1.0) alongside UK/NL/US, not just the UK/NL the prototype samples. Folded into DESIGN.md. Bundled SPEC in the zip unchanged. No slice/schema impact — MANUAL was already in SPEC §5.3 and the bitmask; this just confirms the UI surfaces it.
+- **2026-07-04** — **Design freeze DONE** (supersedes earlier "deferred"). Claude Design delivered high-fidelity UI: theme "Nordic Slate & Teal", four views (Jobs / Saved searches / Companies-health / Countries+world-map) + job-detail drawer, full token tables. Adopted as **DESIGN.md** (canonical UI source of truth; SPEC.md wins on any product conflict). PLAN gains a "UI build note"; Countries view+map folded into slice 10, Companies-health view into slice 11; CLAUDE.md frontend conventions now point at DESIGN.md tokens. Note: the SPEC.md copy bundled in the design zip is an older snapshot — canonical SPEC unchanged and authoritative.
+- **2026-07-04** — **Pre-finalization review, six items resolved:** (1) slice 1 gains a manual slug-verification task 0 (hit greenhouse endpoint in browser before coding); (2) no LLM in slice 9 tests — `LLMClassifier` behind `Classifier` port, `FakeLLMClassifier` in suite; (3) **time: UTC storage, Asia/Jakarta day boundaries** for posted_since + digest (one `LOCAL_TZ` constant at edges); (4) `registry_flags` bitmask confirmed **UK|NL|US|MANUAL** (no SE bit); (5) saved-search digest lines record **match_reason** (which search + filters fired), `seen_matches.match_reason`; (6) **per-job user_status** (new/seen/hidden/starred) added as **slice 5.5** — status preserved across re-poll unless content_hash changes. All four registries + application-tracking still deferred per scope.
+- **2026-07-04** — **SE registry correction (user-verified):** Migrationsverket's employer certification scheme was discontinued Dec 2023 — no Swedish sponsor register exists (Sweden has no employer licensing; any compliant employer may sponsor, so SE `unknown` companies skew sponsor-likely). `MigrationsverketRegistry` dropped from slice 2. **relocate.me & similar curated boards adopted as a MANUAL registry flag** — hand-entered with evidence + date, never scraped (their curation is their product); participates in `registry_inferred` at confidence 1.0. SPEC §4/§5.3, PLAN slice 2 updated.
+- **2026-07-04** — **Source health & recovery added as slice 11** (SPEC §7 "Source health & recovery"): failure taxonomy (gone/unreachable/schema_drift), threshold-based quarantine, weekly restore probe, health in Telegram digest, re-slug recovery as data edit. **Latent bug fixed in the process:** closed-posting sweep now counts absence only on *successful* polls — a 404'd board can no longer mass-close its jobs (slice 10 test `test_failed_poll_never_closes_jobs`).
+- **2026-07-04** — Nine open questions resolved: (1) **TelegramNotifier direct** (Bot API), CourierNotifier deferred behind the Notifier port; (2) name **Beacon final**; (3) `seeds/companies.csv` delivered — 53 verified companies, schema pinned `name,ats_type,ats_slug,country_hq,priority`; unsupported ATS types (smartrecruiters/workable/workday/gem/bendingspoons) load but stay dormant until adapters exist; (4) registry source URLs pinned in TODO; (5) countries verification via VERIFY-COUNTRIES.md checklist; (6) **design freeze deferred** — UI slices proceed on utilitarian defaults; Claude Design freeze before UI-polish work; (7) **localhost/Tailscale only, no auth in MVP** — public exposure requires an auth slice first (SPEC §9); (8) `make verify` recipe pinned in PLAN slice 0 (ruff+mypy+pytest / eslint+tsc+vitest); (9) HN adapter uses the **official Firebase API** (whoishiring user → latest thread → kids), not Algolia.
+- **2026-07-04** — Principles reordered: **Clean Architecture is the primary principle** (SPEC guiding principles, CLAUDE.md rule 1); TDD loop made explicit as red → green → **mandatory refactor checkpoint** with a trigger table (PLAN.md "TDD loop"); layer-leak triggers outrank all other refactor triggers.
+- **2026-07-04** — Sponsorship changed from hard requirement to **soft signal**: badge + default sort (`sort_rank DESC, posted_at DESC`), tier filter strictly opt-in, `explicit_no` shown last but never hidden. SPEC §2/§3/§7/§10, PLAN slice 2, CLAUDE.md updated.
+- **2026-07-04** — Spec suite created. Working name: Beacon. Scope locked to ATS APIs + API/RSS boards; LinkedIn/Indeed and application tracking explicitly deferred (SPEC §2).
+- **2026-07-04** — Sponsorship tier precedence fixed as pure function: explicit_no > explicit_yes > registry_inferred > unknown.
+- **2026-07-04** — Country visa reference data (SPEC §4) is knowledge-as-of Jan 2026; every row carries `verified_at` + `source_url`. Re-verify SE citizenship reform and CA Express Entry draws against official sources before weighting those countries in strategy.
+
+## Open items / TODO (not slice work)
+
+- [x] ~~Build initial `seeds/companies.csv`~~ — delivered 2026-07-04, 53 verified rows. Place at `seeds/companies.csv` in repo.
+- [x] ~~Download registry snapshots for fixtures~~ — **ALL FOUR RESOLVED 2026-07-04:**
+  - [x] UK sponsor register CSV — delivered (2026-07-03 snapshot, 142k rows) → `uk_sponsors_fixture.csv` (35 rows)
+  - [x] NL IND recognised sponsors — delivered via DevTools extraction (12,886 orgs + KvK) → `ind_sponsors_fixture.csv` (25 rows)
+  - [x] SE Migrationsverket — does not exist (scheme discontinued Dec 2023); MANUAL flag workflow instead
+  - [x] US H-1B LCA — delivered (FY2026 Q2 XLSX, 1.04M rows / ~210k filings, 31,587 employers) → `h1b_lca_fixture.csv` (40 rows incl. Denied + padding-row cases). ~25 seed companies confirmed US sponsors; 10 confirmed absent (negative controls). Cohere US vs Cohere Health matcher rule + DBA matching added to slice 2.
+  - Fixture destination in repo: `backend/tests/fixtures/registries/`
+- [ ] First MANUAL curation pass: browse relocate.me / swedishtechjobs for SE+NL companies; flag matches in seed list, add promising new companies as seed rows (after slice 2 ships the flag CLI)
+- [x] ~~Decide final project name~~ — **Beacon**, final.
+- [x] ~~Confirm notifier contract~~ — Telegram Bot API direct; need bot token + chat_id in `.env` before slice 8 (fresh bot via BotFather, or reuse Relay's).
+- [ ] Work through VERIFY-COUNTRIES.md — confirm SPEC §4 rows against official sources, update `verified_at`/`source_url` (blocks strategy decisions, not build slices).
+- [x] ~~Claude Design freeze session~~ — **done 2026-07-04**, delivered as DESIGN.md (Nordic Slate & Teal). Prototype `.dc.html` files kept as reference in the design bundle.
+- [ ] Future adapters from dormant seed rows: smartrecruiters (3 companies), workable (1), workday (2), gem (1), bendingspoons (1).
+- [ ] Missing skills referenced by PLAN "UI build note": `frontend-design` and `typescript-conventions` were never delivered (only react/python/fastapi/pytest exist). Deliver or drop the references before frontend slices. ~~Must be installed at `.claude/skills/<name>/SKILL.md`~~ — **installed 2026-07-04** (python one lives at `modern-python-conventions/` matching its frontmatter name); the four still lack their `references/*.md` companions.
+- [ ] Record ATS response fixtures (Greenhouse first) after slice-1 task 0 slug verification → `backend/tests/fixtures/greenhouse/` etc. Only registry fixtures exist today.
+- [x] ~~On repo creation (slice 0)~~ — done 2026-07-04: `seeds/companies.csv` placed; 3 registry fixture CSVs at `backend/tests/fixtures/registries/` (UK CRLF endings verified intact); `.gitignore` covers `.DS_Store` + design zip (kept locally, not shipped).
+
+## Session log
+
+*(newest first)*
+
+- **2026-07-04** — **Slice 0 built and verified.** Backend: uv-managed Python 3.12, FastAPI app factory with `/healthz` (TDD: red → green), `db.py` migration runner (numbered `.sql`, `schema_migrations` bookkeeping, idempotent — 2 tests), ruff (line 100) + mypy strict + pytest-asyncio all green. Frontend: Vite + React 19 + TS strict (single tsconfig so `npx tsc --noEmit` really typechecks), vitest + testing-library (red → green on App render), eslint flat config. `make verify` green end-to-end. Repo-creation TODOs done: seeds, registry fixtures, skills installed, `.gitignore`, launchd stub. Next: slice 1 task 0 (verify greenhouse slugs, record fixtures).
+- **2026-07-04** — Pre-dev readiness check of the full bundle; five doc/fixture corrections applied (see Decisions). Suite is consistent and ready for slice 0. No code yet.
+- **2026-07-04** — Spec suite generated (SPEC/PLAN/CLAUDE/PROGRESS). No code yet.

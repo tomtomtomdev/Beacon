@@ -1,0 +1,54 @@
+name,ats_type,ats_slug,country_hq,priority
+Grab,smartrecruiters,Grab,SG,1
+Agoda,greenhouse,agoda,SG,1
+Carousell,smartrecruiters,carousellgroup,SG,2
+Crypto.com,lever,crypto,SG,2
+Ninja Van,lever,ninjavan,SG,3
+Nium,lever,nium,SG,3
+SmartNews,workable,smartnews,JP,2
+Woven by Toyota,lever,woven-by-toyota,JP,2
+Autify,lever,Autify,JP,3
+Atlassian,lever,atlassian,AU,1
+Canva,smartrecruiters,canva,AU,1
+Airwallex,ashby,airwallex,AU,1
+SafetyCulture,ashby,safetyculture,AU,2
+Culture Amp,greenhouse,cultureamp,AU,2
+Immutable,lever,immutable,AU,3
+Linktree,gem,linktree,AU,3
+Adyen,greenhouse,adyen,NL,1
+Mollie,ashby,mollie,NL,2
+Picnic,greenhouse,teampicnic,NL,2
+Bird (MessageBird),greenhouse,bird,NL,3
+WeTransfer,bendingspoons,WeTransfer,NL,3
+Backbase,greenhouse,workatbackbase,NL,3
+Intercom,greenhouse,intercom,IE,1
+Tines,greenhouse,tines,IE,2
+Workhuman,workday,workhuman/wd1/WorkhumanCareers,IE,3
+Flipdish,greenhouse,flipdish,IE,3
+Wealthsimple,lever,wealthsimple,CA,1
+1Password,ashby,1password,CA,1
+Cohere,ashby,cohere,CA,1
+Clio,workday,clio/wd3/ClioCareerSite,CA,2
+Stripe,greenhouse,stripe,US,1
+Airbnb,greenhouse,airbnb,US,1
+OpenAI,ashby,openai,US,1
+Anthropic,greenhouse,anthropic,US,1
+Figma,greenhouse,figma,US,1
+Databricks,greenhouse,databricks,US,1
+Notion,ashby,notion,US,2
+Plaid,lever,plaid,US,2
+Discord,greenhouse,discord,US,2
+Reddit,greenhouse,reddit,US,2
+Coinbase,greenhouse,coinbase,US,2
+Robinhood,greenhouse,robinhood,US,2
+Scale AI,greenhouse,scaleai,US,2
+Duolingo,greenhouse,duolingo,US,2
+Faire,greenhouse,faire,US,2
+Miro,ashby,miro,US,2
+Vercel,greenhouse,vercel,US,3
+Linear,ashby,linear,US,3
+Spotify,lever,spotify,SE,1
+Epidemic Sound,ashby,epidemic-sound,SE,2
+Lovable,ashby,lovable,SE,2
+Truecaller,greenhouse,truecaller,SE,3
+Mentimeter,greenhouse,mentimeter,SE,3

@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+
+# Local data
+*.sqlite3
+beacon.db
+
+# Design bundle kept locally as reference, not shipped
+Design for Spec-2.zip
