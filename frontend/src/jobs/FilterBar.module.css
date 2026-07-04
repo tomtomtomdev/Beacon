@@ -1,0 +1,103 @@
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 0;
+  background: linear-gradient(var(--bg-page) 80%, transparent);
+}
+
+.searchBox {
+  position: relative;
+  flex: 1;
+  min-width: 240px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-faint);
+}
+
+.searchInput {
+  width: 100%;
+  padding: 11px 11px 11px 40px;
+  background: var(--surface);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  font-size: 13.5px;
+  color: var(--ink);
+}
+
+.searchInput::placeholder {
+  color: var(--text-faint);
+}
+
+.dropdown {
+  position: relative;
+}
+
+.pillButton,
+.pillButtonActive {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-input);
+  background: var(--surface);
+  color: var(--text-body-muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.pillButtonActive {
+  background: var(--accent-soft-bg);
+  border-color: var(--accent-border);
+  color: var(--accent-soft-fg);
+  font-weight: 600;
+}
+
+.clickAway {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+}
+
+.menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 10;
+  width: 230px;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-menu);
+  box-shadow: var(--shadow-menu);
+}
+
+.menuRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 9px;
+  border-radius: 7px;
+  font-size: 13px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.menuRow:hover {
+  background: var(--bg-hover);
+}
+
+.menuRow input[type='checkbox'] {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--accent);
+}

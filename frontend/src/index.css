@@ -1,7 +1,24 @@
-:root {
-  font-family: system-ui, sans-serif;
+@import './tokens.css';
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  background: var(--bg-page);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  display: flex;
+  min-height: 100vh;
+}
+
+button,
+input {
+  font-family: inherit;
 }

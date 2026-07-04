@@ -1,0 +1,60 @@
+/* Nordic Slate & Teal — DESIGN.md token tables, verbatim. Do not invent colors. */
+:root {
+  /* Surfaces / structure */
+  --bg-page: #eef1f3;
+  --surface: #ffffff;
+  --bg-sidebar: #f6f8f9;
+  --bg-table-header: #f4f7f8;
+  --bg-hover: #f4f7f8;
+  --bg-chip: #e9eef0;
+  --bg-segment-track: #e2e8eb;
+  --border-primary: #e0e6ea;
+  --border-input: #dbe2e6;
+  --border-row: #eef2f4;
+
+  /* Text */
+  --ink: #16202a;
+  --text-body-muted: #5d6b76;
+  --text-secondary: #6b7784;
+  --text-faint: #93a0aa;
+  --text-label: #97a3ac;
+  --text-mono-faint: #a3aeb6;
+
+  /* Accent (teal) */
+  --accent: #0e8a7d;
+  --accent-hover: #0b7268;
+  --accent-soft-bg: #d7efec;
+  --accent-soft-fg: #0a6c62;
+  --accent-border: #a9dcd5;
+
+  /* Sponsorship tiers (bg / fg / dot) */
+  --tier-yes-bg: #dcf0e4;
+  --tier-yes-fg: #1b8a5a;
+  --tier-yes-dot: #25a56a;
+  --tier-registry-bg: #dde9f4;
+  --tier-registry-fg: #2f6fae;
+  --tier-registry-dot: #3f83c8;
+  --tier-unknown-bg: #e7ecef;
+  --tier-unknown-fg: #6b7784;
+  --tier-unknown-dot: #a6b0ba;
+  --tier-no-bg: #f6e3e1;
+  --tier-no-fg: #c0504a;
+  --tier-no-dot: #d26f68;
+
+  /* Radius */
+  --radius-card: 14px;
+  --radius-input: 10px;
+  --radius-menu: 12px;
+  --radius-segment: 9px;
+  --radius-chip: 6px;
+  --radius-pill: 999px;
+
+  /* Shadow */
+  --shadow-menu: 0 12px 32px rgba(20, 32, 42, 0.12);
+  --shadow-drawer: -20px 0 50px rgba(20, 32, 42, 0.1);
+  --shadow-segment-active: 0 1px 2px rgba(0, 0, 0, 0.08);
+
+  /* Typography */
+  --font-ui: 'Geist', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', monospace;
+}
