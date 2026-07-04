@@ -57,8 +57,8 @@ Tasks:
 - launchd plist stub (unloaded) for the scheduler
 
 Acceptance:
-- [ ] `make verify` passes from clean clone
-- [ ] `GET /healthz` returns `{"status":"ok"}` (one integration test)
+- [x] `make verify` passes from clean clone
+- [x] `GET /healthz` returns `{"status":"ok"}` (one integration test)
 
 ---
 
@@ -83,9 +83,9 @@ Tasks:
 7. Frontend: `JobTable` (title, company, location, posted, link) + `FilterBar` (keyword input, country multi-select). vitest: renders rows from mocked fetch; filter change refetches.
 
 Acceptance:
-- [ ] `python -m beacon.ingest --company <slug>` against one real Greenhouse board inserts rows
-- [ ] UI shows them, keyword+country filter works
-- [ ] Re-run ingest → row count unchanged
+- [x] `python -m beacon.ingest --company <slug>` against one real Greenhouse board inserts rows
+- [x] UI shows them, keyword+country filter works
+- [x] Re-run ingest → row count unchanged
 
 ---
 

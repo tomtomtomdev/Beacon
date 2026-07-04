@@ -4,16 +4,16 @@
 
 ## Current status
 
-**Active slice:** 1 — Greenhouse → SQLite → /jobs → JobTable (not started)
-**Next action:** Slice-1 task 0 — manually verify 2–3 greenhouse seed slugs in a browser, record fixtures to `backend/tests/fixtures/greenhouse/`, then RED: `test_greenhouse_normalize`.
-**Baseline:** Slice 0 committed; `make verify` green on both stacks.
+**Active slice:** 2 — Sponsor registries → registry_inferred (not started)
+**Next action:** Slice-2 RED: company-name normalizer/matcher tests against `backend/tests/fixtures/registries/uk_sponsors_fixture.csv` (all the real-data hazards in PLAN slice 2 become fixture rows). Highest-risk code in the repo — spot-check script required after any normalizer change.
+**Baseline:** Slices 0–1 committed; `make verify` green on both stacks (53 backend + 7 frontend tests).
 
 ## Slice tracker
 
 | # | Slice | Status | Done date |
 |---|---|---|---|
 | 0 | Skeleton & verify gate | ✅ done | 2026-07-04 |
-| 1 | Greenhouse → SQLite → /jobs → JobTable | ⬜ | |
+| 1 | Greenhouse → SQLite → /jobs → JobTable | ✅ done | 2026-07-04 |
 | 2 | Sponsor registries → registry_inferred | ⬜ | |
 | 3 | Heuristic category/level classifier | ⬜ | |
 | 4 | Lever + Ashby adapters | ⬜ | |
@@ -30,6 +30,7 @@ Legend: ⬜ not started · 🟨 in progress · ✅ done (acceptance boxes checke
 
 ## Decisions log
 
+- **2026-07-04** — **Slice 1 shipped; deviations/policies set during the build:** (1) **`jobs.location_raw` column added** (not in SPEC §7 schema): ATS location strings that don't parse to a single country/city (`"Bangkok or Shanghai"`, `"North America (Remote)"`) keep country=city=NULL, and the raw string survives so a future better parser can re-parse without re-fetching. (2) **Location parsing is conservative by policy** — country names (+aliases), US state codes, and a region blocklist only; a bare city (`"Bangkok"`) stays country-less rather than fabricating TH via a city table (candidate improvement in slice 3's remote_scope work). (3) `RawPosting` is a `Mapping[str, Any]` type alias, not a wrapper dataclass. (4) `ingest_all` takes `Sequence[Company]` (caller lists/filters); adapter availability is a `SourceFactory` returning `None` for ATS types without adapters — SUPPORTED_ATS is implicitly the factory's keys ({greenhouse} today, lever/ashby in slice 4). (5) `sort_rank` SQL CASE is **generated from `domain/sponsorship.SORT_RANK`** so SQL can never disagree with the domain table. (6) **polite_get() not yet built** (plain 15s-timeout client) — required before slice 4 gives us multiple adapters and the scheduler polls at volume; tracked in Open items. (7) Greenhouse fixture note: `edge_locations.json` last job has a deliberately hand-nulled `first_published` (no recorded slug happened to omit it; normalize must map it to `posted_at=None`). (8) Frontend country dropdown ships without the P/☆ tier badges until the countries table exists (slice 10).
 - **2026-07-04** — **Slice 0 shipped; two scaffold deviations from the pinned recipe:** (1) Makefile backend commands are prefixed `uv run` (pinned recipe assumed an activated venv; `uv run` auto-syncs, which is what makes "verify passes from clean clone" actually true) — frontend recipe unchanged; a `make setup` convenience target added. (2) The python conventions skill installed at `.claude/skills/modern-python-conventions/` (its frontmatter `name:` is `modern-python-conventions`, and skill dir must match frontmatter) — other three match their filenames. Also: `db.py` migration runner placed at `beacon/adapters/persistence/db.py` (sqlite is IO → adapters layer), migrations dir at `backend/migrations/` per CLAUDE.md; launchd plist stub at `deploy/com.beacon.scheduler.plist` (Disabled, unloaded).
 - **2026-07-04** — **Pre-dev consistency pass, five corrections applied:** (1) seed ATS counts corrected everywhere to match the actual CSV — greenhouse **24**, lever **10**, ashby **11** (45 supported), **8** awaiting adapters across 5 types (smartrecruiters 3, workday 2, workable/gem/bendingspoons 1 each); SPEC §5.1, PLAN slice 11 seed line, DESIGN §3 updated, with a note that UI counts are computed from the companies table, never hardcoded; (2) stale `MigrationsverketRegistry` removed from SPEC §7 architecture tree (registry dropped 2026-07-04, tree missed); (3) PLAN slice-2 `test_registry_flags_bitmask` rewritten UK+NL → UK|NL — it still referenced the nonexistent SE bit; (4) DESIGN.md header note corrected: the zip's SPEC.md is byte-identical to canonical (verified by diff), not "an older snapshot"; (5) `uk_sponsors_fixture.csv` re-saved with CRLF line endings so the slice-2 "survives CRLF" test actually exercises the real register's format (was LF-only). Known gaps left open, tracked below: no ATS response fixtures yet (recorded after slice-1 task 0), and `frontend-design`/`typescript-conventions` skills referenced by PLAN's UI build note were never delivered.
 - **2026-07-04** — **Design v2 update** — single change from v1: drawer registry-evidence section now explicitly specifies rendering the **MANUAL** flag (confidence 1.0) alongside UK/NL/US, not just the UK/NL the prototype samples. Folded into DESIGN.md. Bundled SPEC in the zip unchanged. No slice/schema impact — MANUAL was already in SPEC §5.3 and the bitmask; this just confirms the UI surfaces it.
@@ -53,6 +54,7 @@ Legend: ⬜ not started · 🟨 in progress · ✅ done (acceptance boxes checke
   - [x] SE Migrationsverket — does not exist (scheme discontinued Dec 2023); MANUAL flag workflow instead
   - [x] US H-1B LCA — delivered (FY2026 Q2 XLSX, 1.04M rows / ~210k filings, 31,587 employers) → `h1b_lca_fixture.csv` (40 rows incl. Denied + padding-row cases). ~25 seed companies confirmed US sponsors; 10 confirmed absent (negative controls). Cohere US vs Cohere Health matcher rule + DBA matching added to slice 2.
   - Fixture destination in repo: `backend/tests/fixtures/registries/`
+- [ ] Build `polite_get()` (1 rps/host, ETag/If-Modified-Since, 3-try backoff, 15s timeout) — before slice 4 (multiple adapters) / scheduler-driven polling. Slice-1 CLI uses a plain 15s-timeout httpx client.
 - [ ] First MANUAL curation pass: browse relocate.me / swedishtechjobs for SE+NL companies; flag matches in seed list, add promising new companies as seed rows (after slice 2 ships the flag CLI)
 - [x] ~~Decide final project name~~ — **Beacon**, final.
 - [x] ~~Confirm notifier contract~~ — Telegram Bot API direct; need bot token + chat_id in `.env` before slice 8 (fresh bot via BotFather, or reuse Relay's).
@@ -67,6 +69,7 @@ Legend: ⬜ not started · 🟨 in progress · ✅ done (acceptance boxes checke
 
 *(newest first)*
 
+- **2026-07-04** — **Slice 1 built, verified, acceptance passed.** Task 0 first: 5 greenhouse slugs live-verified (agoda/adyen/anthropic/teampicnic/tines all 200); fixtures recorded and trimmed to `backend/tests/fixtures/greenhouse/` (`tines_jobs.json` 15 jobs, `edge_locations.json` 9 handpicked location-format hazards). TDD chain: `parse_location` (18-row table), `normalize_description`+`content_hash`, `GreenhouseAdapter` normalize/fetch (MockTransport), migration 001 (full SPEC §7 companies+jobs), `ingest_source`/`ingest_all` (bad posting never kills poll; dead board never kills run), seeds parser (53-row real-file guard), `GET /jobs` (q/country multi/posted_since/limit/offset; default order from domain SORT_RANK; no default tier filter — test-guarded), frontend JobsPage (FilterBar keyword+country dropdown, JobTable with tier chips, tokens.css from DESIGN tables, URL-param filter state, TanStack Query). Acceptance: live `--company tines` ingest → 15 rows; re-run → 15 rows, `last_seen_at` bumped on all; filters exercised against real data through the vite proxy (UI verified by component tests + proxy smoke — worth a quick visual eyeball next session). Backend 53 tests, frontend 7, `make verify` green. Fixed test-isolation gap: explicit `cleanup()` in setupTests (vitest runs without globals).
 - **2026-07-04** — **Slice 0 built and verified.** Backend: uv-managed Python 3.12, FastAPI app factory with `/healthz` (TDD: red → green), `db.py` migration runner (numbered `.sql`, `schema_migrations` bookkeeping, idempotent — 2 tests), ruff (line 100) + mypy strict + pytest-asyncio all green. Frontend: Vite + React 19 + TS strict (single tsconfig so `npx tsc --noEmit` really typechecks), vitest + testing-library (red → green on App render), eslint flat config. `make verify` green end-to-end. Repo-creation TODOs done: seeds, registry fixtures, skills installed, `.gitignore`, launchd stub. Next: slice 1 task 0 (verify greenhouse slugs, record fixtures).
 - **2026-07-04** — Pre-dev readiness check of the full bundle; five doc/fixture corrections applied (see Decisions). Suite is consistent and ready for slice 0. No code yet.
 - **2026-07-04** — Spec suite generated (SPEC/PLAN/CLAUDE/PROGRESS). No code yet.
