@@ -1,0 +1,535 @@
+{
+  "jobs": [
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/agoda/jobs/8023173",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 3471720,
+      "location": {
+        "name": "Bangkok, Thailand"
+      },
+      "metadata": [
+        {
+          "id": 7640309,
+          "name": "Sub Department",
+          "value": "Strategic Partnerships",
+          "value_type": "single_select"
+        },
+        {
+          "id": 55461,
+          "name": "Visa sponsored",
+          "value": true,
+          "value_type": "yes_no"
+        }
+      ],
+      "id": 8023173,
+      "updated_at": "2026-06-24T05:52:18-04:00",
+      "requisition_id": null,
+      "title": "2026 - RTA - Senior Area Manager / Associate Director, Business Development - South Korea & APAC (Korean Speaking, Bangkok based)",
+      "company_name": "Agoda",
+      "first_published": "2026-06-24T05:52:18-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;&lt;/p&gt;\n&lt;p&gt;&lt;strong&gt;About Agoda&lt;/strong&gt;&lt;/p&gt;\n&lt;p&gt;At Agoda, we bridge the world through travel. Our story began in 2005, when two lifelong friends and entrepreneurs, driven by their passion for travel, launched Agoda to make it easier for everyone to explore the world.&amp;nbsp;&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;&amp;nbsp&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 82098,
+          "name": "Strategic Partnerships and Programs",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 9185,
+          "name": "Seoul",
+          "location": "Seoul, South Korea",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": null,
+      "ai_opt_out_request_url": "http://app.greenhouse.io/ai_opt_out_request/job_post/8023173/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/agoda/jobs/8015127",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 3326448,
+      "location": {
+        "name": "Bangkok"
+      },
+      "metadata": [
+        {
+          "id": 7640309,
+          "name": "Sub Department",
+          "value": "Finance",
+          "value_type": "single_select"
+        },
+        {
+          "id": 55461,
+          "name": "Visa sponsored",
+          "value": true,
+          "value_type": "yes_no"
+        }
+      ],
+      "id": 8015127,
+      "updated_at": "2026-06-18T03:21:25-04:00",
+      "requisition_id": null,
+      "title": "Accounting Treasury Manager (Bangkok Based - Relocation Provided)",
+      "company_name": "Agoda",
+      "first_published": "2026-06-18T03:21:25-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;&lt;/p&gt;\n&lt;p&gt;&lt;strong&gt;About Agoda&lt;/strong&gt;&lt;/p&gt;\n&lt;p&gt;At Agoda, we bridge the world through travel. Our story began in 2005, when two lifelong friends and entrepreneurs, driven by their passion for travel, launched Agoda to make it easier for everyone to explore the world.&amp;nbsp;&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;&amp;nbsp&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 14583,
+          "name": "Finance",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 9154,
+          "name": "Bangkok (One Bangkok Office)",
+          "location": "Bangkok, Thailand",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": null,
+      "ai_opt_out_request_url": "http://app.greenhouse.io/ai_opt_out_request/job_post/8015127/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/agoda/jobs/7009865",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 2582195,
+      "location": {
+        "name": "Singapore"
+      },
+      "metadata": [
+        {
+          "id": 7640309,
+          "name": "Sub Department",
+          "value": "IT Engineering",
+          "value_type": "single_select"
+        },
+        {
+          "id": 55461,
+          "name": "Visa sponsored",
+          "value": true,
+          "value_type": "yes_no"
+        }
+      ],
+      "id": 7009865,
+      "updated_at": "2026-06-09T05:12:39-04:00",
+      "requisition_id": null,
+      "title": "Lead Data Scientist - (Singapore Based)",
+      "company_name": "Agoda",
+      "first_published": "2025-06-25T03:52:52-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;&lt;/p&gt;\n&lt;p&gt;&lt;strong&gt;About Agoda&lt;/strong&gt;&lt;/p&gt;\n&lt;p&gt;At Agoda, we bridge the world through travel. Our story began in 2005, when two lifelong friends and entrepreneurs, driven by their passion for travel, launched Agoda to make it easier for everyone to explore the world.&amp;nbsp;&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;&amp;nbsp&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 82100,
+          "name": "Information Technology",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 20659,
+          "name": "Singapore (Guoco) ",
+          "location": "Singapore, Singapore",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": null,
+      "ai_opt_out_request_url": "http://app.greenhouse.io/ai_opt_out_request/job_post/7009865/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/agoda/jobs/7130516",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 2782388,
+      "location": {
+        "name": "Bangkok (Central World Office)"
+      },
+      "metadata": [
+        {
+          "id": 7640309,
+          "name": "Sub Department",
+          "value": "Corporate Strategy Department",
+          "value_type": "single_select"
+        },
+        {
+          "id": 55461,
+          "name": "Visa sponsored",
+          "value": true,
+          "value_type": "yes_no"
+        }
+      ],
+      "id": 7130516,
+      "updated_at": "2026-06-09T05:12:39-04:00",
+      "requisition_id": null,
+      "title": "Analyst/Senior Analyst/Associate Manager, Corporate Strategy (Bangkok Based)",
+      "company_name": "Agoda",
+      "first_published": "2025-08-04T04:16:12-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;&lt;/p&gt;\n&lt;p&gt;&lt;strong&gt;About Agoda&lt;/strong&gt;&lt;/p&gt;\n&lt;p&gt;At Agoda, we bridge the world through travel. Our story began in 2005, when two lifelong friends and entrepreneurs, driven by their passion for travel, launched Agoda to make it easier for everyone to explore the world.&amp;nbsp;&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;&amp;nbsp&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 89886,
+          "name": "Corporate Strategy Department",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 9154,
+          "name": "Bangkok (One Bangkok Office)",
+          "location": "Bangkok, Thailand",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": null,
+      "ai_opt_out_request_url": "http://app.greenhouse.io/ai_opt_out_request/job_post/7130516/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/agoda/jobs/7988022",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 3464769,
+      "location": {
+        "name": "Bangkok or Shanghai"
+      },
+      "metadata": [
+        {
+          "id": 7640309,
+          "name": "Sub Department",
+          "value": "Strategic Partnerships",
+          "value_type": "single_select"
+        },
+        {
+          "id": 55461,
+          "name": "Visa sponsored",
+          "value": true,
+          "value_type": "yes_no"
+        }
+      ],
+      "id": 7988022,
+      "updated_at": "2026-07-03T02:34:53-04:00",
+      "requisition_id": null,
+      "title": "Senior Area Manager, Strategic Partnerships (Taiwan & China Financial institution partnerships) (Bangkok- or Shanghai-based, relocation provided)",
+      "company_name": "Agoda",
+      "first_published": "2026-06-06T03:55:13-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;&lt;/p&gt;\n&lt;p&gt;&lt;strong&gt;About Agoda&lt;/strong&gt;&lt;/p&gt;\n&lt;p&gt;At Agoda, we bridge the world through travel. Our story began in 2005, when two lifelong friends and entrepreneurs, driven by their passion for travel, launched Agoda to make it easier for everyone to explore the world.&amp;nbsp;&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;&amp;nbsp&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 82098,
+          "name": "Strategic Partnerships and Programs",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 9154,
+          "name": "Bangkok (One Bangkok Office)",
+          "location": "Bangkok, Thailand",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": null,
+      "ai_opt_out_request_url": "http://app.greenhouse.io/ai_opt_out_request/job_post/7988022/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/agoda/jobs/7801117",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 3406618,
+      "location": {
+        "name": "Chicago, IL"
+      },
+      "metadata": [
+        {
+          "id": 7640309,
+          "name": "Sub Department",
+          "value": null,
+          "value_type": "single_select"
+        },
+        {
+          "id": 55461,
+          "name": "Visa sponsored",
+          "value": false,
+          "value_type": "yes_no"
+        }
+      ],
+      "id": 7801117,
+      "updated_at": "2026-06-23T09:05:04-04:00",
+      "requisition_id": "6238",
+      "title": "Accounting Manager (Contract, Rocket Travel by Agoda)",
+      "company_name": "Agoda",
+      "first_published": "2026-04-09T14:35:52-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;&lt;/p&gt;\n&lt;p&gt;&lt;strong&gt;About Agoda&lt;/strong&gt;&lt;/p&gt;\n&lt;p&gt;At Agoda, we bridge the world through travel. Our story began in 2005, when two lifelong friends and entrepreneurs, driven by their passion for travel, launched Agoda to make it easier for everyone to explore the world.&amp;nbsp;&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;&amp;nbsp&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 58873,
+          "name": "Rocket Travel - Finance/BI",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 62457,
+          "name": "Rocket Travel, Inc.-Chicago",
+          "location": "Chicago, Illinois, United States",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": null,
+      "ai_opt_out_request_url": "http://app.greenhouse.io/ai_opt_out_request/job_post/7801117/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/agoda/jobs/8040984",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 3378566,
+      "location": {
+        "name": "Kuala Lumpur"
+      },
+      "metadata": [
+        {
+          "id": 7640309,
+          "name": "Sub Department",
+          "value": "NHA Market Development (NHA)",
+          "value_type": "single_select"
+        },
+        {
+          "id": 55461,
+          "name": "Visa sponsored",
+          "value": false,
+          "value_type": "yes_no"
+        }
+      ],
+      "id": 8040984,
+      "updated_at": "2026-07-01T04:16:41-04:00",
+      "requisition_id": "6211",
+      "title": "Account Executive, Kuala Lumpur Based",
+      "company_name": "Agoda",
+      "first_published": "2026-07-01T04:16:41-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;&lt;/p&gt;\n&lt;p&gt;&lt;strong&gt;About Agoda&lt;/strong&gt;&lt;/p&gt;\n&lt;p&gt;At Agoda, we bridge the world through travel. Our story began in 2005, when two lifelong friends and entrepreneurs, driven by their passion for travel, launched Agoda to make it easier for everyone to explore the world.&amp;nbsp;&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;&amp;nbsp&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 14573,
+          "name": "Supply",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 9174,
+          "name": "Kuala Lumpur",
+          "location": "Kuala Lumpur, Malaysia",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": null,
+      "ai_opt_out_request_url": "http://app.greenhouse.io/ai_opt_out_request/job_post/8040984/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://jobs.picnic.app/nl/vacancies?gh_jid=7824695",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 3415228,
+      "location": {
+        "name": "Amsterdam, North Holland, Netherlands"
+      },
+      "metadata": [
+        {
+          "id": 9753011,
+          "name": "Contract type",
+          "value": null,
+          "value_type": "single_select"
+        }
+      ],
+      "id": 7824695,
+      "updated_at": "2026-07-02T11:07:34-04:00",
+      "requisition_id": null,
+      "title": "Analytics - Future Leaders Graduate Program ",
+      "company_name": "Picnic",
+      "first_published": "2026-04-20T10:51:12-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;h2&gt;&lt;strong&gt;Real ownership. Real impact. Build from day one.&lt;/strong&gt;&lt;/h2&gt;\n&lt;p&gt;Are you an ambitious graduate ready to tackle complex&lt;strong&gt;,&lt;/strong&gt; real-world challenges at the intersection of data, strategy and tech?&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;&lt;strong&gt;The Future Leaders Graduate Program – Business Analytics&lt;/strong&gt; at Picnic is a two-year&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 352418,
+          "name": "Graduate Programs",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 23281,
+          "name": "Amsterdam",
+          "location": "Amsterdam, North Holland, Netherlands",
+          "child_ids": [],
+          "parent_id": 58748
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": false,
+      "ai_opt_out_request_url": "http://app.greenhouse.io/ai_opt_out_request/job_post/7824695/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://jobs.picnic.app/nl/vacancies?gh_jid=7185834",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 3140843,
+      "location": {
+        "name": "Düsseldorf, North Rhine-Westphalia, Germany"
+      },
+      "metadata": [
+        {
+          "id": 9753011,
+          "name": "Contract type",
+          "value": null,
+          "value_type": "single_select"
+        }
+      ],
+      "id": 7185834,
+      "updated_at": "2026-07-02T11:07:34-04:00",
+      "requisition_id": null,
+      "title": "Analytics - Future Leaders Graduate Program ",
+      "company_name": "Picnic",
+      "first_published": null,
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;h2&gt;&amp;nbsp;&lt;/h2&gt;\n&lt;h2&gt;&lt;strong&gt;Real ownership. Real impact. Build from day one.&lt;/strong&gt;&lt;/h2&gt;\n&lt;p&gt;Are you an ambitious graduate ready to tackle complex&lt;strong&gt;,&lt;/strong&gt; real-world challenges at the intersection of data, strategy and tech?&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;&lt;strong&gt;The Future Leaders Graduate Program – Business Analytics&lt;/st&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 352418,
+          "name": "Graduate Programs",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 51565,
+          "name": "Düsseldorf",
+          "location": "Düsseldorf, North Rhine-Westphalia, Germany",
+          "child_ids": [],
+          "parent_id": 58745
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": false,
+      "ai_opt_out_request_url": "http://app.greenhouse.io/ai_opt_out_request/job_post/7185834/ai_opt_out"
+    }
+  ],
+  "meta": {
+    "total": 9
+  }
+}

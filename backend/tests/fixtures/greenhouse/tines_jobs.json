@@ -1,0 +1,733 @@
+{
+  "jobs": [
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/tines/jobs/6000558004",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 5156643004,
+      "location": {
+        "name": "United States - East (Remote)"
+      },
+      "metadata": null,
+      "id": 6000558004,
+      "updated_at": "2026-05-28T13:41:15-04:00",
+      "requisition_id": "731",
+      "title": "Content Marketing Manager",
+      "company_name": "Tines",
+      "first_published": "2026-05-19T20:17:51-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;Founded in 2018 with co-headquarters in Dublin and Boston, Tines powers some of the world&#39;s most important workflows. Our intelligent workflow platform applies AI, automation, and integration with human ingenuity to drive real business results.&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;Tines serves a diverse range of customers, from startups to public com&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 4003128004,
+          "name": "Marketing",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 4048762004,
+          "name": "United States - East (Remote)",
+          "location": null,
+          "child_ids": [],
+          "parent_id": 4001628004
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": false,
+      "ai_opt_out_request_url": "http://app4.greenhouse.io/ai_opt_out_request/job_post/6000558004/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/tines/jobs/5971008004",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 5142708004,
+      "location": {
+        "name": "United States (Remote)"
+      },
+      "metadata": null,
+      "id": 5971008004,
+      "updated_at": "2026-06-09T10:26:13-04:00",
+      "requisition_id": "715",
+      "title": "Customer Success Manager II - Central",
+      "company_name": "Tines",
+      "first_published": "2026-04-15T12:45:01-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;Founded in 2018 with co-headquarters in Dublin and Boston, Tines powers some of the world&#39;s most important workflows. Our intelligent workflow platform applies AI, automation, and integration with human ingenuity to drive real business results.&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;Tines serves a diverse range of customers, from startups to public com&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 4103094004,
+          "name": "Customer Success",
+          "child_ids": [
+            4003132004,
+            4077007004
+          ],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 4047319004,
+          "name": "United States (Remote)",
+          "location": null,
+          "child_ids": [],
+          "parent_id": 4001628004
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": false,
+      "ai_opt_out_request_url": "http://app4.greenhouse.io/ai_opt_out_request/job_post/5971008004/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/tines/jobs/6100569004",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 5178297004,
+      "location": {
+        "name": "United States (Remote)"
+      },
+      "metadata": null,
+      "id": 6100569004,
+      "updated_at": "2026-06-24T10:54:05-04:00",
+      "requisition_id": "746",
+      "title": "Customer Success Manager II - West",
+      "company_name": "Tines",
+      "first_published": "2026-06-24T10:54:05-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;Founded in 2018 with co-headquarters in Dublin and Boston, Tines powers some of the world&#39;s most important workflows. Our intelligent workflow platform applies AI, automation, and integration with human ingenuity to drive real business results.&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;Tines serves a diverse range of customers, from startups to public com&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 4103094004,
+          "name": "Customer Success",
+          "child_ids": [
+            4003132004,
+            4077007004
+          ],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 4047319004,
+          "name": "United States (Remote)",
+          "location": null,
+          "child_ids": [],
+          "parent_id": 4001628004
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": false,
+      "ai_opt_out_request_url": "http://app4.greenhouse.io/ai_opt_out_request/job_post/6100569004/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/tines/jobs/6103937004",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 5180095004,
+      "location": {
+        "name": "Dublin, Ireland (Hybrid)"
+      },
+      "metadata": null,
+      "id": 6103937004,
+      "updated_at": "2026-07-02T13:30:33-04:00",
+      "requisition_id": "748",
+      "title": "Executive Assistant to CEO and COO ( Fixed term contract ) ",
+      "company_name": "Tines",
+      "first_published": "2026-07-02T13:28:48-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;Founded in 2018 with co-headquarters in Dublin and Boston, Tines powers some of the world&#39;s most important workflows. Our intelligent workflow platform applies AI, automation, and integration with human ingenuity to drive real business results.&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;Tines serves a diverse range of customers, from startups to public com&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 4098030004,
+          "name": "Executive Support",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 4068857004,
+          "name": "Dublin, Ireland (Hybrid)",
+          "location": null,
+          "child_ids": [],
+          "parent_id": 4008278004
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": false,
+      "ai_opt_out_request_url": "http://app4.greenhouse.io/ai_opt_out_request/job_post/6103937004/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/tines/jobs/5972580004",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 5143621004,
+      "location": {
+        "name": "North America (Remote)"
+      },
+      "metadata": null,
+      "id": 5972580004,
+      "updated_at": "2026-04-16T11:48:34-04:00",
+      "requisition_id": "720",
+      "title": "Manager, Technical Support Engineering - East",
+      "company_name": "Tines",
+      "first_published": "2026-04-16T11:47:14-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;Founded in 2018 with co-headquarters in Dublin and Boston, Tines powers some of the world&#39;s most important workflows. Our intelligent workflow platform applies AI, automation, and integration with human ingenuity to drive real business results.&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;Tines serves a diverse range of customers, from startups to public com&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 4077008004,
+          "name": "Knowledge, Education & Support",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 4047319004,
+          "name": "United States (Remote)",
+          "location": null,
+          "child_ids": [],
+          "parent_id": 4001628004
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": false,
+      "ai_opt_out_request_url": "http://app4.greenhouse.io/ai_opt_out_request/job_post/5972580004/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/tines/jobs/6078951004",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 5174003004,
+      "location": {
+        "name": "Boston, MA"
+      },
+      "metadata": null,
+      "id": 6078951004,
+      "updated_at": "2026-06-16T11:20:27-04:00",
+      "requisition_id": "743",
+      "title": "People Operations Specialist ",
+      "company_name": "Tines",
+      "first_published": "2026-06-16T11:17:25-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;Founded in 2018 with co-headquarters in Dublin and Boston, Tines powers some of the world&#39;s most important workflows. Our intelligent workflow platform applies AI, automation, and integration with human ingenuity to drive real business results.&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;Tines serves a diverse range of customers, from startups to public com&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 4077009004,
+          "name": "Human Resources",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 4064394004,
+          "name": "Boston, MA (Hybrid)",
+          "location": null,
+          "child_ids": [],
+          "parent_id": 4001628004
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": false,
+      "ai_opt_out_request_url": "http://app4.greenhouse.io/ai_opt_out_request/job_post/6078951004/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/tines/jobs/6009375004",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 5160289004,
+      "location": {
+        "name": "United States - East (Remote)"
+      },
+      "metadata": null,
+      "id": 6009375004,
+      "updated_at": "2026-06-02T13:43:52-04:00",
+      "requisition_id": "736",
+      "title": "Product Marketing Manager - Regulated Industries",
+      "company_name": "Tines",
+      "first_published": "2026-06-02T13:43:52-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;Founded in 2018 with co-headquarters in Dublin and Boston, Tines powers some of the world&#39;s most important workflows. Our intelligent workflow platform applies AI, automation, and integration with human ingenuity to drive real business results.&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;Tines serves a diverse range of customers, from startups to public com&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 4072581004,
+          "name": "Product",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 4048762004,
+          "name": "United States - East (Remote)",
+          "location": null,
+          "child_ids": [],
+          "parent_id": 4001628004
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": false,
+      "ai_opt_out_request_url": "http://app4.greenhouse.io/ai_opt_out_request/job_post/6009375004/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/tines/jobs/6009359004",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 5160282004,
+      "location": {
+        "name": "North America (Remote)"
+      },
+      "metadata": null,
+      "id": 6009359004,
+      "updated_at": "2026-06-05T16:56:54-04:00",
+      "requisition_id": "735",
+      "title": "Senior Manager, Solutions Engineering - East",
+      "company_name": "Tines",
+      "first_published": "2026-06-05T16:56:33-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;Founded in 2018 with co-headquarters in Dublin and Boston, Tines powers some of the world&#39;s most important workflows. Our intelligent workflow platform applies AI, automation, and integration with human ingenuity to drive real business results.&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;Tines serves a diverse range of customers, from startups to public com&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 4077013004,
+          "name": "Solutions Engineering",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 4001628004,
+          "name": "North America (Remote)",
+          "location": null,
+          "child_ids": [
+            4048763004,
+            4048762004,
+            4048761004,
+            4064394004,
+            4047319004,
+            4088592004
+          ],
+          "parent_id": null
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": false,
+      "ai_opt_out_request_url": "http://app4.greenhouse.io/ai_opt_out_request/job_post/6009359004/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/tines/jobs/6011382004",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 5161202004,
+      "location": {
+        "name": "United States (Remote)"
+      },
+      "metadata": null,
+      "id": 6011382004,
+      "updated_at": "2026-06-05T10:48:40-04:00",
+      "requisition_id": "737",
+      "title": "Senior Product Security Engineer",
+      "company_name": "Tines",
+      "first_published": "2026-06-03T04:44:26-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;Founded in 2018 with co-headquarters in Dublin and Boston, Tines powers some of the world&#39;s most important workflows. Our intelligent workflow platform applies AI, automation, and integration with human ingenuity to drive real business results.&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;Tines serves a diverse range of customers, from startups to public com&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 4077011004,
+          "name": "Technology",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 4001628004,
+          "name": "North America (Remote)",
+          "location": null,
+          "child_ids": [
+            4048763004,
+            4048762004,
+            4048761004,
+            4064394004,
+            4047319004,
+            4088592004
+          ],
+          "parent_id": null
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": false,
+      "ai_opt_out_request_url": "http://app4.greenhouse.io/ai_opt_out_request/job_post/6011382004/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/tines/jobs/5973812004",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "education": "education_optional",
+      "internal_job_id": 5144179004,
+      "location": {
+        "name": "United States (Remote)"
+      },
+      "metadata": null,
+      "id": 5973812004,
+      "updated_at": "2026-07-01T09:06:20-04:00",
+      "requisition_id": "723",
+      "title": "Senior Security Operations Engineer",
+      "company_name": "Tines",
+      "first_published": "2026-04-17T16:05:57-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;Founded in 2018 with co-headquarters in Dublin and Boston, Tines powers some of the world&#39;s most important workflows. Our intelligent workflow platform applies AI, automation, and integration with human ingenuity to drive real business results.&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;Tines serves a diverse range of customers, from startups to public com&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 4077011004,
+          "name": "Technology",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 4047319004,
+          "name": "United States (Remote)",
+          "location": null,
+          "child_ids": [],
+          "parent_id": 4001628004
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": false,
+      "ai_opt_out_request_url": "http://app4.greenhouse.io/ai_opt_out_request/job_post/5973812004/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/tines/jobs/6019545004",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 5165063004,
+      "location": {
+        "name": "United States - East (Remote)"
+      },
+      "metadata": null,
+      "id": 6019545004,
+      "updated_at": "2026-07-01T09:07:57-04:00",
+      "requisition_id": "741",
+      "title": "Senior Site Reliability Engineer - Government Cloud",
+      "company_name": "Tines",
+      "first_published": "2026-06-25T03:57:21-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;Founded in 2018 with co-headquarters in Dublin and Boston, Tines powers some of the world&#39;s most important workflows. Our intelligent workflow platform applies AI, automation, and integration with human ingenuity to drive real business results.&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;Tines serves a diverse range of customers, from startups to public com&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 4003129004,
+          "name": "Engineering",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 4048762004,
+          "name": "United States - East (Remote)",
+          "location": null,
+          "child_ids": [],
+          "parent_id": 4001628004
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": false,
+      "ai_opt_out_request_url": "http://app4.greenhouse.io/ai_opt_out_request/job_post/6019545004/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/tines/jobs/6017339004",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 5163984004,
+      "location": {
+        "name": "United States (Remote)"
+      },
+      "metadata": null,
+      "id": 6017339004,
+      "updated_at": "2026-07-01T09:07:00-04:00",
+      "requisition_id": "739",
+      "title": "Senior Software Engineer - Government Cloud",
+      "company_name": "Tines",
+      "first_published": "2026-06-10T12:26:24-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;Founded in 2018 with co-headquarters in Dublin and Boston, Tines powers some of the world&#39;s most important workflows. Our intelligent workflow platform applies AI, automation, and integration with human ingenuity to drive real business results.&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;Tines serves a diverse range of customers, from startups to public com&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 4003129004,
+          "name": "Engineering",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 4048762004,
+          "name": "United States - East (Remote)",
+          "location": null,
+          "child_ids": [],
+          "parent_id": 4001628004
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": false,
+      "ai_opt_out_request_url": "http://app4.greenhouse.io/ai_opt_out_request/job_post/6017339004/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/tines/jobs/6104688004",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 5180448004,
+      "location": {
+        "name": "Sydney, New South Wales, Australia"
+      },
+      "metadata": null,
+      "id": 6104688004,
+      "updated_at": "2026-07-03T03:15:12-04:00",
+      "requisition_id": "749",
+      "title": "Senior Solutions Engineer",
+      "company_name": "Tines",
+      "first_published": "2026-07-02T12:43:39-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;Founded in 2018 with co-headquarters in Dublin and Boston, Tines powers some of the world&#39;s most important workflows. Our intelligent workflow platform applies AI, automation, and integration with human ingenuity to drive real business results.&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;Tines serves a diverse range of customers, from startups to public com&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 4077115004,
+          "name": "Sales",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 4032144004,
+          "name": "Sydney, Australia (Remote)",
+          "location": "Sydney, New South Wales, Australia",
+          "child_ids": [],
+          "parent_id": 4032143004
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": false,
+      "ai_opt_out_request_url": "http://app4.greenhouse.io/ai_opt_out_request/job_post/6104688004/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/tines/jobs/6108006004",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 5182078004,
+      "location": {
+        "name": "Ireland (Remote)"
+      },
+      "metadata": null,
+      "id": 6108006004,
+      "updated_at": "2026-07-02T13:51:51-04:00",
+      "requisition_id": "750",
+      "title": "Software Engineer (back-end) ",
+      "company_name": "Tines",
+      "first_published": "2026-07-02T13:44:06-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;Founded in 2018 with co-headquarters in Dublin and Boston, Tines powers some of the world&#39;s most important workflows. Our intelligent workflow platform applies AI, automation, and integration with human ingenuity to drive real business results.&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;Tines serves a diverse range of customers, from startups to public com&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 4003129004,
+          "name": "Engineering",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 4048762004,
+          "name": "United States - East (Remote)",
+          "location": null,
+          "child_ids": [],
+          "parent_id": 4001628004
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": false,
+      "ai_opt_out_request_url": "http://app4.greenhouse.io/ai_opt_out_request/job_post/6108006004/ai_opt_out"
+    },
+    {
+      "absolute_url": "https://job-boards.greenhouse.io/tines/jobs/6014045004",
+      "data_compliance": [
+        {
+          "type": "gdpr",
+          "requires_consent": false,
+          "requires_processing_consent": false,
+          "requires_retention_consent": false,
+          "retention_period": null,
+          "demographic_data_consent_applies": false
+        }
+      ],
+      "internal_job_id": 5162218004,
+      "location": {
+        "name": "United States (Remote)"
+      },
+      "metadata": null,
+      "id": 6014045004,
+      "updated_at": "2026-06-15T13:27:42-04:00",
+      "requisition_id": "738",
+      "title": "Staff Software Engineer (backend)",
+      "company_name": "Tines",
+      "first_published": "2026-06-04T12:25:39-04:00",
+      "language": "en",
+      "application_deadline": null,
+      "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;Founded in 2018 with co-headquarters in Dublin and Boston, Tines powers some of the world&#39;s most important workflows. Our intelligent workflow platform applies AI, automation, and integration with human ingenuity to drive real business results.&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;Tines serves a diverse range of customers, from startups to public com&lt;p&gt;[truncated for fixture]&lt;/p&gt;",
+      "departments": [
+        {
+          "id": 4003129004,
+          "name": "Engineering",
+          "child_ids": [],
+          "parent_id": null
+        }
+      ],
+      "offices": [
+        {
+          "id": 4048762004,
+          "name": "United States - East (Remote)",
+          "location": null,
+          "child_ids": [],
+          "parent_id": 4001628004
+        }
+      ],
+      "ai_disclaimer": null,
+      "include_ai_disclaimer": false,
+      "ai_opt_out_request_url": "http://app4.greenhouse.io/ai_opt_out_request/job_post/6014045004/ai_opt_out"
+    }
+  ],
+  "meta": {
+    "total": 15
+  }
+}
