@@ -15,6 +15,19 @@ Personal tool, single user, self-hosted. FastAPI + SQLite backend (`backend/`), 
 5. **Fixtures over live calls.** All adapter tests run against recorded JSON/CSV/XML fixtures in `backend/tests/fixtures/{source}/`. Live network calls only in manual acceptance checks, never in the test suite.
 6. **The pipeline never dies on one bad item.** Per-posting try/except with structured log line, then continue. A single malformed job must not block a poll.
 
+## Skills (mandatory triggers)
+
+Project skills live in `.claude/skills/`. Invoke the matching skill via the Skill tool **before writing the first line of code** in its area — not after, not "if it seems complex". Multiple can apply to one task (e.g. a new FastAPI route with tests fires all three backend skills).
+
+| When the task touches… | Invoke |
+|---|---|
+| Any Python code — domain, use cases, adapters, scripts, refactors | `modern-python-conventions` |
+| FastAPI — routers, DTOs, `Depends`, lifespan, app factory, route tests | `fastapi-conventions` (with `modern-python-conventions`) |
+| Python tests — new test files, fixtures, conftest, parametrization, TDD reds | `pytest-conventions` |
+| Frontend — any `.tsx`/`.ts` component, hook, state, or React Query work | `react-conventions` |
+
+Not yet delivered (referenced by PLAN's UI build note, tracked in PROGRESS): `frontend-design`, `typescript-conventions` — until they exist, DESIGN.md itself is the frontend-design authority.
+
 ## Architecture boundaries (enforcement of rule 1)
 
 ```
