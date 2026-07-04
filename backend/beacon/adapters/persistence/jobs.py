@@ -1,12 +1,54 @@
 import sqlite3
-from datetime import datetime
+from datetime import UTC, datetime
 
+from beacon.application.ports import JobFilters, JobListing, JobPage
 from beacon.domain.job import NormalizedJob
+from beacon.domain.sponsorship import SORT_RANK
+
+# Built from the domain table so SQL can never disagree with it.
+_SORT_RANK_CASE = (
+    "CASE jobs.sponsor_tier "
+    + " ".join(f"WHEN '{tier.value}' THEN {rank}" for tier, rank in SORT_RANK.items())
+    + " ELSE 0 END"
+)
 
 
 class SqliteJobRepo:
     def __init__(self, conn: sqlite3.Connection) -> None:
         self._conn = conn
+
+    def search(self, filters: JobFilters) -> JobPage:
+        clauses: list[str] = []
+        params: list[str] = []
+        if filters.q:
+            clauses.append("(jobs.title LIKE ? OR jobs.description LIKE ?)")
+            params += [f"%{filters.q}%"] * 2
+        if filters.countries:
+            placeholders = ", ".join("?" * len(filters.countries))
+            clauses.append(f"jobs.country IN ({placeholders})")
+            params += list(filters.countries)
+        if filters.posted_since is not None:
+            clauses.append("jobs.posted_at >= ?")
+            params.append(filters.posted_since.astimezone(UTC).isoformat())
+        where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+
+        total = self._conn.execute(
+            f"SELECT COUNT(*) AS n FROM jobs {where}",
+            params,  # noqa: S608 — params bound
+        ).fetchone()["n"]
+        rows = self._conn.execute(
+            f"""
+            SELECT jobs.id, jobs.title, companies.name AS company, jobs.url,
+                   jobs.location_raw, jobs.country, jobs.city, jobs.posted_at,
+                   jobs.sponsor_tier
+            FROM jobs JOIN companies ON companies.id = jobs.company_id
+            {where}
+            ORDER BY {_SORT_RANK_CASE} DESC, jobs.posted_at DESC
+            LIMIT ? OFFSET ?
+            """,
+            [*params, str(filters.limit), str(filters.offset)],
+        ).fetchall()
+        return JobPage(jobs=[_row_to_listing(row) for row in rows], total=total)
 
     def upsert(self, company_id: int, job: NormalizedJob, seen_at: datetime) -> None:
         self._conn.execute(
@@ -44,3 +86,18 @@ class SqliteJobRepo:
             ),
         )
         self._conn.commit()
+
+
+def _row_to_listing(row: sqlite3.Row) -> JobListing:
+    posted_at = row["posted_at"]
+    return JobListing(
+        id=row["id"],
+        title=row["title"],
+        company=row["company"],
+        url=row["url"],
+        location_raw=row["location_raw"],
+        country=row["country"],
+        city=row["city"],
+        posted_at=datetime.fromisoformat(posted_at) if posted_at else None,
+        sponsor_tier=row["sponsor_tier"],
+    )

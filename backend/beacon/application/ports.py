@@ -1,6 +1,7 @@
 """Protocols every external system implements. Adapters depend on this module, never vice versa."""
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Protocol
 
@@ -19,8 +20,43 @@ class JobSource(Protocol):
     def normalize(self, raw: RawPosting) -> NormalizedJob: ...
 
 
+@dataclass(frozen=True, slots=True)
+class JobFilters:
+    """Query contract for job listings. Tier is deliberately absent from defaults —
+    sponsorship never filters unless explicitly requested."""
+
+    q: str | None = None
+    countries: tuple[str, ...] = ()
+    posted_since: datetime | None = None
+    limit: int = 50
+    offset: int = 0
+
+
+@dataclass(frozen=True, slots=True)
+class JobListing:
+    """Read model for the job table: one row joined with its company."""
+
+    id: int
+    title: str
+    company: str
+    url: str
+    location_raw: str
+    country: str | None
+    city: str | None
+    posted_at: datetime | None
+    sponsor_tier: str
+
+
+@dataclass(frozen=True, slots=True)
+class JobPage:
+    jobs: list[JobListing]
+    total: int
+
+
 class JobRepo(Protocol):
     def upsert(self, company_id: int, job: NormalizedJob, seen_at: datetime) -> None: ...
+
+    def search(self, filters: JobFilters) -> JobPage: ...
 
 
 class CompanyRepo(Protocol):

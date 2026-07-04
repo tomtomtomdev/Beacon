@@ -2,6 +2,8 @@ import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
 
+MIGRATIONS_DIR = Path(__file__).parents[3] / "migrations"
+
 
 def connect(db_path: Path | str) -> sqlite3.Connection:
     conn = sqlite3.connect(db_path)
