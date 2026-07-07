@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
-import { fetchJobs } from '../api/jobs'
+import { fetchJobs, type SortBy } from '../api/jobs'
+import type { SponsorTier } from '../api/types'
 import { FilterBar } from './FilterBar'
 import { JobTable } from './JobTable'
 import styles from './JobsPage.module.css'
@@ -9,6 +10,8 @@ export function JobsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const q = searchParams.get('q') ?? ''
   const countries = searchParams.getAll('country')
+  const tiers = searchParams.getAll('sponsor_tier') as SponsorTier[]
+  const sort: SortBy = searchParams.get('sort') === 'date' ? 'date' : 'tier'
 
   const setQ = (value: string) => {
     setSearchParams(
@@ -35,9 +38,34 @@ export function JobsPage() {
     )
   }
 
+  const toggleTier = (tier: SponsorTier) => {
+    setSearchParams(
+      (params) => {
+        const selected = new Set(params.getAll('sponsor_tier'))
+        if (selected.has(tier)) selected.delete(tier)
+        else selected.add(tier)
+        params.delete('sponsor_tier')
+        for (const value of selected) params.append('sponsor_tier', value)
+        return params
+      },
+      { replace: true },
+    )
+  }
+
+  const setSort = (value: SortBy) => {
+    setSearchParams(
+      (params) => {
+        if (value === 'date') params.set('sort', 'date')
+        else params.delete('sort')
+        return params
+      },
+      { replace: true },
+    )
+  }
+
   const { data, isPending, isError } = useQuery({
-    queryKey: ['jobs', q, countries],
-    queryFn: () => fetchJobs({ q, countries }),
+    queryKey: ['jobs', q, countries, tiers, sort],
+    queryFn: () => fetchJobs({ q, countries, tiers, sort }),
   })
 
   return (
@@ -65,7 +93,16 @@ export function JobsPage() {
         </div>
       </header>
 
-      <FilterBar q={q} countries={countries} onQChange={setQ} onToggleCountry={toggleCountry} />
+      <FilterBar
+        q={q}
+        countries={countries}
+        tiers={tiers}
+        sort={sort}
+        onQChange={setQ}
+        onToggleCountry={toggleCountry}
+        onToggleTier={toggleTier}
+        onSortChange={setSort}
+      />
 
       {isError && <p className={styles.stateText}>Could not reach the Beacon API.</p>}
       {!isError && !isPending && data && data.jobs.length === 0 && (

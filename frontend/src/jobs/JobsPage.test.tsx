@@ -117,6 +117,51 @@ describe('JobsPage', () => {
     expect(firstUrl).toContain('country=SE')
   })
 
+  it('defaults to sponsor-tier sort with no sort or tier params (filter is opt-in)', async () => {
+    renderPage()
+    await screen.findByText('Swift Engineer')
+
+    const firstUrl = String(fetchMock.mock.calls[0][0])
+    expect(firstUrl).not.toContain('sort=')
+    expect(firstUrl).not.toContain('sponsor_tier=')
+  })
+
+  it('switching sort to Date refetches with sort=date', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByText('Swift Engineer')
+
+    await user.click(screen.getByRole('button', { name: 'Date' }))
+
+    await waitFor(() => {
+      const urls = fetchMock.mock.calls.map((call) => String(call[0]))
+      expect(urls.some((u) => u.includes('sort=date'))).toBe(true)
+    })
+  })
+
+  it('selecting a sponsor tier refetches with the opt-in filter param', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByText('Swift Engineer')
+
+    await user.click(screen.getByRole('button', { name: /filter by sponsor tier/i }))
+    await user.click(screen.getByRole('checkbox', { name: /registry/i }))
+
+    await waitFor(() => {
+      const urls = fetchMock.mock.calls.map((call) => String(call[0]))
+      expect(urls.some((u) => u.includes('sponsor_tier=registry_inferred'))).toBe(true)
+    })
+  })
+
+  it('reads initial sort and tier filter from the URL', async () => {
+    renderPage('/?sort=date&sponsor_tier=registry_inferred')
+
+    await screen.findByText('Swift Engineer')
+    const firstUrl = String(fetchMock.mock.calls[0][0])
+    expect(firstUrl).toContain('sort=date')
+    expect(firstUrl).toContain('sponsor_tier=registry_inferred')
+  })
+
   it('shows the empty state when nothing matches', async () => {
     fetchMock.mockResolvedValue({
       ok: true,
