@@ -1,5 +1,5 @@
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
@@ -34,6 +34,8 @@ def get_jobs(
     q: str | None = None,
     country: Annotated[list[str] | None, Query()] = None,
     posted_since: datetime | None = None,
+    sponsor_tier: Annotated[list[str] | None, Query()] = None,
+    sort: Literal["tier", "date"] = "tier",
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> JobsPageOut:
@@ -43,6 +45,8 @@ def get_jobs(
         q=q,
         countries=tuple(c.upper() for c in country or ()),
         posted_since=posted_since,
+        sponsor_tiers=tuple(sponsor_tier or ()),
+        sort=sort,
         limit=limit,
         offset=offset,
     )

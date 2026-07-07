@@ -32,12 +32,17 @@ class RegistryIngester(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class JobFilters:
-    """Query contract for job listings. Tier is deliberately absent from defaults —
-    sponsorship never filters unless explicitly requested."""
+    """Query contract for job listings. sponsor_tiers is deliberately empty by default —
+    sponsorship drives the sort but never filters unless explicitly requested.
+
+    sort: "tier" (default, sort_rank DESC then posted_at DESC) or "date" (posted_at DESC).
+    """
 
     q: str | None = None
     countries: tuple[str, ...] = ()
     posted_since: datetime | None = None
+    sponsor_tiers: tuple[str, ...] = ()
+    sort: str = "tier"
     limit: int = 50
     offset: int = 0
 

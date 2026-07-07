@@ -34,7 +34,18 @@ class SqliteJobRepo:
         if filters.posted_since is not None:
             clauses.append("jobs.posted_at >= ?")
             params.append(filters.posted_since.astimezone(UTC).isoformat())
+        if filters.sponsor_tiers:
+            placeholders = ", ".join("?" * len(filters.sponsor_tiers))
+            clauses.append(f"jobs.sponsor_tier IN ({placeholders})")
+            params += list(filters.sponsor_tiers)
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+
+        # "date" ignores tier; the default keeps likely sponsors on top (posted_at breaks ties).
+        order_by = (
+            "jobs.posted_at DESC"
+            if filters.sort == "date"
+            else f"{_SORT_RANK_CASE} DESC, jobs.posted_at DESC"
+        )
 
         total = self._conn.execute(
             f"SELECT COUNT(*) AS n FROM jobs {where}",
@@ -47,7 +58,7 @@ class SqliteJobRepo:
                    jobs.sponsor_tier
             FROM jobs JOIN companies ON companies.id = jobs.company_id
             {where}
-            ORDER BY {_SORT_RANK_CASE} DESC, jobs.posted_at DESC
+            ORDER BY {order_by}
             LIMIT ? OFFSET ?
             """,
             [*params, str(filters.limit), str(filters.offset)],

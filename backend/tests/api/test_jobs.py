@@ -135,6 +135,60 @@ async def test_jobs_sorts_higher_sponsor_tier_first(
     assert payload["total"] == 4
 
 
+async def test_sort_date_orders_by_posted_at_ignoring_tier(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    seeded.execute("UPDATE jobs SET sponsor_tier = 'registry_inferred' WHERE external_id = '1'")
+    seeded.commit()
+
+    payload = await get_jobs(client, sort="date")
+
+    # sort=date ignores tier entirely: pure posted_at DESC, undated last.
+    assert [j["title"] for j in payload["jobs"]] == [
+        "Swift Developer",
+        "Data Engineer",
+        "Swift Engineer",
+        "Platform Engineer",
+    ]
+
+
+async def test_bad_sort_value_is_rejected(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    response = await client.get("/jobs", params={"sort": "salary"})
+
+    assert response.status_code == 422
+
+
+async def test_tier_filter_is_opt_in(client: httpx.AsyncClient, seeded: sqlite3.Connection) -> None:
+    seeded.execute("UPDATE jobs SET sponsor_tier = 'registry_inferred' WHERE external_id = '1'")
+    seeded.execute("UPDATE jobs SET sponsor_tier = 'explicit_no' WHERE external_id = '3'")
+    seeded.commit()
+
+    # No sponsor_tier param → every tier is returned; sponsorship never filters by default.
+    assert (await get_jobs(client))["total"] == 4
+
+    only_registry = await get_jobs(client, sponsor_tier="registry_inferred")
+    assert only_registry["total"] == 1
+    assert only_registry["jobs"][0]["title"] == "Swift Engineer"
+
+
+async def test_tier_filter_accepts_multiple_values(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    seeded.execute("UPDATE jobs SET sponsor_tier = 'registry_inferred' WHERE external_id = '1'")
+    seeded.execute("UPDATE jobs SET sponsor_tier = 'explicit_no' WHERE external_id = '3'")
+    seeded.commit()
+
+    response = await client.get(
+        "/jobs",
+        params=[("sponsor_tier", "registry_inferred"), ("sponsor_tier", "explicit_no")],
+    )
+
+    assert response.status_code == 200
+    assert {j["title"] for j in response.json()["jobs"]} == {"Swift Engineer", "Swift Developer"}
+
+
 async def test_jobs_q_matches_description_too(
     client: httpx.AsyncClient, seeded: sqlite3.Connection
 ) -> None:
