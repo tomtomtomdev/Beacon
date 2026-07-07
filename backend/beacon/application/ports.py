@@ -7,6 +7,7 @@ from typing import Any, Protocol
 
 from beacon.domain.company import Company
 from beacon.domain.job import NormalizedJob
+from beacon.domain.registry import Registry, RegistryCompany
 
 # A source-shaped payload exactly as the ATS returned it (one job posting).
 type RawPosting = Mapping[str, Any]
@@ -18,6 +19,15 @@ class JobSource(Protocol):
     async def fetch(self) -> list[RawPosting]: ...
 
     def normalize(self, raw: RawPosting) -> NormalizedJob: ...
+
+
+class RegistryIngester(Protocol):
+    """A sponsor register. Reads a manually-refreshed snapshot (MVP) into the rows the
+    matcher consumes. registry is the bit this ingester contributes to registry_flags."""
+
+    registry: Registry
+
+    def fetch(self) -> list[RegistryCompany]: ...
 
 
 @dataclass(frozen=True, slots=True)
