@@ -18,6 +18,7 @@ def test_companies_table_has_full_spec_schema(db: sqlite3.Connection) -> None:
         "country_hq",
         "registry_flags",
         "match_confidence",
+        "match_evidence",
         "priority",
         "active",
         "consecutive_failures",

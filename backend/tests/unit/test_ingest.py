@@ -52,6 +52,9 @@ class FakeJobRepo:
     def search(self, filters: JobFilters) -> JobPage:
         raise NotImplementedError("ingest never searches")
 
+    def resolve_registry_tier(self, company_id: int, tier: str) -> None:
+        raise NotImplementedError("ingest never re-resolves tiers")
+
 
 COMPANY = Company(
     name="Tines", ats_type="greenhouse", ats_slug="tines", country_hq="IE", priority=2, id=7

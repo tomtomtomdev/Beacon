@@ -2,13 +2,20 @@ import sqlite3
 
 from beacon.domain.company import Company
 
+_SELECT_COLUMNS = (
+    "id, name, ats_type, ats_slug, country_hq, priority, registry_flags, match_confidence"
+)
+
 
 class SqliteCompanyRepo:
     def __init__(self, conn: sqlite3.Connection) -> None:
         self._conn = conn
 
     def upsert(self, company: Company) -> Company:
-        """Insert by unique name, or refresh the seedable fields; returns the persisted row."""
+        """Insert by unique name, or refresh the seedable fields; returns the persisted row.
+
+        Registry columns are deliberately untouched here — refresh owns them, so re-seeding
+        never wipes a company's flags."""
         self._conn.execute(
             """
             INSERT INTO companies (name, ats_type, ats_slug, country_hq, priority)
@@ -29,18 +36,32 @@ class SqliteCompanyRepo:
         )
         self._conn.commit()
         row = self._conn.execute(
-            "SELECT id, name, ats_type, ats_slug, country_hq, priority"
-            " FROM companies WHERE name = ?",
+            f"SELECT {_SELECT_COLUMNS} FROM companies WHERE name = ?",
             (company.name,),
         ).fetchone()
         return _row_to_company(row)
 
     def list_active(self) -> list[Company]:
         rows = self._conn.execute(
-            "SELECT id, name, ats_type, ats_slug, country_hq, priority"
-            " FROM companies WHERE active = 1 ORDER BY priority, name"
+            f"SELECT {_SELECT_COLUMNS} FROM companies WHERE active = 1 ORDER BY priority, name"
         ).fetchall()
         return [_row_to_company(row) for row in rows]
+
+    def get_by_name(self, name: str) -> Company | None:
+        row = self._conn.execute(
+            f"SELECT {_SELECT_COLUMNS} FROM companies WHERE name = ?", (name,)
+        ).fetchone()
+        return _row_to_company(row) if row is not None else None
+
+    def set_registry_match(
+        self, company_id: int, flags: int, confidence: float | None, evidence: str | None
+    ) -> None:
+        self._conn.execute(
+            "UPDATE companies SET registry_flags = ?, match_confidence = ?, match_evidence = ?"
+            " WHERE id = ?",
+            (flags, confidence, evidence, company_id),
+        )
+        self._conn.commit()
 
 
 def _row_to_company(row: sqlite3.Row) -> Company:
@@ -51,4 +72,6 @@ def _row_to_company(row: sqlite3.Row) -> Company:
         country_hq=row["country_hq"],
         priority=row["priority"],
         id=row["id"],
+        registry_flags=row["registry_flags"],
+        match_confidence=row["match_confidence"],
     )

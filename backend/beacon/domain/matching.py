@@ -13,9 +13,10 @@ a spot-check, never with a branch.
 """
 
 import re
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
-from beacon.domain.registry import RegistryCompany
+from beacon.domain.registry import Registry, RegistryCompany
 
 # Legal-entity and branch designators. Compared after periods are removed, so "N.V."
 # arrives as "nv" and "S.A." as "sa".
@@ -164,4 +165,50 @@ def match_confidence(seed_name: str, entry: RegistryCompany) -> float | None:
                 continue
             confidence = FULL_CONFIDENCE if seed.core == candidate.core else STRIPPED_CONFIDENCE
             best = confidence if best is None else max(best, confidence)
+    return best
+
+
+@dataclass(frozen=True, slots=True)
+class RegistryMatch:
+    """The combined verdict for one company across every registry it was checked against."""
+
+    flags: Registry
+    confidence: float | None
+    evidence: str | None
+
+
+def match_company(
+    seed_name: str, entries_by_registry: Mapping[Registry, Sequence[RegistryCompany]]
+) -> RegistryMatch:
+    """Match one seed name against every registry's entries, OR-ing the bits that hit.
+
+    Registry match is company-level: a registry contributes its bit on the single best
+    entry hit (multi-entity companies are counted once). Confidence is the best across
+    registries; evidence keeps a per-registry audit line."""
+    flags = Registry(0)
+    confidences: list[float] = []
+    reasons: list[str] = []
+    for registry, entries in entries_by_registry.items():
+        best_entry = _best_entry(seed_name, entries)
+        if best_entry is None:
+            continue
+        confidence, entry = best_entry
+        flags |= registry
+        confidences.append(confidence)
+        reasons.append(f"{registry.name} {entry.evidence or f'{confidence:.2f}'}")
+    return RegistryMatch(
+        flags=flags,
+        confidence=max(confidences) if confidences else None,
+        evidence="; ".join(reasons) if reasons else None,
+    )
+
+
+def _best_entry(
+    seed_name: str, entries: Sequence[RegistryCompany]
+) -> tuple[float, RegistryCompany] | None:
+    best: tuple[float, RegistryCompany] | None = None
+    for entry in entries:
+        confidence = match_confidence(seed_name, entry)
+        if confidence is not None and (best is None or confidence > best[0]):
+            best = (confidence, entry)
     return best

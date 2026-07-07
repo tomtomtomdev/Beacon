@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 
 from beacon.application.ports import JobFilters, JobListing, JobPage
 from beacon.domain.job import NormalizedJob
-from beacon.domain.sponsorship import SORT_RANK
+from beacon.domain.sponsorship import SORT_RANK, SponsorTier
 
 # Built from the domain table so SQL can never disagree with it.
 _SORT_RANK_CASE = (
@@ -11,6 +11,10 @@ _SORT_RANK_CASE = (
     + " ".join(f"WHEN '{tier.value}' THEN {rank}" for tier, rank in SORT_RANK.items())
     + " ELSE 0 END"
 )
+
+# Explicit-text tiers win over the registry signal, so registry re-resolution skips them.
+_EXPLICIT_TIERS = (SponsorTier.EXPLICIT_YES, SponsorTier.EXPLICIT_NO)
+_EXPLICIT_TIER_LITERALS = ", ".join(f"'{tier.value}'" for tier in _EXPLICIT_TIERS)
 
 
 class SqliteJobRepo:
@@ -49,6 +53,14 @@ class SqliteJobRepo:
             [*params, str(filters.limit), str(filters.offset)],
         ).fetchall()
         return JobPage(jobs=[_row_to_listing(row) for row in rows], total=total)
+
+    def resolve_registry_tier(self, company_id: int, tier: str) -> None:
+        self._conn.execute(
+            f"UPDATE jobs SET sponsor_tier = ?"  # noqa: S608 — literals are enum values
+            f" WHERE company_id = ? AND sponsor_tier NOT IN ({_EXPLICIT_TIER_LITERALS})",
+            (tier, company_id),
+        )
+        self._conn.commit()
 
     def upsert(self, company_id: int, job: NormalizedJob, seen_at: datetime) -> None:
         self._conn.execute(

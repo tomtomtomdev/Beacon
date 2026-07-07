@@ -7,3 +7,9 @@ CREATE TABLE registries_meta (
     fetched_at TEXT NOT NULL,
     row_count  INTEGER NOT NULL
 );
+
+-- SPEC §7's companies schema omitted an evidence column, but SPEC §5.3 / PLAN slice 2
+-- require the MANUAL flag to carry an evidence note + date, and the JobDetail drawer
+-- (slice 10) will show which registries matched. One free-text column serves both the
+-- fuzzy-match audit trail ("UK Skilled Worker; NL KvK …") and MANUAL notes.
+ALTER TABLE companies ADD COLUMN match_evidence TEXT;

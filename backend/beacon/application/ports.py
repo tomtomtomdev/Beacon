@@ -68,8 +68,19 @@ class JobRepo(Protocol):
 
     def search(self, filters: JobFilters) -> JobPage: ...
 
+    def resolve_registry_tier(self, company_id: int, tier: str) -> None:
+        """Set the registry-derived tier on a company's jobs, leaving explicit-text
+        tiers untouched (they win on precedence)."""
+        ...
+
 
 class CompanyRepo(Protocol):
     def upsert(self, company: Company) -> Company: ...
 
     def list_active(self) -> list[Company]: ...
+
+    def get_by_name(self, name: str) -> Company | None: ...
+
+    def set_registry_match(
+        self, company_id: int, flags: int, confidence: float | None, evidence: str | None
+    ) -> None: ...
