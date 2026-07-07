@@ -152,9 +152,9 @@ Tasks:
 7. UI: sponsorship badge on JobTable rows; sort toggle (tier / date) defaulting to tier; tier filter chips (off by default); JobDetail shows which registries matched and confidence
 
 Acceptance:
-- [ ] Spot-check: 10 known UK/NL-registered seed companies get the correct flags; a control company gets none; one MANUAL-flagged company (e.g. a relocate.me listing) shows registry_inferred with its evidence note
-- [ ] `registry_inferred` never appears on a company with empty flags (property test over random rows)
-- [ ] Default JobTable view shows all jobs with likely sponsors on top; nothing filtered out unless tier chips are actively selected
+- [x] Spot-check: 10 known UK/NL-registered seed companies get the correct flags; a control company gets none; one MANUAL-flagged company (e.g. a relocate.me listing) shows registry_inferred with its evidence note
+- [x] `registry_inferred` never appears on a company with empty flags (property test over random rows)
+- [x] Default JobTable view shows all jobs with likely sponsors on top; nothing filtered out unless tier chips are actively selected
 
 ---
 
