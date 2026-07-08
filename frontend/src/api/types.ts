@@ -20,3 +20,17 @@ export interface JobsPageResponse {
   jobs: Job[]
   total: number
 }
+
+// One underlying posting behind a canonical job — where the same role was found.
+export interface DuplicateSource {
+  source: string
+  company: string
+  url: string
+}
+
+// GET /jobs/{id}: the canonical job plus every source it appears on. The detail
+// drawer that consumes this lands in slice 10 (per DESIGN.md); the contract lives here now.
+export interface JobDetail extends Job {
+  description: string
+  duplicate_sources: DuplicateSource[]
+}
