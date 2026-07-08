@@ -366,3 +366,50 @@ async def test_job_detail_unknown_id_is_404(
     response = await client.get("/jobs/999999")
 
     assert response.status_code == 404
+
+
+async def test_patch_status_transitions(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    job_id = _ids_by_external(seeded)["1"]
+
+    response = await client.patch(f"/jobs/{job_id}/status", json={"status": "starred"})
+
+    assert response.status_code == 200, response.text
+    assert response.json()["user_status"] == "starred"
+    row = seeded.execute("SELECT user_status FROM jobs WHERE id = ?", (job_id,)).fetchone()
+    assert row["user_status"] == "starred"
+
+
+async def test_patch_status_invalid_value_is_422(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    job_id = _ids_by_external(seeded)["1"]
+
+    response = await client.patch(f"/jobs/{job_id}/status", json={"status": "archived"})
+
+    assert response.status_code == 422
+
+
+async def test_patch_status_unknown_id_is_404(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    response = await client.patch("/jobs/999999/status", json={"status": "seen"})
+
+    assert response.status_code == 404
+
+
+async def test_patch_status_on_duplicate_updates_canonical(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    ids = _ids_by_external(seeded)
+    seeded.execute("UPDATE jobs SET canonical_id = ? WHERE id = ?", (ids["1"], ids["2"]))
+    seeded.commit()
+
+    # Status is a property of the canonical row; patching a duplicate id lands there.
+    response = await client.patch(f"/jobs/{ids['2']}/status", json={"status": "hidden"})
+
+    assert response.status_code == 200
+    assert response.json()["id"] == ids["1"]
+    canonical = seeded.execute("SELECT user_status FROM jobs WHERE id = ?", (ids["1"],)).fetchone()
+    assert canonical["user_status"] == "hidden"

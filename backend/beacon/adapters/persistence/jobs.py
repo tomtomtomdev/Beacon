@@ -145,6 +145,18 @@ class SqliteJobRepo:
         )
         self._conn.commit()
 
+    def set_user_status(self, job_id: int, status: str) -> int | None:
+        row = self._conn.execute(
+            "SELECT id, canonical_id FROM jobs WHERE id = ?", (job_id,)
+        ).fetchone()
+        if row is None:
+            return None
+        # Status lives on the canonical row (the one the list shows); a duplicate id lands there.
+        canonical_id: int = row["canonical_id"] if row["canonical_id"] is not None else row["id"]
+        self._conn.execute("UPDATE jobs SET user_status = ? WHERE id = ?", (status, canonical_id))
+        self._conn.commit()
+        return canonical_id
+
     def get_job_detail(self, job_id: int) -> JobDetail | None:
         row = self._conn.execute(
             "SELECT id, canonical_id FROM jobs WHERE id = ?", (job_id,)

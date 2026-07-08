@@ -90,6 +90,9 @@ class FakeJobRepo:
     def get_job_detail(self, job_id: int) -> JobDetail | None:
         raise NotImplementedError("ingest never reads detail")
 
+    def set_user_status(self, job_id: int, status: str) -> int | None:
+        raise NotImplementedError("ingest never sets status")
+
     def search(self, filters: JobFilters) -> JobPage:
         raise NotImplementedError("ingest never searches")
 

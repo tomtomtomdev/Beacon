@@ -158,6 +158,12 @@ class JobRepo(Protocol):
         duplicate id is given), with every underlying source listed. None if unknown."""
         ...
 
+    def set_user_status(self, job_id: int, status: str) -> int | None:
+        """Set the user status on the canonical row for this id (resolving through
+        canonical_id if a duplicate id is given). Returns the updated canonical id,
+        or None if the id is unknown."""
+        ...
+
     def search(self, filters: JobFilters) -> JobPage: ...
 
     def resolve_registry_tier(self, company_id: int, tier: str) -> None:

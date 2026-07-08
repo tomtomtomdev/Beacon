@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from beacon.api.deps import JobRepoDep
 from beacon.application.ports import JobDetail, JobFilters, JobListing
-from beacon.application.queries import get_job, list_jobs
+from beacon.application.queries import get_job, list_jobs, set_job_status
 from beacon.domain.status import UserStatus
 
 router = APIRouter()
@@ -80,6 +80,23 @@ def get_job_detail(repo: JobRepoDep, job_id: int) -> JobDetailOut:
     if detail is None:
         raise HTTPException(status_code=404, detail="job not found")
     return _to_detail_dto(detail)
+
+
+class StatusUpdate(BaseModel):
+    status: UserStatus
+
+
+class StatusOut(BaseModel):
+    id: int
+    user_status: UserStatus
+
+
+@router.patch("/jobs/{job_id}/status")
+def patch_job_status(repo: JobRepoDep, job_id: int, body: StatusUpdate) -> StatusOut:
+    canonical_id = set_job_status(repo, job_id, body.status.value)
+    if canonical_id is None:
+        raise HTTPException(status_code=404, detail="job not found")
+    return StatusOut(id=canonical_id, user_status=body.status)
 
 
 def _to_detail_dto(detail: JobDetail) -> JobDetailOut:

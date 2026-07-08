@@ -7,3 +7,7 @@ def list_jobs(jobs: JobRepo, filters: JobFilters) -> JobPage:
 
 def get_job(jobs: JobRepo, job_id: int) -> JobDetail | None:
     return jobs.get_job_detail(job_id)
+
+
+def set_job_status(jobs: JobRepo, job_id: int, status: str) -> int | None:
+    return jobs.set_user_status(job_id, status)
