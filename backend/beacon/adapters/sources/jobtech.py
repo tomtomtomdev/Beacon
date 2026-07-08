@@ -15,6 +15,9 @@ from beacon.domain.job import NormalizedJob
 _SEARCH_API = "https://jobsearch.api.jobtechdev.se/search"
 _AD_URL = "https://arbetsformedlingen.se/platsbanken/annonser/{id}"
 _DEFAULT_COUNTRY = "SE"
+# country_code is JobTech's numeric taxonomy, not ISO-2. Sweden (199) dominates this board;
+# any other code is a genuinely foreign ad we don't map → country stays unknown, never SE.
+_COUNTRY_CODE_TO_ISO = {"199": "SE"}
 # JobTech emits publication_date without an offset; the ad clock is Swedish local time.
 _SOURCE_TZ = ZoneInfo("Europe/Stockholm")
 
@@ -33,9 +36,11 @@ class JobTechAdapter:
 
     def normalize(self, raw: RawPosting) -> NormalizedJob:
         address = raw.get("workplace_address") or {}
-        country = str(address.get("country_code") or _DEFAULT_COUNTRY).upper()
+        raw_code = address.get("country_code")
+        # Absent → SE (the board's default); present → map the numeric code (unmapped → None).
+        country = _DEFAULT_COUNTRY if not raw_code else _COUNTRY_CODE_TO_ISO.get(str(raw_code))
         city = address.get("municipality") or None
-        location_raw = ", ".join(p for p in (city, address.get("country")) if p) or country
+        location_raw = ", ".join(p for p in (city, address.get("country")) if p) or (country or "")
 
         block = raw.get("description") or {}
         description = normalize_description(

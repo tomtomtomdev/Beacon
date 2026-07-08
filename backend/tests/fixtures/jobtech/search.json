@@ -2,47 +2,62 @@
   "total": { "value": 4 },
   "hits": [
     {
-      "id": "27811001",
+      "id": "31260112",
       "headline": "Senior Backend Engineer",
-      "employer": { "name": "Spotify AB", "workplace": "Spotify" },
+      "employer": {
+        "name": "Spotify AB",
+        "organization_number": "5566373277",
+        "url": "https://www.lifeatspotify.com/",
+        "workplace": "Spotify"
+      },
       "workplace_address": {
         "municipality": "Stockholm",
+        "municipality_code": "0180",
         "region": "Stockholms län",
+        "region_code": "01",
         "country": "Sverige",
-        "country_code": "SE"
+        "country_code": "199",
+        "country_concept_id": "i46j_HmG_v64",
+        "city": "Stockholm"
       },
       "description": {
         "text": "We are looking for a senior backend engineer. Python, Go.",
         "text_formatted": "<p>We are looking for a senior backend engineer.</p><p>Python, Go.</p>"
       },
-      "webpage_url": "https://arbetsformedlingen.se/platsbanken/annonser/27811001",
+      "webpage_url": "https://arbetsformedlingen.se/platsbanken/annonser/31260112",
       "publication_date": "2026-07-01T09:00:00"
     },
     {
-      "id": "27811002",
+      "id": "31260110",
       "headline": "Frontend-utvecklare",
-      "employer": { "name": "Klarna Bank AB" },
-      "workplace_address": { "municipality": "Göteborg" },
+      "employer": { "name": "Klarna Bank AB", "organization_number": "5560737071" },
+      "workplace_address": {
+        "municipality": "Göteborg",
+        "municipality_code": "1480",
+        "region": "Västra Götalands län"
+      },
       "description": { "text": "Vi söker en frontend-utvecklare till vårt team." },
-      "webpage_url": "https://arbetsformedlingen.se/platsbanken/annonser/27811002",
+      "webpage_url": "https://arbetsformedlingen.se/platsbanken/annonser/31260110",
       "publication_date": "2026-06-15T14:30:00+02:00"
     },
     {
-      "id": "27811003",
+      "id": "31260107",
       "headline": "DevOps Engineer",
-      "employer": { "name": "Volvo Cars" },
+      "employer": { "name": "Volvo Cars", "organization_number": "5560740000" },
       "workplace_address": {
         "municipality": "Oslo",
         "country": "Norge",
-        "country_code": "NO"
+        "country_code": "155",
+        "country_concept_id": "QJgN_Zge_BzJ",
+        "city": "Oslo"
       },
       "description": { "text": "Join our platform team in Oslo." },
       "publication_date": null
     },
     {
-      "id": "27811004",
+      "id": "31260101",
       "headline": "Data Engineer",
-      "employer": { "name": "King" },
+      "employer": { "name": "King", "organization_number": "5567890123" },
       "description": { "text": "Build data pipelines for games." },
       "publication_date": "2026-05-20T08:00:00"
     }

@@ -27,15 +27,15 @@ def hit(jobtech_search: dict[str, Any], hit_id: str) -> dict[str, Any]:
 
 
 def test_jobtech_normalize_swedish_hit(jobtech_search: dict[str, Any]) -> None:
-    job = make_adapter().normalize(hit(jobtech_search, "27811001"))
+    job = make_adapter().normalize(hit(jobtech_search, "31260112"))
 
     assert job.source_id == "jobtech"
-    assert job.external_id == "27811001"
+    assert job.external_id == "31260112"
     assert job.title == "Senior Backend Engineer"
     assert job.company_name == "Spotify AB"
-    assert job.country == "SE"
+    assert job.country == "SE"  # numeric country_code 199 → SE
     assert job.city == "Stockholm"
-    assert job.url == "https://arbetsformedlingen.se/platsbanken/annonser/27811001"
+    assert job.url == "https://arbetsformedlingen.se/platsbanken/annonser/31260112"
     # Naive publication_date is Swedish local time (CEST = UTC+2 in July) → aware UTC.
     assert job.posted_at == datetime(2026, 7, 1, 7, 0, tzinfo=UTC)
     assert "backend engineer" in job.description
@@ -43,21 +43,22 @@ def test_jobtech_normalize_swedish_hit(jobtech_search: dict[str, Any]) -> None:
 
 
 def test_jobtech_defaults_country_to_se_when_absent(jobtech_search: dict[str, Any]) -> None:
-    job = make_adapter().normalize(hit(jobtech_search, "27811002"))
+    job = make_adapter().normalize(hit(jobtech_search, "31260110"))
 
-    assert job.country == "SE"  # workplace_address had no country_code
+    assert job.country == "SE"  # workplace_address had no country_code → board default
     assert job.city == "Göteborg"
     # Explicit +02:00 offset → aware UTC.
     assert job.posted_at == datetime(2026, 6, 15, 12, 30, tzinfo=UTC)
 
 
-def test_jobtech_keeps_a_foreign_country_code(jobtech_search: dict[str, Any]) -> None:
-    job = make_adapter().normalize(hit(jobtech_search, "27811003"))
+def test_jobtech_foreign_numeric_code_is_unknown_not_se(jobtech_search: dict[str, Any]) -> None:
+    job = make_adapter().normalize(hit(jobtech_search, "31260107"))
 
-    assert job.country == "NO"  # SE default only applies when country_code is absent
+    assert job.country is None  # code 155 (Norge) isn't Sweden and isn't mapped → not fabricated
+    assert job.location_raw == "Oslo, Norge"  # raw preserved for a future better parser
     assert job.posted_at is None  # null publication_date is never fabricated
     # No webpage_url → the ad URL is reconstructed from the id.
-    assert job.url == "https://arbetsformedlingen.se/platsbanken/annonser/27811003"
+    assert job.url == "https://arbetsformedlingen.se/platsbanken/annonser/31260107"
 
 
 def test_jobtech_normalize_handles_every_recorded_hit(jobtech_search: dict[str, Any]) -> None:
