@@ -204,7 +204,7 @@ Tests first:
 Tasks: simhash impl (or `simhash` lib) on normalized description; dedup pass in pipeline post-upsert; `/jobs/{id}` detail endpoint including `duplicate_sources`; JobDetail view in UI.
 
 Acceptance:
-- [ ] Seed a company present on both its Greenhouse board and RemoteOK (later) or synthetic fixture → one row in UI
+- [x] Seed a company present on both its Greenhouse board and RemoteOK (later) or synthetic fixture → one row in UI — **done 2026-07-08**: live-ingested `immutable` (lever, 3 real roles, dedup 0/0 — no false merges), then cloned one posting under a second `source_id` with a reformatted+footered description; dedup collapsed it (list 3→3, groups=1, duplicates=1) and `/jobs/{id}` detail listed both sources (lever + remoteok).
 
 ---
 
