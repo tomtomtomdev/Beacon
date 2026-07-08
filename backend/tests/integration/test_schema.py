@@ -59,6 +59,25 @@ def test_registries_meta_bookkeeping_table_exists(db: sqlite3.Connection) -> Non
     assert columns(db, "registries_meta") == {"registry", "fetched_at", "row_count"}
 
 
+def test_saved_searches_table_has_full_spec_schema(db: sqlite3.Connection) -> None:
+    assert columns(db, "saved_searches") == {
+        "id",
+        "name",
+        "filters_json",
+        "notify_channel",
+        "last_run_at",
+    }
+
+
+def test_seen_matches_table_has_full_spec_schema(db: sqlite3.Connection) -> None:
+    assert columns(db, "seen_matches") == {
+        "search_id",
+        "job_canonical_id",
+        "notified_at",
+        "match_reason",
+    }
+
+
 def test_jobs_reject_duplicate_source_external_id(db: sqlite3.Connection) -> None:
     db.execute(
         "INSERT INTO companies (name, ats_type, ats_slug, country_hq, priority)"

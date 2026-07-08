@@ -1,6 +1,6 @@
 """Protocols every external system implements. Adapters depend on this module, never vice versa."""
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Protocol
@@ -8,8 +8,10 @@ from typing import Any, Protocol
 from beacon.domain.classification import Classification
 from beacon.domain.company import Company
 from beacon.domain.dedup import DedupRow
+from beacon.domain.digest import Digest
 from beacon.domain.job import NormalizedJob
 from beacon.domain.registry import Registry, RegistryCompany
+from beacon.domain.saved_search import SavedSearch
 from beacon.domain.sponsorship import SponsorSignal
 
 # A source-shaped payload exactly as the ATS returned it (one job posting).
@@ -45,6 +47,14 @@ class Classifier(Protocol):
     shares this port and only upgrades the ambiguous residue."""
 
     def classify(self, job: NormalizedJob) -> Classification: ...
+
+
+class Notifier(Protocol):
+    """Delivers a new-match digest. TelegramNotifier is the MVP; the digest is channel-
+    agnostic so each notifier owns its own formatting/size limits. Never called for an
+    empty digest (the use case guards that)."""
+
+    async def send(self, digest: Digest) -> None: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -195,3 +205,29 @@ class CompanyRepo(Protocol):
     def set_registry_match(
         self, company_id: int, flags: int, confidence: float | None, evidence: str | None
     ) -> None: ...
+
+
+class SearchRepo(Protocol):
+    def create(self, search: SavedSearch) -> SavedSearch:
+        """Persist a new saved search; returns it with its assigned id."""
+        ...
+
+    def list_all(self) -> list[SavedSearch]: ...
+
+    def get(self, search_id: int) -> SavedSearch | None: ...
+
+    def delete(self, search_id: int) -> bool:
+        """Remove a saved search (and its seen_matches, via cascade). False if unknown."""
+        ...
+
+    def seen_job_ids(self, search_id: int) -> set[int]:
+        """Canonical job ids already notified for this search — the notify-once ledger."""
+        ...
+
+    def record_matches(
+        self, search_id: int, matches: Sequence[tuple[int, str]], notified_at: datetime
+    ) -> None:
+        """Mark (canonical job id, match_reason) pairs as notified; idempotent per pair."""
+        ...
+
+    def touch_last_run(self, search_id: int, at: datetime) -> None: ...

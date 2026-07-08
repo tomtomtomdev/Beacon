@@ -6,7 +6,8 @@ column and back with no loss, so the round-trip is the contract."""
 
 import json
 from collections.abc import Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
+from datetime import datetime
 
 
 @dataclass(frozen=True, slots=True)
@@ -19,6 +20,18 @@ class SearchFilters:
     categories: tuple[str, ...] = ()
     levels: tuple[str, ...] = ()
     tiers: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class SavedSearch:
+    """A named, persisted search that alerts on new matches. id/last_run_at are None
+    until the row is stored / first run; notify_channel names the Notifier to use."""
+
+    name: str
+    filters: SearchFilters = field(default_factory=SearchFilters)
+    notify_channel: str = "telegram"
+    id: int | None = None
+    last_run_at: datetime | None = None
 
 
 def filters_to_json(filters: SearchFilters) -> str:
