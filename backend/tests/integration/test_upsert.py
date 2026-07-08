@@ -5,6 +5,7 @@ import pytest
 
 from beacon.adapters.persistence.companies import SqliteCompanyRepo
 from beacon.adapters.persistence.jobs import SqliteJobRepo
+from beacon.domain.classification import Category, Classification, Level
 from beacon.domain.company import Company
 from beacon.domain.job import NormalizedJob
 
@@ -56,6 +57,29 @@ def test_upsert_refreshes_mutable_fields(db: sqlite3.Connection, company_id: int
 
     rows = db.execute("SELECT title FROM jobs").fetchall()
     assert [row["title"] for row in rows] == ["Senior Engineer"]
+
+
+def test_upsert_persists_classification(db: sqlite3.Connection, company_id: int) -> None:
+    repo = SqliteJobRepo(db)
+
+    repo.upsert(
+        company_id,
+        make_job(),
+        seen_at=FIRST_POLL,
+        classification=Classification(frozenset({Category.IOS, Category.AI_ML}), Level.SENIOR),
+    )
+
+    row = db.execute("SELECT categories, level FROM jobs").fetchone()
+    assert row["categories"] == "ai-ml,ios"
+    assert row["level"] == "senior"
+
+
+def test_content_hash_for_reads_back_stored_hash(db: sqlite3.Connection, company_id: int) -> None:
+    repo = SqliteJobRepo(db)
+
+    assert repo.content_hash_for("greenhouse", "6000558004") is None
+    repo.upsert(company_id, make_job(), seen_at=FIRST_POLL)
+    assert repo.content_hash_for("greenhouse", "6000558004") == "a" * 64
 
 
 def test_company_upsert_is_idempotent_and_returns_id(db: sqlite3.Connection) -> None:

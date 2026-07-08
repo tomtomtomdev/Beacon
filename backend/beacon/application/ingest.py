@@ -3,7 +3,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
-from beacon.application.ports import JobRepo, JobSource
+from beacon.application.ports import Classifier, JobRepo, JobSource
 from beacon.domain.company import Company
 
 logger = logging.getLogger(__name__)
@@ -20,9 +20,12 @@ class IngestResult:
 
 
 async def ingest_source(
-    source: JobSource, company: Company, jobs: JobRepo, *, now: datetime
+    source: JobSource, company: Company, jobs: JobRepo, classifier: Classifier, *, now: datetime
 ) -> IngestResult:
-    """Fetch → normalize → upsert one company's board. One bad posting never kills the poll."""
+    """Fetch → normalize → classify → upsert one board. One bad posting never kills the poll.
+
+    Classification is cached by content_hash: a posting is (re)classified only when its
+    content_hash is new or changed, so unchanged re-polls never re-run the classifier."""
     if company.id is None:
         raise ValueError(f"company {company.name!r} must be persisted before ingest")
 
@@ -30,7 +33,10 @@ async def ingest_source(
     upserted = errors = 0
     for raw in raw_postings:
         try:
-            jobs.upsert(company.id, source.normalize(raw), seen_at=now)
+            job = source.normalize(raw)
+            previous_hash = jobs.content_hash_for(job.source_id, job.external_id)
+            classification = None if previous_hash == job.content_hash else classifier.classify(job)
+            jobs.upsert(company.id, job, seen_at=now, classification=classification)
             upserted += 1
         except Exception:
             errors += 1
@@ -53,7 +59,12 @@ async def ingest_source(
 
 
 async def ingest_all(
-    companies: Sequence[Company], jobs: JobRepo, source_for: SourceFactory, *, now: datetime
+    companies: Sequence[Company],
+    jobs: JobRepo,
+    source_for: SourceFactory,
+    classifier: Classifier,
+    *,
+    now: datetime,
 ) -> dict[str, IngestResult]:
     """Poll every company that has an adapter. One dead board never stops the run."""
     results: dict[str, IngestResult] = {}
@@ -65,7 +76,7 @@ async def ingest_all(
             )
             continue
         try:
-            results[company.name] = await ingest_source(source, company, jobs, now=now)
+            results[company.name] = await ingest_source(source, company, jobs, classifier, now=now)
         except Exception:
             logger.exception("poll_failed source=%s company=%s", source.source_id, company.name)
     return results

@@ -77,7 +77,21 @@ class JobPage:
 
 
 class JobRepo(Protocol):
-    def upsert(self, company_id: int, job: NormalizedJob, seen_at: datetime) -> None: ...
+    def upsert(
+        self,
+        company_id: int,
+        job: NormalizedJob,
+        seen_at: datetime,
+        classification: Classification | None = None,
+    ) -> None:
+        """Persist a posting. classification writes categories/level; None leaves the
+        stored values intact (an unchanged re-poll keeps its earlier classification)."""
+        ...
+
+    def content_hash_for(self, source_id: str, external_id: str) -> str | None:
+        """The content_hash currently stored for this posting, or None if unseen.
+        Lets the pipeline classify only when content changed."""
+        ...
 
     def search(self, filters: JobFilters) -> JobPage: ...
 

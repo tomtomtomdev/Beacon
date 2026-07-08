@@ -2,6 +2,7 @@ import sqlite3
 from datetime import UTC, datetime
 
 from beacon.application.ports import JobFilters, JobListing, JobPage
+from beacon.domain.classification import Classification, format_categories
 from beacon.domain.job import NormalizedJob
 from beacon.domain.sponsorship import SORT_RANK, SponsorTier
 
@@ -73,14 +74,31 @@ class SqliteJobRepo:
         )
         self._conn.commit()
 
-    def upsert(self, company_id: int, job: NormalizedJob, seen_at: datetime) -> None:
+    def content_hash_for(self, source_id: str, external_id: str) -> str | None:
+        row = self._conn.execute(
+            "SELECT content_hash FROM jobs WHERE source_id = ? AND external_id = ?",
+            (source_id, external_id),
+        ).fetchone()
+        return row["content_hash"] if row is not None else None
+
+    def upsert(
+        self,
+        company_id: int,
+        job: NormalizedJob,
+        seen_at: datetime,
+        classification: Classification | None = None,
+    ) -> None:
+        # categories/level are only rewritten when a fresh classification is supplied
+        # (COALESCE keeps the prior values on an unchanged re-poll — see ingest caching).
+        categories = format_categories(classification.categories) if classification else None
+        level = classification.level.value if classification else None
         self._conn.execute(
             """
             INSERT INTO jobs (
                 company_id, source_id, external_id, title, description, url,
-                location_raw, country, city, content_hash, posted_at,
+                location_raw, country, city, categories, level, content_hash, posted_at,
                 first_seen_at, last_seen_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT (source_id, external_id) DO UPDATE SET
                 title = excluded.title,
                 description = excluded.description,
@@ -88,6 +106,8 @@ class SqliteJobRepo:
                 location_raw = excluded.location_raw,
                 country = excluded.country,
                 city = excluded.city,
+                categories = COALESCE(excluded.categories, jobs.categories),
+                level = COALESCE(excluded.level, jobs.level),
                 content_hash = excluded.content_hash,
                 posted_at = excluded.posted_at,
                 last_seen_at = excluded.last_seen_at
@@ -102,6 +122,8 @@ class SqliteJobRepo:
                 job.location_raw,
                 job.country,
                 job.city,
+                categories,
+                level,
                 job.content_hash,
                 job.posted_at.isoformat() if job.posted_at else None,
                 seen_at.isoformat(),
