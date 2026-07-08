@@ -19,6 +19,8 @@ class JobOut(BaseModel):
     location: str
     country: str | None
     city: str | None
+    categories: list[str]
+    level: str | None
     posted_at: datetime | None
     sponsor_tier: str
 
@@ -33,6 +35,8 @@ def get_jobs(
     repo: JobRepoDep,
     q: str | None = None,
     country: Annotated[list[str] | None, Query()] = None,
+    category: Annotated[list[str] | None, Query()] = None,
+    level: Annotated[list[str] | None, Query()] = None,
     posted_since: datetime | None = None,
     sponsor_tier: Annotated[list[str] | None, Query()] = None,
     sort: Literal["tier", "date"] = "tier",
@@ -44,6 +48,8 @@ def get_jobs(
     filters = JobFilters(
         q=q,
         countries=tuple(c.upper() for c in country or ()),
+        categories=tuple(category or ()),
+        levels=tuple(level or ()),
         posted_since=posted_since,
         sponsor_tiers=tuple(sponsor_tier or ()),
         sort=sort,
@@ -63,6 +69,8 @@ def _to_dto(job: JobListing) -> JobOut:
         location=job.location_raw,
         country=job.country,
         city=job.city,
+        categories=list(job.categories),
+        level=job.level,
         posted_at=job.posted_at,
         sponsor_tier=job.sponsor_tier,
     )

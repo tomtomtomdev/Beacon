@@ -32,6 +32,16 @@ class SqliteJobRepo:
             placeholders = ", ".join("?" * len(filters.countries))
             clauses.append(f"jobs.country IN ({placeholders})")
             params += list(filters.countries)
+        if filters.categories:
+            # categories is a comma-joined multi-label string; match on comma-delimited
+            # membership so a filter for "ios" hits "ai-ml,ios" but never a substring.
+            ors = " OR ".join("(',' || jobs.categories || ',') LIKE ?" for _ in filters.categories)
+            clauses.append(f"({ors})")
+            params += [f"%,{category},%" for category in filters.categories]
+        if filters.levels:
+            placeholders = ", ".join("?" * len(filters.levels))
+            clauses.append(f"jobs.level IN ({placeholders})")
+            params += list(filters.levels)
         if filters.posted_since is not None:
             clauses.append("jobs.posted_at >= ?")
             params.append(filters.posted_since.astimezone(UTC).isoformat())
@@ -55,8 +65,8 @@ class SqliteJobRepo:
         rows = self._conn.execute(
             f"""
             SELECT jobs.id, jobs.title, companies.name AS company, jobs.url,
-                   jobs.location_raw, jobs.country, jobs.city, jobs.posted_at,
-                   jobs.sponsor_tier
+                   jobs.location_raw, jobs.country, jobs.city, jobs.categories,
+                   jobs.level, jobs.posted_at, jobs.sponsor_tier
             FROM jobs JOIN companies ON companies.id = jobs.company_id
             {where}
             ORDER BY {order_by}
@@ -168,6 +178,7 @@ def _row_to_normalized(row: sqlite3.Row) -> NormalizedJob:
 
 def _row_to_listing(row: sqlite3.Row) -> JobListing:
     posted_at = row["posted_at"]
+    categories = row["categories"]
     return JobListing(
         id=row["id"],
         title=row["title"],
@@ -176,6 +187,8 @@ def _row_to_listing(row: sqlite3.Row) -> JobListing:
         location_raw=row["location_raw"],
         country=row["country"],
         city=row["city"],
+        categories=tuple(categories.split(",")) if categories else (),
+        level=row["level"],
         posted_at=datetime.fromisoformat(posted_at) if posted_at else None,
         sponsor_tier=row["sponsor_tier"],
     )

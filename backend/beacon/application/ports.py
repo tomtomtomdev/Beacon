@@ -48,6 +48,8 @@ class JobFilters:
 
     q: str | None = None
     countries: tuple[str, ...] = ()
+    categories: tuple[str, ...] = ()
+    levels: tuple[str, ...] = ()
     posted_since: datetime | None = None
     sponsor_tiers: tuple[str, ...] = ()
     sort: str = "tier"
@@ -66,6 +68,8 @@ class JobListing:
     location_raw: str
     country: str | None
     city: str | None
+    categories: tuple[str, ...]
+    level: str | None
     posted_at: datetime | None
     sponsor_tier: str
 

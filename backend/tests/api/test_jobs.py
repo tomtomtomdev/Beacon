@@ -189,6 +189,50 @@ async def test_tier_filter_accepts_multiple_values(
     assert {j["title"] for j in response.json()["jobs"]} == {"Swift Engineer", "Swift Developer"}
 
 
+async def test_category_filter_matches_any_selected_including_multi_label(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    seeded.execute("UPDATE jobs SET categories = 'ios', level = 'senior' WHERE external_id = '1'")
+    seeded.execute("UPDATE jobs SET categories = 'backend' WHERE external_id = '2'")
+    seeded.execute("UPDATE jobs SET categories = 'ai-ml,ios' WHERE external_id = '3'")
+    seeded.commit()
+
+    payload = await get_jobs(client, category="ios")
+
+    # job 3 is multi-label (ai-ml,ios) and must still match a single-category filter.
+    assert {j["title"] for j in payload["jobs"]} == {"Swift Engineer", "Swift Developer"}
+
+
+async def test_category_filter_accepts_multiple_values_and_dto_exposes_fields(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    seeded.execute("UPDATE jobs SET categories = 'ios', level = 'senior' WHERE external_id = '1'")
+    seeded.execute("UPDATE jobs SET categories = 'backend', level = 'lead' WHERE external_id = '2'")
+    seeded.commit()
+
+    response = await client.get("/jobs", params=[("category", "ios"), ("category", "backend")])
+
+    assert response.status_code == 200
+    jobs = {j["title"]: j for j in response.json()["jobs"]}
+    assert set(jobs) == {"Swift Engineer", "Data Engineer"}
+    assert jobs["Swift Engineer"]["categories"] == ["ios"]
+    assert jobs["Swift Engineer"]["level"] == "senior"
+
+
+async def test_level_filter_is_opt_in(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    seeded.execute("UPDATE jobs SET level = 'senior' WHERE external_id = '1'")
+    seeded.execute("UPDATE jobs SET level = 'staff' WHERE external_id = '2'")
+    seeded.execute("UPDATE jobs SET level = 'junior' WHERE external_id = '3'")
+    seeded.commit()
+
+    assert (await get_jobs(client))["total"] == 4  # no level param → nothing filtered
+
+    response = await client.get("/jobs", params=[("level", "senior"), ("level", "staff")])
+    assert {j["title"] for j in response.json()["jobs"]} == {"Swift Engineer", "Data Engineer"}
+
+
 async def test_jobs_q_matches_description_too(
     client: httpx.AsyncClient, seeded: sqlite3.Connection
 ) -> None:
