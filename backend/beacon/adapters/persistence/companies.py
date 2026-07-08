@@ -41,6 +41,30 @@ class SqliteCompanyRepo:
         ).fetchone()
         return _row_to_company(row)
 
+    def get_or_create(self, company: Company) -> Company:
+        """Insert only if the name is new; a name already present (a seed) is returned
+        untouched, so its real ats_type/registry_flags survive a company-less poll."""
+        self._conn.execute(
+            """
+            INSERT INTO companies (name, ats_type, ats_slug, country_hq, priority)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT (name) DO NOTHING
+            """,
+            (
+                company.name,
+                company.ats_type,
+                company.ats_slug,
+                company.country_hq,
+                company.priority,
+            ),
+        )
+        self._conn.commit()
+        row = self._conn.execute(
+            f"SELECT {_SELECT_COLUMNS} FROM companies WHERE name = ?",
+            (company.name,),
+        ).fetchone()
+        return _row_to_company(row)
+
     def list_active(self) -> list[Company]:
         rows = self._conn.execute(
             f"SELECT {_SELECT_COLUMNS} FROM companies WHERE active = 1 ORDER BY priority, name"

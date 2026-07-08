@@ -16,3 +16,6 @@ class NormalizedJob:
     city: str | None
     posted_at: datetime | None  # aware UTC; None when the board omits it — never fabricated
     content_hash: str
+    # Set only by company-less sources (HN/JobTech) that parse the employer from the posting;
+    # ATS jobs leave it None (their company comes from the seed row being polled).
+    company_name: str | None = None

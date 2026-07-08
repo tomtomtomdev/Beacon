@@ -3,10 +3,13 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
-from beacon.application.ports import Classifier, JobRepo, JobSource
+from beacon.application.ports import Classifier, CompanyRepo, JobRepo, JobSource
 from beacon.domain.company import Company
 from beacon.domain.job import NormalizedJob
 from beacon.domain.sponsorship import SponsorSignal, detect_sponsorship, resolve_tier
+
+# ats_type a company-less source stamps on employers it shadows; no adapter polls it.
+SHADOW_ATS_TYPE = "none"
 
 logger = logging.getLogger(__name__)
 
@@ -21,25 +24,46 @@ class IngestResult:
     errors: int
 
 
-def _resolve_sponsorship(job: NormalizedJob, company: Company) -> SponsorSignal:
+def _resolve_sponsorship(job: NormalizedJob, registry_flags: int) -> SponsorSignal:
     """Combine the posting's explicit-text signal with the company's registry flags via
     the one precedence function: explicit text > registry > unknown. Explicit tiers keep
     their evidence sentence; registry/unknown carry none."""
     detected = detect_sponsorship(job.description)
     text_tier = detected.tier if detected else None
     return SponsorSignal(
-        tier=resolve_tier(text_tier, company.registry_flags),
+        tier=resolve_tier(text_tier, registry_flags),
         evidence=detected.evidence if detected else None,
+    )
+
+
+def _upsert_posting(
+    job: NormalizedJob,
+    company_id: int,
+    registry_flags: int,
+    jobs: JobRepo,
+    classifier: Classifier,
+    now: datetime,
+) -> None:
+    """Classify + resolve sponsorship (gated by content_hash) and upsert one posting.
+
+    Classification and sponsorship are (re)computed only when the posting's content_hash is
+    new or changed; an unchanged re-poll upserts with both None so the stored values survive."""
+    previous_hash = jobs.content_hash_for(job.source_id, job.external_id)
+    if previous_hash == job.content_hash:
+        classification = None
+        sponsorship = None
+    else:
+        classification = classifier.classify(job)
+        sponsorship = _resolve_sponsorship(job, registry_flags)
+    jobs.upsert(
+        company_id, job, seen_at=now, classification=classification, sponsorship=sponsorship
     )
 
 
 async def ingest_source(
     source: JobSource, company: Company, jobs: JobRepo, classifier: Classifier, *, now: datetime
 ) -> IngestResult:
-    """Fetch → normalize → classify → upsert one board. One bad posting never kills the poll.
-
-    Classification is cached by content_hash: a posting is (re)classified only when its
-    content_hash is new or changed, so unchanged re-polls never re-run the classifier."""
+    """Fetch → normalize → classify → upsert one board. One bad posting never kills the poll."""
     if company.id is None:
         raise ValueError(f"company {company.name!r} must be persisted before ingest")
 
@@ -48,18 +72,7 @@ async def ingest_source(
     for raw in raw_postings:
         try:
             job = source.normalize(raw)
-            previous_hash = jobs.content_hash_for(job.source_id, job.external_id)
-            if previous_hash == job.content_hash:
-                # Unchanged content: skip re-classify and re-detect; the stored
-                # classification and sponsor tier/evidence carry over untouched.
-                classification = None
-                sponsorship = None
-            else:
-                classification = classifier.classify(job)
-                sponsorship = _resolve_sponsorship(job, company)
-            jobs.upsert(
-                company.id, job, seen_at=now, classification=classification, sponsorship=sponsorship
-            )
+            _upsert_posting(job, company.id, company.registry_flags, jobs, classifier, now)
             upserted += 1
         except Exception:
             errors += 1
@@ -74,6 +87,59 @@ async def ingest_source(
         "poll source=%s company=%s fetched=%d upserted=%d errors=%d",
         source.source_id,
         company.name,
+        len(raw_postings),
+        upserted,
+        errors,
+    )
+    return IngestResult(fetched=len(raw_postings), upserted=upserted, errors=errors)
+
+
+def _shadow_company(job: NormalizedJob) -> Company:
+    """A minimal employer row for a company named only inside a company-less posting.
+    ats_type='none' means no adapter ever polls it; get_or_create leaves a real seed intact."""
+    if not job.company_name:
+        raise ValueError(f"company-less posting {job.external_id!r} has no company_name")
+    return Company(
+        name=job.company_name,
+        ats_type=SHADOW_ATS_TYPE,
+        ats_slug="",
+        country_hq=job.country or "",
+        priority=5,
+    )
+
+
+async def ingest_companyless_source(
+    source: JobSource,
+    jobs: JobRepo,
+    companies: CompanyRepo,
+    classifier: Classifier,
+    *,
+    now: datetime,
+) -> IngestResult:
+    """Ingest a source whose postings each name their own employer (HN, JobTech).
+
+    One source yields jobs across many companies; each posting resolves-or-creates its
+    employer (a known seed is reused, so its registry flags carry through). One bad posting
+    never kills the poll."""
+    raw_postings = await source.fetch()
+    upserted = errors = 0
+    for raw in raw_postings:
+        try:
+            job = source.normalize(raw)
+            company = companies.get_or_create(_shadow_company(job))
+            if company.id is None:  # get_or_create always persists; guard narrows the type
+                raise ValueError(f"company {company.name!r} was not persisted")
+            _upsert_posting(job, company.id, company.registry_flags, jobs, classifier, now)
+            upserted += 1
+        except Exception:
+            errors += 1
+            logger.exception(
+                "posting_failed source=%s external_id=%s", source.source_id, raw.get("id", "?")
+            )
+
+    logger.info(
+        "poll source=%s fetched=%d upserted=%d errors=%d",
+        source.source_id,
         len(raw_postings),
         upserted,
         errors,

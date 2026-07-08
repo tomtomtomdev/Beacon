@@ -4,7 +4,11 @@ from datetime import UTC, datetime
 
 import pytest
 
-from beacon.application.ingest import ingest_all, ingest_source
+from beacon.application.ingest import (
+    ingest_all,
+    ingest_companyless_source,
+    ingest_source,
+)
 from beacon.application.ports import JobDetail, JobFilters, JobPage, RawPosting
 from beacon.domain.classification import Category, Classification, Level
 from beacon.domain.company import Company
@@ -297,3 +301,135 @@ async def test_ingest_all_continues_when_one_company_fetch_fails() -> None:
 
     assert set(results) == {"Bbb"}
     assert [job.external_id for _, job, _, _ in repo.upserts] == ["9"]
+
+
+# --- company-less sources (HN / JobTech): one source, many companies parsed per posting ---
+
+
+def companyless_job(
+    external_id: str, company_name: str | None, description: str = "Build things."
+) -> NormalizedJob:
+    return NormalizedJob(
+        source_id="hn",
+        external_id=external_id,
+        title="Engineer",
+        url=f"https://news.ycombinator.com/item?id={external_id}",
+        description=description,
+        location_raw="",
+        country=None,
+        city=None,
+        posted_at=None,
+        content_hash="h" * 64,
+        company_name=company_name,
+    )
+
+
+class CompanylessSource:
+    """A JobSource whose postings each name their own company. A None slot blows up."""
+
+    source_id = "hn"
+
+    def __init__(self, jobs: list[NormalizedJob | None]) -> None:
+        self._jobs = jobs
+
+    async def fetch(self) -> list[RawPosting]:
+        return [{"i": i} for i in range(len(self._jobs))]
+
+    def normalize(self, raw: RawPosting) -> NormalizedJob:
+        job = self._jobs[raw["i"]]
+        if job is None:
+            raise ValueError("malformed posting")
+        return job
+
+
+class FakeCompanyRepo:
+    def __init__(self, existing: list[Company] | None = None) -> None:
+        self._by_name: dict[str, Company] = {c.name: c for c in existing or []}
+        self._next_id = max((c.id or 0 for c in self._by_name.values()), default=0) + 1
+        self.created: list[str] = []
+
+    def get_or_create(self, company: Company) -> Company:
+        found = self._by_name.get(company.name)
+        if found is not None:
+            return found
+        stored = replace(company, id=self._next_id)
+        self._next_id += 1
+        self._by_name[company.name] = stored
+        self.created.append(company.name)
+        return stored
+
+    def get_by_name(self, name: str) -> Company | None:
+        return self._by_name.get(name)
+
+    def upsert(self, company: Company) -> Company:
+        raise NotImplementedError("company-less ingest never re-seeds")
+
+    def list_active(self) -> list[Company]:
+        raise NotImplementedError("company-less ingest never lists")
+
+    def set_registry_match(
+        self, company_id: int, flags: int, confidence: float | None, evidence: str | None
+    ) -> None:
+        raise NotImplementedError("company-less ingest never matches registries")
+
+
+ANTHROPIC = Company(
+    name="Anthropic",
+    ats_type="greenhouse",
+    ats_slug="anthropic",
+    country_hq="US",
+    priority=1,
+    id=1,
+    registry_flags=int(Registry.UK),
+)
+
+
+async def test_companyless_creates_shadow_company_for_a_new_name() -> None:
+    jobs = FakeJobRepo()
+    companies = FakeCompanyRepo()
+    source = CompanylessSource([companyless_job("1", "BrandNewCo")])
+
+    result = await ingest_companyless_source(source, jobs, companies, CountingClassifier(), now=NOW)
+
+    assert (result.fetched, result.upserted, result.errors) == (1, 1, 0)
+    assert companies.created == ["BrandNewCo"]
+    shadow = companies.get_by_name("BrandNewCo")
+    assert shadow is not None and shadow.ats_type == "none"
+    assert jobs.upserts[0][0] == shadow.id  # posting attached to the shadow company's id
+
+
+async def test_companyless_posting_attaches_to_existing_company_untouched() -> None:
+    # A known name (already a seed) is reused, not shadowed — so the posting inherits its
+    # registry flags: silent text at a UK-flagged company resolves to registry_inferred.
+    jobs = FakeJobRepo()
+    companies = FakeCompanyRepo(existing=[ANTHROPIC])
+    source = CompanylessSource([companyless_job("1", "Anthropic")])
+
+    await ingest_companyless_source(source, jobs, companies, CountingClassifier(), now=NOW)
+
+    assert companies.created == []
+    assert jobs.upserts[0][0] == 1
+    assert jobs.sponsorships[0] == SponsorSignal(SponsorTier.REGISTRY_INFERRED, None)
+
+
+async def test_companyless_one_bad_posting_never_blocks_the_poll() -> None:
+    jobs = FakeJobRepo()
+    companies = FakeCompanyRepo()
+    source = CompanylessSource([companyless_job("1", "A"), None, companyless_job("3", "C")])
+
+    result = await ingest_companyless_source(source, jobs, companies, CountingClassifier(), now=NOW)
+
+    assert (result.fetched, result.upserted, result.errors) == (3, 2, 1)
+    assert [job.external_id for _, job, _, _ in jobs.upserts] == ["1", "3"]
+
+
+async def test_companyless_posting_without_company_name_is_an_error() -> None:
+    jobs = FakeJobRepo()
+    companies = FakeCompanyRepo()
+    source = CompanylessSource([companyless_job("1", None)])
+
+    result = await ingest_companyless_source(source, jobs, companies, CountingClassifier(), now=NOW)
+
+    assert (result.fetched, result.upserted, result.errors) == (1, 0, 1)
+    assert jobs.upserts == []
+    assert companies.created == []
