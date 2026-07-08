@@ -260,7 +260,7 @@ Notes: official HN Firebase API (github.com/HackerNews/API) — one request per 
 Tasks: `HNAdapter` (Firebase API: whoishiring user → latest thread → kids, bounded-concurrency item fetches), `JobTechAdapter`; both register as company-less sources (jobs may create shadow `companies` rows with `ats_type=none`).
 
 Acceptance:
-- [ ] Current month's HN thread ingests; obvious junk rate acceptably low on spot-check
+- [x] Current month's HN thread ingests; obvious junk rate acceptably low on spot-check
 
 ---
 
