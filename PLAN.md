@@ -278,7 +278,7 @@ Tests first:
 Tasks: CRUD `/searches`; `match_saved_searches` in pipeline; `TelegramNotifier` (Bot API `sendMessage`, bot token + chat_id from Settings as `SecretStr`; plain text, 4096-char split); SavedSearches UI (create from current FilterBar state — "save this search" button). `CourierNotifier` explicitly deferred — the port makes it a drop-in later.
 
 Acceptance:
-- [ ] Create search "senior iOS, SE+NL+IE, tier≥registry_inferred" in UI → next ingest of a matching fixture job produces exactly one Telegram message
+- [x] Create search "senior iOS, SE+NL+IE, tier≥registry_inferred" in UI → next ingest of a matching fixture job produces exactly one Telegram message — **verified end-to-end locally 2026-07-08** via `scripts/spot_check_digest.py`: the acceptance search + 2 matching iOS/SE+NL/registry_inferred jobs (US/backend control excluded) produce ONE grouped digest message, and a re-run notifies nothing (seen-matches dedup). Telegram `sendMessage` payload shape (chat_id, plain text, no parse_mode, one POST/message, 4096-split) proven by `test_notify.py` MockTransport; `/searches` CRUD + UI save-from-filters proven by API/frontend tests. **Live phone send pending a bot token** — set `BEACON_TELEGRAM_BOT_TOKEN`/`BEACON_TELEGRAM_CHAT_ID` and re-run the spot-check to fire a real message.
 
 ---
 
