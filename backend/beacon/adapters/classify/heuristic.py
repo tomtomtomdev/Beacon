@@ -1,0 +1,53 @@
+"""HeuristicClassifier — keyword/word-boundary category matching + title/years level.
+
+Implements the Classifier port. Pure and offline: the sibling LLMClassifier (slice 9) will
+share the port and take over only the ambiguous residue this leaves empty.
+"""
+
+import re
+
+from beacon.adapters.classify.keywords import (
+    CATEGORY_KEYWORDS,
+    LEVEL_KEYWORDS,
+    LEVEL_SENIORITY,
+    YEARS_SENIOR_THRESHOLD,
+)
+from beacon.domain.classification import Category, Classification, Level
+from beacon.domain.job import NormalizedJob
+
+# "5+ years", "5 years", "5+ yrs" — captures the number so the largest requirement wins.
+_YEARS = re.compile(r"(\d+)\s*\+?\s*(?:years|yrs|year)\b", re.IGNORECASE)
+
+
+def _compile(keywords: tuple[str, ...]) -> re.Pattern[str]:
+    """One word-boundary alternation per keyword set: \\b(?:kw1|kw2|...)\\b, longest first
+    so "jetpack compose" is preferred over "jetpack" when both could match."""
+    ordered = sorted(keywords, key=len, reverse=True)
+    return re.compile(r"\b(?:" + "|".join(re.escape(kw) for kw in ordered) + r")\b")
+
+
+_CATEGORY_PATTERNS: dict[Category, re.Pattern[str]] = {
+    category: _compile(keywords) for category, keywords in CATEGORY_KEYWORDS.items()
+}
+_LEVEL_PATTERNS: dict[Level, re.Pattern[str]] = {
+    level: _compile(keywords) for level, keywords in LEVEL_KEYWORDS.items()
+}
+
+
+class HeuristicClassifier:
+    def classify(self, job: NormalizedJob) -> Classification:
+        haystack = f"{job.title}\n{job.description}".casefold()
+        categories = frozenset(
+            category for category, pattern in _CATEGORY_PATTERNS.items() if pattern.search(haystack)
+        )
+        return Classification(categories=categories, level=self._level(job, haystack))
+
+    def _level(self, job: NormalizedJob, haystack: str) -> Level:
+        title = job.title.casefold()
+        matched = [level for level, pattern in _LEVEL_PATTERNS.items() if pattern.search(title)]
+        if matched:
+            return max(matched, key=lambda level: LEVEL_SENIORITY[level])
+        years = [int(match.group(1)) for match in _YEARS.finditer(haystack)]
+        if years and max(years) >= YEARS_SENIOR_THRESHOLD:
+            return Level.SENIOR
+        return Level.UNSPECIFIED

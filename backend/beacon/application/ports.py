@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Protocol
 
+from beacon.domain.classification import Classification
 from beacon.domain.company import Company
 from beacon.domain.job import NormalizedJob
 from beacon.domain.registry import Registry, RegistryCompany
@@ -28,6 +29,13 @@ class RegistryIngester(Protocol):
     registry: Registry
 
     def fetch(self) -> list[RegistryCompany]: ...
+
+
+class Classifier(Protocol):
+    """Produces a job's category/level. Heuristic today; the LLM classifier (slice 9)
+    shares this port and only upgrades the ambiguous residue."""
+
+    def classify(self, job: NormalizedJob) -> Classification: ...
 
 
 @dataclass(frozen=True, slots=True)
