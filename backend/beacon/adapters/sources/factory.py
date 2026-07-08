@@ -8,6 +8,8 @@ from collections.abc import Callable
 
 from beacon.adapters.sources.ashby import AshbyAdapter
 from beacon.adapters.sources.greenhouse import GreenhouseAdapter
+from beacon.adapters.sources.hn import HNAdapter
+from beacon.adapters.sources.jobtech import JobTechAdapter
 from beacon.adapters.sources.lever import LeverAdapter
 from beacon.application.ingest import SourceFactory
 from beacon.application.ports import Fetcher, JobSource
@@ -30,3 +32,9 @@ def make_source_factory(fetcher: Fetcher) -> SourceFactory:
         return build(company.ats_slug, fetcher) if build is not None else None
 
     return source_for
+
+
+def make_companyless_sources(fetcher: Fetcher) -> list[JobSource]:
+    """Sources not tied to a seed company; each yields jobs across many employers parsed
+    from the postings (see ingest_companyless_source). Not part of the per-company factory."""
+    return [HNAdapter(fetcher), JobTechAdapter(fetcher)]

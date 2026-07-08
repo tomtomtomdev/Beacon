@@ -2,7 +2,11 @@ import httpx
 import pytest
 
 from beacon.adapters.http.polite import PoliteClient
-from beacon.adapters.sources.factory import SUPPORTED_ATS, make_source_factory
+from beacon.adapters.sources.factory import (
+    SUPPORTED_ATS,
+    make_companyless_sources,
+    make_source_factory,
+)
 from beacon.domain.company import Company
 
 
@@ -30,3 +34,11 @@ def test_factory_returns_none_for_ats_without_adapter() -> None:
     source_for = make_source_factory(PoliteClient(httpx.AsyncClient()))
 
     assert source_for(make_company("smartrecruiters")) is None
+
+
+def test_companyless_sources_are_hn_and_jobtech() -> None:
+    sources = make_companyless_sources(PoliteClient(httpx.AsyncClient()))
+
+    # Company-less sources aren't keyed by a seed company; the CLI ingests them separately.
+    assert {source.source_id for source in sources} == {"hn", "jobtech"}
+    assert all(callable(s.fetch) and callable(s.normalize) for s in sources)
