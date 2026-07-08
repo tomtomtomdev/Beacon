@@ -59,6 +59,12 @@
   background: var(--tier-no-dot);
 }
 
+.toolbar {
+  display: flex;
+  align-items: center;
+  padding: 4px 0 10px;
+}
+
 .stateText {
   font-size: 13.5px;
   color: var(--text-body-muted);

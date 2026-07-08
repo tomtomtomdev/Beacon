@@ -21,6 +21,7 @@ const payload: JobsPageResponse = {
       level: 'senior',
       posted_at: '2026-07-01T00:00:00+00:00',
       sponsor_tier: 'unknown',
+      user_status: 'new',
     },
     {
       id: 2,
@@ -34,6 +35,7 @@ const payload: JobsPageResponse = {
       level: null,
       posted_at: null,
       sponsor_tier: 'unknown',
+      user_status: 'starred',
     },
   ],
 }
@@ -212,7 +214,75 @@ describe('JobsPage', () => {
     expect(firstUrl).toContain('sponsor_tier=registry_inferred')
   })
 
-  it('shows the empty state when nothing matches', async () => {
+  it('defaults to the New view — the morning scan', async () => {
+    renderPage()
+    await screen.findByText('Swift Engineer')
+
+    const firstUrl = String(fetchMock.mock.calls[0][0])
+    expect(firstUrl).toContain('status=new')
+    expect(screen.getByRole('button', { name: 'New' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('switching to All refetches without a status param (all but hidden)', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByText('Swift Engineer')
+
+    await user.click(screen.getByRole('button', { name: 'All' }))
+
+    await waitFor(() => {
+      const listCalls = fetchMock.mock.calls
+        .map((call) => String(call[0]))
+        .filter((u) => u.startsWith('/jobs?') || u === '/jobs')
+      expect(listCalls.some((u) => !u.includes('status'))).toBe(true)
+    })
+  })
+
+  it('switching to Starred refetches with status=starred', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByText('Swift Engineer')
+
+    await user.click(screen.getByRole('button', { name: 'Starred' }))
+
+    await waitFor(() => {
+      const urls = fetchMock.mock.calls.map((call) => String(call[0]))
+      expect(urls.some((u) => u.includes('status=starred'))).toBe(true)
+    })
+  })
+
+  it('starring a row PATCHes the job status to starred', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByText('Swift Engineer')
+
+    await user.click(screen.getByRole('button', { name: /star Swift Engineer/i }))
+
+    await waitFor(() => {
+      const patch = fetchMock.mock.calls.find(
+        (call) => String(call[0]) === '/jobs/1/status' && call[1]?.method === 'PATCH',
+      )
+      expect(patch).toBeDefined()
+      expect(JSON.parse(String(patch?.[1]?.body))).toEqual({ status: 'starred' })
+    })
+  })
+
+  it('hiding a row PATCHes the job status to hidden', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByText('Swift Engineer')
+
+    await user.click(screen.getByRole('button', { name: /hide Swift Engineer/i }))
+
+    await waitFor(() => {
+      const patch = fetchMock.mock.calls.find(
+        (call) => String(call[0]) === '/jobs/1/status' && call[1]?.method === 'PATCH',
+      )
+      expect(JSON.parse(String(patch?.[1]?.body))).toEqual({ status: 'hidden' })
+    })
+  })
+
+  it('shows a per-view empty state when nothing matches (New = all caught up)', async () => {
     fetchMock.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ total: 0, jobs: [] }),
@@ -220,6 +290,6 @@ describe('JobsPage', () => {
 
     renderPage()
 
-    expect(await screen.findByText(/no postings/i)).toBeInTheDocument()
+    expect(await screen.findByText(/you're all caught up/i)).toBeInTheDocument()
   })
 })

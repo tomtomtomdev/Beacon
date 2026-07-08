@@ -1,5 +1,5 @@
-import { ExternalLink } from 'lucide-react'
-import type { Job, SponsorTier } from '../api/types'
+import { ExternalLink, Eye, EyeOff, Star } from 'lucide-react'
+import type { Job, SponsorTier, UserStatus } from '../api/types'
 import styles from './JobTable.module.css'
 import { postedAgo } from './postedAgo'
 import { categoryLabel } from './taxonomy'
@@ -11,7 +11,12 @@ const TIER_LABEL: Record<SponsorTier, string> = {
   explicit_no: 'No sponsor',
 }
 
-export function JobTable({ jobs }: { jobs: Job[] }) {
+interface JobTableProps {
+  jobs: Job[]
+  onSetStatus: (id: number, status: UserStatus) => void
+}
+
+export function JobTable({ jobs, onSetStatus }: JobTableProps) {
   return (
     <div className={styles.card} data-testid="job-table">
       <div className={styles.headerRow}>
@@ -22,10 +27,19 @@ export function JobTable({ jobs }: { jobs: Job[] }) {
         <span className={styles.right}>Sponsor · Posted</span>
         <span />
       </div>
-      {jobs.map((job) => (
-        <div key={job.id} className={styles.row}>
+      {jobs.map((job) => {
+        const starred = job.user_status === 'starred'
+        const hidden = job.user_status === 'hidden'
+        return (
+        <div key={job.id} className={hidden ? `${styles.row} ${styles.rowMuted}` : styles.row}>
           <div className={styles.roleCell}>
-            <div className={styles.title}>{job.title}</div>
+            <div className={styles.title}>
+              <span
+                className={job.user_status === 'new' ? styles.newDot : styles.newDotIdle}
+                aria-hidden
+              />
+              {job.title}
+            </div>
             <div className={styles.company}>{job.company}</div>
           </div>
           <div className={styles.locationCell}>
@@ -52,6 +66,23 @@ export function JobTable({ jobs }: { jobs: Job[] }) {
             <span className={styles.posted}>{postedAgo(job.posted_at)}</span>
           </div>
           <div className={styles.actions}>
+            <button
+              type="button"
+              className={starred ? styles.iconButtonActive : styles.iconButton}
+              aria-label={`${starred ? 'Unstar' : 'Star'} ${job.title}`}
+              aria-pressed={starred}
+              onClick={() => onSetStatus(job.id, starred ? 'seen' : 'starred')}
+            >
+              <Star size={16} fill={starred ? 'currentColor' : 'none'} aria-hidden />
+            </button>
+            <button
+              type="button"
+              className={styles.iconButton}
+              aria-label={`${hidden ? 'Restore' : 'Hide'} ${job.title}`}
+              onClick={() => onSetStatus(job.id, hidden ? 'seen' : 'hidden')}
+            >
+              {hidden ? <Eye size={16} aria-hidden /> : <EyeOff size={16} aria-hidden />}
+            </button>
             <a
               className={styles.iconButton}
               href={job.url}
@@ -63,7 +94,8 @@ export function JobTable({ jobs }: { jobs: Job[] }) {
             </a>
           </div>
         </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

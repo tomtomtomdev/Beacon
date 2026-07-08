@@ -1,10 +1,27 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
-import { fetchJobs, type SortBy } from '../api/jobs'
-import type { SponsorTier } from '../api/types'
+import { fetchJobs, patchJobStatus, type SortBy, type StatusView } from '../api/jobs'
+import type { SponsorTier, UserStatus } from '../api/types'
 import { FilterBar } from './FilterBar'
 import { JobTable } from './JobTable'
 import styles from './JobsPage.module.css'
+import { StatusTabs } from './StatusTabs'
+
+const STATUS_VIEWS: readonly StatusView[] = ['new', 'starred', 'all', 'hidden']
+
+// Per-view empty states (DESIGN.md §2).
+const EMPTY_TEXT: Record<StatusView, { title: string; subtitle: string }> = {
+  new: {
+    title: "You're all caught up",
+    subtitle: 'No new postings under these filters. Switch to All to browse everything.',
+  },
+  starred: { title: 'No starred postings yet', subtitle: 'Star a job to keep it here.' },
+  all: {
+    title: 'No postings match these filters',
+    subtitle: 'Clear the keyword or country filters to browse more.',
+  },
+  hidden: { title: 'Nothing hidden', subtitle: 'Jobs you hide land here, recoverable anytime.' },
+}
 
 export function JobsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -14,6 +31,12 @@ export function JobsPage() {
   const levels = searchParams.getAll('level')
   const tiers = searchParams.getAll('sponsor_tier') as SponsorTier[]
   const sort: SortBy = searchParams.get('sort') === 'date' ? 'date' : 'tier'
+  // Default view is New — the morning scan — so the daily list shows what's new, not the backlog.
+  const statusParam = searchParams.get('status')
+  const view: StatusView =
+    statusParam && STATUS_VIEWS.includes(statusParam as StatusView)
+      ? (statusParam as StatusView)
+      : 'new'
 
   const setQ = (value: string) => {
     setSearchParams(
@@ -52,9 +75,28 @@ export function JobsPage() {
     )
   }
 
+  const setView = (value: StatusView) => {
+    setSearchParams(
+      (params) => {
+        // 'new' is the default landing view — keep it out of the URL for clean shared links.
+        if (value === 'new') params.delete('status')
+        else params.set('status', value)
+        return params
+      },
+      { replace: true },
+    )
+  }
+
+  const queryClient = useQueryClient()
   const { data, isPending, isError } = useQuery({
-    queryKey: ['jobs', q, countries, categories, levels, tiers, sort],
-    queryFn: () => fetchJobs({ q, countries, categories, levels, tiers, sort }),
+    queryKey: ['jobs', q, countries, categories, levels, tiers, sort, view],
+    queryFn: () => fetchJobs({ q, countries, categories, levels, tiers, sort, status: view }),
+  })
+
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: UserStatus }) => patchJobStatus(id, status),
+    // The row leaves the current view once its status changes — refetch to reflect it.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['jobs'] }),
   })
 
   return (
@@ -82,6 +124,10 @@ export function JobsPage() {
         </div>
       </header>
 
+      <div className={styles.toolbar}>
+        <StatusTabs view={view} onViewChange={setView} />
+      </div>
+
       <FilterBar
         q={q}
         countries={countries}
@@ -100,11 +146,16 @@ export function JobsPage() {
       {isError && <p className={styles.stateText}>Could not reach the Beacon API.</p>}
       {!isError && !isPending && data && data.jobs.length === 0 && (
         <div className={styles.empty}>
-          <p className={styles.emptyTitle}>No postings match these filters</p>
-          <p className={styles.stateText}>Clear the keyword or country filters to browse more.</p>
+          <p className={styles.emptyTitle}>{EMPTY_TEXT[view].title}</p>
+          <p className={styles.stateText}>{EMPTY_TEXT[view].subtitle}</p>
         </div>
       )}
-      {data && data.jobs.length > 0 && <JobTable jobs={data.jobs} />}
+      {data && data.jobs.length > 0 && (
+        <JobTable
+          jobs={data.jobs}
+          onSetStatus={(id, status) => statusMutation.mutate({ id, status })}
+        />
+      )}
     </main>
   )
 }
