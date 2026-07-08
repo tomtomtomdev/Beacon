@@ -10,6 +10,8 @@ export function JobsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const q = searchParams.get('q') ?? ''
   const countries = searchParams.getAll('country')
+  const categories = searchParams.getAll('category')
+  const levels = searchParams.getAll('level')
   const tiers = searchParams.getAll('sponsor_tier') as SponsorTier[]
   const sort: SortBy = searchParams.get('sort') === 'date' ? 'date' : 'tier'
 
@@ -24,28 +26,15 @@ export function JobsPage() {
     )
   }
 
-  const toggleCountry = (code: string) => {
+  // One toggle for every repeated multi-select param (country/category/level/sponsor_tier).
+  const toggleParam = (param: string, value: string) => {
     setSearchParams(
       (params) => {
-        const selected = new Set(params.getAll('country'))
-        if (selected.has(code)) selected.delete(code)
-        else selected.add(code)
-        params.delete('country')
-        for (const country of selected) params.append('country', country)
-        return params
-      },
-      { replace: true },
-    )
-  }
-
-  const toggleTier = (tier: SponsorTier) => {
-    setSearchParams(
-      (params) => {
-        const selected = new Set(params.getAll('sponsor_tier'))
-        if (selected.has(tier)) selected.delete(tier)
-        else selected.add(tier)
-        params.delete('sponsor_tier')
-        for (const value of selected) params.append('sponsor_tier', value)
+        const selected = new Set(params.getAll(param))
+        if (selected.has(value)) selected.delete(value)
+        else selected.add(value)
+        params.delete(param)
+        for (const item of selected) params.append(param, item)
         return params
       },
       { replace: true },
@@ -64,8 +53,8 @@ export function JobsPage() {
   }
 
   const { data, isPending, isError } = useQuery({
-    queryKey: ['jobs', q, countries, tiers, sort],
-    queryFn: () => fetchJobs({ q, countries, tiers, sort }),
+    queryKey: ['jobs', q, countries, categories, levels, tiers, sort],
+    queryFn: () => fetchJobs({ q, countries, categories, levels, tiers, sort }),
   })
 
   return (
@@ -96,11 +85,15 @@ export function JobsPage() {
       <FilterBar
         q={q}
         countries={countries}
+        categories={categories}
+        levels={levels}
         tiers={tiers}
         sort={sort}
         onQChange={setQ}
-        onToggleCountry={toggleCountry}
-        onToggleTier={toggleTier}
+        onToggleCountry={(code) => toggleParam('country', code)}
+        onToggleCategory={(value) => toggleParam('category', value)}
+        onToggleLevel={(value) => toggleParam('level', value)}
+        onToggleTier={(tier) => toggleParam('sponsor_tier', tier)}
         onSortChange={setSort}
       />
 

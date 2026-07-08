@@ -3,6 +3,7 @@ import { useState } from 'react'
 import type { SortBy } from '../api/jobs'
 import type { SponsorTier } from '../api/types'
 import styles from './FilterBar.module.css'
+import { CATEGORY_OPTIONS, LEVEL_OPTIONS } from './taxonomy'
 
 // DESIGN.md §1 country dropdown list; tier P/☆ badges arrive with the countries table (slice 10).
 const COUNTRIES: ReadonlyArray<{ code: string; name: string }> = [
@@ -32,10 +33,14 @@ type OpenMenu = 'country' | 'tier' | null
 interface FilterBarProps {
   q: string
   countries: string[]
+  categories: string[]
+  levels: string[]
   tiers: SponsorTier[]
   sort: SortBy
   onQChange: (q: string) => void
   onToggleCountry: (code: string) => void
+  onToggleCategory: (value: string) => void
+  onToggleLevel: (value: string) => void
   onToggleTier: (tier: SponsorTier) => void
   onSortChange: (sort: SortBy) => void
 }
@@ -43,10 +48,14 @@ interface FilterBarProps {
 export function FilterBar({
   q,
   countries,
+  categories,
+  levels,
   tiers,
   sort,
   onQChange,
   onToggleCountry,
+  onToggleCategory,
+  onToggleLevel,
   onToggleTier,
   onSortChange,
 }: FilterBarProps) {
@@ -58,8 +67,9 @@ export function FilterBar({
   const tierLabel = tiers.length > 0 ? `Tier · ${tiers.length}` : 'Sponsor tier'
 
   return (
-    <div className={styles.bar}>
-      <div className={styles.searchBox}>
+    <div className={styles.filters}>
+      <div className={styles.bar}>
+        <div className={styles.searchBox}>
         <Search size={16} className={styles.searchIcon} aria-hidden />
         <input
           className={styles.searchInput}
@@ -147,6 +157,35 @@ export function FilterBar({
             </div>
           </>
         )}
+        </div>
+      </div>
+
+      <div className={styles.chipRow}>
+        <span className={styles.chipLabel}>Category</span>
+        {CATEGORY_OPTIONS.map(({ value, label }) => (
+          <button
+            key={value}
+            type="button"
+            className={categories.includes(value) ? styles.chipToggleActive : styles.chipToggle}
+            aria-pressed={categories.includes(value)}
+            onClick={() => onToggleCategory(value)}
+          >
+            {label}
+          </button>
+        ))}
+        <span className={styles.chipDivider} aria-hidden />
+        <span className={styles.chipLabel}>Level</span>
+        {LEVEL_OPTIONS.map(({ value, label }) => (
+          <button
+            key={value}
+            type="button"
+            className={levels.includes(value) ? styles.chipToggleActive : styles.chipToggle}
+            aria-pressed={levels.includes(value)}
+            onClick={() => onToggleLevel(value)}
+          >
+            {label}
+          </button>
+        ))}
       </div>
     </div>
   )

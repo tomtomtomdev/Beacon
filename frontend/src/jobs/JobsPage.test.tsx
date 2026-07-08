@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -17,6 +17,8 @@ const payload: JobsPageResponse = {
       location: 'Stockholm, Sweden',
       country: 'SE',
       city: 'Stockholm',
+      categories: ['ios', 'ai-ml'],
+      level: 'senior',
       posted_at: '2026-07-01T00:00:00+00:00',
       sponsor_tier: 'unknown',
     },
@@ -28,6 +30,8 @@ const payload: JobsPageResponse = {
       location: 'Dublin, Ireland (Hybrid)',
       country: 'IE',
       city: 'Dublin',
+      categories: ['backend'],
+      level: null,
       posted_at: null,
       sponsor_tier: 'unknown',
     },
@@ -151,6 +155,52 @@ describe('JobsPage', () => {
       const urls = fetchMock.mock.calls.map((call) => String(call[0]))
       expect(urls.some((u) => u.includes('sponsor_tier=registry_inferred'))).toBe(true)
     })
+  })
+
+  it('selecting a category pill refetches with the category param', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByText('Swift Engineer')
+
+    await user.click(screen.getByRole('button', { name: 'iOS' }))
+
+    await waitFor(() => {
+      const urls = fetchMock.mock.calls.map((call) => String(call[0]))
+      expect(urls.some((u) => u.includes('category=ios'))).toBe(true)
+    })
+  })
+
+  it('selecting a level pill refetches with the level param', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByText('Swift Engineer')
+
+    await user.click(screen.getByRole('button', { name: 'Senior' }))
+
+    await waitFor(() => {
+      const urls = fetchMock.mock.calls.map((call) => String(call[0]))
+      expect(urls.some((u) => u.includes('level=senior'))).toBe(true)
+    })
+  })
+
+  it('reads initial category and level filters from the URL', async () => {
+    renderPage('/?category=ios&level=senior')
+
+    await screen.findByText('Swift Engineer')
+    const firstUrl = String(fetchMock.mock.calls[0][0])
+    expect(firstUrl).toContain('category=ios')
+    expect(firstUrl).toContain('level=senior')
+  })
+
+  it('renders category chips and the level per row', async () => {
+    renderPage()
+
+    await screen.findByText('Swift Engineer')
+    // Scope to the table — category labels also appear as filter pills in the bar.
+    const table = within(screen.getByTestId('job-table'))
+    expect(table.getByText('iOS')).toBeInTheDocument() // multi-label: both chips render
+    expect(table.getByText('AI/ML')).toBeInTheDocument()
+    expect(table.getByText('SENIOR')).toBeInTheDocument() // level uppercased
   })
 
   it('reads initial sort and tier filter from the URL', async () => {

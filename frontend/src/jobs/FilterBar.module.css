@@ -1,12 +1,56 @@
-.bar {
+.filters {
   position: sticky;
   top: 0;
   z-index: 5;
+  background: linear-gradient(var(--bg-page) 88%, transparent);
+}
+
+.bar {
   display: flex;
   gap: 10px;
   align-items: center;
-  padding: 12px 0;
-  background: linear-gradient(var(--bg-page) 80%, transparent);
+  padding: 12px 0 8px;
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  padding: 0 0 12px;
+}
+
+.chipLabel {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-label);
+}
+
+.chipToggle,
+.chipToggleActive {
+  padding: 5px 11px;
+  border-radius: var(--radius-chip);
+  border: 1px solid var(--border-input);
+  background: var(--surface);
+  color: var(--text-body-muted);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.chipToggleActive {
+  background: var(--accent-soft-bg);
+  border-color: var(--accent-border);
+  color: var(--accent-soft-fg);
+  font-weight: 600;
+}
+
+.chipDivider {
+  width: 1px;
+  height: 18px;
+  margin: 0 4px;
+  background: var(--border-primary);
 }
 
 .searchBox {

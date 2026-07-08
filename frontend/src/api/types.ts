@@ -10,6 +10,8 @@ export interface Job {
   location: string
   country: string | null
   city: string | null
+  categories: string[]
+  level: string | null
   posted_at: string | null
   sponsor_tier: SponsorTier
 }
