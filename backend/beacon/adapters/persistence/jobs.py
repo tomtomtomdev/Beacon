@@ -1,8 +1,16 @@
 import sqlite3
+from collections.abc import Mapping
 from datetime import UTC, datetime
 
-from beacon.application.ports import JobFilters, JobListing, JobPage
+from beacon.application.ports import (
+    DuplicateSource,
+    JobDetail,
+    JobFilters,
+    JobListing,
+    JobPage,
+)
 from beacon.domain.classification import Classification, format_categories
+from beacon.domain.dedup import DedupRow
 from beacon.domain.job import NormalizedJob
 from beacon.domain.sponsorship import SORT_RANK, SponsorTier
 
@@ -23,7 +31,8 @@ class SqliteJobRepo:
         self._conn = conn
 
     def search(self, filters: JobFilters) -> JobPage:
-        clauses: list[str] = []
+        # Duplicates hang off their canonical via canonical_id; the list shows canonicals only.
+        clauses: list[str] = ["jobs.canonical_id IS NULL"]
         params: list[str] = []
         if filters.q:
             clauses.append("(jobs.title LIKE ? OR jobs.description LIKE ?)")
@@ -107,6 +116,78 @@ class SqliteJobRepo:
             (format_categories(classification.categories), classification.level.value, job_id),
         )
         self._conn.commit()
+
+    def list_dedup_rows(self) -> list[DedupRow]:
+        rows = self._conn.execute(
+            "SELECT id, company_id, title, country, description FROM jobs"
+        ).fetchall()
+        return [
+            DedupRow(
+                id=row["id"],
+                company_id=row["company_id"],
+                title=row["title"],
+                country=row["country"],
+                description=row["description"],
+            )
+            for row in rows
+        ]
+
+    def set_canonical_links(self, links: Mapping[int, int | None]) -> None:
+        self._conn.executemany(
+            "UPDATE jobs SET canonical_id = ? WHERE id = ?",
+            [(canonical_id, job_id) for job_id, canonical_id in links.items()],
+        )
+        self._conn.commit()
+
+    def get_job_detail(self, job_id: int) -> JobDetail | None:
+        row = self._conn.execute(
+            "SELECT id, canonical_id FROM jobs WHERE id = ?", (job_id,)
+        ).fetchone()
+        if row is None:
+            return None
+        canonical_id = row["canonical_id"] if row["canonical_id"] is not None else row["id"]
+
+        job = self._conn.execute(
+            """
+            SELECT jobs.id, jobs.title, companies.name AS company, jobs.url, jobs.description,
+                   jobs.location_raw, jobs.country, jobs.city, jobs.categories, jobs.level,
+                   jobs.posted_at, jobs.sponsor_tier
+            FROM jobs JOIN companies ON companies.id = jobs.company_id
+            WHERE jobs.id = ?
+            """,
+            (canonical_id,),
+        ).fetchone()
+
+        sources = self._conn.execute(
+            """
+            SELECT jobs.source_id AS source, companies.name AS company, jobs.url
+            FROM jobs JOIN companies ON companies.id = jobs.company_id
+            WHERE jobs.id = ? OR jobs.canonical_id = ?
+            ORDER BY jobs.id
+            """,
+            (canonical_id, canonical_id),
+        ).fetchall()
+
+        categories = job["categories"]
+        posted_at = job["posted_at"]
+        return JobDetail(
+            id=job["id"],
+            title=job["title"],
+            company=job["company"],
+            url=job["url"],
+            description=job["description"],
+            location_raw=job["location_raw"],
+            country=job["country"],
+            city=job["city"],
+            categories=tuple(categories.split(",")) if categories else (),
+            level=job["level"],
+            posted_at=datetime.fromisoformat(posted_at) if posted_at else None,
+            sponsor_tier=job["sponsor_tier"],
+            duplicate_sources=tuple(
+                DuplicateSource(source=s["source"], company=s["company"], url=s["url"])
+                for s in sources
+            ),
+        )
 
     def upsert(
         self,

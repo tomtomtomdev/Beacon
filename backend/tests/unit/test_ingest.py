@@ -1,11 +1,13 @@
+from collections.abc import Mapping
 from datetime import UTC, datetime
 
 import pytest
 
 from beacon.application.ingest import ingest_all, ingest_source
-from beacon.application.ports import JobFilters, JobPage, RawPosting
+from beacon.application.ports import JobDetail, JobFilters, JobPage, RawPosting
 from beacon.domain.classification import Category, Classification, Level
 from beacon.domain.company import Company
+from beacon.domain.dedup import DedupRow
 from beacon.domain.job import NormalizedJob
 
 NOW = datetime(2026, 7, 4, 12, 0, tzinfo=UTC)
@@ -78,6 +80,15 @@ class FakeJobRepo:
 
     def set_classification(self, job_id: int, classification: Classification) -> None:
         raise NotImplementedError("ingest never backfills")
+
+    def list_dedup_rows(self) -> list[DedupRow]:
+        raise NotImplementedError("ingest never dedupes")
+
+    def set_canonical_links(self, links: Mapping[int, int | None]) -> None:
+        raise NotImplementedError("ingest never dedupes")
+
+    def get_job_detail(self, job_id: int) -> JobDetail | None:
+        raise NotImplementedError("ingest never reads detail")
 
     def search(self, filters: JobFilters) -> JobPage:
         raise NotImplementedError("ingest never searches")

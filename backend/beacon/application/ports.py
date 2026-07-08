@@ -7,6 +7,7 @@ from typing import Any, Protocol
 
 from beacon.domain.classification import Classification
 from beacon.domain.company import Company
+from beacon.domain.dedup import DedupRow
 from beacon.domain.job import NormalizedJob
 from beacon.domain.registry import Registry, RegistryCompany
 
@@ -87,6 +88,35 @@ class JobPage:
     total: int
 
 
+@dataclass(frozen=True, slots=True)
+class DuplicateSource:
+    """One underlying posting behind a canonical job — where the same role was found."""
+
+    source: str
+    company: str
+    url: str
+
+
+@dataclass(frozen=True, slots=True)
+class JobDetail:
+    """Read model for the detail view: the canonical job plus every source it was
+    found on (its own posting and any cross-source duplicates)."""
+
+    id: int
+    title: str
+    company: str
+    url: str
+    description: str
+    location_raw: str
+    country: str | None
+    city: str | None
+    categories: tuple[str, ...]
+    level: str | None
+    posted_at: datetime | None
+    sponsor_tier: str
+    duplicate_sources: tuple[DuplicateSource, ...]
+
+
 class JobRepo(Protocol):
     def upsert(
         self,
@@ -110,6 +140,20 @@ class JobRepo(Protocol):
         ...
 
     def set_classification(self, job_id: int, classification: Classification) -> None: ...
+
+    def list_dedup_rows(self) -> list[DedupRow]:
+        """Every persisted job reduced to the fields the canonicalizer compares."""
+        ...
+
+    def set_canonical_links(self, links: Mapping[int, int | None]) -> None:
+        """Apply the dedup assignment: canonical_id = the canonical row's id for a
+        duplicate, or None for a canonical row. Applied in one transaction."""
+        ...
+
+    def get_job_detail(self, job_id: int) -> JobDetail | None:
+        """The canonical job for this id (resolving through canonical_id if a
+        duplicate id is given), with every underlying source listed. None if unknown."""
+        ...
 
     def search(self, filters: JobFilters) -> JobPage: ...
 
