@@ -1,8 +1,8 @@
-"""HeuristicClassifier: keyword-driven category (multi-label) + level from title/years.
+"""HeuristicClassifier: title-driven category (multi-label) + level from title/years.
 
 Table-driven — a spot-check miss becomes a new row here, never a branch in the classifier.
-Word-boundary matching is deliberately exercised (go/ml/html traps) because that is the
-first thing to break when the keyword tables grow.
+The precision cases (desc-ignored, ai-native-not-aiml, no-ml-in-html) lock in the slice-3
+decision to read category from the title only, since body copy is boilerplate-contaminated.
 """
 
 from datetime import UTC, datetime
@@ -29,30 +29,38 @@ def _job(title: str, description: str = "") -> NormalizedJob:
     )
 
 
+# Category is read from the TITLE only (body copy is boilerplate-contaminated — see
+# heuristic.py). Every expected category must therefore be derivable from the title.
 CATEGORY_CASES = [
-    ("ios-swift", "Senior iOS Engineer", "Swift, SwiftUI and UIKit experience", {Category.IOS}),
-    ("android-kotlin", "Android Developer", "Kotlin with Jetpack Compose", {Category.ANDROID}),
-    ("flutter-dart", "Mobile Engineer", "Build with Flutter and Dart", {Category.FLUTTER}),
-    ("aiml", "ML Engineer", "PyTorch, LLM fine-tuning, RAG, CUDA kernels", {Category.AI_ML}),
-    ("backend", "Backend Engineer", "Django, FastAPI, Go and gRPC services", {Category.BACKEND}),
-    ("frontend", "Frontend Engineer", "React, Vue and modern CSS", {Category.FRONTEND}),
-    ("fullstack", "Full-Stack Engineer", "Comfortable full stack", {Category.FULLSTACK}),
+    ("ios-title", "Senior iOS Engineer", "Ship features to users", {Category.IOS}),
+    ("android-title", "Android Developer", "Join the mobile team", {Category.ANDROID}),
+    ("android-aosp", "AOSP Engineer", "Platform work", {Category.ANDROID}),  # real Adyen title
+    ("flutter-title", "Flutter Engineer", "Cross-platform apps", {Category.FLUTTER}),
+    ("aiml-ml-engineer", "ML Engineer", "Train and serve models", {Category.AI_ML}),
+    ("aiml-ai-engineer", "AI Engineer", "Build agents", {Category.AI_ML}),
+    ("backend-title", "Backend Engineer", "Own our services", {Category.BACKEND}),
+    # Spot-check misses (real Adyen/Agoda titles): space-form "Back End", Java, SRE, infra.
+    ("backend-space", "Back End Software Engineer", "", {Category.BACKEND}),
+    ("backend-java", "Software Engineer (Java)", "", {Category.BACKEND}),
+    ("backend-sre", "Senior Site Reliability Engineer", "", {Category.BACKEND}),
+    ("backend-infra", "Staff Infrastructure Engineer", "", {Category.BACKEND}),
+    ("frontend-title", "Frontend Engineer", "Build the web UI", {Category.FRONTEND}),
+    ("frontend-space", "Lead Software Engineer - Front End", "", {Category.FRONTEND}),
+    ("fullstack-title", "Full-Stack Engineer", "End to end", {Category.FULLSTACK}),
+    ("multi-ios-aiml", "iOS ML Engineer", "On-device models", {Category.IOS, Category.AI_ML}),
     (
-        "multi-ios-aiml",
-        "iOS ML Engineer",
-        "Ship Swift apps with on-device PyTorch models",
-        {Category.IOS, Category.AI_ML},
+        "multi-ios-android",
+        "iOS and Android Engineer",
+        "Both platforms",
+        {Category.IOS, Category.ANDROID},
     ),
-    (
-        "multi-front-back",
-        "Software Engineer",
-        "React on the frontend, Django on the backend",
-        {Category.FRONTEND, Category.BACKEND},
-    ),
-    # Word-boundary traps: "go" must not fire on "going/algorithms", "ml" not on "html".
-    ("no-go-trap", "Engineer", "We are going to build great algorithms", set()),
-    ("no-ml-in-html", "Frontend Engineer", "Hand-write HTML and CSS", {Category.FRONTEND}),
-    # Honest empty: nothing technical matched (LLM fallback cleans residue in slice 9).
+    # "ml" must fire on the word, never inside "html".
+    ("no-ml-in-html", "HTML Email Developer", "Hand-write HTML", set()),
+    # Precision: description tech NEVER contaminates category — the title is a sales role.
+    ("desc-ignored", "Account Executive", "We build LLMs with PyTorch and Django", set()),
+    # Bare "ai" was removed so AI-company sales titles don't read as ML roles.
+    ("ai-native-not-aiml", "Account Executive, AI Native", "Sell to AI startups", set()),
+    # Honest empty: nothing matched (LLM fallback cleans residue in slice 9).
     ("empty", "Project Manager", "Own the roadmap and stakeholders", set()),
 ]
 

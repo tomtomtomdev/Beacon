@@ -3,9 +3,12 @@
 Extending a category or fixing a spot-check miss means editing a tuple here and adding a
 parametrized row to tests/unit/test_classifier.py — never adding a branch to heuristic.py.
 
-Every keyword is matched on word boundaries (see heuristic.py), so short tokens like "go"
-and "ml" are safe to list: they fire on the word, never inside "going" or "html".
-Keep keywords to letters, digits, spaces and hyphens — other punctuation breaks \\b anchoring.
+Category keywords are matched against the job TITLE only (heuristic.py explains why), so
+they can be role words like "backend" without a body's "backend systems" prose triggering
+them. Every keyword is matched on word boundaries, so short tokens like "ml" fire on the
+word, never inside "html". Bare "ai"/"go" were removed — they misfire on "AI Native"
+sales titles and "go-to-market"; use phrases ("ai engineer") or the specific form ("golang").
+Keep keywords to letters, digits, spaces, hyphens and slashes — other punctuation breaks \\b.
 """
 
 from beacon.domain.classification import Category, Level
@@ -25,6 +28,7 @@ CATEGORY_KEYWORDS: dict[Category, tuple[str, ...]] = {
     ),
     Category.ANDROID: (
         "android",
+        "aosp",
         "kotlin",
         "jetpack",
         "jetpack compose",
@@ -36,7 +40,9 @@ CATEGORY_KEYWORDS: dict[Category, tuple[str, ...]] = {
     ),
     Category.AI_ML: (
         "ml",
-        "ai",
+        "ml engineer",
+        "ai engineer",
+        "ai/ml",
         "machine learning",
         "deep learning",
         "pytorch",
@@ -54,30 +60,39 @@ CATEGORY_KEYWORDS: dict[Category, tuple[str, ...]] = {
     Category.BACKEND: (
         "backend",
         "back-end",
+        "back end",
         "django",
         "fastapi",
         "flask",
         "rails",
         "grpc",
-        "go",
         "golang",
         "rust",
+        "java",
         "kubernetes",
         "postgres",
         "postgresql",
         "microservice",
         "microservices",
         "spring boot",
+        "infrastructure",
+        "infra",
+        "site reliability",
+        "sre",
+        "devops",
+        "systems engineer",
     ),
     Category.FRONTEND: (
         "frontend",
         "front-end",
+        "front end",
         "react",
         "vue",
         "angular",
         "svelte",
         "css",
         "tailwind",
+        "javascript",
     ),
     Category.FULLSTACK: (
         "fullstack",

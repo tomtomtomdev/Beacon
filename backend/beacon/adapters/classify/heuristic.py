@@ -36,18 +36,23 @@ _LEVEL_PATTERNS: dict[Level, re.Pattern[str]] = {
 
 class HeuristicClassifier:
     def classify(self, job: NormalizedJob) -> Classification:
-        haystack = f"{job.title}\n{job.description}".casefold()
+        # Category is read from the TITLE only. Descriptions are marketing-laden — an
+        # AI company's every posting says "LLM", a fintech's says "backend" — so matching
+        # the body cross-contaminates unrelated roles (proven in the slice-3 spot-check).
+        # The title names the role; ambiguous/empty residue is the LLM fallback's job (slice 9).
+        title = job.title.casefold()
         categories = frozenset(
-            category for category, pattern in _CATEGORY_PATTERNS.items() if pattern.search(haystack)
+            category for category, pattern in _CATEGORY_PATTERNS.items() if pattern.search(title)
         )
-        return Classification(categories=categories, level=self._level(job, haystack))
+        return Classification(categories=categories, level=self._level(job))
 
-    def _level(self, job: NormalizedJob, haystack: str) -> Level:
+    def _level(self, job: NormalizedJob) -> Level:
         title = job.title.casefold()
         matched = [level for level, pattern in _LEVEL_PATTERNS.items() if pattern.search(title)]
         if matched:
             return max(matched, key=lambda level: LEVEL_SENIORITY[level])
-        years = [int(match.group(1)) for match in _YEARS.finditer(haystack)]
+        # Years-of-experience is role-specific (not boilerplate), so it may come from the body.
+        years = [int(m.group(1)) for m in _YEARS.finditer(f"{job.title}\n{job.description}")]
         if years and max(years) >= YEARS_SENIOR_THRESHOLD:
             return Level.SENIOR
         return Level.UNSPECIFIED

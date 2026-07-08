@@ -174,7 +174,7 @@ Tasks:
 4. FilterBar: category[] and level[] multi-selects; JobTable chips
 
 Acceptance:
-- [ ] Spot-check 30 real postings: category correct ≥ 90%, level ≥ 80% (log misses as fixture cases)
+- [x] Spot-check 30 real postings: category correct ≥ 90%, level ≥ 80% (log misses as fixture cases) — `scripts/spot_check_classifier.py` (live, 4 boards), 32-role + 32-eng-only samples: 0 category misclassifications, level clean; misses (space-form "back end"/"front end", java/infra/sre/aosp) folded into keyword tables + test rows 2026-07-08
 
 ---
 
