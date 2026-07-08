@@ -73,6 +73,12 @@ class FakeJobRepo:
     def content_hash_for(self, source_id: str, external_id: str) -> str | None:
         return self._hashes.get((source_id, external_id))
 
+    def list_unclassified(self) -> list[tuple[int, NormalizedJob]]:
+        raise NotImplementedError("ingest never backfills")
+
+    def set_classification(self, job_id: int, classification: Classification) -> None:
+        raise NotImplementedError("ingest never backfills")
+
     def search(self, filters: JobFilters) -> JobPage:
         raise NotImplementedError("ingest never searches")
 

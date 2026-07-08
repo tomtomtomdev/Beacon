@@ -81,6 +81,23 @@ class SqliteJobRepo:
         ).fetchone()
         return row["content_hash"] if row is not None else None
 
+    def list_unclassified(self) -> list[tuple[int, NormalizedJob]]:
+        rows = self._conn.execute(
+            """
+            SELECT id, source_id, external_id, title, url, description, location_raw,
+                   country, city, posted_at, content_hash
+            FROM jobs WHERE categories IS NULL
+            """
+        ).fetchall()
+        return [(row["id"], _row_to_normalized(row)) for row in rows]
+
+    def set_classification(self, job_id: int, classification: Classification) -> None:
+        self._conn.execute(
+            "UPDATE jobs SET categories = ?, level = ? WHERE id = ?",
+            (format_categories(classification.categories), classification.level.value, job_id),
+        )
+        self._conn.commit()
+
     def upsert(
         self,
         company_id: int,
@@ -131,6 +148,22 @@ class SqliteJobRepo:
             ),
         )
         self._conn.commit()
+
+
+def _row_to_normalized(row: sqlite3.Row) -> NormalizedJob:
+    posted_at = row["posted_at"]
+    return NormalizedJob(
+        source_id=row["source_id"],
+        external_id=row["external_id"],
+        title=row["title"],
+        url=row["url"],
+        description=row["description"],
+        location_raw=row["location_raw"],
+        country=row["country"],
+        city=row["city"],
+        posted_at=datetime.fromisoformat(posted_at) if posted_at else None,
+        content_hash=row["content_hash"],
+    )
 
 
 def _row_to_listing(row: sqlite3.Row) -> JobListing:

@@ -93,6 +93,13 @@ class JobRepo(Protocol):
         Lets the pipeline classify only when content changed."""
         ...
 
+    def list_unclassified(self) -> list[tuple[int, NormalizedJob]]:
+        """Persisted jobs never classified (categories IS NULL), each as (job_id, job).
+        An empty-string categories value means 'classified, nothing matched' and is skipped."""
+        ...
+
+    def set_classification(self, job_id: int, classification: Classification) -> None: ...
+
     def search(self, filters: JobFilters) -> JobPage: ...
 
     def resolve_registry_tier(self, company_id: int, tier: str) -> None:
