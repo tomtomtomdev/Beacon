@@ -226,9 +226,9 @@ Tasks:
 4. UI: seen/hide/star buttons per row; "new only" toggle (default on for the morning view); starred filter; hidden rows greyed under `status=all`
 
 Acceptance:
-- [ ] Mark a job seen → it drops out of the "new only" view but stays findable
-- [ ] Re-poll leaves seen/starred intact; a company editing the JD flips it back to new
-- [ ] Hidden jobs vanish from default view, recoverable via status=all
+- [x] Mark a job seen → it drops out of the "new only" view but stays findable — live 2026-07-08: PATCH job→seen, `status=new` total 2→1, `status=all` still lists it as seen
+- [x] Re-poll leaves seen/starred intact; a company editing the JD flips it back to new — live: unchanged-hash re-upsert kept `seen`; edited-hash re-upsert reset to `new`
+- [x] Hidden jobs vanish from default view, recoverable via status=all — live: PATCH job→hidden, default view drops it, `status=all` keeps it (greyed in UI)
 
 ---
 
