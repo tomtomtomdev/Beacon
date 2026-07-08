@@ -1,4 +1,5 @@
 import sqlite3
+from dataclasses import replace
 from datetime import UTC, datetime
 
 import pytest
@@ -80,6 +81,46 @@ def test_content_hash_for_reads_back_stored_hash(db: sqlite3.Connection, company
     assert repo.content_hash_for("greenhouse", "6000558004") is None
     repo.upsert(company_id, make_job(), seen_at=FIRST_POLL)
     assert repo.content_hash_for("greenhouse", "6000558004") == "a" * 64
+
+
+def test_upsert_defaults_status_new(db: sqlite3.Connection, company_id: int) -> None:
+    repo = SqliteJobRepo(db)
+
+    repo.upsert(company_id, make_job(), seen_at=FIRST_POLL)
+
+    row = db.execute("SELECT user_status FROM jobs").fetchone()
+    assert row["user_status"] == "new"
+
+
+def test_upsert_preserves_status_on_unchanged_content(
+    db: sqlite3.Connection, company_id: int
+) -> None:
+    repo = SqliteJobRepo(db)
+
+    repo.upsert(company_id, make_job(), seen_at=FIRST_POLL)
+    db.execute("UPDATE jobs SET user_status = 'starred'")
+    db.commit()
+    repo.upsert(company_id, make_job(), seen_at=SECOND_POLL)
+
+    # Same content_hash → the user's decision survives the re-poll.
+    row = db.execute("SELECT user_status FROM jobs").fetchone()
+    assert row["user_status"] == "starred"
+
+
+def test_upsert_resets_status_new_on_changed_content(
+    db: sqlite3.Connection, company_id: int
+) -> None:
+    repo = SqliteJobRepo(db)
+
+    repo.upsert(company_id, make_job(), seen_at=FIRST_POLL)
+    db.execute("UPDATE jobs SET user_status = 'seen'")
+    db.commit()
+    changed = replace(make_job(), content_hash="b" * 64)
+    repo.upsert(company_id, changed, seen_at=SECOND_POLL)
+
+    # A materially edited posting (new hash) is genuinely new again.
+    row = db.execute("SELECT user_status FROM jobs").fetchone()
+    assert row["user_status"] == "new"
 
 
 def test_company_upsert_is_idempotent_and_returns_id(db: sqlite3.Connection) -> None:

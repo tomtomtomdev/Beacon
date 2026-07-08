@@ -218,7 +218,13 @@ class SqliteJobRepo:
                 level = COALESCE(excluded.level, jobs.level),
                 content_hash = excluded.content_hash,
                 posted_at = excluded.posted_at,
-                last_seen_at = excluded.last_seen_at
+                last_seen_at = excluded.last_seen_at,
+                -- A materially edited posting (changed hash) is new again; an
+                -- unchanged re-poll keeps the user's seen/hidden/starred decision.
+                user_status = CASE
+                    WHEN jobs.content_hash != excluded.content_hash THEN 'new'
+                    ELSE jobs.user_status
+                END
             """,
             (
                 company_id,
