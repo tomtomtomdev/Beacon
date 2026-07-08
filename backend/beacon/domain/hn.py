@@ -62,6 +62,10 @@ _ROLE_RE = re.compile(r"\b(?:" + "|".join(_ROLE_KEYWORDS) + r")\b", re.IGNORECAS
 # Signals that a field describes where the work happens even when no country is named.
 _LOCATION_SIGNALS = ("remote", "hybrid", "onsite", "on-site", "on site")
 
+# Trailing "(YC W22)" / "( https://… )" annotations on the company name — stripped so the
+# same employer isn't shadowed under several names across months.
+_TRAILING_PARENS = re.compile(r"(?:\s*\([^)]*\))+\s*$")
+
 
 @dataclass(frozen=True, slots=True)
 class HnPosting:
@@ -82,7 +86,14 @@ def parse_hn_posting(text: str) -> HnPosting | None:
         return None
 
     company, *rest = parts
-    return HnPosting(company=company, location=_first_location(rest), role=_first_role(rest))
+    return HnPosting(
+        company=_clean_company(company), location=_first_location(rest), role=_first_role(rest)
+    )
+
+
+def _clean_company(company: str) -> str:
+    stripped = _TRAILING_PARENS.sub("", company).strip()
+    return stripped or company  # a name that is *only* a parenthetical is left intact
 
 
 def _first_role(fields: list[str]) -> str | None:

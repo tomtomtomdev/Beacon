@@ -66,3 +66,23 @@ def test_role_falls_back_to_none_when_no_role_keyword() -> None:
     assert posting.role is None
     assert posting.company == "Notion"
     assert posting.location == "London, United Kingdom"
+
+
+@pytest.mark.parametrize(
+    ("header", "company"),
+    [
+        # Trailing YC-batch / URL annotations are stripped so one employer isn't split
+        # into several shadow companies across months.
+        ("PermitFlow (YC W22) | New York, NY | Staff Engineer", "PermitFlow"),
+        ("String ( https://usestring.ai/ ) | ONSITE | Founding Engineer", "String"),
+        ("Hive (S14) (www.hive.co) | Remote | Product Engineer", "Hive"),
+        ("Acme (Europe) Ltd | Berlin, Germany | Engineer", "Acme (Europe) Ltd"),  # not trailing
+        ("(Stealth) | SF | Engineer", "(Stealth)"),  # all-parenthetical → kept intact
+    ],
+    ids=["yc-batch", "url", "double-trailing", "mid-paren-kept", "only-paren-kept"],
+)
+def test_company_strips_trailing_parentheticals(header: str, company: str) -> None:
+    posting = parse_hn_posting(header)
+
+    assert posting is not None
+    assert posting.company == company
