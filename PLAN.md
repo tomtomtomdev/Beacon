@@ -187,7 +187,7 @@ Tests: same shape as slice 1 (fixture normalize + endpoint construction + idempo
 Tasks: `LeverAdapter`, `AshbyAdapter`; `ingest_all()` use case iterating active companies by `ats_type`; per-host rate limiter (1 rps) + backoff wrapper shared by all adapters.
 
 Acceptance:
-- [ ] One real company per ATS ingests cleanly via `ingest_all`
+- [x] One real company per ATS ingests cleanly via `ingest_all` — live 2026-07-08: `immutable` (lever) 3/3, `linear` (ashby) 25/25, 0 errors; all 28 rows classified + dated, per-host 1 rps applied via shared PoliteClient
 
 ---
 
