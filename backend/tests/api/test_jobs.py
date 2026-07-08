@@ -270,3 +270,49 @@ async def test_jobs_country_param_accepts_multiple_values(
 
     assert response.status_code == 200
     assert {j["country"] for j in response.json()["jobs"]} == {"SE", "IE"}
+
+
+def _ids_by_external(conn: sqlite3.Connection) -> dict[str, int]:
+    return {
+        row["external_id"]: row["id"] for row in conn.execute("SELECT id, external_id FROM jobs")
+    }
+
+
+async def test_jobs_list_excludes_duplicates(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    ids = _ids_by_external(seeded)
+    seeded.execute("UPDATE jobs SET canonical_id = ? WHERE id = ?", (ids["1"], ids["2"]))
+    seeded.commit()
+
+    payload = await get_jobs(client)
+
+    assert payload["total"] == 3
+    assert "Data Engineer" not in {j["title"] for j in payload["jobs"]}
+
+
+async def test_job_detail_resolves_to_canonical_with_every_source(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    ids = _ids_by_external(seeded)
+    seeded.execute("UPDATE jobs SET canonical_id = ? WHERE id = ?", (ids["1"], ids["2"]))
+    seeded.commit()
+
+    # Requesting the duplicate id resolves to its canonical and lists both underlying postings.
+    response = await client.get(f"/jobs/{ids['2']}")
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["id"] == ids["1"]
+    assert body["title"] == "Swift Engineer"
+    assert body["description"] == "Build things."
+    urls = {source["url"] for source in body["duplicate_sources"]}
+    assert urls == {"https://example.test/1", "https://example.test/2"}
+
+
+async def test_job_detail_unknown_id_is_404(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    response = await client.get("/jobs/999999")
+
+    assert response.status_code == 404

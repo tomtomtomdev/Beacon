@@ -17,6 +17,7 @@ from beacon.adapters.persistence.db import MIGRATIONS_DIR, connect, run_migratio
 from beacon.adapters.persistence.jobs import SqliteJobRepo
 from beacon.adapters.seeds import parse_seed_csv
 from beacon.adapters.sources.factory import make_source_factory
+from beacon.application.dedup import dedupe_jobs
 from beacon.application.ingest import ingest_all
 from beacon.config import Settings
 
@@ -36,10 +37,11 @@ async def _run(settings: Settings, only_slug: str | None) -> int:
             print(f"no active company with ats_slug={only_slug!r}")
             return 1
 
+    jobs = SqliteJobRepo(conn)
     async with httpx.AsyncClient(timeout=15.0) as client:
         results = await ingest_all(
             companies,
-            SqliteJobRepo(conn),
+            jobs,
             make_source_factory(PoliteClient(client)),
             HeuristicClassifier(),
             now=datetime.now(UTC),
@@ -50,6 +52,10 @@ async def _run(settings: Settings, only_slug: str | None) -> int:
             f"company={name} fetched={result.fetched}"
             f" upserted={result.upserted} errors={result.errors}"
         )
+
+    # Cross-source dedup runs once after every board is upserted (SPEC §5 pipeline).
+    dedup = dedupe_jobs(jobs)
+    print(f"dedup groups={dedup.groups} duplicates={dedup.duplicates}")
     return 0
 
 
