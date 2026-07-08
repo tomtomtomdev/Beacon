@@ -81,7 +81,7 @@ class SqliteJobRepo:
             f"""
             SELECT jobs.id, jobs.title, companies.name AS company, jobs.url,
                    jobs.location_raw, jobs.country, jobs.city, jobs.categories,
-                   jobs.level, jobs.posted_at, jobs.sponsor_tier
+                   jobs.level, jobs.posted_at, jobs.sponsor_tier, jobs.user_status
             FROM jobs JOIN companies ON companies.id = jobs.company_id
             {where}
             ORDER BY {order_by}
@@ -169,7 +169,7 @@ class SqliteJobRepo:
             """
             SELECT jobs.id, jobs.title, companies.name AS company, jobs.url, jobs.description,
                    jobs.location_raw, jobs.country, jobs.city, jobs.categories, jobs.level,
-                   jobs.posted_at, jobs.sponsor_tier
+                   jobs.posted_at, jobs.sponsor_tier, jobs.user_status
             FROM jobs JOIN companies ON companies.id = jobs.company_id
             WHERE jobs.id = ?
             """,
@@ -201,6 +201,7 @@ class SqliteJobRepo:
             level=job["level"],
             posted_at=datetime.fromisoformat(posted_at) if posted_at else None,
             sponsor_tier=job["sponsor_tier"],
+            user_status=job["user_status"],
             duplicate_sources=tuple(
                 DuplicateSource(source=s["source"], company=s["company"], url=s["url"])
                 for s in sources
@@ -296,4 +297,5 @@ def _row_to_listing(row: sqlite3.Row) -> JobListing:
         level=row["level"],
         posted_at=datetime.fromisoformat(posted_at) if posted_at else None,
         sponsor_tier=row["sponsor_tier"],
+        user_status=row["user_status"],
     )

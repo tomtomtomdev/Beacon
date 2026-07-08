@@ -83,6 +83,7 @@ class JobListing:
     level: str | None
     posted_at: datetime | None
     sponsor_tier: str
+    user_status: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -117,6 +118,7 @@ class JobDetail:
     level: str | None
     posted_at: datetime | None
     sponsor_tier: str
+    user_status: str
     duplicate_sources: tuple[DuplicateSource, ...]
 
 

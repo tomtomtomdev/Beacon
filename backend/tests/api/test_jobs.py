@@ -105,6 +105,19 @@ async def test_jobs_api_filters(client: httpx.AsyncClient, seeded: sqlite3.Conne
     assert job["url"] == "https://example.test/1"
 
 
+async def test_jobs_list_exposes_user_status(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    seeded.execute("UPDATE jobs SET user_status = 'starred' WHERE external_id = '1'")
+    seeded.commit()
+
+    payload = await get_jobs(client)
+
+    by_title = {j["title"]: j for j in payload["jobs"]}
+    assert by_title["Swift Engineer"]["user_status"] == "starred"
+    assert by_title["Platform Engineer"]["user_status"] == "new"
+
+
 async def test_jobs_without_params_returns_every_job(
     client: httpx.AsyncClient, seeded: sqlite3.Connection
 ) -> None:

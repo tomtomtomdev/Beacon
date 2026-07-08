@@ -24,6 +24,7 @@ class JobOut(BaseModel):
     level: str | None
     posted_at: datetime | None
     sponsor_tier: str
+    user_status: UserStatus
 
 
 class JobsPageOut(BaseModel):
@@ -112,6 +113,7 @@ def _to_detail_dto(detail: JobDetail) -> JobDetailOut:
         level=detail.level,
         posted_at=detail.posted_at,
         sponsor_tier=detail.sponsor_tier,
+        user_status=UserStatus(detail.user_status),
         description=detail.description,
         duplicate_sources=[
             DuplicateSourceOut(source=s.source, company=s.company, url=s.url)
@@ -133,4 +135,5 @@ def _to_dto(job: JobListing) -> JobOut:
         level=job.level,
         posted_at=job.posted_at,
         sponsor_tier=job.sponsor_tier,
+        user_status=UserStatus(job.user_status),
     )
