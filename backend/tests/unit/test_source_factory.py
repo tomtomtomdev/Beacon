@@ -1,7 +1,8 @@
 import httpx
+import pytest
 
 from beacon.adapters.http.polite import PoliteClient
-from beacon.adapters.sources.factory import make_source_factory
+from beacon.adapters.sources.factory import SUPPORTED_ATS, make_source_factory
 from beacon.domain.company import Company
 
 
@@ -9,13 +10,20 @@ def make_company(ats_type: str) -> Company:
     return Company(name="X", ats_type=ats_type, ats_slug="x", country_hq="US", priority=1, id=1)
 
 
-def test_factory_builds_greenhouse_adapter() -> None:
+def test_supported_ats_is_greenhouse_lever_ashby() -> None:
+    assert SUPPORTED_ATS == {"greenhouse", "lever", "ashby"}
+
+
+@pytest.mark.parametrize("ats_type", sorted(SUPPORTED_ATS))
+def test_all_adapters_satisfy_the_jobsource_protocol(ats_type: str) -> None:
     source_for = make_source_factory(PoliteClient(httpx.AsyncClient()))
 
-    source = source_for(make_company("greenhouse"))
+    source = source_for(make_company(ats_type))
 
+    # Structural JobSource contract: an id plus fetch/normalize.
     assert source is not None
-    assert source.source_id == "greenhouse"
+    assert source.source_id == ats_type
+    assert callable(source.fetch) and callable(source.normalize)
 
 
 def test_factory_returns_none_for_ats_without_adapter() -> None:
