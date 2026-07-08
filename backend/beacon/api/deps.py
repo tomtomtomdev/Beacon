@@ -8,6 +8,7 @@ from fastapi import Depends, Request
 
 from beacon.adapters.persistence.db import connect
 from beacon.adapters.persistence.jobs import SqliteJobRepo
+from beacon.adapters.persistence.searches import SqliteSearchRepo
 from beacon.config import Settings
 
 
@@ -29,3 +30,10 @@ def get_job_repo(db: Annotated[sqlite3.Connection, Depends(get_db)]) -> SqliteJo
 
 
 JobRepoDep = Annotated[SqliteJobRepo, Depends(get_job_repo)]
+
+
+def get_search_repo(db: Annotated[sqlite3.Connection, Depends(get_db)]) -> SqliteSearchRepo:
+    return SqliteSearchRepo(db)
+
+
+SearchRepoDep = Annotated[SqliteSearchRepo, Depends(get_search_repo)]

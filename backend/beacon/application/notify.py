@@ -5,33 +5,18 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 
-from beacon.application.ports import JobFilters, JobListing, JobRepo, Notifier, SearchRepo
+from beacon.application.ports import JobListing, JobRepo, Notifier, SearchRepo
+from beacon.application.searches import to_job_filters
 from beacon.domain.digest import Digest, DigestGroup, DigestLine
 from beacon.domain.saved_search import SearchFilters, match_reason
 
 logger = logging.getLogger(__name__)
-
-# A saved search alerts on new matches, not a paginated view — take the whole match set.
-_MATCH_LIMIT = 500
 
 
 @dataclass(frozen=True, slots=True)
 class MatchResult:
     searches_run: int
     new_matches: int
-
-
-def _job_filters(filters: SearchFilters) -> JobFilters:
-    """Project the saved-search criteria onto the /jobs query. Status/sort/pagination are
-    view concerns and stay at their defaults (default view excludes hidden)."""
-    return JobFilters(
-        q=filters.q,
-        countries=filters.countries,
-        categories=filters.categories,
-        levels=filters.levels,
-        sponsor_tiers=filters.tiers,
-        limit=_MATCH_LIMIT,
-    )
 
 
 def _digest_line(filters: SearchFilters, job: JobListing) -> DigestLine:
@@ -66,7 +51,7 @@ async def match_saved_searches(
     for search in all_searches:
         if search.id is None:  # list_all only yields persisted rows; guard narrows the type
             continue
-        page = jobs.search(_job_filters(search.filters))
+        page = jobs.search(to_job_filters(search.filters))
         seen = searches.seen_job_ids(search.id)
         new = [job for job in page.jobs if job.id not in seen]
         if not new:
