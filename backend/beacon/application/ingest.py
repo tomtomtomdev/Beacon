@@ -5,6 +5,8 @@ from datetime import datetime
 
 from beacon.application.ports import Classifier, JobRepo, JobSource
 from beacon.domain.company import Company
+from beacon.domain.job import NormalizedJob
+from beacon.domain.sponsorship import SponsorSignal, detect_sponsorship, resolve_tier
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +19,18 @@ class IngestResult:
     fetched: int
     upserted: int
     errors: int
+
+
+def _resolve_sponsorship(job: NormalizedJob, company: Company) -> SponsorSignal:
+    """Combine the posting's explicit-text signal with the company's registry flags via
+    the one precedence function: explicit text > registry > unknown. Explicit tiers keep
+    their evidence sentence; registry/unknown carry none."""
+    detected = detect_sponsorship(job.description)
+    text_tier = detected.tier if detected else None
+    return SponsorSignal(
+        tier=resolve_tier(text_tier, company.registry_flags),
+        evidence=detected.evidence if detected else None,
+    )
 
 
 async def ingest_source(
@@ -35,8 +49,17 @@ async def ingest_source(
         try:
             job = source.normalize(raw)
             previous_hash = jobs.content_hash_for(job.source_id, job.external_id)
-            classification = None if previous_hash == job.content_hash else classifier.classify(job)
-            jobs.upsert(company.id, job, seen_at=now, classification=classification)
+            if previous_hash == job.content_hash:
+                # Unchanged content: skip re-classify and re-detect; the stored
+                # classification and sponsor tier/evidence carry over untouched.
+                classification = None
+                sponsorship = None
+            else:
+                classification = classifier.classify(job)
+                sponsorship = _resolve_sponsorship(job, company)
+            jobs.upsert(
+                company.id, job, seen_at=now, classification=classification, sponsorship=sponsorship
+            )
             upserted += 1
         except Exception:
             errors += 1

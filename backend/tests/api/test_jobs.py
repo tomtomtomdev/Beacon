@@ -373,6 +373,35 @@ async def test_job_detail_resolves_to_canonical_with_every_source(
     assert urls == {"https://example.test/1", "https://example.test/2"}
 
 
+async def test_job_detail_exposes_sponsor_evidence(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    job_id = _ids_by_external(seeded)["1"]
+    seeded.execute(
+        "UPDATE jobs SET sponsor_tier = 'explicit_yes', sponsor_evidence = ? WHERE id = ?",
+        ("Visa sponsorship available for this role.", job_id),
+    )
+    seeded.commit()
+
+    response = await client.get(f"/jobs/{job_id}")
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["sponsor_tier"] == "explicit_yes"
+    assert body["sponsor_evidence"] == "Visa sponsorship available for this role."
+
+
+async def test_job_detail_sponsor_evidence_null_when_absent(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    job_id = _ids_by_external(seeded)["4"]
+
+    response = await client.get(f"/jobs/{job_id}")
+
+    assert response.status_code == 200, response.text
+    assert response.json()["sponsor_evidence"] is None
+
+
 async def test_job_detail_unknown_id_is_404(
     client: httpx.AsyncClient, seeded: sqlite3.Connection
 ) -> None:

@@ -9,6 +9,7 @@ from beacon.adapters.persistence.jobs import SqliteJobRepo
 from beacon.domain.classification import Category, Classification, Level
 from beacon.domain.company import Company
 from beacon.domain.job import NormalizedJob
+from beacon.domain.sponsorship import SponsorSignal, SponsorTier
 
 FIRST_POLL = datetime(2026, 7, 4, 6, 0, tzinfo=UTC)
 SECOND_POLL = datetime(2026, 7, 4, 12, 0, tzinfo=UTC)
@@ -73,6 +74,79 @@ def test_upsert_persists_classification(db: sqlite3.Connection, company_id: int)
     row = db.execute("SELECT categories, level FROM jobs").fetchone()
     assert row["categories"] == "ai-ml,ios"
     assert row["level"] == "senior"
+
+
+def test_upsert_defaults_tier_unknown_without_sponsorship(
+    db: sqlite3.Connection, company_id: int
+) -> None:
+    repo = SqliteJobRepo(db)
+
+    repo.upsert(company_id, make_job(), seen_at=FIRST_POLL)
+
+    row = db.execute("SELECT sponsor_tier, sponsor_evidence FROM jobs").fetchone()
+    assert row["sponsor_tier"] == "unknown"
+    assert row["sponsor_evidence"] is None
+
+
+def test_upsert_persists_sponsorship_tier_and_evidence(
+    db: sqlite3.Connection, company_id: int
+) -> None:
+    repo = SqliteJobRepo(db)
+
+    repo.upsert(
+        company_id,
+        make_job(),
+        seen_at=FIRST_POLL,
+        sponsorship=SponsorSignal(SponsorTier.EXPLICIT_NO, "No visa sponsorship for this role."),
+    )
+
+    row = db.execute("SELECT sponsor_tier, sponsor_evidence FROM jobs").fetchone()
+    assert row["sponsor_tier"] == "explicit_no"
+    assert row["sponsor_evidence"] == "No visa sponsorship for this role."
+
+
+def test_upsert_preserves_tier_and_evidence_on_unchanged_repoll(
+    db: sqlite3.Connection, company_id: int
+) -> None:
+    repo = SqliteJobRepo(db)
+
+    repo.upsert(
+        company_id,
+        make_job(),
+        seen_at=FIRST_POLL,
+        sponsorship=SponsorSignal(SponsorTier.EXPLICIT_YES, "Visa sponsorship available."),
+    )
+    # A re-poll with unchanged content supplies no sponsorship → the stored signal survives.
+    repo.upsert(company_id, make_job(), seen_at=SECOND_POLL)
+
+    row = db.execute("SELECT sponsor_tier, sponsor_evidence FROM jobs").fetchone()
+    assert row["sponsor_tier"] == "explicit_yes"
+    assert row["sponsor_evidence"] == "Visa sponsorship available."
+
+
+def test_upsert_rewrites_and_clears_evidence_when_new_signal_supplied(
+    db: sqlite3.Connection, company_id: int
+) -> None:
+    repo = SqliteJobRepo(db)
+
+    repo.upsert(
+        company_id,
+        make_job(),
+        seen_at=FIRST_POLL,
+        sponsorship=SponsorSignal(SponsorTier.EXPLICIT_YES, "Visa sponsorship available."),
+    )
+    # The posting was edited: the sponsorship line is gone, tier falls back to unknown and
+    # the stale evidence must be cleared — a supplied signal always overwrites both fields.
+    repo.upsert(
+        company_id,
+        make_job(),
+        seen_at=SECOND_POLL,
+        sponsorship=SponsorSignal(SponsorTier.UNKNOWN, None),
+    )
+
+    row = db.execute("SELECT sponsor_tier, sponsor_evidence FROM jobs").fetchone()
+    assert row["sponsor_tier"] == "unknown"
+    assert row["sponsor_evidence"] is None
 
 
 def test_content_hash_for_reads_back_stored_hash(db: sqlite3.Connection, company_id: int) -> None:

@@ -1,4 +1,5 @@
 from collections.abc import Mapping
+from dataclasses import replace
 from datetime import UTC, datetime
 
 import pytest
@@ -9,18 +10,22 @@ from beacon.domain.classification import Category, Classification, Level
 from beacon.domain.company import Company
 from beacon.domain.dedup import DedupRow
 from beacon.domain.job import NormalizedJob
+from beacon.domain.registry import Registry
+from beacon.domain.sponsorship import SponsorSignal, SponsorTier
 
 NOW = datetime(2026, 7, 4, 12, 0, tzinfo=UTC)
 LATER = datetime(2026, 7, 5, 12, 0, tzinfo=UTC)
 
 
-def make_job(external_id: str, content_hash: str = "a" * 64) -> NormalizedJob:
+def make_job(
+    external_id: str, content_hash: str = "a" * 64, description: str = "Build things."
+) -> NormalizedJob:
     return NormalizedJob(
         source_id="greenhouse",
         external_id=external_id,
         title=f"Engineer {external_id}",
         url=f"https://example.test/{external_id}",
-        description="Build things.",
+        description=description,
         location_raw="Dublin, Ireland",
         country="IE",
         city="Dublin",
@@ -60,6 +65,7 @@ class FakeSource:
 class FakeJobRepo:
     def __init__(self) -> None:
         self.upserts: list[tuple[int, NormalizedJob, datetime, Classification | None]] = []
+        self.sponsorships: list[SponsorSignal | None] = []
         self._hashes: dict[tuple[str, str], str] = {}
 
     def upsert(
@@ -68,8 +74,10 @@ class FakeJobRepo:
         job: NormalizedJob,
         seen_at: datetime,
         classification: Classification | None = None,
+        sponsorship: SponsorSignal | None = None,
     ) -> None:
         self.upserts.append((company_id, job, seen_at, classification))
+        self.sponsorships.append(sponsorship)
         self._hashes[(job.source_id, job.external_id)] = job.content_hash
 
     def content_hash_for(self, source_id: str, external_id: str) -> str | None:
@@ -165,6 +173,64 @@ async def test_changed_content_hash_reclassifies() -> None:
 
     assert classifier.calls == ["1", "1"]  # content changed → classified again
     assert repo.upserts[1][3] is not None
+
+
+class DescribedSource(FakeSource):
+    """Fetches one posting whose description carries the given sponsorship text."""
+
+    def __init__(self, description: str) -> None:
+        super().__init__([{"id": 1}])
+        self._description = description
+
+    def normalize(self, raw: RawPosting) -> NormalizedJob:
+        return make_job(str(raw["id"]), description=self._description)
+
+
+async def test_explicit_text_tier_wins_over_registry_on_ingest() -> None:
+    # A flagged company would infer registry_inferred, but explicit "no" text beats it.
+    flagged = replace(COMPANY, registry_flags=int(Registry.UK))
+    repo = FakeJobRepo()
+    source = DescribedSource("No visa sponsorship is available for this role.")
+
+    await ingest_source(source, flagged, repo, CountingClassifier(), now=NOW)
+
+    assert repo.sponsorships[0] == SponsorSignal(
+        SponsorTier.EXPLICIT_NO, "No visa sponsorship is available for this role."
+    )
+
+
+async def test_silent_text_falls_back_to_registry_tier_on_ingest() -> None:
+    flagged = replace(COMPANY, registry_flags=int(Registry.NL))
+    repo = FakeJobRepo()
+
+    await ingest_source(
+        DescribedSource("Build great products."), flagged, repo, CountingClassifier(), now=NOW
+    )
+
+    assert repo.sponsorships[0] == SponsorSignal(SponsorTier.REGISTRY_INFERRED, None)
+
+
+async def test_silent_text_unflagged_company_is_unknown_on_ingest() -> None:
+    repo = FakeJobRepo()  # COMPANY has no registry flags
+
+    await ingest_source(
+        DescribedSource("Build great products."), COMPANY, repo, CountingClassifier(), now=NOW
+    )
+
+    assert repo.sponsorships[0] == SponsorSignal(SponsorTier.UNKNOWN, None)
+
+
+async def test_sponsorship_not_recomputed_on_unchanged_repoll() -> None:
+    repo = FakeJobRepo()
+    source = DescribedSource("Visa sponsorship available.")
+
+    await ingest_source(source, COMPANY, repo, CountingClassifier(), now=NOW)
+    await ingest_source(source, COMPANY, repo, CountingClassifier(), now=LATER)
+
+    assert repo.sponsorships[0] == SponsorSignal(
+        SponsorTier.EXPLICIT_YES, "Visa sponsorship available."
+    )
+    assert repo.sponsorships[1] is None  # unchanged content → tier left intact
 
 
 async def test_ingest_requires_persisted_company() -> None:

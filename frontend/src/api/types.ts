@@ -36,5 +36,8 @@ export interface DuplicateSource {
 // drawer that consumes this lands in slice 10 (per DESIGN.md); the contract lives here now.
 export interface JobDetail extends Job {
   description: string
+  // The sentence that decided an explicit_yes/explicit_no tier; null for
+  // registry_inferred/unknown. The drawer highlights it (slice 10, per DESIGN.md).
+  sponsor_evidence: string | null
   duplicate_sources: DuplicateSource[]
 }

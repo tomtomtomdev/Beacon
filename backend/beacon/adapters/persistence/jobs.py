@@ -12,7 +12,7 @@ from beacon.application.ports import (
 from beacon.domain.classification import Classification, format_categories
 from beacon.domain.dedup import DedupRow
 from beacon.domain.job import NormalizedJob
-from beacon.domain.sponsorship import SORT_RANK, SponsorTier
+from beacon.domain.sponsorship import SORT_RANK, SponsorSignal, SponsorTier
 from beacon.domain.status import UserStatus
 
 # Built from the domain table so SQL can never disagree with it.
@@ -169,7 +169,7 @@ class SqliteJobRepo:
             """
             SELECT jobs.id, jobs.title, companies.name AS company, jobs.url, jobs.description,
                    jobs.location_raw, jobs.country, jobs.city, jobs.categories, jobs.level,
-                   jobs.posted_at, jobs.sponsor_tier, jobs.user_status
+                   jobs.posted_at, jobs.sponsor_tier, jobs.sponsor_evidence, jobs.user_status
             FROM jobs JOIN companies ON companies.id = jobs.company_id
             WHERE jobs.id = ?
             """,
@@ -201,6 +201,7 @@ class SqliteJobRepo:
             level=job["level"],
             posted_at=datetime.fromisoformat(posted_at) if posted_at else None,
             sponsor_tier=job["sponsor_tier"],
+            sponsor_evidence=job["sponsor_evidence"],
             user_status=job["user_status"],
             duplicate_sources=tuple(
                 DuplicateSource(source=s["source"], company=s["company"], url=s["url"])
@@ -214,18 +215,26 @@ class SqliteJobRepo:
         job: NormalizedJob,
         seen_at: datetime,
         classification: Classification | None = None,
+        sponsorship: SponsorSignal | None = None,
     ) -> None:
-        # categories/level are only rewritten when a fresh classification is supplied
-        # (COALESCE keeps the prior values on an unchanged re-poll — see ingest caching).
-        categories = format_categories(classification.categories) if classification else None
-        level = classification.level.value if classification else None
+        # categories/level and sponsor_tier/evidence are only rewritten when a fresh
+        # classification / sponsorship signal is supplied. On an unchanged re-poll both are
+        # None and the stored values survive (see ingest caching): categories via COALESCE,
+        # and sponsor_* keyed off :sponsor_tier being NULL (so a registry-derived tier,
+        # written later by refresh_registries, is never clobbered back to 'unknown').
         self._conn.execute(
             """
             INSERT INTO jobs (
                 company_id, source_id, external_id, title, description, url,
-                location_raw, country, city, categories, level, content_hash, posted_at,
+                location_raw, country, city, categories, level,
+                sponsor_tier, sponsor_evidence, content_hash, posted_at,
                 first_seen_at, last_seen_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (
+                :company_id, :source_id, :external_id, :title, :description, :url,
+                :location_raw, :country, :city, :categories, :level,
+                COALESCE(:sponsor_tier, 'unknown'), :sponsor_evidence, :content_hash,
+                :posted_at, :seen_at, :seen_at
+            )
             ON CONFLICT (source_id, external_id) DO UPDATE SET
                 title = excluded.title,
                 description = excluded.description,
@@ -235,6 +244,11 @@ class SqliteJobRepo:
                 city = excluded.city,
                 categories = COALESCE(excluded.categories, jobs.categories),
                 level = COALESCE(excluded.level, jobs.level),
+                sponsor_tier = COALESCE(:sponsor_tier, jobs.sponsor_tier),
+                sponsor_evidence = CASE
+                    WHEN :sponsor_tier IS NOT NULL THEN :sponsor_evidence
+                    ELSE jobs.sponsor_evidence
+                END,
                 content_hash = excluded.content_hash,
                 posted_at = excluded.posted_at,
                 last_seen_at = excluded.last_seen_at,
@@ -245,23 +259,26 @@ class SqliteJobRepo:
                     ELSE jobs.user_status
                 END
             """,
-            (
-                company_id,
-                job.source_id,
-                job.external_id,
-                job.title,
-                job.description,
-                job.url,
-                job.location_raw,
-                job.country,
-                job.city,
-                categories,
-                level,
-                job.content_hash,
-                job.posted_at.isoformat() if job.posted_at else None,
-                seen_at.isoformat(),
-                seen_at.isoformat(),
-            ),
+            {
+                "company_id": company_id,
+                "source_id": job.source_id,
+                "external_id": job.external_id,
+                "title": job.title,
+                "description": job.description,
+                "url": job.url,
+                "location_raw": job.location_raw,
+                "country": job.country,
+                "city": job.city,
+                "categories": (
+                    format_categories(classification.categories) if classification else None
+                ),
+                "level": classification.level.value if classification else None,
+                "sponsor_tier": sponsorship.tier.value if sponsorship else None,
+                "sponsor_evidence": sponsorship.evidence if sponsorship else None,
+                "content_hash": job.content_hash,
+                "posted_at": job.posted_at.isoformat() if job.posted_at else None,
+                "seen_at": seen_at.isoformat(),
+            },
         )
         self._conn.commit()
 

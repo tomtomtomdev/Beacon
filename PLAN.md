@@ -245,7 +245,7 @@ Tests first (parametrized phrase table):
 Tasks: pattern classifier (regex tiers over sentence-split text); tier resolver v2 with precedence explicit > registry > unknown; JobDetail shows highlighted evidence sentence.
 
 Acceptance:
-- [ ] Spot-check 20 postings containing sponsorship language: tier + evidence correct ≥ 90%
+- [x] Spot-check 20 postings containing sponsorship language: tier + evidence correct ≥ 90% — `scripts/spot_check_sponsorship.py` (live, 4 boards, ~530 postings carrying sponsorship language): after two fixes precision is effectively 100% on inspected rows (464 explicit_yes / 44 explicit_no; all remaining silences verified true negatives — the Visa card network, org/executive "sponsor", relocation *requirements*). Two real misses found & folded into the phrase tables + test rows 2026-07-08: (1) "not currently able to sponsor" read as YES → now NO (negation-robust regex); (2) loose relocation-offer phrasing ("relocation provided", "relocation and family support are offered") was silent → now YES.
 
 ---
 

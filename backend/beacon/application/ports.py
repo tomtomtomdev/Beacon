@@ -10,6 +10,7 @@ from beacon.domain.company import Company
 from beacon.domain.dedup import DedupRow
 from beacon.domain.job import NormalizedJob
 from beacon.domain.registry import Registry, RegistryCompany
+from beacon.domain.sponsorship import SponsorSignal
 
 # A source-shaped payload exactly as the ATS returned it (one job posting).
 type RawPosting = Mapping[str, Any]
@@ -118,6 +119,7 @@ class JobDetail:
     level: str | None
     posted_at: datetime | None
     sponsor_tier: str
+    sponsor_evidence: str | None
     user_status: str
     duplicate_sources: tuple[DuplicateSource, ...]
 
@@ -129,9 +131,12 @@ class JobRepo(Protocol):
         job: NormalizedJob,
         seen_at: datetime,
         classification: Classification | None = None,
+        sponsorship: SponsorSignal | None = None,
     ) -> None:
         """Persist a posting. classification writes categories/level; None leaves the
-        stored values intact (an unchanged re-poll keeps its earlier classification)."""
+        stored values intact (an unchanged re-poll keeps its earlier classification).
+        sponsorship writes sponsor_tier/sponsor_evidence; None leaves them intact (so a
+        registry-derived tier survives an unchanged re-poll)."""
         ...
 
     def content_hash_for(self, source_id: str, external_id: str) -> str | None:
