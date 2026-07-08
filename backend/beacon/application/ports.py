@@ -14,6 +14,13 @@ from beacon.domain.registry import Registry, RegistryCompany
 type RawPosting = Mapping[str, Any]
 
 
+class Fetcher(Protocol):
+    """The single HTTP door every adapter fetches through. The implementation owns
+    politeness (1 rps/host, conditional GET, backoff); adapters just ask for JSON."""
+
+    async def get_json(self, url: str, *, params: Mapping[str, str] | None = None) -> Any: ...
+
+
 class JobSource(Protocol):
     source_id: str
 
