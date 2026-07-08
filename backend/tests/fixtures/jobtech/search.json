@@ -1,0 +1,50 @@
+{
+  "total": { "value": 4 },
+  "hits": [
+    {
+      "id": "27811001",
+      "headline": "Senior Backend Engineer",
+      "employer": { "name": "Spotify AB", "workplace": "Spotify" },
+      "workplace_address": {
+        "municipality": "Stockholm",
+        "region": "Stockholms län",
+        "country": "Sverige",
+        "country_code": "SE"
+      },
+      "description": {
+        "text": "We are looking for a senior backend engineer. Python, Go.",
+        "text_formatted": "<p>We are looking for a senior backend engineer.</p><p>Python, Go.</p>"
+      },
+      "webpage_url": "https://arbetsformedlingen.se/platsbanken/annonser/27811001",
+      "publication_date": "2026-07-01T09:00:00"
+    },
+    {
+      "id": "27811002",
+      "headline": "Frontend-utvecklare",
+      "employer": { "name": "Klarna Bank AB" },
+      "workplace_address": { "municipality": "Göteborg" },
+      "description": { "text": "Vi söker en frontend-utvecklare till vårt team." },
+      "webpage_url": "https://arbetsformedlingen.se/platsbanken/annonser/27811002",
+      "publication_date": "2026-06-15T14:30:00+02:00"
+    },
+    {
+      "id": "27811003",
+      "headline": "DevOps Engineer",
+      "employer": { "name": "Volvo Cars" },
+      "workplace_address": {
+        "municipality": "Oslo",
+        "country": "Norge",
+        "country_code": "NO"
+      },
+      "description": { "text": "Join our platform team in Oslo." },
+      "publication_date": null
+    },
+    {
+      "id": "27811004",
+      "headline": "Data Engineer",
+      "employer": { "name": "King" },
+      "description": { "text": "Build data pipelines for games." },
+      "publication_date": "2026-05-20T08:00:00"
+    }
+  ]
+}
