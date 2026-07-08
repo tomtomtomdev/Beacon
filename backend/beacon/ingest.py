@@ -12,14 +12,30 @@ import httpx
 
 from beacon.adapters.classify.heuristic import HeuristicClassifier
 from beacon.adapters.http.polite import PoliteClient
+from beacon.adapters.notify.stdout import StdoutNotifier
+from beacon.adapters.notify.telegram import TelegramNotifier
 from beacon.adapters.persistence.companies import SqliteCompanyRepo
 from beacon.adapters.persistence.db import MIGRATIONS_DIR, connect, run_migrations
 from beacon.adapters.persistence.jobs import SqliteJobRepo
+from beacon.adapters.persistence.searches import SqliteSearchRepo
 from beacon.adapters.seeds import parse_seed_csv
 from beacon.adapters.sources.factory import make_companyless_sources, make_source_factory
 from beacon.application.dedup import dedupe_jobs
 from beacon.application.ingest import SHADOW_ATS_TYPE, ingest_all, ingest_companyless_source
+from beacon.application.notify import match_saved_searches
+from beacon.application.ports import Notifier
 from beacon.config import Settings
+
+
+def _make_notifier(settings: Settings, client: httpx.AsyncClient) -> Notifier:
+    """TelegramNotifier when a bot token + chat_id are configured, else StdoutNotifier —
+    so ingest never fails just because Telegram isn't set up yet."""
+    token = settings.telegram_bot_token
+    if token is not None and settings.telegram_chat_id is not None:
+        return TelegramNotifier(
+            client, bot_token=token.get_secret_value(), chat_id=settings.telegram_chat_id
+        )
+    return StdoutNotifier()
 
 
 async def _run(settings: Settings, *, only_company: str | None, only_source: str | None) -> int:
@@ -70,9 +86,16 @@ async def _run(settings: Settings, *, only_company: str | None, only_source: str
                     f" upserted={result.upserted} errors={result.errors}"
                 )
 
-    # Cross-source dedup runs once after every board is upserted (SPEC §5 pipeline).
-    dedup = dedupe_jobs(jobs)
-    print(f"dedup groups={dedup.groups} duplicates={dedup.duplicates}")
+        # Cross-source dedup runs once after every board is upserted (SPEC §5 pipeline).
+        dedup = dedupe_jobs(jobs)
+        print(f"dedup groups={dedup.groups} duplicates={dedup.duplicates}")
+
+        # Notify: match saved searches against the deduped canonical rows, alert once.
+        match = await match_saved_searches(
+            SqliteSearchRepo(conn), jobs, _make_notifier(settings, client), now=now
+        )
+        print(f"searches={match.searches_run} new_matches={match.new_matches}")
+
     return 0
 
 

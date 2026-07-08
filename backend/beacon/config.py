@@ -5,6 +5,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
+from pydantic import SecretStr
+
 _REPO_ROOT = Path(__file__).parents[2]
 _REGISTRIES = _REPO_ROOT / "data" / "registries"
 
@@ -17,10 +19,15 @@ class Settings:
     uk_registry_path: Path = _REGISTRIES / "uk_sponsors.csv"
     ind_registry_path: Path = _REGISTRIES / "ind_sponsors.csv"
     h1b_registry_path: Path = _REGISTRIES / "h1b_lca.csv"
+    # Telegram Bot API credentials for the digest (slice 8). Absent → StdoutNotifier.
+    # SecretStr keeps the token out of reprs/logs.
+    telegram_bot_token: SecretStr | None = None
+    telegram_chat_id: str | None = None
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> "Settings":
         source = os.environ if env is None else env
+        token = source.get("BEACON_TELEGRAM_BOT_TOKEN")
         return cls(
             db_path=Path(source.get("BEACON_DB_PATH", str(_REPO_ROOT / "beacon.db"))),
             seeds_path=Path(
@@ -35,4 +42,6 @@ class Settings:
             h1b_registry_path=Path(
                 source.get("BEACON_H1B_REGISTRY_PATH", str(_REGISTRIES / "h1b_lca.csv"))
             ),
+            telegram_bot_token=SecretStr(token) if token else None,
+            telegram_chat_id=source.get("BEACON_TELEGRAM_CHAT_ID"),
         )
