@@ -272,6 +272,56 @@ async def test_jobs_country_param_accepts_multiple_values(
     assert {j["country"] for j in response.json()["jobs"]} == {"SE", "IE"}
 
 
+async def test_default_view_excludes_hidden(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    seeded.execute("UPDATE jobs SET user_status = 'hidden' WHERE external_id = '3'")
+    seeded.commit()
+
+    payload = await get_jobs(client)
+
+    # No status param hides only what the user hid; new/seen/starred stay visible.
+    assert payload["total"] == 3
+    assert "Swift Developer" not in {j["title"] for j in payload["jobs"]}
+
+
+async def test_status_all_includes_hidden(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    seeded.execute("UPDATE jobs SET user_status = 'hidden' WHERE external_id = '3'")
+    seeded.commit()
+
+    assert (await get_jobs(client, status="all"))["total"] == 4
+
+
+async def test_new_only_view(client: httpx.AsyncClient, seeded: sqlite3.Connection) -> None:
+    seeded.execute("UPDATE jobs SET user_status = 'seen' WHERE external_id = '1'")
+    seeded.execute("UPDATE jobs SET user_status = 'starred' WHERE external_id = '2'")
+    seeded.commit()
+
+    payload = await get_jobs(client, status="new")
+
+    # The morning scan: only untouched postings.
+    assert {j["title"] for j in payload["jobs"]} == {"Swift Developer", "Platform Engineer"}
+
+
+async def test_starred_view(client: httpx.AsyncClient, seeded: sqlite3.Connection) -> None:
+    seeded.execute("UPDATE jobs SET user_status = 'starred' WHERE external_id = '2'")
+    seeded.commit()
+
+    payload = await get_jobs(client, status="starred")
+
+    assert {j["title"] for j in payload["jobs"]} == {"Data Engineer"}
+
+
+async def test_bad_status_value_is_rejected(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    response = await client.get("/jobs", params={"status": "archived"})
+
+    assert response.status_code == 422
+
+
 def _ids_by_external(conn: sqlite3.Connection) -> dict[str, int]:
     return {
         row["external_id"]: row["id"] for row in conn.execute("SELECT id, external_id FROM jobs")

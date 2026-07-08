@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from beacon.api.deps import JobRepoDep
 from beacon.application.ports import JobDetail, JobFilters, JobListing
 from beacon.application.queries import get_job, list_jobs
+from beacon.domain.status import UserStatus
 
 router = APIRouter()
 
@@ -39,6 +40,7 @@ def get_jobs(
     level: Annotated[list[str] | None, Query()] = None,
     posted_since: datetime | None = None,
     sponsor_tier: Annotated[list[str] | None, Query()] = None,
+    status: UserStatus | Literal["all"] | None = None,
     sort: Literal["tier", "date"] = "tier",
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
@@ -52,6 +54,7 @@ def get_jobs(
         levels=tuple(level or ()),
         posted_since=posted_since,
         sponsor_tiers=tuple(sponsor_tier or ()),
+        status=status,
         sort=sort,
         limit=limit,
         offset=offset,

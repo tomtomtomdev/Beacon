@@ -60,6 +60,9 @@ class JobFilters:
     levels: tuple[str, ...] = ()
     posted_since: datetime | None = None
     sponsor_tiers: tuple[str, ...] = ()
+    # None → default view (everything except 'hidden'); "all" → no status filter;
+    # a specific status → only that status (e.g. "new" for the morning scan).
+    status: str | None = None
     sort: str = "tier"
     limit: int = 50
     offset: int = 0

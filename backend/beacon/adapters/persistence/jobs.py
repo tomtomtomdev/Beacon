@@ -13,6 +13,7 @@ from beacon.domain.classification import Classification, format_categories
 from beacon.domain.dedup import DedupRow
 from beacon.domain.job import NormalizedJob
 from beacon.domain.sponsorship import SORT_RANK, SponsorTier
+from beacon.domain.status import UserStatus
 
 # Built from the domain table so SQL can never disagree with it.
 _SORT_RANK_CASE = (
@@ -58,6 +59,11 @@ class SqliteJobRepo:
             placeholders = ", ".join("?" * len(filters.sponsor_tiers))
             clauses.append(f"jobs.sponsor_tier IN ({placeholders})")
             params += list(filters.sponsor_tiers)
+        if filters.status is None:
+            clauses.append(f"jobs.user_status != '{UserStatus.HIDDEN.value}'")
+        elif filters.status != "all":
+            clauses.append("jobs.user_status = ?")
+            params.append(filters.status)
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
 
         # "date" ignores tier; the default keeps likely sponsors on top (posted_at breaks ties).
