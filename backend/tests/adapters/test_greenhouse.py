@@ -5,6 +5,7 @@ from typing import Any, cast
 import httpx
 import pytest
 
+from beacon.adapters.http.polite import PoliteClient
 from beacon.adapters.sources.greenhouse import GreenhouseAdapter
 from beacon.domain.descriptions import content_hash, normalize_description
 
@@ -24,7 +25,8 @@ def make_adapter(
 ) -> GreenhouseAdapter:
     transport = httpx.MockTransport(handler) if handler else None
     client = httpx.AsyncClient(transport=transport)
-    return GreenhouseAdapter(slug=slug, client=client)
+    fetcher = PoliteClient(client, min_interval=0.0)  # real politeness layer, no waiting
+    return GreenhouseAdapter(slug=slug, fetcher=fetcher)
 
 
 def test_greenhouse_normalize(tines_jobs: dict[str, Any]) -> None:

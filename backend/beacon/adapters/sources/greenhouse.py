@@ -1,8 +1,6 @@
 from datetime import UTC, datetime
 
-import httpx
-
-from beacon.application.ports import RawPosting
+from beacon.application.ports import Fetcher, RawPosting
 from beacon.domain.descriptions import content_hash, normalize_description
 from beacon.domain.job import NormalizedJob
 from beacon.domain.location import parse_location
@@ -13,16 +11,15 @@ _BOARDS_API = "https://boards-api.greenhouse.io/v1/boards/{slug}/jobs"
 class GreenhouseAdapter:
     source_id = "greenhouse"
 
-    def __init__(self, slug: str, client: httpx.AsyncClient) -> None:
+    def __init__(self, slug: str, fetcher: Fetcher) -> None:
         self._slug = slug
-        self._client = client
+        self._fetcher = fetcher
 
     async def fetch(self) -> list[RawPosting]:
-        response = await self._client.get(
+        data = await self._fetcher.get_json(
             _BOARDS_API.format(slug=self._slug), params={"content": "true"}
         )
-        response.raise_for_status()
-        jobs: list[RawPosting] = response.json()["jobs"]
+        jobs: list[RawPosting] = data["jobs"]
         return jobs
 
     def normalize(self, raw: RawPosting) -> NormalizedJob:

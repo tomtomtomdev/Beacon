@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 import httpx
 
 from beacon.adapters.classify.heuristic import HeuristicClassifier
+from beacon.adapters.http.polite import PoliteClient
 from beacon.adapters.persistence.companies import SqliteCompanyRepo
 from beacon.adapters.persistence.db import MIGRATIONS_DIR, connect, run_migrations
 from beacon.adapters.persistence.jobs import SqliteJobRepo
@@ -39,7 +40,7 @@ async def _run(settings: Settings, only_slug: str | None) -> int:
         results = await ingest_all(
             companies,
             SqliteJobRepo(conn),
-            make_source_factory(client),
+            make_source_factory(PoliteClient(client)),
             HeuristicClassifier(),
             now=datetime.now(UTC),
         )

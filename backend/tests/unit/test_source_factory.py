@@ -1,5 +1,6 @@
 import httpx
 
+from beacon.adapters.http.polite import PoliteClient
 from beacon.adapters.sources.factory import make_source_factory
 from beacon.domain.company import Company
 
@@ -9,7 +10,7 @@ def make_company(ats_type: str) -> Company:
 
 
 def test_factory_builds_greenhouse_adapter() -> None:
-    source_for = make_source_factory(httpx.AsyncClient())
+    source_for = make_source_factory(PoliteClient(httpx.AsyncClient()))
 
     source = source_for(make_company("greenhouse"))
 
@@ -18,6 +19,6 @@ def test_factory_builds_greenhouse_adapter() -> None:
 
 
 def test_factory_returns_none_for_ats_without_adapter() -> None:
-    source_for = make_source_factory(httpx.AsyncClient())
+    source_for = make_source_factory(PoliteClient(httpx.AsyncClient()))
 
     assert source_for(make_company("smartrecruiters")) is None

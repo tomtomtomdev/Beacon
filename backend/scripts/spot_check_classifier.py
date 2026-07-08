@@ -18,6 +18,7 @@ from collections import Counter
 import httpx
 
 from beacon.adapters.classify.heuristic import HeuristicClassifier
+from beacon.adapters.http.polite import PoliteClient
 from beacon.adapters.sources.greenhouse import GreenhouseAdapter
 from beacon.domain.classification import format_categories
 
@@ -32,7 +33,7 @@ _ENGINEERING_TITLE = re.compile(r"engineer|developer|scientist|programmer", re.I
 
 
 async def _postings(slug: str, client: httpx.AsyncClient) -> list[tuple[str, str, str, str]]:
-    adapter = GreenhouseAdapter(slug, client)
+    adapter = GreenhouseAdapter(slug, PoliteClient(client))
     classifier = HeuristicClassifier()
     rows: list[tuple[str, str, str, str]] = []
     for raw in await adapter.fetch():
