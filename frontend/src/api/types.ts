@@ -41,3 +41,23 @@ export interface JobDetail extends Job {
   sponsor_evidence: string | null
   duplicate_sources: DuplicateSource[]
 }
+
+// The matchable criteria of a saved search — the subset of the Jobs filter bar that
+// gets serialized (no sort/status/pagination). Mirrors domain SearchFilters.
+export interface SearchFilters {
+  q: string | null
+  countries: string[]
+  categories: string[]
+  levels: string[]
+  tiers: SponsorTier[]
+}
+
+// GET/POST /searches. new_count = matching jobs the user hasn't triaged yet (user_status='new').
+export interface SavedSearch {
+  id: number
+  name: string
+  filters: SearchFilters
+  notify_channel: string
+  last_run_at: string | null
+  new_count: number
+}

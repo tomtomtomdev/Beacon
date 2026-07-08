@@ -1,0 +1,213 @@
+.main {
+  flex: 1;
+  min-width: 0;
+  padding: 26px 34px;
+}
+
+.header {
+  margin-bottom: 18px;
+}
+
+.h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  color: var(--text-body-muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  padding: 15px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-card);
+}
+
+.cardMain {
+  min-width: 0;
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cardName {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+}
+
+.pillNew {
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-fg);
+}
+
+.pillIdle {
+  background: var(--bg-chip);
+  color: var(--text-secondary);
+}
+
+.summary {
+  margin: 6px 0 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-body-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardSide {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.channel {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+
+.lastRun {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-mono-faint);
+}
+
+.deleteButton {
+  margin-top: 4px;
+  padding: 3px 8px;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-chip);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.deleteButton:hover {
+  border-color: var(--tier-no-dot);
+  color: var(--tier-no-fg);
+}
+
+.addButton {
+  padding: 13px 16px;
+  border: 1px dashed #cdd6db;
+  border-radius: var(--radius-card);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+}
+
+.addButton:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.createForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 15px 18px;
+  border: 1px dashed var(--accent-border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.createLabel {
+  font-size: 12.5px;
+  color: var(--text-body-muted);
+}
+
+.createRow {
+  display: flex;
+  gap: 8px;
+}
+
+.nameInput {
+  flex: 1;
+  padding: 8px 11px;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  font-size: 13.5px;
+  font-family: var(--font-ui);
+}
+
+.saveButton {
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-input);
+  background: var(--accent);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.saveButton:hover {
+  background: var(--accent-hover);
+}
+
+.cancelButton {
+  padding: 8px 14px;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.summaryPreview {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-mono-faint);
+}
+
+.empty {
+  padding: 40px 0;
+  text-align: center;
+}
+
+.emptyTitle {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.stateText {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-body-muted);
+}
