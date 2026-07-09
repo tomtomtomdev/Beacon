@@ -47,6 +47,11 @@
   --country-label: #3d8a7e;
   --country-value: #1f3b40;
 
+  /* Countries view / world map (DESIGN §4) */
+  --geo-panel-bg: #f4f7f8;
+  --geo-nice: #7c8791;
+  --map-land: #cdd6db;
+
   /* Sponsorship tiers (bg / fg / dot) */
   --tier-yes-bg: #dcf0e4;
   --tier-yes-fg: #1b8a5a;

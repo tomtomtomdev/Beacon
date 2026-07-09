@@ -1,15 +1,16 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, useSearchParams } from 'react-router-dom'
 import styles from './App.module.css'
+import { CountriesPage } from './countries/CountriesPage'
 import { JobsPage } from './jobs/JobsPage'
 import { SavedSearchesPage } from './searches/SavedSearchesPage'
 import { SettingsPage } from './settings/SettingsPage'
 
 const queryClient = new QueryClient()
 
-type View = 'jobs' | 'searches' | 'settings'
+type View = 'jobs' | 'searches' | 'countries' | 'settings'
 
-const VIEWS: readonly View[] = ['jobs', 'searches', 'settings']
+const VIEWS: readonly View[] = ['jobs', 'searches', 'countries', 'settings']
 
 function parseView(raw: string | null): View {
   return VIEWS.includes(raw as View) ? (raw as View) : 'jobs'
@@ -56,6 +57,14 @@ function AppShell() {
           </button>
           <button
             type="button"
+            className={view === 'countries' ? styles.navItemActive : styles.navItem}
+            aria-current={view === 'countries'}
+            onClick={() => setView('countries')}
+          >
+            Countries
+          </button>
+          <button
+            type="button"
             className={view === 'settings' ? styles.navItemActive : styles.navItem}
             aria-current={view === 'settings'}
             onClick={() => setView('settings')}
@@ -66,6 +75,7 @@ function AppShell() {
       </aside>
       {view === 'jobs' && <JobsPage />}
       {view === 'searches' && <SavedSearchesPage />}
+      {view === 'countries' && <CountriesPage />}
       {view === 'settings' && <SettingsPage />}
     </>
   )

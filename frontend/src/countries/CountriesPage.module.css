@@ -1,0 +1,224 @@
+.main {
+  flex: 1;
+  padding: 26px 34px;
+  overflow-y: auto;
+}
+
+.header {
+  margin-bottom: 20px;
+}
+
+.h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  max-width: 720px;
+  font-size: 13px;
+  color: var(--text-body-muted);
+}
+
+.state {
+  color: var(--text-body-muted);
+  font-size: 13.5px;
+}
+
+.geoPanel {
+  background: var(--geo-panel-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.geoHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 16px;
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-body-muted);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legendDot {
+  width: 9px;
+  height: 9px;
+  border-radius: var(--radius-pill);
+}
+
+.dotPrimary {
+  background: var(--accent);
+}
+
+.dotNice {
+  background: var(--geo-nice);
+}
+
+.map {
+  position: relative;
+  width: 100%;
+  height: 300px;
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.pin {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  border: 2px solid #ffffff;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.pinPrimary {
+  background: var(--accent);
+}
+
+.pinNice {
+  background: var(--geo-nice);
+}
+
+/* Selected pin gets a pulsing ring (DESIGN §4 bk-pulse). */
+.pinActive::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: var(--radius-pill);
+  border: 2px solid currentColor;
+  color: var(--accent);
+  animation: bk-pulse 1.4s ease-out infinite;
+}
+
+@keyframes bk-pulse {
+  from {
+    transform: scale(0.55);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  display: block;
+  text-align: left;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border-primary);
+  border-radius: 14px;
+  padding: 18px 20px;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+}
+
+.cardSelected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(14, 138, 125, 0.15);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.cardName {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.tierPill {
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.tierPrimary {
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-fg);
+}
+
+.tierNice {
+  background: var(--bg-chip);
+  color: var(--text-secondary);
+}
+
+.block {
+  margin-bottom: 10px;
+}
+
+.blockLabel {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-label);
+}
+
+.blockValue {
+  margin-top: 3px;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-row);
+}
+
+.registryNote {
+  font-size: 11.5px;
+  color: var(--text-body-muted);
+}
+
+.verified {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-mono-faint);
+}
