@@ -9,6 +9,7 @@ from beacon.domain.classification import Classification
 from beacon.domain.company import Company
 from beacon.domain.dedup import DedupRow
 from beacon.domain.digest import Digest
+from beacon.domain.health import SourceHealth
 from beacon.domain.job import NormalizedJob
 from beacon.domain.notification import TelegramConfig
 from beacon.domain.registry import Registry, RegistryCompany
@@ -249,6 +250,18 @@ class CompanyRepo(Protocol):
     def set_registry_match(
         self, company_id: int, flags: int, confidence: float | None, evidence: str | None
     ) -> None: ...
+
+    def get_health(self, company_id: int) -> SourceHealth:
+        """The company's current polling health (SPEC §7). Fresh rows read back as OK."""
+        ...
+
+    def set_health(self, company_id: int, health: SourceHealth) -> None:
+        """Persist a health transition (after a poll, or a probe restore)."""
+        ...
+
+    def list_quarantined(self) -> list[Company]:
+        """The quarantined seed companies — the weekly probe's retry list."""
+        ...
 
 
 class SearchRepo(Protocol):

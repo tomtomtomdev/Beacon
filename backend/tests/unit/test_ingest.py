@@ -13,6 +13,7 @@ from beacon.application.ports import JobDetail, JobFilters, JobPage, RawPosting
 from beacon.domain.classification import Category, Classification, Level
 from beacon.domain.company import Company
 from beacon.domain.dedup import DedupRow
+from beacon.domain.health import Health, SourceHealth
 from beacon.domain.job import CLOSE_AFTER_MISSES, NormalizedJob
 from beacon.domain.registry import Registry
 from beacon.domain.sponsorship import SponsorSignal, SponsorTier
@@ -390,6 +391,7 @@ class FakeCompanyRepo:
         self._by_name: dict[str, Company] = {c.name: c for c in existing or []}
         self._next_id = max((c.id or 0 for c in self._by_name.values()), default=0) + 1
         self.created: list[str] = []
+        self._health: dict[int, SourceHealth] = {}
 
     def get_or_create(self, company: Company) -> Company:
         found = self._by_name.get(company.name)
@@ -414,6 +416,16 @@ class FakeCompanyRepo:
         self, company_id: int, flags: int, confidence: float | None, evidence: str | None
     ) -> None:
         raise NotImplementedError("company-less ingest never matches registries")
+
+    def get_health(self, company_id: int) -> SourceHealth:
+        return self._health.get(company_id, SourceHealth())
+
+    def set_health(self, company_id: int, health: SourceHealth) -> None:
+        self._health[company_id] = health
+
+    def list_quarantined(self) -> list[Company]:
+        quarantined = {cid for cid, h in self._health.items() if h.health is Health.QUARANTINED}
+        return [c for c in self._by_name.values() if c.id in quarantined]
 
 
 ANTHROPIC = Company(
