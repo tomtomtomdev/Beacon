@@ -79,6 +79,30 @@ cd frontend
 npm run dev
 ```
 
+### Source health & recovery
+
+Beacon treats a source failure as a first-class **state**, never as data (SPEC §7). Each poll
+classifies failures — `gone` (404/410, the board moved/was removed), `unreachable` (5xx /
+timeout / transport), `schema_drift` (fetched but nothing parsed, the API changed shape) — and
+records them on the company. A source **quarantines** after 3 consecutive `gone`/`schema_drift`
+failures or 10 `unreachable` ones; a quarantined source stops being polled and its jobs are
+frozen (never closed), so a dead board can't corrupt the data. A weekly probe retries
+quarantined sources and auto-restores any that recover. Health surfaces in the **Companies**
+view (`GET /companies/health`) and in the Telegram digest.
+
+**Recovering a moved board is a data edit, no code:** a company that switched ATS provider or
+renamed its slug just needs its row in `seeds/companies.csv` updated —
+
+```bash
+# edit seeds/companies.csv: change ats_type / ats_slug for the affected company, then:
+cd backend && uv run python -m beacon.ingest
+```
+
+The next re-seed detects the changed `ats_type`/`ats_slug`, **resets that company's health**
+(clears quarantine + counters), and the poll proceeds normally. An unchanged re-seed never
+un-quarantines, so routine runs don't disturb a genuine quarantine. Live acceptance:
+`uv run python scripts/spot_check_health.py`.
+
 ### Configuration
 
 All env reads live in one place (`beacon/config.py`). Defaults work out of the box:

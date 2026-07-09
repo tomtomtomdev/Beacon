@@ -338,9 +338,11 @@ Tasks:
 7. **Companies view (DESIGN.md §3):** summary cards (seed/supported/healthy/degraded/quarantined/adapter-pending counts) + companies table (Company · ATS·slug · HQ · Last success · Health badge with reason); plus "source stale since <date>" banner on jobs from quarantined companies. Seed line: `seed 53 · greenhouse 24 · lever 10 · ashby 11 · 8 awaiting adapters` (counts computed from the companies table, never hardcoded). CSV-edit recovery documented in README
 
 Acceptance:
-- [ ] Point a seed row at a nonsense slug → after 3 polls it's quarantined with reason `gone`, polling stops, Telegram digest reports it, its jobs never close
-- [ ] Fix the slug, reset health → next cycle polls and upserts normally
-- [ ] Kill network mid-cycle (simulated) → affected sources degrade, nothing closes, recovery is automatic on next success
+- [x] Point a seed row at a nonsense slug → after 3 polls it's quarantined with reason `gone`, polling stops, Telegram digest reports it, its jobs never close — **live 2026-07-09** via `scripts/spot_check_health.py`: a nonsense Greenhouse slug 404s → degraded/degraded/quarantined(gone) over 3 real polls; the pre-existing job's `closed_at` stays null; the digest health section lists it. (`test_ingest_all_quarantines_after_three_gone_polls`, `test_failed_poll_never_closes_jobs`, `test_health_in_digest`.)
+- [x] Fix the slug, reset health → next cycle polls and upserts normally — **live**: editing the slug to a real board (`tines`) reset health on re-seed and the recovery poll upserted 15 jobs. Recovery is a pure CSV edit — a changed `ats_type`/`ats_slug` on re-seed clears quarantine (`test_reslug_on_reseed_resets_health`); an unchanged re-seed never un-quarantines.
+- [x] Kill network mid-cycle (simulated) → affected sources degrade, nothing closes, recovery is automatic on next success — covered by `test_success_after_a_failure_restores_health` (unreachable → degraded → success restores ok) + the no-sweep-on-failed-poll guard; the weekly probe (`probe_quarantined`, `test_probe_*`) restores a source that was down long enough to quarantine.
+
+Note: the per-job "source stale since <date>" banner on the Jobs view (DESIGN §2/§3) and the sidebar source-health footer are deferred (consistent with prior UI-defer decisions) — the Companies view + `/companies/health` + digest are the primary surfaces and cover the acceptance.
 
 ---
 
