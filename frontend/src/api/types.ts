@@ -39,6 +39,10 @@ export interface JobDetail extends Job {
   // The sentence that decided an explicit_yes/explicit_no tier; null for
   // registry_inferred/unknown. The drawer highlights it (slice 10, per DESIGN.md).
   sponsor_evidence: string | null
+  // Behind a registry_inferred tier: which registers the company matched (e.g. ['UK','NL'])
+  // and the fuzzy-match confidence. Empty / null when no register matched.
+  registries: string[]
+  match_confidence: number | null
   duplicate_sources: DuplicateSource[]
 }
 
@@ -80,4 +84,21 @@ export interface TelegramSettingsUpdate {
 export interface TestResult {
   ok: boolean
   channel: string
+}
+
+// Target-geography weighting (SPEC §3) — drives the Countries-view legend and map pins.
+export type PriorityTier = 'primary' | 'nice_to_have'
+
+// GET /countries: one country's relocation reference card (SPEC §4). Figures are as-known;
+// verified_at + source_url let the UI show a "verified as of" date and a re-verify link.
+export interface Country {
+  code: string
+  name: string
+  visa_summary: string
+  pr_summary: string
+  citizenship_summary: string
+  registry_name: string
+  priority_tier: PriorityTier
+  verified_at: string
+  source_url: string
 }

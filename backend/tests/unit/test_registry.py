@@ -1,4 +1,6 @@
-from beacon.domain.registry import Registry, RegistryCompany
+import pytest
+
+from beacon.domain.registry import Registry, RegistryCompany, registry_names
 
 
 def test_bitmask_members_are_uk_nl_us_manual_only() -> None:
@@ -13,6 +15,26 @@ def test_flags_compose_and_test_by_bit() -> None:
     assert flags & Registry.NL
     assert not flags & Registry.US
     assert int(flags) == int(Registry.UK) + int(Registry.NL)
+
+
+@pytest.mark.parametrize(
+    ("flags", "expected"),
+    [
+        (0, ()),
+        (int(Registry.UK), ("UK",)),
+        (int(Registry.MANUAL), ("MANUAL",)),
+        (int(Registry.UK | Registry.NL), ("UK", "NL")),
+        (
+            int(Registry.UK | Registry.NL | Registry.US | Registry.MANUAL),
+            ("UK", "NL", "US", "MANUAL"),
+        ),
+    ],
+    ids=["none", "uk", "manual", "uk-nl", "all"],
+)
+def test_registry_names_decodes_the_bitmask_in_definition_order(
+    flags: int, expected: tuple[str, ...]
+) -> None:
+    assert registry_names(flags) == expected
 
 
 def test_registry_company_carries_aliases_and_evidence() -> None:

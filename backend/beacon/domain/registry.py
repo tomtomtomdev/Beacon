@@ -15,6 +15,14 @@ class Registry(IntFlag):
     MANUAL = 8
 
 
+def registry_names(flags: int) -> tuple[str, ...]:
+    """The names of the registries a company matched, in bitmask definition order
+    (UK, NL, US, MANUAL) — what the job-detail drawer lists for a registry_inferred tier."""
+    # Iterating a flag yields its canonical members, each with a real name (mypy types
+    # Enum.name as str | None, so narrow it explicitly).
+    return tuple(member.name for member in Registry(flags) if member.name is not None)
+
+
 @dataclass(frozen=True, slots=True)
 class RegistryCompany:
     """One organisation as a registry lists it, ready for name matching.

@@ -402,6 +402,35 @@ async def test_job_detail_sponsor_evidence_null_when_absent(
     assert response.json()["sponsor_evidence"] is None
 
 
+async def test_job_detail_lists_matched_registries_and_confidence(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    # The drawer's registry_inferred card names which registers matched (SPEC slice-2 task
+    # deferred here) — company on UK+NL registers, confidence 0.94.
+    job_id = _ids_by_external(seeded)["1"]
+    seeded.execute(
+        "UPDATE companies SET registry_flags = 3, match_confidence = 0.94 WHERE name = 'Spotify'"
+    )
+    seeded.execute("UPDATE jobs SET sponsor_tier = 'registry_inferred' WHERE id = ?", (job_id,))
+    seeded.commit()
+
+    body = (await client.get(f"/jobs/{job_id}")).json()
+
+    assert body["registries"] == ["UK", "NL"]
+    assert body["match_confidence"] == 0.94
+
+
+async def test_job_detail_no_registries_when_company_unflagged(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    job_id = _ids_by_external(seeded)["4"]
+
+    body = (await client.get(f"/jobs/{job_id}")).json()
+
+    assert body["registries"] == []
+    assert body["match_confidence"] is None
+
+
 async def test_job_detail_unknown_id_is_404(
     client: httpx.AsyncClient, seeded: sqlite3.Connection
 ) -> None:

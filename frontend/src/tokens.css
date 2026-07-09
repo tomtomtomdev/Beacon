@@ -28,6 +28,25 @@
   --accent-soft-fg: #0a6c62;
   --accent-border: #a9dcd5;
 
+  /* Status pills (bg / fg) */
+  --pill-new-bg: #d7efec;
+  --pill-new-fg: #0a6c62;
+  --pill-seen-bg: #e7ecef;
+  --pill-seen-fg: #6b7784;
+  --pill-starred-bg: #cbeae4;
+  --pill-starred-fg: #0a6c62;
+  --pill-hidden-bg: #f6e3e1;
+  --pill-hidden-fg: #c0504a;
+
+  /* Job-detail drawer (DESIGN §2) */
+  --drawer-overlay: rgba(16, 24, 32, 0.22);
+
+  /* Country visa panel (teal-tinted, DESIGN §2) */
+  --country-bg: #e6f4f1;
+  --country-border: #c9e6e1;
+  --country-label: #3d8a7e;
+  --country-value: #1f3b40;
+
   /* Sponsorship tiers (bg / fg / dot) */
   --tier-yes-bg: #dcf0e4;
   --tier-yes-fg: #1b8a5a;

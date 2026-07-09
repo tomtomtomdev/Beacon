@@ -282,6 +282,38 @@ describe('JobsPage', () => {
     })
   })
 
+  it('opening a new job sets the ?job param and marks it seen', async () => {
+    const detail = {
+      ...payload.jobs[0],
+      description: 'Details.',
+      sponsor_evidence: null,
+      registries: [],
+      match_confidence: null,
+      duplicate_sources: [],
+    }
+    fetchMock.mockImplementation((url: RequestInfo | URL) => {
+      const u = String(url)
+      if (u === '/countries') return Promise.resolve({ ok: true, json: () => Promise.resolve([]) })
+      if (u.startsWith('/jobs/') && !u.includes('/status'))
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(detail) })
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(payload) })
+    })
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByText('Swift Engineer')
+
+    await user.click(screen.getByRole('button', { name: /open Swift Engineer details/i }))
+
+    // The drawer opens (its own detail fetch) and the `new` job is PATCHed to seen.
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+    await waitFor(() => {
+      const patch = fetchMock.mock.calls.find(
+        (call) => String(call[0]) === '/jobs/1/status' && call[1]?.method === 'PATCH',
+      )
+      expect(JSON.parse(String(patch?.[1]?.body))).toEqual({ status: 'seen' })
+    })
+  })
+
   it('shows a per-view empty state when nothing matches (New = all caught up)', async () => {
     fetchMock.mockResolvedValue({
       ok: true,

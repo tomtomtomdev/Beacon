@@ -45,8 +45,19 @@
   text-align: right;
 }
 
+/* The role cell is the drawer-open trigger (DESIGN.md §2 "opens on row click"), reset
+   from button defaults to a left-aligned block that fills its grid column. */
 .roleCell {
   min-width: 0;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
 }
 
 .title {
@@ -59,6 +70,10 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.roleCell:hover .title {
+  color: var(--accent);
 }
 
 /* DESIGN.md §2: leading 7px dot, teal when status is `new`, else transparent to keep alignment. */
@@ -79,6 +94,7 @@
 }
 
 .company {
+  display: block;
   margin-top: 2px;
   font-size: 12.5px;
   font-weight: 500;

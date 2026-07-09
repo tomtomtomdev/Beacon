@@ -73,6 +73,8 @@ class DuplicateSourceOut(BaseModel):
 class JobDetailOut(JobOut):
     description: str
     sponsor_evidence: str | None
+    registries: list[str]
+    match_confidence: float | None
     duplicate_sources: list[DuplicateSourceOut]
 
 
@@ -117,6 +119,8 @@ def _to_detail_dto(detail: JobDetail) -> JobDetailOut:
         user_status=UserStatus(detail.user_status),
         description=detail.description,
         sponsor_evidence=detail.sponsor_evidence,
+        registries=list(detail.registries),
+        match_confidence=detail.match_confidence,
         duplicate_sources=[
             DuplicateSourceOut(source=s.source, company=s.company, url=s.url)
             for s in detail.duplicate_sources

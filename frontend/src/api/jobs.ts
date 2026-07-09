@@ -1,4 +1,4 @@
-import type { JobsPageResponse, SponsorTier, UserStatus } from './types'
+import type { JobDetail, JobsPageResponse, SponsorTier, UserStatus } from './types'
 
 export type SortBy = 'tier' | 'date'
 
@@ -42,6 +42,16 @@ export async function fetchJobs({
     throw new Error(`GET /jobs failed: ${response.status}`)
   }
   return (await response.json()) as JobsPageResponse
+}
+
+// GET /jobs/{id} — the canonical job, its sponsorship evidence, and every source it was
+// found on. Feeds the detail drawer (DESIGN.md §2).
+export async function fetchJobDetail(id: number): Promise<JobDetail> {
+  const response = await fetch(`/jobs/${id}`)
+  if (!response.ok) {
+    throw new Error(`GET /jobs/${id} failed: ${response.status}`)
+  }
+  return (await response.json()) as JobDetail
 }
 
 export async function patchJobStatus(id: number, status: UserStatus): Promise<void> {

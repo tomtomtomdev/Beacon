@@ -1,5 +1,15 @@
+import type { SponsorTier } from '../api/types'
+
 // Category/level display taxonomy — shared by the FilterBar pills and the JobTable chips
 // so a code always renders the same label. Values are the API codes; labels are DESIGN.md §2.
+
+// Sponsor-tier chip labels — shared by the JobTable row chip and the drawer chip row.
+export const TIER_LABEL: Record<SponsorTier, string> = {
+  explicit_yes: 'Sponsors',
+  registry_inferred: 'Registry',
+  unknown: 'Unknown',
+  explicit_no: 'No sponsor',
+}
 
 export const CATEGORY_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: 'ios', label: 'iOS' },

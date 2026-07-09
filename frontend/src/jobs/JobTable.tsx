@@ -1,22 +1,16 @@
 import { ExternalLink, Eye, EyeOff, Star } from 'lucide-react'
-import type { Job, SponsorTier, UserStatus } from '../api/types'
+import type { Job, UserStatus } from '../api/types'
 import styles from './JobTable.module.css'
 import { postedAgo } from './postedAgo'
-import { categoryLabel } from './taxonomy'
-
-const TIER_LABEL: Record<SponsorTier, string> = {
-  explicit_yes: 'Sponsors',
-  registry_inferred: 'Registry',
-  unknown: 'Unknown',
-  explicit_no: 'No sponsor',
-}
+import { categoryLabel, TIER_LABEL } from './taxonomy'
 
 interface JobTableProps {
   jobs: Job[]
+  onOpen: (id: number) => void
   onSetStatus: (id: number, status: UserStatus) => void
 }
 
-export function JobTable({ jobs, onSetStatus }: JobTableProps) {
+export function JobTable({ jobs, onOpen, onSetStatus }: JobTableProps) {
   return (
     <div className={styles.card} data-testid="job-table">
       <div className={styles.headerRow}>
@@ -32,16 +26,21 @@ export function JobTable({ jobs, onSetStatus }: JobTableProps) {
         const hidden = job.user_status === 'hidden'
         return (
         <div key={job.id} className={hidden ? `${styles.row} ${styles.rowMuted}` : styles.row}>
-          <div className={styles.roleCell}>
-            <div className={styles.title}>
+          <button
+            type="button"
+            className={styles.roleCell}
+            aria-label={`Open ${job.title} details`}
+            onClick={() => onOpen(job.id)}
+          >
+            <span className={styles.title}>
               <span
                 className={job.user_status === 'new' ? styles.newDot : styles.newDotIdle}
                 aria-hidden
               />
               {job.title}
-            </div>
-            <div className={styles.company}>{job.company}</div>
-          </div>
+            </span>
+            <span className={styles.company}>{job.company}</span>
+          </button>
           <div className={styles.locationCell}>
             <div className={styles.city}>{job.location || '—'}</div>
             {job.country && <div className={styles.countryCode}>{job.country}</div>}

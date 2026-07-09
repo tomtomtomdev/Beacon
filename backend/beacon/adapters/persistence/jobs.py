@@ -12,6 +12,7 @@ from beacon.application.ports import (
 from beacon.domain.classification import Classification, format_categories
 from beacon.domain.dedup import DedupRow
 from beacon.domain.job import NormalizedJob
+from beacon.domain.registry import registry_names
 from beacon.domain.sponsorship import SORT_RANK, SponsorSignal, SponsorTier
 from beacon.domain.status import UserStatus
 
@@ -179,7 +180,8 @@ class SqliteJobRepo:
             """
             SELECT jobs.id, jobs.title, companies.name AS company, jobs.url, jobs.description,
                    jobs.location_raw, jobs.country, jobs.city, jobs.categories, jobs.level,
-                   jobs.posted_at, jobs.sponsor_tier, jobs.sponsor_evidence, jobs.user_status
+                   jobs.posted_at, jobs.sponsor_tier, jobs.sponsor_evidence, jobs.user_status,
+                   companies.registry_flags, companies.match_confidence
             FROM jobs JOIN companies ON companies.id = jobs.company_id
             WHERE jobs.id = ?
             """,
@@ -212,6 +214,8 @@ class SqliteJobRepo:
             posted_at=datetime.fromisoformat(posted_at) if posted_at else None,
             sponsor_tier=job["sponsor_tier"],
             sponsor_evidence=job["sponsor_evidence"],
+            registries=registry_names(job["registry_flags"]),
+            match_confidence=job["match_confidence"],
             user_status=job["user_status"],
             duplicate_sources=tuple(
                 DuplicateSource(source=s["source"], company=s["company"], url=s["url"])

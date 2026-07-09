@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { fetchJobs, patchJobStatus, type SortBy, type StatusView } from '../api/jobs'
 import type { SponsorTier, UserStatus } from '../api/types'
 import { FilterBar } from './FilterBar'
+import { JobDrawer } from './JobDrawer'
 import { JobTable } from './JobTable'
 import styles from './JobsPage.module.css'
 import { StatusTabs } from './StatusTabs'
@@ -87,6 +88,11 @@ export function JobsPage() {
     )
   }
 
+  // The open drawer is a URL param (?job=id) so a deep-linked job is shareable and the
+  // browser Back button closes it — same rationale as the filter/view params.
+  const jobParam = searchParams.get('job')
+  const openJobId = jobParam ? Number(jobParam) : null
+
   const queryClient = useQueryClient()
   const { data, isPending, isError } = useQuery({
     queryKey: ['jobs', q, countries, categories, levels, tiers, sort, view],
@@ -95,9 +101,36 @@ export function JobsPage() {
 
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: UserStatus }) => patchJobStatus(id, status),
-    // The row leaves the current view once its status changes — refetch to reflect it.
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['jobs'] }),
+    // The row leaves the current view once its status changes; the drawer's own detail
+    // reflects the new status — invalidate both.
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobs'] })
+      queryClient.invalidateQueries({ queryKey: ['job'] })
+    },
   })
+
+  const openJob = (id: number) => {
+    setSearchParams(
+      (params) => {
+        params.set('job', String(id))
+        return params
+      },
+      { replace: true },
+    )
+    // Opening a `new` job marks it seen (DESIGN.md §2 status workflow).
+    const job = data?.jobs.find((candidate) => candidate.id === id)
+    if (job?.user_status === 'new') statusMutation.mutate({ id, status: 'seen' })
+  }
+
+  const closeJob = () => {
+    setSearchParams(
+      (params) => {
+        params.delete('job')
+        return params
+      },
+      { replace: true },
+    )
+  }
 
   return (
     <main className={styles.main}>
@@ -153,6 +186,15 @@ export function JobsPage() {
       {data && data.jobs.length > 0 && (
         <JobTable
           jobs={data.jobs}
+          onOpen={openJob}
+          onSetStatus={(id, status) => statusMutation.mutate({ id, status })}
+        />
+      )}
+
+      {openJobId !== null && (
+        <JobDrawer
+          jobId={openJobId}
+          onClose={closeJob}
           onSetStatus={(id, status) => statusMutation.mutate({ id, status })}
         />
       )}
