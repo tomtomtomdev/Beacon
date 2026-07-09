@@ -22,6 +22,8 @@ LOCAL_TZ = ZoneInfo("Asia/Jakarta")
 class Settings:
     db_path: Path
     seeds_path: Path
+    # Where the nightly SQLite backup writes timestamped copies (SPEC §9).
+    backups_dir: Path = _REPO_ROOT / "backups"
     # Manually-refreshed registry snapshots (MVP); drop real exports in data/registries/.
     uk_registry_path: Path = _REGISTRIES / "uk_sponsors.csv"
     ind_registry_path: Path = _REGISTRIES / "ind_sponsors.csv"
@@ -46,6 +48,7 @@ class Settings:
             seeds_path=Path(
                 source.get("BEACON_SEEDS_PATH", str(_REPO_ROOT / "seeds" / "companies.csv"))
             ),
+            backups_dir=Path(source.get("BEACON_BACKUPS_PATH", str(_REPO_ROOT / "backups"))),
             uk_registry_path=Path(
                 source.get("BEACON_UK_REGISTRY_PATH", str(_REGISTRIES / "uk_sponsors.csv"))
             ),

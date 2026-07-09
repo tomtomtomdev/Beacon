@@ -22,6 +22,11 @@ def test_settings_env_overrides_win() -> None:
     assert settings.seeds_path == Path("/data/seeds.csv")
 
 
+def test_backups_dir_defaults_inside_the_repo_and_env_overrides() -> None:
+    assert Settings.from_env({}).backups_dir.name == "backups"
+    assert Settings.from_env({"BEACON_BACKUPS_PATH": "/data/bk"}).backups_dir == Path("/data/bk")
+
+
 def test_telegram_settings_absent_by_default() -> None:
     settings = Settings.from_env({})
 

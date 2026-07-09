@@ -22,3 +22,6 @@ data/registries/
 
 # Design bundle kept locally as reference, not shipped
 Design for Spec-2.zip
+
+# Nightly SQLite backups (local only)
+backups/

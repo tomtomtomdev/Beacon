@@ -30,7 +30,17 @@ from beacon.application.settings import effective_telegram_config
 from beacon.config import Settings
 
 
-async def _run(settings: Settings, *, only_company: str | None, only_source: str | None) -> int:
+async def run_ingest(
+    settings: Settings,
+    *,
+    only_company: str | None = None,
+    only_source: str | None = None,
+    poll_ats: bool = True,
+    poll_boards: bool = True,
+) -> int:
+    """One poll cycle: ATS boards, then company-less boards, then dedup + notify. poll_ats /
+    poll_boards let the scheduler run the two source families on their own intervals (SPEC §9);
+    dedup + notify always run (idempotent), so either family's poll keeps the list consistent."""
     conn = connect(settings.db_path)
     run_migrations(conn, MIGRATIONS_DIR)
     seed_countries(SqliteCountryRepo(conn))
@@ -57,7 +67,7 @@ async def _run(settings: Settings, *, only_company: str | None, only_source: str
 
             # ATS boards: one seed company each. Shadow rows (ats_type='none', left by a
             # prior company-less poll) are excluded — no adapter polls them.
-            if only_source is None:
+            if only_source is None and poll_ats:
                 ats = [c for c in company_repo.list_active() if c.ats_type != SHADOW_ATS_TYPE]
                 if only_company is not None:
                     ats = [c for c in ats if c.ats_slug == only_company]
@@ -74,7 +84,7 @@ async def _run(settings: Settings, *, only_company: str | None, only_source: str
                     )
 
             # Company-less sources (HN, JobTech): one source, many employers per posting.
-            if only_company is None:
+            if only_company is None and poll_boards:
                 sources = make_companyless_sources(fetcher)
                 if only_source is not None:
                     sources = [s for s in sources if s.source_id == only_source]
@@ -118,7 +128,7 @@ def main(argv: list[str] | None = None) -> int:
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
     return asyncio.run(
-        _run(Settings.from_env(), only_company=args.company, only_source=args.source)
+        run_ingest(Settings.from_env(), only_company=args.company, only_source=args.source)
     )
 
 

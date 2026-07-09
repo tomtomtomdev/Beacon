@@ -51,7 +51,7 @@ def _wire(settings: Settings) -> tuple[SqliteCompanyRepo, SqliteJobRepo]:
     return company_repo, SqliteJobRepo(conn)
 
 
-def _run_refresh(settings: Settings) -> int:
+def run_refresh(settings: Settings) -> int:
     company_repo, jobs = _wire(settings)
     ingesters = _available_ingesters(settings)
     if not ingesters:
@@ -87,7 +87,7 @@ def main(argv: list[str] | None = None) -> int:
         if not args.evidence:
             parser.error("--evidence is required with --flag")
         return _run_flag(settings, args.flag, args.evidence)
-    return _run_refresh(settings)
+    return run_refresh(settings)
 
 
 if __name__ == "__main__":

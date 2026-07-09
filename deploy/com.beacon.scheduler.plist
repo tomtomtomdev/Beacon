@@ -1,26 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- Stub for the Beacon scheduler (slice 10). NOT loaded yet.
-     Load with: launchctl load ~/Library/LaunchAgents/com.beacon.scheduler.plist -->
+<!-- Beacon scheduler (slice 10). Install + load with:
+       cp deploy/com.beacon.scheduler.plist ~/Library/LaunchAgents/
+       launchctl load ~/Library/LaunchAgents/com.beacon.scheduler.plist
+     RunAtLoad + KeepAlive → a reboot relaunches it and the next interval poll runs unattended.
+     Tail logs at /tmp/beacon.scheduler.{out,err}.log. -->
 <plist version="1.0">
 <dict>
     <key>Label</key>
     <string>com.beacon.scheduler</string>
-    <key>Disabled</key>
-    <true/>
     <key>ProgramArguments</key>
     <array>
         <string>/Users/tomtomtom/.local/bin/uv</string>
         <string>run</string>
         <string>--project</string>
-        <string>/Users/tomtomtom/Downloads/Beacon/backend</string>
+        <string>/Users/tomtomtom/Desktop/Beacon/backend</string>
         <string>python</string>
         <string>-m</string>
         <string>beacon.scheduler</string>
     </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/tomtomtom/Desktop/Beacon/backend</string>
     <key>RunAtLoad</key>
     <true/>
     <key>KeepAlive</key>
     <true/>
+    <key>StandardOutPath</key>
+    <string>/tmp/beacon.scheduler.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/beacon.scheduler.err.log</string>
 </dict>
 </plist>
