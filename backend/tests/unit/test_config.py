@@ -2,6 +2,8 @@ from pathlib import Path
 
 from beacon.config import Settings
 
+DEFAULT_LLM_MODEL = "claude-haiku-4-5-20251001"
+
 
 def test_settings_defaults_resolve_inside_the_repo() -> None:
     settings = Settings.from_env({})
@@ -37,3 +39,27 @@ def test_telegram_settings_from_env_keep_the_token_secret() -> None:
     assert repr(settings.telegram_bot_token) == "SecretStr('**********')"
     assert settings.telegram_bot_token.get_secret_value() == "12345:secret"
     assert settings.telegram_chat_id == "4242"
+
+
+def test_llm_settings_default_when_absent() -> None:
+    settings = Settings.from_env({})
+
+    assert settings.anthropic_api_key is None
+    assert settings.llm_model == DEFAULT_LLM_MODEL
+    assert settings.llm_monthly_budget == 500
+
+
+def test_llm_settings_from_env_override_and_keep_the_key_secret() -> None:
+    settings = Settings.from_env(
+        {
+            "BEACON_ANTHROPIC_API_KEY": "sk-ant-secret",
+            "BEACON_LLM_MODEL": "claude-something-newer",
+            "BEACON_LLM_MONTHLY_BUDGET": "1200",
+        }
+    )
+
+    assert settings.anthropic_api_key is not None
+    assert repr(settings.anthropic_api_key) == "SecretStr('**********')"
+    assert settings.anthropic_api_key.get_secret_value() == "sk-ant-secret"
+    assert settings.llm_model == "claude-something-newer"
+    assert settings.llm_monthly_budget == 1200
