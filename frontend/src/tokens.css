@@ -52,6 +52,20 @@
   --geo-nice: #7c8791;
   --map-land: #cdd6db;
 
+  /* Source health (bg / fg / dot) — DESIGN §3 Companies view */
+  --health-ok-bg: #dcf0e4;
+  --health-ok-fg: #1b8a5a;
+  --health-ok-dot: #25a56a;
+  --health-degraded-bg: #faf1dd;
+  --health-degraded-fg: #9a6a12;
+  --health-degraded-dot: #d99a2b;
+  --health-quarantined-bg: #f6e3e1;
+  --health-quarantined-fg: #c0504a;
+  --health-quarantined-dot: #d26f68;
+  --health-pending-bg: #e7ecef;
+  --health-pending-fg: #6b7784;
+  --health-pending-dot: #a6b0ba;
+
   /* Sponsorship tiers (bg / fg / dot) */
   --tier-yes-bg: #dcf0e4;
   --tier-yes-fg: #1b8a5a;

@@ -86,6 +86,36 @@ export interface TestResult {
   channel: string
 }
 
+// GET /companies/health (DESIGN §3). status is the display state; 'pending' = a seed company
+// whose ATS type has no adapter yet (never polled). reason is the failure kind when unhealthy.
+export type HealthStatus = 'ok' | 'degraded' | 'quarantined' | 'pending'
+
+export interface CompanyHealthRow {
+  name: string
+  ats_type: string
+  ats_slug: string
+  country_hq: string
+  status: HealthStatus
+  reason: string | null
+  last_success_at: string | null
+  consecutive_failures: number
+}
+
+export interface HealthSummary {
+  seed: number
+  supported: number
+  healthy: number
+  degraded: number
+  quarantined: number
+  pending: number
+  by_ats: Record<string, number>
+}
+
+export interface CompanyHealth {
+  summary: HealthSummary
+  companies: CompanyHealthRow[]
+}
+
 // Target-geography weighting (SPEC §3) — drives the Countries-view legend and map pins.
 export type PriorityTier = 'primary' | 'nice_to_have'
 
