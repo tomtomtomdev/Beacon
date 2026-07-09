@@ -11,6 +11,7 @@ import pytest
 
 from beacon.adapters.persistence.companies import SqliteCompanyRepo
 from beacon.adapters.persistence.jobs import SqliteJobRepo
+from beacon.adapters.persistence.registries_meta import SqliteRegistriesMetaRepo
 from beacon.adapters.registries.h1b import H1BLCARegistry
 from beacon.adapters.registries.ind import INDRegistry
 from beacon.adapters.registries.uk import UKSponsorRegistry
@@ -141,6 +142,20 @@ def test_manual_flag_yields_registry_inferred(seeded: sqlite3.Connection) -> Non
         "sponsor_tier"
     ]
     assert tier == SponsorTier.REGISTRY_INFERRED.value
+
+
+def test_refresh_records_registry_snapshot_freshness(seeded: sqlite3.Connection) -> None:
+    repo = SqliteCompanyRepo(seeded)
+    meta_repo = SqliteRegistriesMetaRepo(seeded)
+
+    refresh_registries(
+        repo.list_active(), ingesters(), repo, SqliteJobRepo(seeded), meta_repo=meta_repo, now=NOW
+    )
+
+    metas = {m.registry: m for m in meta_repo.list_all()}
+    assert set(metas) == {"UK", "NL", "US"}
+    assert metas["UK"].fetched_at == NOW
+    assert metas["UK"].row_count > 0
 
 
 def test_refresh_preserves_a_manual_flag(seeded: sqlite3.Connection) -> None:

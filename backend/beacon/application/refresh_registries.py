@@ -8,8 +8,9 @@ fuzzy matching may add UK/NL/US bits but never clears MANUAL.
 import logging
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import datetime
 
-from beacon.application.ports import CompanyRepo, JobRepo, RegistryIngester
+from beacon.application.ports import CompanyRepo, JobRepo, RegistriesMetaRepo, RegistryIngester
 from beacon.domain.company import Company
 from beacon.domain.matching import match_company
 from beacon.domain.registry import Registry
@@ -29,8 +30,18 @@ def refresh_registries(
     ingesters: Sequence[RegistryIngester],
     company_repo: CompanyRepo,
     jobs: JobRepo,
+    *,
+    meta_repo: RegistriesMetaRepo | None = None,
+    now: datetime | None = None,
 ) -> RefreshResult:
     entries_by_registry = {ingester.registry: ingester.fetch() for ingester in ingesters}
+
+    # Record each snapshot's freshness so the digest can nag when one goes stale (SPEC §7).
+    if meta_repo is not None and now is not None:
+        for registry, entries in entries_by_registry.items():
+            if registry.name is not None:
+                meta_repo.record(registry.name, now, len(entries))
+
     matched = 0
     for company in companies:
         if company.id is None:

@@ -4,8 +4,14 @@ Bitmask members are UK | NL | US | MANUAL (SPEC §5.3). There is no SE bit — t
 Swedish employer-certification scheme was discontinued Dec 2023.
 """
 
+from collections.abc import Iterable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from enum import IntFlag
+
+# Registries are refreshed by hand on a monthly-ish cadence, so they never quarantine — they
+# just nag when a snapshot goes stale (SPEC §7: fetched_at older than 45 days → digest warning).
+REGISTRY_STALE_AFTER_DAYS = 45
 
 
 class Registry(IntFlag):
@@ -21,6 +27,29 @@ def registry_names(flags: int) -> tuple[str, ...]:
     # Iterating a flag yields its canonical members, each with a real name (mypy types
     # Enum.name as str | None, so narrow it explicitly).
     return tuple(member.name for member in Registry(flags) if member.name is not None)
+
+
+@dataclass(frozen=True, slots=True)
+class RegistryMeta:
+    """A registry snapshot's freshness bookkeeping (the registries_meta table). `registry` is
+    the bitmask member name (UK/NL/US/MANUAL); `fetched_at` is when the snapshot was ingested."""
+
+    registry: str
+    fetched_at: datetime
+    row_count: int
+
+    def is_stale(self, *, now: datetime, max_age_days: int = REGISTRY_STALE_AFTER_DAYS) -> bool:
+        return (now - self.fetched_at) > timedelta(days=max_age_days)
+
+
+def stale_registries(
+    metas: Iterable[RegistryMeta],
+    *,
+    now: datetime,
+    max_age_days: int = REGISTRY_STALE_AFTER_DAYS,
+) -> tuple[RegistryMeta, ...]:
+    """The snapshots older than the staleness window — the digest's registry-nag lines."""
+    return tuple(m for m in metas if m.is_stale(now=now, max_age_days=max_age_days))
 
 
 @dataclass(frozen=True, slots=True)

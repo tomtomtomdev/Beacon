@@ -10,11 +10,13 @@ python -m beacon.refresh --flag "Lovable" --evidence "listed on relocate.me"
 
 import argparse
 import logging
+import sqlite3
 from datetime import UTC, datetime
 
 from beacon.adapters.persistence.companies import SqliteCompanyRepo
 from beacon.adapters.persistence.db import MIGRATIONS_DIR, connect, run_migrations
 from beacon.adapters.persistence.jobs import SqliteJobRepo
+from beacon.adapters.persistence.registries_meta import SqliteRegistriesMetaRepo
 from beacon.adapters.registries.h1b import H1BLCARegistry
 from beacon.adapters.registries.ind import INDRegistry
 from beacon.adapters.registries.uk import UKSponsorRegistry
@@ -42,28 +44,35 @@ def _available_ingesters(settings: Settings) -> list[RegistryIngester]:
     return ingesters
 
 
-def _wire(settings: Settings) -> tuple[SqliteCompanyRepo, SqliteJobRepo]:
+def _wire(settings: Settings) -> tuple[sqlite3.Connection, SqliteCompanyRepo, SqliteJobRepo]:
     conn = connect(settings.db_path)
     run_migrations(conn, MIGRATIONS_DIR)
     company_repo = SqliteCompanyRepo(conn)
     for seed in parse_seed_csv(settings.seeds_path.read_text()):
         company_repo.upsert(seed)
-    return company_repo, SqliteJobRepo(conn)
+    return conn, company_repo, SqliteJobRepo(conn)
 
 
 def run_refresh(settings: Settings) -> int:
-    company_repo, jobs = _wire(settings)
+    conn, company_repo, jobs = _wire(settings)
     ingesters = _available_ingesters(settings)
     if not ingesters:
         print("no registry snapshots available — nothing to match")
         return 1
-    result = refresh_registries(company_repo.list_active(), ingesters, company_repo, jobs)
+    result = refresh_registries(
+        company_repo.list_active(),
+        ingesters,
+        company_repo,
+        jobs,
+        meta_repo=SqliteRegistriesMetaRepo(conn),
+        now=datetime.now(UTC),
+    )
     print(f"refresh companies={result.companies} matched={result.matched}")
     return 0
 
 
 def _run_flag(settings: Settings, name: str, evidence: str) -> int:
-    company_repo, jobs = _wire(settings)
+    _conn, company_repo, jobs = _wire(settings)
     try:
         flag_manual_sponsor(company_repo, jobs, name, evidence, flagged_on=datetime.now(UTC).date())
     except ValueError as error:

@@ -1,6 +1,45 @@
+from datetime import UTC, datetime, timedelta
+
 import pytest
 
-from beacon.domain.registry import Registry, RegistryCompany, registry_names
+from beacon.domain.registry import (
+    REGISTRY_STALE_AFTER_DAYS,
+    Registry,
+    RegistryCompany,
+    RegistryMeta,
+    registry_names,
+    stale_registries,
+)
+
+NOW = datetime(2026, 7, 9, 12, 0, tzinfo=UTC)
+
+
+def _meta(registry: str, days_ago: int) -> RegistryMeta:
+    return RegistryMeta(registry=registry, fetched_at=NOW - timedelta(days=days_ago), row_count=100)
+
+
+def test_registry_fresh_within_the_window_is_not_stale() -> None:
+    fresh = _meta("UK", days_ago=REGISTRY_STALE_AFTER_DAYS - 1)
+
+    assert fresh.is_stale(now=NOW) is False
+
+
+def test_registry_past_the_window_is_stale() -> None:
+    old = _meta("UK", days_ago=REGISTRY_STALE_AFTER_DAYS + 1)
+
+    assert old.is_stale(now=NOW) is True
+
+
+def test_stale_registries_returns_only_the_stale_ones() -> None:
+    metas = [
+        _meta("UK", days_ago=10),
+        _meta("NL", days_ago=60),
+        _meta("US", days_ago=50),
+    ]
+
+    stale = stale_registries(metas, now=NOW)
+
+    assert [m.registry for m in stale] == ["NL", "US"]
 
 
 def test_bitmask_members_are_uk_nl_us_manual_only() -> None:

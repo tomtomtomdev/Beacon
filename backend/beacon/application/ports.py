@@ -12,7 +12,7 @@ from beacon.domain.digest import Digest
 from beacon.domain.health import SourceHealth
 from beacon.domain.job import NormalizedJob
 from beacon.domain.notification import TelegramConfig
-from beacon.domain.registry import Registry, RegistryCompany
+from beacon.domain.registry import Registry, RegistryCompany, RegistryMeta
 from beacon.domain.saved_search import SavedSearch
 from beacon.domain.sponsorship import SponsorSignal
 from beacon.domain.visa import CountryReference
@@ -300,6 +300,19 @@ class CountryRepo(Protocol):
 
     def seed(self, countries: Sequence[CountryReference]) -> None:
         """Idempotently upsert the reference rows (keyed on code); re-seeding updates."""
+        ...
+
+
+class RegistriesMetaRepo(Protocol):
+    """Freshness bookkeeping for the sponsor-registry snapshots (registries_meta). The refresh
+    records each snapshot's fetched_at/row_count; the digest reads it to nag when one is stale."""
+
+    def record(self, registry: str, fetched_at: datetime, row_count: int) -> None:
+        """Upsert one registry's snapshot freshness, keyed on the registry name."""
+        ...
+
+    def list_all(self) -> list[RegistryMeta]:
+        """Every recorded registry snapshot."""
         ...
 
 
