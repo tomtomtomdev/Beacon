@@ -46,6 +46,19 @@ async def test_get_json_returns_parsed_body_and_passes_params() -> None:
     assert seen[0].url.params.get("content") == "true"
 
 
+async def test_get_text_returns_the_raw_body() -> None:
+    # RSS feeds (We Work Remotely) need the raw text, not JSON.
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text="<rss><channel/></rss>")
+
+    clock = FakeClock()
+    body = await _client(httpx.MockTransport(handler), clock).get_text(
+        "https://weworkremotely.com/remote-jobs.rss"
+    )
+
+    assert body == "<rss><channel/></rss>"
+
+
 async def test_rate_limits_per_host_but_not_across_hosts() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json=[])

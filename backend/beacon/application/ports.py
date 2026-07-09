@@ -26,6 +26,8 @@ class Fetcher(Protocol):
 
     async def get_json(self, url: str, *, params: Mapping[str, str] | None = None) -> Any: ...
 
+    async def get_text(self, url: str, *, params: Mapping[str, str] | None = None) -> str: ...
+
 
 class JobSource(Protocol):
     source_id: str

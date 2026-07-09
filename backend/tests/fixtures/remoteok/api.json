@@ -1,0 +1,44 @@
+[
+  {
+    "legal": "By using the RemoteOK API you agree to attribute RemoteOK and link back."
+  },
+  {
+    "slug": "senior-ios-engineer-acme",
+    "id": "1000001",
+    "epoch": 1751371200,
+    "date": "2026-07-01T12:00:00+00:00",
+    "company": "Acme",
+    "position": "Senior iOS Engineer",
+    "tags": ["ios", "swift", "senior"],
+    "description": "<p>We are hiring a <b>Senior iOS Engineer</b> to build our mobile app.</p>",
+    "location": "Worldwide",
+    "salary_min": 120000,
+    "salary_max": 170000,
+    "apply_url": "https://remoteok.com/remote-jobs/1000001",
+    "url": "https://remoteok.com/remote-jobs/1000001-senior-ios-engineer-acme"
+  },
+  {
+    "slug": "backend-engineer-globex",
+    "id": "1000002",
+    "epoch": 1750412200,
+    "date": "2026-06-20T09:30:00+00:00",
+    "company": "Globex",
+    "position": "Backend Engineer",
+    "tags": ["backend", "go", "postgres"],
+    "description": "<p>Backend engineer wanted for our platform team.</p>",
+    "location": "United States",
+    "url": "https://remoteok.com/remote-jobs/1000002-backend-engineer-globex"
+  },
+  {
+    "slug": "flutter-developer-initech",
+    "id": "1000003",
+    "epoch": 0,
+    "date": "",
+    "company": "Initech",
+    "position": "Flutter Developer",
+    "tags": ["flutter", "dart"],
+    "description": "<p>Flutter developer for cross-platform apps.</p>",
+    "location": "Europe",
+    "url": "https://remoteok.com/remote-jobs/1000003-flutter-developer-initech"
+  }
+]

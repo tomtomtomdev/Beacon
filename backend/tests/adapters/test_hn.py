@@ -121,6 +121,9 @@ class ConcurrencyProbe:
         self._in_flight -= 1
         return self._fixture["items"].get(item_id)
 
+    async def get_text(self, url: str, *, params: Mapping[str, str] | None = None) -> str:
+        raise NotImplementedError  # HN uses JSON only
+
 
 async def test_item_fetches_are_bounded_by_the_concurrency_limit(
     hn_fixture: dict[str, Any],
@@ -151,6 +154,9 @@ class FlakyFetcher:
         if item_id == self._fail_id:
             raise httpx.ConnectError("boom")
         return self._fixture["items"].get(item_id)
+
+    async def get_text(self, url: str, *, params: Mapping[str, str] | None = None) -> str:
+        raise NotImplementedError  # HN uses JSON only
 
 
 async def test_a_raised_item_fetch_never_kills_the_poll_and_is_retried(

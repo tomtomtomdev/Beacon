@@ -11,6 +11,8 @@ from beacon.adapters.sources.greenhouse import GreenhouseAdapter
 from beacon.adapters.sources.hn import HNAdapter
 from beacon.adapters.sources.jobtech import JobTechAdapter
 from beacon.adapters.sources.lever import LeverAdapter
+from beacon.adapters.sources.remoteok import RemoteOKAdapter
+from beacon.adapters.sources.wwr import WWRAdapter
 from beacon.application.ingest import SourceFactory
 from beacon.application.ports import Fetcher, JobSource
 from beacon.domain.company import Company
@@ -37,4 +39,9 @@ def make_source_factory(fetcher: Fetcher) -> SourceFactory:
 def make_companyless_sources(fetcher: Fetcher) -> list[JobSource]:
     """Sources not tied to a seed company; each yields jobs across many employers parsed
     from the postings (see ingest_companyless_source). Not part of the per-company factory."""
-    return [HNAdapter(fetcher), JobTechAdapter(fetcher)]
+    return [
+        HNAdapter(fetcher),
+        JobTechAdapter(fetcher),
+        RemoteOKAdapter(fetcher),
+        WWRAdapter(fetcher),
+    ]

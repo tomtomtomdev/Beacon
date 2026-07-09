@@ -36,9 +36,14 @@ def test_factory_returns_none_for_ats_without_adapter() -> None:
     assert source_for(make_company("smartrecruiters")) is None
 
 
-def test_companyless_sources_are_hn_and_jobtech() -> None:
+def test_companyless_sources_are_the_four_board_sources() -> None:
     sources = make_companyless_sources(PoliteClient(httpx.AsyncClient()))
 
     # Company-less sources aren't keyed by a seed company; the CLI ingests them separately.
-    assert {source.source_id for source in sources} == {"hn", "jobtech"}
+    assert {source.source_id for source in sources} == {
+        "hn",
+        "jobtech",
+        "remoteok",
+        "weworkremotely",
+    }
     assert all(callable(s.fetch) and callable(s.normalize) for s in sources)

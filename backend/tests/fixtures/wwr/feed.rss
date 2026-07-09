@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>We Work Remotely: Remote Jobs</title>
+    <link>https://weworkremotely.com/</link>
+    <description>The latest remote jobs from We Work Remotely.</description>
+    <item>
+      <title>Acme Corp: Senior Backend Engineer</title>
+      <region>Anywhere in the World</region>
+      <category>Back-End Programming</category>
+      <link>https://weworkremotely.com/remote-jobs/acme-corp-senior-backend-engineer</link>
+      <guid>https://weworkremotely.com/remote-jobs/acme-corp-senior-backend-engineer</guid>
+      <description>&lt;p&gt;We are hiring a Senior Backend Engineer to join our platform team.&lt;/p&gt;</description>
+      <pubDate>Tue, 01 Jul 2026 12:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>Globex: iOS Engineer</title>
+      <region>USA Only</region>
+      <category>Full-Stack Programming</category>
+      <link>https://weworkremotely.com/remote-jobs/globex-ios-engineer</link>
+      <guid>https://weworkremotely.com/remote-jobs/globex-ios-engineer</guid>
+      <description>&lt;p&gt;iOS engineer wanted for our consumer app.&lt;/p&gt;</description>
+      <pubDate>Sun, 15 Jun 2026 08:30:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>Standalone Product Designer</title>
+      <region>Anywhere in the World</region>
+      <link>https://weworkremotely.com/remote-jobs/standalone-product-designer</link>
+      <guid>https://weworkremotely.com/remote-jobs/standalone-product-designer</guid>
+      <description>&lt;p&gt;Design delightful product experiences.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

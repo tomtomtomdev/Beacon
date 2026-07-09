@@ -12,7 +12,7 @@ import asyncio
 import logging
 import time
 from collections.abc import Awaitable, Callable, Mapping
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlsplit
 
 import httpx
@@ -46,6 +46,18 @@ class PoliteClient:
         self._cache: dict[str, tuple[dict[str, str], Any]] = {}
 
     async def get_json(self, url: str, *, params: Mapping[str, str] | None = None) -> Any:
+        return await self._get(url, params, lambda response: response.json())
+
+    async def get_text(self, url: str, *, params: Mapping[str, str] | None = None) -> str:
+        """The raw response body — for feeds that aren't JSON (WWR's RSS/XML)."""
+        return cast(str, await self._get(url, params, lambda response: response.text))
+
+    async def _get(
+        self,
+        url: str,
+        params: Mapping[str, str] | None,
+        parse: Callable[[httpx.Response], Any],
+    ) -> Any:
         host = urlsplit(url).netloc
         key = self._cache_key(url, params)
         async with self._host_lock(host):
@@ -55,7 +67,7 @@ class PoliteClient:
             logger.info("http_304 url=%s served=cache", url)
             return self._cache[key][1]
         response.raise_for_status()
-        data = response.json()
+        data = parse(response)
         self._store(key, response, data)
         return data
 
