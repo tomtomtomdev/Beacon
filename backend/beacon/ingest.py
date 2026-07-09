@@ -75,7 +75,7 @@ async def run_ingest(
                         print(f"no active company with ats_slug={only_company!r}")
                         return 1
                 results = await ingest_all(
-                    ats, jobs, make_source_factory(fetcher), classifier, now=now
+                    ats, jobs, make_source_factory(fetcher), classifier, company_repo, now=now
                 )
                 for name, result in results.items():
                     print(

@@ -3,8 +3,10 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
+from beacon.application.errors import SourceUnavailable
 from beacon.application.ports import Classifier, CompanyRepo, JobRepo, JobSource
 from beacon.domain.company import Company
+from beacon.domain.health import FailureKind, record_failure, record_success, should_poll
 from beacon.domain.job import CLOSE_AFTER_MISSES, NormalizedJob
 from beacon.domain.sponsorship import SponsorSignal, detect_sponsorship, resolve_tier
 
@@ -22,6 +24,9 @@ class IngestResult:
     fetched: int
     upserted: int
     errors: int
+    # None on a successful poll; the health FailureKind when the poll failed. A failed poll
+    # is fed to record_failure and — crucially — never runs the closed-sweep (SPEC §7).
+    failure: FailureKind | None = None
 
 
 def _resolve_sponsorship(job: NormalizedJob, registry_flags: int) -> SponsorSignal:
@@ -63,11 +68,28 @@ def _upsert_posting(
 async def ingest_source(
     source: JobSource, company: Company, jobs: JobRepo, classifier: Classifier, *, now: datetime
 ) -> IngestResult:
-    """Fetch → normalize → classify → upsert one board. One bad posting never kills the poll."""
+    """Fetch → normalize → classify → upsert one board. One bad posting never kills the poll.
+
+    A fetch failure is classified into a health FailureKind (gone/unreachable via
+    SourceUnavailable; a shape error building the posting list → schema_drift) and returned,
+    not raised. A failed poll — including a response where *every* posting fails to normalize
+    (the API changed shape) — never runs the closed-sweep, so a broken source can't mass-close
+    its jobs (SPEC §7)."""
     if company.id is None:
         raise ValueError(f"company {company.name!r} must be persisted before ingest")
 
-    raw_postings = await source.fetch()
+    try:
+        raw_postings = await source.fetch()
+    except SourceUnavailable as exc:
+        logger.warning(
+            "poll_failed source=%s company=%s kind=%s", source.source_id, company.name, exc.kind
+        )
+        return IngestResult(fetched=0, upserted=0, errors=1, failure=exc.kind)
+    except Exception:
+        # Fetched bytes but couldn't even build the posting list → the response shape changed.
+        logger.exception("poll_schema_drift source=%s company=%s", source.source_id, company.name)
+        return IngestResult(fetched=0, upserted=0, errors=1, failure=FailureKind.SCHEMA_DRIFT)
+
     upserted = errors = 0
     seen: set[str] = set()
     for raw in raw_postings:
@@ -85,8 +107,22 @@ async def ingest_source(
                 raw.get("id", "?"),
             )
 
-    # This poll succeeded (fetch returned) — sweep the company's postings on this source for
-    # closures. Scoped to (source_id, company_id) since many companies share an ATS source_id.
+    # A non-empty response where nothing normalized is a shape change, not a poll — and its
+    # empty `seen` set must NOT reach the sweep (an empty board is fine; all-failed is not).
+    if raw_postings and upserted == 0:
+        logger.warning(
+            "poll_schema_drift source=%s company=%s fetched=%d",
+            source.source_id,
+            company.name,
+            len(raw_postings),
+        )
+        return IngestResult(
+            fetched=len(raw_postings), upserted=0, errors=errors, failure=FailureKind.SCHEMA_DRIFT
+        )
+
+    # Genuine success (fetch returned and at least one posting normalized, or the board is
+    # legitimately empty) — sweep the company's postings on this source for closures. Scoped to
+    # (source_id, company_id) since many companies share an ATS source_id.
     closed = jobs.sweep_absent_jobs(
         source.source_id, company.id, seen, now, threshold=CLOSE_AFTER_MISSES
     )
@@ -166,10 +202,13 @@ async def ingest_all(
     jobs: JobRepo,
     source_for: SourceFactory,
     classifier: Classifier,
+    company_repo: CompanyRepo,
     *,
     now: datetime,
 ) -> dict[str, IngestResult]:
-    """Poll every company that has an adapter. One dead board never stops the run."""
+    """Poll every company that has an adapter and isn't quarantined, recording each poll's
+    health outcome. One dead board never stops the run; a quarantined source is skipped
+    entirely (no fetch, no sweep — its jobs stay frozen), only the weekly probe retries it."""
     results: dict[str, IngestResult] = {}
     for company in companies:
         source = source_for(company)
@@ -178,8 +217,24 @@ async def ingest_all(
                 "skip company=%s ats_type=%s reason=no_adapter", company.name, company.ats_type
             )
             continue
+        if company.id is None:
+            continue  # seed rows are always persisted; guard narrows the type
+        state = company_repo.get_health(company.id)
+        if not should_poll(state):
+            logger.info(
+                "skip company=%s reason=quarantined since=%s", company.name, state.last_success_at
+            )
+            continue
         try:
-            results[company.name] = await ingest_source(source, company, jobs, classifier, now=now)
+            result = await ingest_source(source, company, jobs, classifier, now=now)
         except Exception:
-            logger.exception("poll_failed source=%s company=%s", source.source_id, company.name)
+            logger.exception("poll_crashed source=%s company=%s", source.source_id, company.name)
+            continue
+        updated = (
+            record_success(state, now=now)
+            if result.failure is None
+            else record_failure(state, result.failure)
+        )
+        company_repo.set_health(company.id, updated)
+        results[company.name] = result
     return results

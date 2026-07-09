@@ -4,16 +4,17 @@ from datetime import UTC, datetime
 
 import pytest
 
+from beacon.application.errors import SourceUnavailable
 from beacon.application.ingest import (
     ingest_all,
     ingest_companyless_source,
     ingest_source,
 )
-from beacon.application.ports import JobDetail, JobFilters, JobPage, RawPosting
+from beacon.application.ports import JobDetail, JobFilters, JobPage, JobSource, RawPosting
 from beacon.domain.classification import Category, Classification, Level
 from beacon.domain.company import Company
 from beacon.domain.dedup import DedupRow
-from beacon.domain.health import Health, SourceHealth
+from beacon.domain.health import FailureKind, Health, SourceHealth
 from beacon.domain.job import CLOSE_AFTER_MISSES, NormalizedJob
 from beacon.domain.registry import Registry
 from beacon.domain.sponsorship import SponsorSignal, SponsorTier
@@ -293,8 +294,9 @@ async def test_ingest_all_skips_unsupported_ats() -> None:
         source.fetch = counting_fetch  # type: ignore[method-assign]  # test spy
         return source
 
+    company_repo = FakeCompanyRepo(existing=[supported, dormant])
     results = await ingest_all(
-        [supported, dormant], repo, source_for, CountingClassifier(), now=NOW
+        [supported, dormant], repo, source_for, CountingClassifier(), company_repo, now=NOW
     )
 
     assert fetch_calls == ["Tines"]
@@ -316,35 +318,171 @@ async def test_failed_poll_never_closes_jobs() -> None:
     # A poll whose fetch fails (404 / unreachable) must never run the closed-sweep — absence
     # only ever accrues from successful polls, so a dead board can't mass-close its jobs.
     repo = FakeJobRepo()
-
-    class ExplodingSource(FakeSource):
-        async def fetch(self) -> list[RawPosting]:
-            raise ConnectionError("board 404")
+    company_repo = FakeCompanyRepo(existing=[COMPANY])
+    gone = UnavailableSource(FailureKind.GONE)
 
     for _ in range(5):  # five consecutive failing cycles
         await ingest_all(
-            [COMPANY], repo, lambda _c: ExplodingSource([]), CountingClassifier(), now=NOW
+            [COMPANY], repo, lambda _c: gone, CountingClassifier(), company_repo, now=NOW
         )
 
     assert repo.sweeps == []  # never swept → nothing can close
+    assert company_repo.get_health(7).health is Health.QUARANTINED  # gone after 3 (SPEC §7)
 
 
 async def test_ingest_all_continues_when_one_company_fetch_fails() -> None:
     first = make_company("Aaa", "greenhouse", 1)
     second = make_company("Bbb", "greenhouse", 2)
     repo = FakeJobRepo()
+    company_repo = FakeCompanyRepo(existing=[first, second])
 
-    class ExplodingSource(FakeSource):
-        async def fetch(self) -> list[RawPosting]:
-            raise ConnectionError("board unreachable")
+    def source_for(company: Company) -> JobSource:
+        return (
+            UnavailableSource(FailureKind.UNREACHABLE)
+            if company.name == "Aaa"
+            else FakeSource([{"id": 9}])
+        )
 
-    def source_for(company: Company) -> FakeSource:
-        return ExplodingSource([]) if company.name == "Aaa" else FakeSource([{"id": 9}])
+    results = await ingest_all(
+        [first, second], repo, source_for, CountingClassifier(), company_repo, now=NOW
+    )
 
-    results = await ingest_all([first, second], repo, source_for, CountingClassifier(), now=NOW)
-
-    assert set(results) == {"Bbb"}
+    # Both polls are reported; Aaa's carries its failure, Bbb upserted its one job.
+    assert results["Aaa"].failure is FailureKind.UNREACHABLE
+    assert results["Bbb"].upserted == 1
     assert [job.external_id for _, job, _, _ in repo.upserts] == ["9"]
+
+
+# --- source health: failure taxonomy, quarantine, freeze (slice 11) ---
+
+
+class UnavailableSource:
+    """A JobSource whose fetch fails at the HTTP/transport level with a given health kind."""
+
+    source_id = "greenhouse"
+
+    def __init__(self, kind: FailureKind) -> None:
+        self._kind = kind
+
+    async def fetch(self) -> list[RawPosting]:
+        raise SourceUnavailable(self._kind)
+
+    def normalize(self, raw: RawPosting) -> NormalizedJob:  # pragma: no cover - never reached
+        raise AssertionError("unavailable source never normalizes")
+
+
+class AllBadSource(FakeSource):
+    """A non-empty response where every posting fails to normalize (a shape change)."""
+
+    async def fetch(self) -> list[RawPosting]:
+        return [{"id": 1, "bad": True}, {"id": 2, "bad": True}]
+
+
+async def test_gone_fetch_records_the_kind_and_never_sweeps() -> None:
+    repo = FakeJobRepo()
+
+    result = await ingest_source(
+        UnavailableSource(FailureKind.GONE), COMPANY, repo, CountingClassifier(), now=NOW
+    )
+
+    assert result.failure is FailureKind.GONE
+    assert repo.sweeps == []  # a failed poll never runs the closed-sweep
+
+
+async def test_all_postings_failing_to_normalize_is_schema_drift_without_a_sweep() -> None:
+    # A non-empty response nothing could parse → the API changed shape; its empty seen-set
+    # must NOT reach the sweep (that would mark every job absent and eventually close them).
+    repo = FakeJobRepo()
+
+    result = await ingest_source(AllBadSource([]), COMPANY, repo, CountingClassifier(), now=NOW)
+
+    assert (result.fetched, result.upserted, result.failure) == (2, 0, FailureKind.SCHEMA_DRIFT)
+    assert repo.sweeps == []
+
+
+async def test_empty_board_is_a_successful_poll_that_still_sweeps() -> None:
+    # Zero postings is a legitimate empty board (a successful poll), not schema drift.
+    repo = FakeJobRepo()
+
+    result = await ingest_source(FakeSource([]), COMPANY, repo, CountingClassifier(), now=NOW)
+
+    assert result.failure is None
+    assert repo.sweeps == [("greenhouse", 7, set(), NOW, CLOSE_AFTER_MISSES)]
+
+
+async def test_ingest_all_quarantines_after_three_gone_polls() -> None:
+    repo = FakeJobRepo()
+    company_repo = FakeCompanyRepo(existing=[COMPANY])
+    gone = UnavailableSource(FailureKind.GONE)
+
+    for _ in range(2):
+        await ingest_all(
+            [COMPANY], repo, lambda _c: gone, CountingClassifier(), company_repo, now=NOW
+        )
+        assert company_repo.get_health(7).health is Health.DEGRADED  # under threshold
+
+    await ingest_all([COMPANY], repo, lambda _c: gone, CountingClassifier(), company_repo, now=NOW)
+
+    quarantined = company_repo.get_health(7)
+    assert quarantined.health is Health.QUARANTINED
+    assert quarantined.reason is FailureKind.GONE
+    assert quarantined.consecutive_failures == 3
+
+
+async def test_ingest_all_skips_a_quarantined_company_entirely() -> None:
+    # Quarantined → not polled (no fetch, no log spam) and its jobs are frozen (never swept).
+    repo = FakeJobRepo()
+    company_repo = FakeCompanyRepo(existing=[COMPANY])
+    company_repo.set_health(
+        7, SourceHealth(consecutive_failures=3, health=Health.QUARANTINED, reason=FailureKind.GONE)
+    )
+    fetched: list[str] = []
+
+    class WatchedSource(FakeSource):
+        async def fetch(self) -> list[RawPosting]:
+            fetched.append(self.source_id)
+            return await super().fetch()
+
+    await ingest_all(
+        [COMPANY],
+        repo,
+        lambda _c: WatchedSource([{"id": 1}]),
+        CountingClassifier(),
+        company_repo,
+        now=NOW,
+    )
+
+    assert fetched == []  # never polled
+    assert repo.sweeps == []  # jobs frozen — the closed-sweep never touches them
+
+
+async def test_success_after_a_failure_restores_health() -> None:
+    repo = FakeJobRepo()
+    company_repo = FakeCompanyRepo(existing=[COMPANY])
+
+    await ingest_all(
+        [COMPANY],
+        repo,
+        lambda _c: UnavailableSource(FailureKind.UNREACHABLE),
+        CountingClassifier(),
+        company_repo,
+        now=NOW,
+    )
+    assert company_repo.get_health(7).consecutive_failures == 1
+
+    await ingest_all(
+        [COMPANY],
+        repo,
+        lambda _c: FakeSource([{"id": 1}]),
+        CountingClassifier(),
+        company_repo,
+        now=LATER,
+    )
+
+    restored = company_repo.get_health(7)
+    assert restored.health is Health.OK
+    assert restored.consecutive_failures == 0
+    assert restored.last_success_at == LATER
 
 
 # --- company-less sources (HN / JobTech): one source, many companies parsed per posting ---
