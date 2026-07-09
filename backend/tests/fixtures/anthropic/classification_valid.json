@@ -1,0 +1,12 @@
+{
+  "id": "msg_01ABCvalid",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-haiku-4-5-20251001",
+  "content": [
+    {"type": "text", "text": "{\"categories\": [\"backend\", \"ai-ml\"], \"level\": \"senior\"}"}
+  ],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {"input_tokens": 214, "output_tokens": 19}
+}

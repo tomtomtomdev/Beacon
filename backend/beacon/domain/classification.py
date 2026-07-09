@@ -35,6 +35,14 @@ class Classification:
     categories: frozenset[Category]
     level: Level
 
+    @property
+    def is_ambiguous(self) -> bool:
+        """True when no category matched — the residue an upgrader (the LLM classifier)
+        should resolve. Level being UNSPECIFIED alone is NOT ambiguous: 'unspecified' is an
+        honest value and not worth an LLM call once the category is known. The one explicit
+        gate the tiered classifier reads, so 'ambiguous' is defined in exactly one place."""
+        return not self.categories
+
 
 def format_categories(categories: Iterable[Category]) -> str:
     """DB form: sorted, comma-joined values ("ai-ml,ios"). Stable so it diffs cleanly."""

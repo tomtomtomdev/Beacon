@@ -1,0 +1,12 @@
+{
+  "id": "msg_01REFprose",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-haiku-4-5-20251001",
+  "content": [
+    {"type": "text", "text": "I'm sorry, but I can't classify this posting from the information given."}
+  ],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {"input_tokens": 188, "output_tokens": 17}
+}
