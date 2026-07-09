@@ -8,6 +8,8 @@ import httpx
 import pytest
 
 from beacon.adapters.http.polite import PoliteClient
+from beacon.application.errors import SourceUnavailable
+from beacon.domain.health import FailureKind
 
 
 class FakeClock:
@@ -112,12 +114,41 @@ async def test_retries_on_5xx_then_succeeds() -> None:
     assert len(clock.sleeps) == 2  # backed off before each retry
 
 
-async def test_raises_after_exhausting_retries() -> None:
+async def test_exhausted_5xx_retries_raise_unreachable() -> None:
+    # A persistent 5xx is not data — it surfaces as SourceUnavailable so the pipeline can
+    # record health without importing httpx. 5xx → unreachable (transient, be patient).
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(503)
 
     clock = FakeClock()
     client = _client(httpx.MockTransport(handler), clock, min_interval=0.0, max_retries=3)
 
-    with pytest.raises(httpx.HTTPStatusError):
+    with pytest.raises(SourceUnavailable) as exc_info:
         await client.get_json("https://host.example/jobs")
+    assert exc_info.value.kind is FailureKind.UNREACHABLE
+
+
+@pytest.mark.parametrize("status", [404, 410], ids=["not-found", "gone"])
+async def test_404_and_410_raise_gone(status: int) -> None:
+    # A 404/410 means the slug moved or was removed — a fast-quarantine signal, not transient.
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(status)
+
+    clock = FakeClock()
+    client = _client(httpx.MockTransport(handler), clock, min_interval=0.0)
+
+    with pytest.raises(SourceUnavailable) as exc_info:
+        await client.get_json("https://host.example/jobs")
+    assert exc_info.value.kind is FailureKind.GONE
+
+
+async def test_transport_error_raises_unreachable() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectTimeout("dns blip")
+
+    clock = FakeClock()
+    client = _client(httpx.MockTransport(handler), clock, min_interval=0.0, max_retries=2)
+
+    with pytest.raises(SourceUnavailable) as exc_info:
+        await client.get_json("https://host.example/jobs")
+    assert exc_info.value.kind is FailureKind.UNREACHABLE

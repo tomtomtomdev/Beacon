@@ -17,10 +17,21 @@ from urllib.parse import urlsplit
 
 import httpx
 
+from beacon.application.errors import SourceUnavailable
+from beacon.domain.health import FailureKind
+
 logger = logging.getLogger(__name__)
 
 # Transient statuses worth a retry; every other 4xx/5xx surfaces immediately.
 _RETRY_STATUS = frozenset({429, 500, 502, 503, 504})
+
+# 404/410 mean the board moved or was removed (fast-quarantine); every other HTTP failure is
+# treated as transiently unreachable (SPEC §7 taxonomy).
+_GONE_STATUS = frozenset({404, 410})
+
+
+def _status_kind(status_code: int) -> FailureKind:
+    return FailureKind.GONE if status_code in _GONE_STATUS else FailureKind.UNREACHABLE
 
 
 class PoliteClient:
@@ -60,13 +71,20 @@ class PoliteClient:
     ) -> Any:
         host = urlsplit(url).netloc
         key = self._cache_key(url, params)
-        async with self._host_lock(host):
-            await self._throttle(host)
-            response = await self._get_with_retry(url, params, self._conditional_headers(key))
-        if response.status_code == httpx.codes.NOT_MODIFIED:
-            logger.info("http_304 url=%s served=cache", url)
-            return self._cache[key][1]
-        response.raise_for_status()
+        try:
+            async with self._host_lock(host):
+                await self._throttle(host)
+                response = await self._get_with_retry(url, params, self._conditional_headers(key))
+            if response.status_code == httpx.codes.NOT_MODIFIED:
+                logger.info("http_304 url=%s served=cache", url)
+                return self._cache[key][1]
+            response.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            # A definite HTTP failure (retries already exhausted for transient codes).
+            raise SourceUnavailable(_status_kind(exc.response.status_code), str(exc)) from exc
+        except httpx.TransportError as exc:
+            # DNS/connect/timeout — reachability, not a response. Always transient.
+            raise SourceUnavailable(FailureKind.UNREACHABLE, str(exc)) from exc
         data = parse(response)
         self._store(key, response, data)
         return data
