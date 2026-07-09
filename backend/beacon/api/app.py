@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from beacon.adapters.persistence.db import MIGRATIONS_DIR, connect, run_migrations
 from beacon.api.jobs import router as jobs_router
 from beacon.api.searches import router as searches_router
+from beacon.api.settings import router as settings_router
 from beacon.config import Settings
 
 
@@ -25,6 +26,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = resolved
     app.include_router(jobs_router)
     app.include_router(searches_router)
+    app.include_router(settings_router)
 
     @app.get("/healthz")
     async def healthz() -> dict[str, str]:

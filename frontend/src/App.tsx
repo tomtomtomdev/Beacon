@@ -3,16 +3,23 @@ import { BrowserRouter, useSearchParams } from 'react-router-dom'
 import styles from './App.module.css'
 import { JobsPage } from './jobs/JobsPage'
 import { SavedSearchesPage } from './searches/SavedSearchesPage'
+import { SettingsPage } from './settings/SettingsPage'
 
 const queryClient = new QueryClient()
 
-type View = 'jobs' | 'searches'
+type View = 'jobs' | 'searches' | 'settings'
+
+const VIEWS: readonly View[] = ['jobs', 'searches', 'settings']
+
+function parseView(raw: string | null): View {
+  return VIEWS.includes(raw as View) ? (raw as View) : 'jobs'
+}
 
 function AppShell() {
   const [searchParams, setSearchParams] = useSearchParams()
   // View is a URL param so filters set on Jobs survive a hop to Saved searches
   // (that's how "save from current filters" reads them) and the view is shareable.
-  const view: View = searchParams.get('view') === 'searches' ? 'searches' : 'jobs'
+  const view: View = parseView(searchParams.get('view'))
   const setView = (next: View) =>
     setSearchParams(
       (params) => {
@@ -47,9 +54,19 @@ function AppShell() {
           >
             Saved searches
           </button>
+          <button
+            type="button"
+            className={view === 'settings' ? styles.navItemActive : styles.navItem}
+            aria-current={view === 'settings'}
+            onClick={() => setView('settings')}
+          >
+            Settings
+          </button>
         </nav>
       </aside>
-      {view === 'jobs' ? <JobsPage /> : <SavedSearchesPage />}
+      {view === 'jobs' && <JobsPage />}
+      {view === 'searches' && <SavedSearchesPage />}
+      {view === 'settings' && <SettingsPage />}
     </>
   )
 }

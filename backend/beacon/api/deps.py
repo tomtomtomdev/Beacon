@@ -1,20 +1,25 @@
 """Request-scoped wiring: settings → connection → repos. The test seam."""
 
 import sqlite3
-from collections.abc import Iterator
+from collections.abc import AsyncIterator, Iterator
 from typing import Annotated
 
+import httpx
 from fastapi import Depends, Request
 
 from beacon.adapters.persistence.db import connect
 from beacon.adapters.persistence.jobs import SqliteJobRepo
 from beacon.adapters.persistence.searches import SqliteSearchRepo
+from beacon.adapters.persistence.settings import SqliteSettingsRepo
 from beacon.config import Settings
 
 
 def get_settings(request: Request) -> Settings:
     settings: Settings = request.app.state.settings
     return settings
+
+
+SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
 def get_db(settings: Annotated[Settings, Depends(get_settings)]) -> Iterator[sqlite3.Connection]:
@@ -37,3 +42,20 @@ def get_search_repo(db: Annotated[sqlite3.Connection, Depends(get_db)]) -> Sqlit
 
 
 SearchRepoDep = Annotated[SqliteSearchRepo, Depends(get_search_repo)]
+
+
+def get_settings_repo(db: Annotated[sqlite3.Connection, Depends(get_db)]) -> SqliteSettingsRepo:
+    return SqliteSettingsRepo(db)
+
+
+SettingsRepoDep = Annotated[SqliteSettingsRepo, Depends(get_settings_repo)]
+
+
+async def get_http_client() -> AsyncIterator[httpx.AsyncClient]:
+    """A short-lived HTTP client for outbound calls (the Telegram test send). Overridden
+    in tests with a MockTransport client so the suite never hits the network."""
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        yield client
+
+
+HttpClientDep = Annotated[httpx.AsyncClient, Depends(get_http_client)]

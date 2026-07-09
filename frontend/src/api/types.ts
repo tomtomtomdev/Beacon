@@ -61,3 +61,23 @@ export interface SavedSearch {
   last_run_at: string | null
   new_count: number
 }
+
+// GET /settings/telegram. The bot token is write-only — the API returns only whether
+// one is set (bot_token_set), never the token itself.
+export interface TelegramSettings {
+  chat_id: string | null
+  bot_token_set: boolean
+}
+
+// PUT /settings/telegram. bot_token: null → keep the stored token (don't re-send the
+// secret on a chat_id-only save); '' → clear it; a value → set it.
+export interface TelegramSettingsUpdate {
+  chat_id: string | null
+  bot_token: string | null
+}
+
+// POST /settings/telegram/test. channel is 'telegram' when creds resolved, else 'stdout'.
+export interface TestResult {
+  ok: boolean
+  channel: string
+}

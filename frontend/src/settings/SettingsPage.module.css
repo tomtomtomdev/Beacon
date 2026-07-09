@@ -1,0 +1,169 @@
+.main {
+  flex: 1;
+  min-width: 0;
+  padding: 26px 34px;
+}
+
+.header {
+  margin-bottom: 18px;
+}
+
+.h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  color: var(--text-body-muted);
+}
+
+.stateText {
+  font-size: 13.5px;
+  color: var(--text-body-muted);
+}
+
+.card {
+  max-width: 520px;
+  padding: 18px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-card);
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+}
+
+.statusOn {
+  background: var(--tier-yes-bg);
+  color: var(--tier-yes-fg);
+}
+
+.statusOff {
+  background: var(--bg-chip);
+  color: var(--text-secondary);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.label {
+  font-size: 12.5px;
+  color: var(--text-body-muted);
+}
+
+.input {
+  padding: 9px 11px;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  font-size: 13.5px;
+  font-family: var(--font-ui);
+  color: var(--ink);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.saveButton {
+  padding: 8px 18px;
+  border: none;
+  border-radius: var(--radius-input);
+  background: var(--accent);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.saveButton:hover {
+  background: var(--accent-hover);
+}
+
+.saveButton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.savedNote {
+  font-size: 12.5px;
+  color: var(--accent-soft-fg);
+}
+
+.errorNote,
+.testError {
+  font-size: 12.5px;
+  color: var(--tier-no-fg);
+}
+
+.testRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 520px;
+  margin-top: 16px;
+}
+
+.testButton {
+  padding: 9px 16px;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.testButton:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.testButton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.testOk {
+  font-size: 12.5px;
+  color: var(--accent-soft-fg);
+}

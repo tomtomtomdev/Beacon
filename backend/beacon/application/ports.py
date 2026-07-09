@@ -10,6 +10,7 @@ from beacon.domain.company import Company
 from beacon.domain.dedup import DedupRow
 from beacon.domain.digest import Digest
 from beacon.domain.job import NormalizedJob
+from beacon.domain.notification import TelegramConfig
 from beacon.domain.registry import Registry, RegistryCompany
 from beacon.domain.saved_search import SavedSearch
 from beacon.domain.sponsorship import SponsorSignal
@@ -231,3 +232,15 @@ class SearchRepo(Protocol):
         ...
 
     def touch_last_run(self, search_id: int, at: datetime) -> None: ...
+
+
+class SettingsRepo(Protocol):
+    """User-editable runtime config (Telegram creds set via the Settings UI)."""
+
+    def get_telegram_config(self) -> TelegramConfig:
+        """The stored Telegram creds, or an empty TelegramConfig if none set."""
+        ...
+
+    def set_telegram_config(self, config: TelegramConfig) -> None:
+        """Persist the config verbatim — a None field clears that stored value."""
+        ...

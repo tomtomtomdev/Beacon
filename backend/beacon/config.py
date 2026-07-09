@@ -7,6 +7,8 @@ from pathlib import Path
 
 from pydantic import SecretStr
 
+from beacon.domain.notification import TelegramConfig
+
 _REPO_ROOT = Path(__file__).parents[2]
 _REGISTRIES = _REPO_ROOT / "data" / "registries"
 
@@ -44,4 +46,14 @@ class Settings:
             ),
             telegram_bot_token=SecretStr(token) if token else None,
             telegram_chat_id=source.get("BEACON_TELEGRAM_CHAT_ID"),
+        )
+
+    def telegram_config(self) -> TelegramConfig:
+        """The env-provided Telegram creds as a domain value object — the fallback the
+        DB-set creds layer over. Unwraps SecretStr here so it happens in one place."""
+        return TelegramConfig(
+            bot_token=(
+                self.telegram_bot_token.get_secret_value() if self.telegram_bot_token else None
+            ),
+            chat_id=self.telegram_chat_id,
         )
