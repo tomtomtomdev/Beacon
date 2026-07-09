@@ -86,6 +86,20 @@ def test_llm_usage_bookkeeping_table_exists(db: sqlite3.Connection) -> None:
     assert columns(db, "llm_usage") == {"month", "call_count"}
 
 
+def test_countries_table_has_full_spec_schema(db: sqlite3.Connection) -> None:
+    assert columns(db, "countries") == {
+        "code",
+        "name",
+        "visa_summary",
+        "pr_summary",
+        "citizenship_summary",
+        "registry_name",
+        "priority_tier",
+        "verified_at",
+        "source_url",
+    }
+
+
 def test_jobs_reject_duplicate_source_external_id(db: sqlite3.Connection) -> None:
     db.execute(
         "INSERT INTO companies (name, ats_type, ats_slug, country_hq, priority)"

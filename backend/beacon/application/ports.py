@@ -14,6 +14,7 @@ from beacon.domain.notification import TelegramConfig
 from beacon.domain.registry import Registry, RegistryCompany
 from beacon.domain.saved_search import SavedSearch
 from beacon.domain.sponsorship import SponsorSignal
+from beacon.domain.visa import CountryReference
 
 # A source-shaped payload exactly as the ATS returned it (one job posting).
 type RawPosting = Mapping[str, Any]
@@ -250,6 +251,19 @@ class SearchRepo(Protocol):
         ...
 
     def touch_last_run(self, search_id: int, at: datetime) -> None: ...
+
+
+class CountryRepo(Protocol):
+    """The visa reference table (SPEC §4) — a seeded projection of the COUNTRY_REFERENCE
+    domain constant. Read-only to the API; the seed keeps the table in sync at startup."""
+
+    def get_all(self) -> list[CountryReference]:
+        """Every reference row, primary-tier countries before nice-to-have."""
+        ...
+
+    def seed(self, countries: Sequence[CountryReference]) -> None:
+        """Idempotently upsert the reference rows (keyed on code); re-seeding updates."""
+        ...
 
 
 class SettingsRepo(Protocol):

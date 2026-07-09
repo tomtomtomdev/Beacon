@@ -14,6 +14,7 @@ from beacon.adapters.classify.factory import make_classifier
 from beacon.adapters.http.polite import PoliteClient
 from beacon.adapters.notify.factory import make_notifier
 from beacon.adapters.persistence.companies import SqliteCompanyRepo
+from beacon.adapters.persistence.countries import SqliteCountryRepo
 from beacon.adapters.persistence.db import MIGRATIONS_DIR, connect, run_migrations
 from beacon.adapters.persistence.jobs import SqliteJobRepo
 from beacon.adapters.persistence.llm_budget import SqliteLLMBudget
@@ -21,6 +22,7 @@ from beacon.adapters.persistence.searches import SqliteSearchRepo
 from beacon.adapters.persistence.settings import SqliteSettingsRepo
 from beacon.adapters.seeds import parse_seed_csv
 from beacon.adapters.sources.factory import make_companyless_sources, make_source_factory
+from beacon.application.countries import seed_countries
 from beacon.application.dedup import dedupe_jobs
 from beacon.application.ingest import SHADOW_ATS_TYPE, ingest_all, ingest_companyless_source
 from beacon.application.notify import match_saved_searches
@@ -31,6 +33,7 @@ from beacon.config import Settings
 async def _run(settings: Settings, *, only_company: str | None, only_source: str | None) -> int:
     conn = connect(settings.db_path)
     run_migrations(conn, MIGRATIONS_DIR)
+    seed_countries(SqliteCountryRepo(conn))
 
     company_repo = SqliteCompanyRepo(conn)
     for seed in parse_seed_csv(settings.seeds_path.read_text()):
