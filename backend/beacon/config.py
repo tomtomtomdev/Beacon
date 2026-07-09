@@ -4,6 +4,7 @@ import os
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from pydantic import SecretStr
 
@@ -11,6 +12,10 @@ from beacon.domain.notification import TelegramConfig
 
 _REPO_ROOT = Path(__file__).parents[2]
 _REGISTRIES = _REPO_ROOT / "data" / "registries"
+
+# The one local-time zone for day/month boundaries (posted_since, digest, LLM budget month).
+# Storage/comparison stay UTC; LOCAL_TZ is used only at these boundary edges (SPEC §9).
+LOCAL_TZ = ZoneInfo("Asia/Jakarta")
 
 
 @dataclass(frozen=True, slots=True)

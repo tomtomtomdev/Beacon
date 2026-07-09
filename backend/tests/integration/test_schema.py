@@ -82,6 +82,10 @@ def test_app_settings_key_value_table_exists(db: sqlite3.Connection) -> None:
     assert columns(db, "app_settings") == {"key", "value"}
 
 
+def test_llm_usage_bookkeeping_table_exists(db: sqlite3.Connection) -> None:
+    assert columns(db, "llm_usage") == {"month", "call_count"}
+
+
 def test_jobs_reject_duplicate_source_external_id(db: sqlite3.Connection) -> None:
     db.execute(
         "INSERT INTO companies (name, ats_type, ats_slug, country_hq, priority)"
