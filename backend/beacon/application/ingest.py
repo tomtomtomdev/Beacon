@@ -5,7 +5,7 @@ from datetime import datetime
 
 from beacon.application.ports import Classifier, CompanyRepo, JobRepo, JobSource
 from beacon.domain.company import Company
-from beacon.domain.job import NormalizedJob
+from beacon.domain.job import CLOSE_AFTER_MISSES, NormalizedJob
 from beacon.domain.sponsorship import SponsorSignal, detect_sponsorship, resolve_tier
 
 # ats_type a company-less source stamps on employers it shadows; no adapter polls it.
@@ -69,9 +69,11 @@ async def ingest_source(
 
     raw_postings = await source.fetch()
     upserted = errors = 0
+    seen: set[str] = set()
     for raw in raw_postings:
         try:
             job = source.normalize(raw)
+            seen.add(job.external_id)
             _upsert_posting(job, company.id, company.registry_flags, jobs, classifier, now)
             upserted += 1
         except Exception:
@@ -83,13 +85,19 @@ async def ingest_source(
                 raw.get("id", "?"),
             )
 
+    # This poll succeeded (fetch returned) — sweep the company's postings on this source for
+    # closures. Scoped to (source_id, company_id) since many companies share an ATS source_id.
+    closed = jobs.sweep_absent_jobs(
+        source.source_id, company.id, seen, now, threshold=CLOSE_AFTER_MISSES
+    )
     logger.info(
-        "poll source=%s company=%s fetched=%d upserted=%d errors=%d",
+        "poll source=%s company=%s fetched=%d upserted=%d errors=%d closed=%d",
         source.source_id,
         company.name,
         len(raw_postings),
         upserted,
         errors,
+        closed,
     )
     return IngestResult(fetched=len(raw_postings), upserted=upserted, errors=errors)
 
@@ -123,9 +131,11 @@ async def ingest_companyless_source(
     never kills the poll."""
     raw_postings = await source.fetch()
     upserted = errors = 0
+    seen: set[str] = set()
     for raw in raw_postings:
         try:
             job = source.normalize(raw)
+            seen.add(job.external_id)
             company = companies.get_or_create(_shadow_company(job))
             if company.id is None:  # get_or_create always persists; guard narrows the type
                 raise ValueError(f"company {company.name!r} was not persisted")
@@ -137,12 +147,16 @@ async def ingest_companyless_source(
                 "posting_failed source=%s external_id=%s", source.source_id, raw.get("id", "?")
             )
 
+    # Successful poll → sweep this source's postings across every employer it spans
+    # (company_id=None: a company-less source isn't scoped to one company).
+    closed = jobs.sweep_absent_jobs(source.source_id, None, seen, now, threshold=CLOSE_AFTER_MISSES)
     logger.info(
-        "poll source=%s fetched=%d upserted=%d errors=%d",
+        "poll source=%s fetched=%d upserted=%d errors=%d closed=%d",
         source.source_id,
         len(raw_postings),
         upserted,
         errors,
+        closed,
     )
     return IngestResult(fetched=len(raw_postings), upserted=upserted, errors=errors)
 

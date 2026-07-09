@@ -13,7 +13,7 @@ from beacon.application.ports import JobDetail, JobFilters, JobPage, RawPosting
 from beacon.domain.classification import Category, Classification, Level
 from beacon.domain.company import Company
 from beacon.domain.dedup import DedupRow
-from beacon.domain.job import NormalizedJob
+from beacon.domain.job import CLOSE_AFTER_MISSES, NormalizedJob
 from beacon.domain.registry import Registry
 from beacon.domain.sponsorship import SponsorSignal, SponsorTier
 
@@ -70,6 +70,7 @@ class FakeJobRepo:
     def __init__(self) -> None:
         self.upserts: list[tuple[int, NormalizedJob, datetime, Classification | None]] = []
         self.sponsorships: list[SponsorSignal | None] = []
+        self.sweeps: list[tuple[str, int | None, set[str], datetime, int]] = []
         self._hashes: dict[tuple[str, str], str] = {}
 
     def upsert(
@@ -86,6 +87,18 @@ class FakeJobRepo:
 
     def content_hash_for(self, source_id: str, external_id: str) -> str | None:
         return self._hashes.get((source_id, external_id))
+
+    def sweep_absent_jobs(
+        self,
+        source_id: str,
+        company_id: int | None,
+        seen_external_ids: set[str],
+        now: datetime,
+        *,
+        threshold: int,
+    ) -> int:
+        self.sweeps.append((source_id, company_id, seen_external_ids, now, threshold))
+        return 0
 
     def list_unclassified(self) -> list[tuple[int, NormalizedJob]]:
         raise NotImplementedError("ingest never backfills")
@@ -288,6 +301,33 @@ async def test_ingest_all_skips_unsupported_ats() -> None:
     assert [cid for cid, _, _, _ in repo.upserts] == [1]
 
 
+async def test_successful_poll_runs_the_closed_sweep_with_the_seen_ids() -> None:
+    repo = FakeJobRepo()
+    source = FakeSource([{"id": 1}, {"id": 2}])
+
+    await ingest_source(source, COMPANY, repo, CountingClassifier(), now=NOW)
+
+    # Swept, scoped to (source_id, company_id), with exactly the ids present this poll.
+    assert repo.sweeps == [("greenhouse", 7, {"1", "2"}, NOW, CLOSE_AFTER_MISSES)]
+
+
+async def test_failed_poll_never_closes_jobs() -> None:
+    # A poll whose fetch fails (404 / unreachable) must never run the closed-sweep — absence
+    # only ever accrues from successful polls, so a dead board can't mass-close its jobs.
+    repo = FakeJobRepo()
+
+    class ExplodingSource(FakeSource):
+        async def fetch(self) -> list[RawPosting]:
+            raise ConnectionError("board 404")
+
+    for _ in range(5):  # five consecutive failing cycles
+        await ingest_all(
+            [COMPANY], repo, lambda _c: ExplodingSource([]), CountingClassifier(), now=NOW
+        )
+
+    assert repo.sweeps == []  # never swept → nothing can close
+
+
 async def test_ingest_all_continues_when_one_company_fetch_fails() -> None:
     first = make_company("Aaa", "greenhouse", 1)
     second = make_company("Bbb", "greenhouse", 2)
@@ -436,3 +476,14 @@ async def test_companyless_posting_without_company_name_is_an_error() -> None:
     assert (result.fetched, result.upserted, result.errors) == (1, 0, 1)
     assert jobs.upserts == []
     assert companies.created == []
+
+
+async def test_companyless_poll_sweeps_by_source_across_all_companies() -> None:
+    # Company-less source spans many employers → sweep scope is the source_id, company_id None.
+    jobs = FakeJobRepo()
+    companies = FakeCompanyRepo()
+    source = CompanylessSource([companyless_job("1", "A"), companyless_job("2", "B")])
+
+    await ingest_companyless_source(source, jobs, companies, CountingClassifier(), now=NOW)
+
+    assert jobs.sweeps == [("hn", None, {"1", "2"}, NOW, CLOSE_AFTER_MISSES)]

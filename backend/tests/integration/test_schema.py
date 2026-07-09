@@ -52,6 +52,7 @@ def test_jobs_table_has_full_spec_schema(db: sqlite3.Connection) -> None:
         "last_seen_at",
         "closed_at",
         "user_status",
+        "consecutive_misses",
     }
 
 

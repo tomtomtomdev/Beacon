@@ -223,6 +223,51 @@ class SqliteJobRepo:
             ),
         )
 
+    def sweep_absent_jobs(
+        self,
+        source_id: str,
+        company_id: int | None,
+        seen_external_ids: set[str],
+        now: datetime,
+        *,
+        threshold: int,
+    ) -> int:
+        scope = "source_id = ?"
+        scope_params: list[object] = [source_id]
+        if company_id is not None:
+            scope += " AND company_id = ?"
+            scope_params.append(company_id)
+
+        seen = list(seen_external_ids)
+        placeholders = ",".join("?" * len(seen))
+        absent = f"{scope} AND external_id NOT IN ({placeholders})" if seen else scope
+        absent_params = [*scope_params, *seen]
+
+        # Count jobs that this sweep will newly close (absent, still open, reaching threshold).
+        newly_closed: int = self._conn.execute(
+            f"SELECT COUNT(*) FROM jobs"
+            f" WHERE {absent} AND closed_at IS NULL AND consecutive_misses + 1 >= ?",
+            (*absent_params, threshold),
+        ).fetchone()[0]
+
+        # Present again → reset misses and reopen (a closed posting that reappears is live).
+        if seen:
+            self._conn.execute(
+                f"UPDATE jobs SET consecutive_misses = 0, closed_at = NULL"
+                f" WHERE {scope} AND external_id IN ({placeholders})",
+                (*scope_params, *seen),
+            )
+        # Absent → one more miss; close once the counter reaches the threshold.
+        self._conn.execute(
+            f"UPDATE jobs SET consecutive_misses = consecutive_misses + 1,"
+            f" closed_at = CASE WHEN consecutive_misses + 1 >= ? AND closed_at IS NULL"
+            f" THEN ? ELSE closed_at END"
+            f" WHERE {absent}",
+            (threshold, now.isoformat(), *absent_params),
+        )
+        self._conn.commit()
+        return newly_closed
+
     def upsert(
         self,
         company_id: int,

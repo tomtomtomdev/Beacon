@@ -208,6 +208,23 @@ class JobRepo(Protocol):
         or None if the id is unknown."""
         ...
 
+    def sweep_absent_jobs(
+        self,
+        source_id: str,
+        company_id: int | None,
+        seen_external_ids: set[str],
+        now: datetime,
+        *,
+        threshold: int,
+    ) -> int:
+        """After a *successful* poll, advance the closed-posting sweep for the jobs in scope
+        (source_id, and company_id when the source is per-company — None for company-less
+        sources spanning many employers). Jobs present in seen_external_ids reset to zero
+        misses and reopen; absent jobs increment their miss counter and get closed_at set once
+        they reach `threshold` consecutive misses. Returns the count newly closed. Never called
+        on a failed poll, so absence only ever accrues from successful polls (SPEC §7)."""
+        ...
+
     def search(self, filters: JobFilters) -> JobPage: ...
 
     def resolve_registry_tier(self, company_id: int, tier: str) -> None:

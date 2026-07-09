@@ -60,6 +60,17 @@ class FakeJobRepo:
     def content_hash_for(self, source_id: str, external_id: str) -> str | None:
         raise NotImplementedError
 
+    def sweep_absent_jobs(
+        self,
+        source_id: str,
+        company_id: int | None,
+        seen_external_ids: set[str],
+        now: datetime,
+        *,
+        threshold: int,
+    ) -> int:
+        raise NotImplementedError
+
     def list_unclassified(self) -> list[tuple[int, NormalizedJob]]:
         raise NotImplementedError
 

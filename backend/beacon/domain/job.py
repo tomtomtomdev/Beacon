@@ -1,6 +1,10 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+# A posting absent from this many consecutive *successful* polls of its source is closed
+# (kept, greyed out — SPEC §7). Failed polls never count toward absence.
+CLOSE_AFTER_MISSES = 2
+
 
 @dataclass(frozen=True, slots=True)
 class NormalizedJob:
