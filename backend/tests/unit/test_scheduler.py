@@ -13,7 +13,7 @@ def make_settings() -> Settings:
     return Settings(db_path=Path("beacon.db"), seeds_path=Path("seeds.csv"))
 
 
-def test_registers_the_poll_refresh_and_backup_jobs() -> None:
+def test_registers_the_poll_refresh_backup_and_probe_jobs() -> None:
     scheduler = build_scheduler(make_settings())
 
     assert {job.id for job in scheduler.get_jobs()} == {
@@ -21,6 +21,7 @@ def test_registers_the_poll_refresh_and_backup_jobs() -> None:
         "poll_boards",
         "refresh_registries",
         "nightly_backup",
+        "probe_quarantined",
     }
 
 

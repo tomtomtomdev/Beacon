@@ -28,6 +28,7 @@ from beacon.application.dedup import dedupe_jobs
 from beacon.application.health_report import build_health_alerts
 from beacon.application.ingest import ingest_all, ingest_companyless_source
 from beacon.application.notify import match_saved_searches
+from beacon.application.probe import probe_quarantined
 from beacon.application.settings import effective_telegram_config
 from beacon.config import Settings
 from beacon.domain.company import SHADOW_ATS_TYPE
@@ -137,6 +138,32 @@ async def run_ingest(
 
     if api_key:
         print(f"llm_calls_this_month={budget.calls_this_month()}")
+    return 0
+
+
+async def run_probe(settings: Settings) -> int:
+    """The weekly restore probe (SPEC §7): retry each quarantined source once and restore the
+    ones that recovered. Its own composition root so the scheduler can run it on its own cron."""
+    conn = connect(settings.db_path)
+    run_migrations(conn, MIGRATIONS_DIR)
+    company_repo = SqliteCompanyRepo(conn)
+    for seed in parse_seed_csv(settings.seeds_path.read_text()):
+        company_repo.upsert(seed)
+
+    jobs = SqliteJobRepo(conn)
+    now = datetime.now(UTC)
+    api_key = settings.anthropic_api_key.get_secret_value() if settings.anthropic_api_key else None
+    budget = SqliteLLMBudget(conn, cap=settings.llm_monthly_budget)
+
+    with httpx.Client(timeout=30.0) as llm_client:
+        classifier = make_classifier(
+            llm_client, api_key=api_key, model=settings.llm_model, budget=budget
+        )
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            result = await probe_quarantined(
+                company_repo, jobs, make_source_factory(PoliteClient(client)), classifier, now=now
+            )
+    print(f"probe probed={result.probed} restored={result.restored}")
     return 0
 
 
