@@ -50,6 +50,18 @@ class Classifier(Protocol):
     def classify(self, job: NormalizedJob) -> Classification: ...
 
 
+class LLMBudget(Protocol):
+    """The hard monthly cap on LLM classifier calls (cost control, SPEC §9). try_reserve
+    counts one call against the current month and reports whether it was under budget —
+    the tiered classifier only calls the LLM when it returns True."""
+
+    def try_reserve(self) -> bool:
+        """Reserve one LLM call for this month. True (and the call is now counted) when
+        under the monthly cap; False when the cap is reached. Counts the attempt, so a
+        failing/retrying call can never blow the budget."""
+        ...
+
+
 class Notifier(Protocol):
     """Delivers a new-match digest. TelegramNotifier is the MVP; the digest is channel-
     agnostic so each notifier owns its own formatting/size limits. Never called for an
