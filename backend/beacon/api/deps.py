@@ -7,6 +7,7 @@ from typing import Annotated
 import httpx
 from fastapi import Depends, Request
 
+from beacon.adapters.persistence.companies import SqliteCompanyRepo
 from beacon.adapters.persistence.countries import SqliteCountryRepo
 from beacon.adapters.persistence.db import connect
 from beacon.adapters.persistence.jobs import SqliteJobRepo
@@ -57,6 +58,13 @@ def get_country_repo(db: Annotated[sqlite3.Connection, Depends(get_db)]) -> Sqli
 
 
 CountryRepoDep = Annotated[SqliteCountryRepo, Depends(get_country_repo)]
+
+
+def get_company_repo(db: Annotated[sqlite3.Connection, Depends(get_db)]) -> SqliteCompanyRepo:
+    return SqliteCompanyRepo(db)
+
+
+CompanyRepoDep = Annotated[SqliteCompanyRepo, Depends(get_company_repo)]
 
 
 async def get_http_client() -> AsyncIterator[httpx.AsyncClient]:

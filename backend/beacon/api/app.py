@@ -5,6 +5,7 @@ from fastapi import FastAPI
 
 from beacon.adapters.persistence.countries import SqliteCountryRepo
 from beacon.adapters.persistence.db import MIGRATIONS_DIR, connect, run_migrations
+from beacon.api.companies import router as companies_router
 from beacon.api.countries import router as countries_router
 from beacon.api.jobs import router as jobs_router
 from beacon.api.searches import router as searches_router
@@ -34,6 +35,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(searches_router)
     app.include_router(settings_router)
     app.include_router(countries_router)
+    app.include_router(companies_router)
 
     @app.get("/healthz")
     async def healthz() -> dict[str, str]:
