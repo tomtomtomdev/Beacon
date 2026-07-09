@@ -309,9 +309,9 @@ Tasks:
 5. Nightly SQLite backup script
 
 Acceptance:
-- [ ] Machine reboots → scheduler resumes, next poll runs unattended
-- [ ] JobDetail for a Swedish job shows the Sweden card with reform caveat
-- [ ] Simulated 404 board across 5 poll cycles → zero jobs from that company gain `closed_at`
+- [~] Machine reboots → scheduler resumes, next poll runs unattended — **scheduler built + start-verified** (`build_scheduler` registers poll_ats 4h / poll_boards 6h / monthly registries / nightly backup on an AsyncIOScheduler; `python -m beacon.scheduler` starts and schedules them in Asia/Jakarta). The reboot itself is a **manual launchd step**: `cp deploy/com.beacon.scheduler.plist ~/Library/LaunchAgents/ && launchctl load ~/Library/LaunchAgents/com.beacon.scheduler.plist` (RunAtLoad+KeepAlive), then reboot — same shape as slice-8/9's credentialed live steps.
+- [x] JobDetail for a Swedish job shows the Sweden card with reform caveat — drawer CountryPanel renders `GET /countries[SE]`; live server returns SE with "scheme discontinued Dec 2023" + "reform to 8yr" caveat + verified date; `JobDrawer.test.tsx` asserts the rendered panel
+- [x] Simulated 404 board across 5 poll cycles → zero jobs from that company gain `closed_at` — `test_failed_poll_never_closes_jobs` (a fetch-raising source over 5 `ingest_all` cycles never runs the sweep); the sweep only runs at the end of a successful poll
 
 ---
 
