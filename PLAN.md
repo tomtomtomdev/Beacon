@@ -291,7 +291,7 @@ Tests: heuristic-confident jobs never call LLM (spy); ambiguous fixture → LLM 
 Tasks: `LLMClassifier` (Anthropic API, claude-haiku-class model, JSON-out prompt) **behind the same `Classifier` port as `HeuristicClassifier`; tests use `FakeLLMClassifier` returning canned classifications — never a live API call in the suite (honors the offline-test rule)**; confidence gate in heuristic (explicit ambiguity signal, not a magic number sprinkled around); monthly call counter in `registries_meta`-style bookkeeping.
 
 Acceptance:
-- [ ] Backfill run on full DB stays under call budget; spot-check 15 previously-`unspecified` rows improved
+- [ ] Backfill run on full DB stays under call budget; spot-check 15 previously-`unspecified` rows improved — **mechanism built + suite-verified 2026-07-09** (LLM behind the one `Classifier` port via `TieredClassifier`; `is_ambiguous` gate; hard monthly cap in `llm_usage`; fixture/`FakeLLMClassifier` tests, never a live call). **The live run itself is pending an Anthropic key** (`BEACON_ANTHROPIC_API_KEY`): run `scripts/spot_check_llm.py` (heuristic residue → Haiku, prints improved/llm_calls; target ≥15 improved, calls < budget), then `python -m beacon.classify --upgrade-residue` to LLM-upgrade the existing `categories=''` backlog. Only this credentialed run remains — same shape as slice 8's pending live Telegram send.
 
 ---
 
