@@ -29,11 +29,8 @@ class SqliteLLMBudget:
         self._clock = clock
 
     def try_reserve(self) -> bool:
-        month = self._clock().astimezone(LOCAL_TZ).strftime("%Y-%m")
-        row = self._conn.execute(
-            "SELECT call_count FROM llm_usage WHERE month = ?", (month,)
-        ).fetchone()
-        if row is not None and row["call_count"] >= self._cap:
+        month = self._month()
+        if self.calls_this_month() >= self._cap:
             return False
         self._conn.execute(
             "INSERT INTO llm_usage (month, call_count) VALUES (?, 1)"
@@ -42,3 +39,14 @@ class SqliteLLMBudget:
         )
         self._conn.commit()
         return True
+
+    def calls_this_month(self) -> int:
+        """LLM calls reserved so far this (local) month — for reporting/acceptance, not the
+        gate. Zero when the month has no row yet."""
+        row = self._conn.execute(
+            "SELECT call_count FROM llm_usage WHERE month = ?", (self._month(),)
+        ).fetchone()
+        return int(row["call_count"]) if row is not None else 0
+
+    def _month(self) -> str:
+        return self._clock().astimezone(LOCAL_TZ).strftime("%Y-%m")

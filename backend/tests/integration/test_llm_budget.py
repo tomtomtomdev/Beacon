@@ -39,6 +39,19 @@ def test_a_new_month_resets_the_budget(db: sqlite3.Connection) -> None:
     assert budget.try_reserve() is True  # August has its own allowance
 
 
+def test_calls_this_month_reports_the_running_count(db: sqlite3.Connection) -> None:
+    clock = FakeClock(datetime(2026, 7, 9, 5, 0, tzinfo=UTC))
+    budget = SqliteLLMBudget(db, cap=10, clock=clock)
+
+    assert budget.calls_this_month() == 0
+    budget.try_reserve()
+    budget.try_reserve()
+
+    assert budget.calls_this_month() == 2
+    clock.now = datetime(2026, 8, 1, 5, 0, tzinfo=UTC)
+    assert budget.calls_this_month() == 0  # a fresh month starts at zero
+
+
 def test_month_key_uses_local_time_not_utc(db: sqlite3.Connection) -> None:
     # 2026-07-31 20:00 UTC is 2026-08-01 03:00 in Asia/Jakarta (UTC+7) — an August call.
     clock = FakeClock(datetime(2026, 7, 31, 20, 0, tzinfo=UTC))

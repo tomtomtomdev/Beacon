@@ -172,6 +172,12 @@ class JobRepo(Protocol):
         An empty-string categories value means 'classified, nothing matched' and is skipped."""
         ...
 
+    def list_ambiguous(self) -> list[tuple[int, NormalizedJob]]:
+        """Persisted jobs classified but with no category (categories = ''), each as
+        (job_id, job) — the empty residue the LLM upgrader revisits. Distinct from
+        list_unclassified (NULL = never classified)."""
+        ...
+
     def set_classification(self, job_id: int, classification: Classification) -> None: ...
 
     def list_dedup_rows(self) -> list[DedupRow]:

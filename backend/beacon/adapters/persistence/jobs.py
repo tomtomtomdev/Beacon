@@ -116,6 +116,16 @@ class SqliteJobRepo:
         ).fetchall()
         return [(row["id"], _row_to_normalized(row)) for row in rows]
 
+    def list_ambiguous(self) -> list[tuple[int, NormalizedJob]]:
+        rows = self._conn.execute(
+            """
+            SELECT id, source_id, external_id, title, url, description, location_raw,
+                   country, city, posted_at, content_hash
+            FROM jobs WHERE categories = ''
+            """
+        ).fetchall()
+        return [(row["id"], _row_to_normalized(row)) for row in rows]
+
     def set_classification(self, job_id: int, classification: Classification) -> None:
         self._conn.execute(
             "UPDATE jobs SET categories = ?, level = ? WHERE id = ?",

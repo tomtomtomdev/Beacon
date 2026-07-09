@@ -63,6 +63,9 @@ class FakeJobRepo:
     def list_unclassified(self) -> list[tuple[int, NormalizedJob]]:
         raise NotImplementedError
 
+    def list_ambiguous(self) -> list[tuple[int, NormalizedJob]]:
+        raise NotImplementedError
+
     def set_classification(self, job_id: int, classification: Classification) -> None:
         raise NotImplementedError
 

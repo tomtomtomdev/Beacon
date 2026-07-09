@@ -10,12 +10,13 @@ from datetime import UTC, datetime
 
 import httpx
 
-from beacon.adapters.classify.heuristic import HeuristicClassifier
+from beacon.adapters.classify.factory import make_classifier
 from beacon.adapters.http.polite import PoliteClient
 from beacon.adapters.notify.factory import make_notifier
 from beacon.adapters.persistence.companies import SqliteCompanyRepo
 from beacon.adapters.persistence.db import MIGRATIONS_DIR, connect, run_migrations
 from beacon.adapters.persistence.jobs import SqliteJobRepo
+from beacon.adapters.persistence.llm_budget import SqliteLLMBudget
 from beacon.adapters.persistence.searches import SqliteSearchRepo
 from beacon.adapters.persistence.settings import SqliteSettingsRepo
 from beacon.adapters.seeds import parse_seed_csv
@@ -36,57 +37,72 @@ async def _run(settings: Settings, *, only_company: str | None, only_source: str
         company_repo.upsert(seed)
 
     jobs = SqliteJobRepo(conn)
-    classifier = HeuristicClassifier()
     now = datetime.now(UTC)
+    api_key = settings.anthropic_api_key.get_secret_value() if settings.anthropic_api_key else None
+    budget = SqliteLLMBudget(conn, cap=settings.llm_monthly_budget)
 
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        fetcher = PoliteClient(client)
-
-        # ATS boards: one seed company each. Shadow rows (ats_type='none', left by a prior
-        # company-less poll) are excluded — no adapter polls them.
-        if only_source is None:
-            ats = [c for c in company_repo.list_active() if c.ats_type != SHADOW_ATS_TYPE]
-            if only_company is not None:
-                ats = [c for c in ats if c.ats_slug == only_company]
-                if not ats:
-                    print(f"no active company with ats_slug={only_company!r}")
-                    return 1
-            results = await ingest_all(ats, jobs, make_source_factory(fetcher), classifier, now=now)
-            for name, result in results.items():
-                print(
-                    f"company={name} fetched={result.fetched}"
-                    f" upserted={result.upserted} errors={result.errors}"
-                )
-
-        # Company-less sources (HN, JobTech): one source, many employers parsed per posting.
-        if only_company is None:
-            sources = make_companyless_sources(fetcher)
-            if only_source is not None:
-                sources = [s for s in sources if s.source_id == only_source]
-                if not sources:
-                    print(f"no company-less source with id={only_source!r}")
-                    return 1
-            for source in sources:
-                result = await ingest_companyless_source(
-                    source, jobs, company_repo, classifier, now=now
-                )
-                print(
-                    f"source={source.source_id} fetched={result.fetched}"
-                    f" upserted={result.upserted} errors={result.errors}"
-                )
-
-        # Cross-source dedup runs once after every board is upserted (SPEC §5 pipeline).
-        dedup = dedupe_jobs(jobs)
-        print(f"dedup groups={dedup.groups} duplicates={dedup.duplicates}")
-
-        # Notify: match saved searches against the deduped canonical rows, alert once.
-        # Creds set via the Settings UI (DB) win, falling back to BEACON_TELEGRAM_* env.
-        telegram = effective_telegram_config(SqliteSettingsRepo(conn), settings.telegram_config())
-        match = await match_saved_searches(
-            SqliteSearchRepo(conn), jobs, make_notifier(telegram, client), now=now
+    # Heuristic-only until an Anthropic key is set, else a budget-gated tiered classifier
+    # (LLM on the ambiguous residue). The LLM client is sync (the Classifier port is sync);
+    # ingest is sequential, so a blocking classify stalls nothing that could run concurrently.
+    with httpx.Client(timeout=30.0) as llm_client:
+        classifier = make_classifier(
+            llm_client, api_key=api_key, model=settings.llm_model, budget=budget
         )
-        print(f"searches={match.searches_run} new_matches={match.new_matches}")
 
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            fetcher = PoliteClient(client)
+
+            # ATS boards: one seed company each. Shadow rows (ats_type='none', left by a
+            # prior company-less poll) are excluded — no adapter polls them.
+            if only_source is None:
+                ats = [c for c in company_repo.list_active() if c.ats_type != SHADOW_ATS_TYPE]
+                if only_company is not None:
+                    ats = [c for c in ats if c.ats_slug == only_company]
+                    if not ats:
+                        print(f"no active company with ats_slug={only_company!r}")
+                        return 1
+                results = await ingest_all(
+                    ats, jobs, make_source_factory(fetcher), classifier, now=now
+                )
+                for name, result in results.items():
+                    print(
+                        f"company={name} fetched={result.fetched}"
+                        f" upserted={result.upserted} errors={result.errors}"
+                    )
+
+            # Company-less sources (HN, JobTech): one source, many employers per posting.
+            if only_company is None:
+                sources = make_companyless_sources(fetcher)
+                if only_source is not None:
+                    sources = [s for s in sources if s.source_id == only_source]
+                    if not sources:
+                        print(f"no company-less source with id={only_source!r}")
+                        return 1
+                for source in sources:
+                    result = await ingest_companyless_source(
+                        source, jobs, company_repo, classifier, now=now
+                    )
+                    print(
+                        f"source={source.source_id} fetched={result.fetched}"
+                        f" upserted={result.upserted} errors={result.errors}"
+                    )
+
+            # Cross-source dedup runs once after every board is upserted (SPEC §5 pipeline).
+            dedup = dedupe_jobs(jobs)
+            print(f"dedup groups={dedup.groups} duplicates={dedup.duplicates}")
+
+            # Notify: match saved searches against the deduped canonical rows, alert once.
+            # Creds set via the Settings UI (DB) win, falling back to BEACON_TELEGRAM_* env.
+            telegram = effective_telegram_config(
+                SqliteSettingsRepo(conn), settings.telegram_config()
+            )
+            match = await match_saved_searches(
+                SqliteSearchRepo(conn), jobs, make_notifier(telegram, client), now=now
+            )
+            print(f"searches={match.searches_run} new_matches={match.new_matches}")
+
+    if api_key:
+        print(f"llm_calls_this_month={budget.calls_this_month()}")
     return 0
 
 
