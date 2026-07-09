@@ -1,4 +1,11 @@
-from beacon.domain.digest import Digest, DigestGroup, DigestLine, build_messages
+from beacon.domain.digest import (
+    Digest,
+    DigestGroup,
+    DigestLine,
+    HealthAlert,
+    RegistryStale,
+    build_messages,
+)
 
 
 def _line(title: str, *, country: str | None = "SE", tier: str = "registry_inferred") -> DigestLine:
@@ -57,3 +64,40 @@ def test_digest_splits_when_over_max_without_breaking_a_line() -> None:
 def test_empty_digest_produces_no_messages() -> None:
     assert build_messages(Digest(groups=()), max_chars=4096) == []
     assert Digest(groups=(DigestGroup("Empty", ()),)).is_empty()
+
+
+def test_health_alerts_lead_the_digest_with_company_reason_and_since() -> None:
+    digest = Digest(
+        groups=(),
+        health_alerts=(
+            HealthAlert(company="crypto", reason="gone", since="2026-06-01"),
+            HealthAlert(company="smartnews", reason="schema_drift", since="never"),
+        ),
+        stale_registries=(RegistryStale(registry="UK", fetched_at="2026-05-01"),),
+    )
+
+    messages = build_messages(digest, max_chars=4096)
+
+    assert len(messages) == 1
+    text = messages[0]
+    for fragment in ("crypto", "gone", "2026-06-01", "smartnews", "schema_drift", "never"):
+        assert fragment in text
+    assert "UK" in text and "2026-05-01" in text
+
+
+def test_health_only_digest_is_not_empty_and_sends() -> None:
+    # A quarantine with no new job matches must still notify — silent decay is the failure mode.
+    digest = Digest(
+        groups=(), health_alerts=(HealthAlert(company="crypto", reason="gone", since="never"),)
+    )
+
+    assert digest.is_empty() is False
+    assert len(build_messages(digest, max_chars=4096)) == 1
+
+
+def test_stale_registry_alone_is_not_empty() -> None:
+    digest = Digest(
+        groups=(), stale_registries=(RegistryStale(registry="UK", fetched_at="2026-01-01"),)
+    )
+
+    assert digest.is_empty() is False

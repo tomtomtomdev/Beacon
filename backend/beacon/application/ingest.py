@@ -5,13 +5,10 @@ from datetime import datetime
 
 from beacon.application.errors import SourceUnavailable
 from beacon.application.ports import Classifier, CompanyRepo, JobRepo, JobSource
-from beacon.domain.company import Company
+from beacon.domain.company import SHADOW_ATS_TYPE, Company
 from beacon.domain.health import FailureKind, record_failure, record_success, should_poll
 from beacon.domain.job import CLOSE_AFTER_MISSES, NormalizedJob
 from beacon.domain.sponsorship import SponsorSignal, detect_sponsorship, resolve_tier
-
-# ats_type a company-less source stamps on employers it shadows; no adapter polls it.
-SHADOW_ATS_TYPE = "none"
 
 logger = logging.getLogger(__name__)
 

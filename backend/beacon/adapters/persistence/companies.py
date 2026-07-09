@@ -1,7 +1,8 @@
 import sqlite3
 from datetime import datetime
 
-from beacon.domain.company import Company
+from beacon.application.ports import CompanyHealth
+from beacon.domain.company import SHADOW_ATS_TYPE, Company
 from beacon.domain.health import FailureKind, Health, SourceHealth
 
 _SELECT_COLUMNS = (
@@ -132,6 +133,29 @@ class SqliteCompanyRepo:
             (Health.QUARANTINED.value,),
         ).fetchall()
         return [_row_to_company(row) for row in rows]
+
+    def list_health(self) -> list[CompanyHealth]:
+        rows = self._conn.execute(
+            "SELECT name, ats_type, ats_slug, country_hq, health, quarantine_reason,"
+            " last_success_at, consecutive_failures FROM companies"
+            " WHERE active = 1 AND ats_type != ? ORDER BY priority, name",
+            (SHADOW_ATS_TYPE,),
+        ).fetchall()
+        return [_row_to_company_health(row) for row in rows]
+
+
+def _row_to_company_health(row: sqlite3.Row) -> CompanyHealth:
+    last_success = row["last_success_at"]
+    return CompanyHealth(
+        name=row["name"],
+        ats_type=row["ats_type"],
+        ats_slug=row["ats_slug"],
+        country_hq=row["country_hq"],
+        health=row["health"],
+        reason=row["quarantine_reason"],
+        last_success_at=datetime.fromisoformat(last_success) if last_success else None,
+        consecutive_failures=row["consecutive_failures"],
+    )
 
 
 def _row_to_health(row: sqlite3.Row) -> SourceHealth:

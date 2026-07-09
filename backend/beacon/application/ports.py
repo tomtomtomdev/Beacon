@@ -234,6 +234,21 @@ class JobRepo(Protocol):
         ...
 
 
+@dataclass(frozen=True, slots=True)
+class CompanyHealth:
+    """Read model for the source-health view (DESIGN §3) and the digest's quarantine lines.
+    `health` is ok/degraded/quarantined; `reason` is the current failure kind (None when ok)."""
+
+    name: str
+    ats_type: str
+    ats_slug: str
+    country_hq: str
+    health: str
+    reason: str | None
+    last_success_at: datetime | None
+    consecutive_failures: int
+
+
 class CompanyRepo(Protocol):
     def upsert(self, company: Company) -> Company: ...
 
@@ -261,6 +276,11 @@ class CompanyRepo(Protocol):
 
     def list_quarantined(self) -> list[Company]:
         """The quarantined seed companies — the weekly probe's retry list."""
+        ...
+
+    def list_health(self) -> list[CompanyHealth]:
+        """Every pollable seed company with its health, for the source-health view and digest.
+        Shadow employers (ats_type='none') are excluded — they aren't pollable sources."""
         ...
 
 

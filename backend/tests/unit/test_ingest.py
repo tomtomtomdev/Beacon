@@ -10,9 +10,16 @@ from beacon.application.ingest import (
     ingest_companyless_source,
     ingest_source,
 )
-from beacon.application.ports import JobDetail, JobFilters, JobPage, JobSource, RawPosting
+from beacon.application.ports import (
+    CompanyHealth,
+    JobDetail,
+    JobFilters,
+    JobPage,
+    JobSource,
+    RawPosting,
+)
 from beacon.domain.classification import Category, Classification, Level
-from beacon.domain.company import Company
+from beacon.domain.company import SHADOW_ATS_TYPE, Company
 from beacon.domain.dedup import DedupRow
 from beacon.domain.health import FailureKind, Health, SourceHealth
 from beacon.domain.job import CLOSE_AFTER_MISSES, NormalizedJob
@@ -564,6 +571,26 @@ class FakeCompanyRepo:
     def list_quarantined(self) -> list[Company]:
         quarantined = {cid for cid, h in self._health.items() if h.health is Health.QUARANTINED}
         return [c for c in self._by_name.values() if c.id in quarantined]
+
+    def list_health(self) -> list[CompanyHealth]:
+        result: list[CompanyHealth] = []
+        for company in self._by_name.values():
+            if company.ats_type == SHADOW_ATS_TYPE or company.id is None:
+                continue
+            state = self._health.get(company.id, SourceHealth())
+            result.append(
+                CompanyHealth(
+                    name=company.name,
+                    ats_type=company.ats_type,
+                    ats_slug=company.ats_slug,
+                    country_hq=company.country_hq,
+                    health=state.health.value,
+                    reason=state.reason.value if state.reason else None,
+                    last_success_at=state.last_success_at,
+                    consecutive_failures=state.consecutive_failures,
+                )
+            )
+        return result
 
 
 ANTHROPIC = Company(

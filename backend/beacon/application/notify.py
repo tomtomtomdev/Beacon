@@ -7,7 +7,7 @@ from datetime import datetime
 
 from beacon.application.ports import JobListing, JobRepo, Notifier, SearchRepo
 from beacon.application.searches import to_job_filters
-from beacon.domain.digest import Digest, DigestGroup, DigestLine
+from beacon.domain.digest import Digest, DigestGroup, DigestLine, HealthAlert, RegistryStale
 from beacon.domain.saved_search import SearchFilters, match_reason
 
 logger = logging.getLogger(__name__)
@@ -38,12 +38,20 @@ def _digest_line(filters: SearchFilters, job: JobListing) -> DigestLine:
 
 
 async def match_saved_searches(
-    searches: SearchRepo, jobs: JobRepo, notifier: Notifier, *, now: datetime
+    searches: SearchRepo,
+    jobs: JobRepo,
+    notifier: Notifier,
+    *,
+    now: datetime,
+    health_alerts: tuple[HealthAlert, ...] = (),
+    stale_registries: tuple[RegistryStale, ...] = (),
 ) -> MatchResult:
     """Notify (once) about every saved search's not-yet-seen matches.
 
     Sends a single grouped digest, then records the notified matches — send *before*
-    record, so a notifier failure leaves the matches un-recorded and they retry next run."""
+    record, so a notifier failure leaves the matches un-recorded and they retry next run.
+    Source-health alerts (quarantines, stale registries) ride the same digest and make it
+    send even with no new matches — silent decay is the failure mode this guards against."""
     all_searches = searches.list_all()
     groups: list[DigestGroup] = []
     pending: list[tuple[int, list[tuple[int, str]]]] = []
@@ -62,7 +70,9 @@ async def match_saved_searches(
             (search.id, [(job.id, line.reason) for job, line in zip(new, lines, strict=True)])
         )
 
-    digest = Digest(groups=tuple(groups))
+    digest = Digest(
+        groups=tuple(groups), health_alerts=health_alerts, stale_registries=stale_registries
+    )
     new_matches = sum(len(group.lines) for group in groups)
 
     if not digest.is_empty():

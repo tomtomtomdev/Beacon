@@ -18,16 +18,19 @@ from beacon.adapters.persistence.countries import SqliteCountryRepo
 from beacon.adapters.persistence.db import MIGRATIONS_DIR, connect, run_migrations
 from beacon.adapters.persistence.jobs import SqliteJobRepo
 from beacon.adapters.persistence.llm_budget import SqliteLLMBudget
+from beacon.adapters.persistence.registries_meta import SqliteRegistriesMetaRepo
 from beacon.adapters.persistence.searches import SqliteSearchRepo
 from beacon.adapters.persistence.settings import SqliteSettingsRepo
 from beacon.adapters.seeds import parse_seed_csv
 from beacon.adapters.sources.factory import make_companyless_sources, make_source_factory
 from beacon.application.countries import seed_countries
 from beacon.application.dedup import dedupe_jobs
-from beacon.application.ingest import SHADOW_ATS_TYPE, ingest_all, ingest_companyless_source
+from beacon.application.health_report import build_health_alerts
+from beacon.application.ingest import ingest_all, ingest_companyless_source
 from beacon.application.notify import match_saved_searches
 from beacon.application.settings import effective_telegram_config
 from beacon.config import Settings
+from beacon.domain.company import SHADOW_ATS_TYPE
 
 
 async def run_ingest(
@@ -92,9 +95,17 @@ async def run_ingest(
                         print(f"no company-less source with id={only_source!r}")
                         return 1
                 for source in sources:
-                    result = await ingest_companyless_source(
-                        source, jobs, company_repo, classifier, now=now
-                    )
+                    try:
+                        result = await ingest_companyless_source(
+                            source, jobs, company_repo, classifier, now=now
+                        )
+                    except Exception:
+                        # A dead board never stops the run (rule 6); company-less sources have
+                        # no per-company health, so we just log and move on.
+                        logging.getLogger(__name__).exception(
+                            "companyless_poll_failed source=%s", source.source_id
+                        )
+                        continue
                     print(
                         f"source={source.source_id} fetched={result.fetched}"
                         f" upserted={result.upserted} errors={result.errors}"
@@ -109,8 +120,18 @@ async def run_ingest(
             telegram = effective_telegram_config(
                 SqliteSettingsRepo(conn), settings.telegram_config()
             )
+            # Source-health section: quarantined companies + stale registry snapshots ride the
+            # same digest (SPEC §7) so silent decay surfaces even with no new matches.
+            health_alerts, stale = build_health_alerts(
+                company_repo, SqliteRegistriesMetaRepo(conn), now=now
+            )
             match = await match_saved_searches(
-                SqliteSearchRepo(conn), jobs, make_notifier(telegram, client), now=now
+                SqliteSearchRepo(conn),
+                jobs,
+                make_notifier(telegram, client),
+                now=now,
+                health_alerts=health_alerts,
+                stale_registries=stale,
             )
             print(f"searches={match.searches_run} new_matches={match.new_matches}")
 

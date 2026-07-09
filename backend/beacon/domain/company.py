@@ -1,5 +1,9 @@
 from dataclasses import dataclass
 
+# ats_type stamped on employers shadowed from a company-less posting (HN/JobTech): no adapter
+# polls them, and they're excluded from the source-health view (they aren't pollable sources).
+SHADOW_ATS_TYPE = "none"
+
 
 @dataclass(frozen=True, slots=True)
 class Company:

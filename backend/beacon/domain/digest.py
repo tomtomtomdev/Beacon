@@ -28,11 +28,34 @@ class DigestGroup:
 
 
 @dataclass(frozen=True, slots=True)
+class HealthAlert:
+    """One quarantined source in the digest's health section (SPEC §7)."""
+
+    company: str
+    reason: str  # gone / unreachable / schema_drift
+    since: str  # date of last successful poll, or "never"
+
+
+@dataclass(frozen=True, slots=True)
+class RegistryStale:
+    """One sponsor-registry snapshot that's overdue a refresh (SPEC §7 staleness nag)."""
+
+    registry: str
+    fetched_at: str  # date the snapshot was last ingested
+
+
+@dataclass(frozen=True, slots=True)
 class Digest:
     groups: tuple[DigestGroup, ...]
+    # Source-health section (SPEC §7): quarantined sources and stale registry snapshots. These
+    # make an otherwise-empty digest send — silent decay is the failure mode this exists to catch.
+    health_alerts: tuple[HealthAlert, ...] = ()
+    stale_registries: tuple[RegistryStale, ...] = ()
 
     def is_empty(self) -> bool:
-        return not any(group.lines for group in self.groups)
+        return not (
+            any(group.lines for group in self.groups) or self.health_alerts or self.stale_registries
+        )
 
 
 def _render_line(line: DigestLine) -> str:
@@ -48,10 +71,29 @@ def _render_header(group: DigestGroup) -> str:
     return f"🔔 {group.search_name} ({len(group.lines)} new)"
 
 
+def _render_health(digest: Digest) -> str | None:
+    """The source-health section, if any — one block leading the digest so quarantines and
+    stale registries are seen first. None when everything is healthy (adds nothing)."""
+    if not digest.health_alerts and not digest.stale_registries:
+        return None
+    lines = ["⚠ Source health"]
+    lines += [
+        f"• {alert.company} — quarantined ({alert.reason}) · last ok {alert.since}"
+        for alert in digest.health_alerts
+    ]
+    lines += [
+        f"• registry {stale.registry} snapshot stale (fetched {stale.fetched_at})"
+        for stale in digest.stale_registries
+    ]
+    return "\n".join(lines)
+
+
 def _units(digest: Digest) -> list[str]:
     """Atomic blocks to pack. A group's header always travels with its first entry so a
     header is never orphaned at the end of a message; later entries pack on their own."""
     units: list[str] = []
+    if (health := _render_health(digest)) is not None:
+        units.append(health)
     for group in digest.groups:
         if not group.lines:
             continue
