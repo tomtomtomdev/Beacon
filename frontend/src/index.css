@@ -22,3 +22,60 @@ button,
 input {
   font-family: inherit;
 }
+
+::selection {
+  background: rgba(94, 234, 212, 0.28);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--accent-hover);
+}
+
+/* Thin dark scrollbar (prototype .bk-scroll) — applied to scrollable panes. */
+.bk-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.bk-scroll::-webkit-scrollbar-thumb {
+  background: #123842;
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+.bk-scroll::-webkit-scrollbar-thumb:hover {
+  background: #1e5058;
+  background-clip: padding-box;
+}
+
+@keyframes bk-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes bk-slide {
+  from {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+@keyframes bk-pulse {
+  from {
+    transform: scale(0.55);
+    opacity: 0.65;
+  }
+  to {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { JobsPageResponse } from '../api/types'
-import { JobsPage } from './JobsPage'
+import { JobsPane } from './JobsPane'
 
 const payload: JobsPageResponse = {
   total: 2,
@@ -47,7 +47,7 @@ function renderPage(initialUrl = '/') {
   return render(
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={[initialUrl]}>
-        <JobsPage />
+        <JobsPane onBack={() => {}} />
       </MemoryRouter>
     </QueryClientProvider>,
   )
@@ -66,7 +66,7 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-describe('JobsPage', () => {
+describe('JobsPane', () => {
   it('renders a row per job from the API', async () => {
     renderPage()
 

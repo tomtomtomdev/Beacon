@@ -83,7 +83,7 @@
   width: 34px;
   height: 34px;
   border: 1px solid var(--border-input);
-  background: var(--surface);
+  background: var(--surface-raised);
   border-radius: var(--radius-input);
   color: var(--text-secondary);
   cursor: pointer;
@@ -354,7 +354,7 @@
   padding: 10px 16px;
   border-radius: var(--radius-input);
   background: var(--accent);
-  color: #ffffff;
+  color: var(--accent-ink);
   font-size: 13px;
   font-weight: 500;
   text-decoration: none;

@@ -1,14 +1,29 @@
-.main {
-  flex: 1;
+/* Jobs pane — rendered inside the Countries view, below the globe. */
+.pane {
   min-width: 0;
-  padding: 26px 34px;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: 10px;
+  gap: 16px;
+  padding: 6px 0 0;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .h1 {
@@ -16,10 +31,11 @@
   font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.02em;
+  color: var(--ink);
 }
 
 .subtitle {
-  margin: 4px 0 0;
+  margin: 7px 0 0;
   font-size: 13.5px;
   color: var(--text-body-muted);
 }
@@ -27,6 +43,7 @@
 .legend {
   display: flex;
   gap: 14px;
+  padding-bottom: 2px;
 }
 
 .legendItem {
@@ -46,23 +63,29 @@
 .dotYes {
   background: var(--tier-yes-dot);
 }
-
 .dotRegistry {
   background: var(--tier-registry-dot);
 }
-
 .dotUnknown {
   background: var(--tier-unknown-dot);
 }
-
 .dotNo {
   background: var(--tier-no-dot);
+}
+
+/* Sticky filter bar with a gradient fade over the page background (DESIGN §2). */
+.filterBar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 16px 0;
+  background: linear-gradient(var(--bg-page) 78%, rgba(4, 18, 26, 0));
 }
 
 .toolbar {
   display: flex;
   align-items: center;
-  padding: 4px 0 10px;
+  margin-bottom: 12px;
 }
 
 .stateText {
@@ -81,5 +104,6 @@
 .emptyTitle {
   margin: 0 0 6px;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 500;
+  color: var(--text-chip);
 }

@@ -32,3 +32,27 @@ const CATEGORY_LABELS = new Map(CATEGORY_OPTIONS.map(({ value, label }) => [valu
 
 // Unknown codes (e.g. a new backend category not yet in the table) fall back to the raw code.
 export const categoryLabel = (value: string): string => CATEGORY_LABELS.get(value) ?? value
+
+// The 11 target markets (SPEC §3) — shared by the FilterBar country dropdown and the
+// "Jobs · {Country}" heading. Codes are the /jobs `country[]` param; tier drives the P/☆ badge.
+export const COUNTRY_OPTIONS: ReadonlyArray<{
+  code: string
+  name: string
+  tier: 'primary' | 'nice_to_have'
+}> = [
+  { code: 'SG', name: 'Singapore', tier: 'primary' },
+  { code: 'AU', name: 'Australia', tier: 'primary' },
+  { code: 'JP', name: 'Japan', tier: 'primary' },
+  { code: 'NL', name: 'Netherlands', tier: 'primary' },
+  { code: 'US', name: 'United States', tier: 'primary' },
+  { code: 'CA', name: 'Canada', tier: 'primary' },
+  { code: 'IE', name: 'Ireland', tier: 'primary' },
+  { code: 'SE', name: 'Sweden', tier: 'nice_to_have' },
+  { code: 'NO', name: 'Norway', tier: 'nice_to_have' },
+  { code: 'DK', name: 'Denmark', tier: 'nice_to_have' },
+  { code: 'CH', name: 'Switzerland', tier: 'nice_to_have' },
+]
+
+const COUNTRY_NAMES = new Map(COUNTRY_OPTIONS.map(({ code, name }) => [code, name]))
+
+export const countryName = (code: string): string => COUNTRY_NAMES.get(code) ?? code

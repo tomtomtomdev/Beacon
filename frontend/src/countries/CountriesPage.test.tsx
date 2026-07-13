@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Country } from '../api/types'
 import { CountriesPage } from './CountriesPage'
@@ -36,15 +37,20 @@ function renderPage() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={client}>
-      <CountriesPage />
+      <MemoryRouter initialEntries={['/']}>
+        <CountriesPage />
+      </MemoryRouter>
     </QueryClientProvider>,
   )
 }
 
 beforeEach(() => {
-  fetchMock.mockResolvedValue({ ok: true, json: () => Promise.resolve(countries) } as Response)
+  fetchMock.mockImplementation((url: RequestInfo | URL) => {
+    const body = String(url).startsWith('/countries') ? countries : { total: 0, jobs: [] }
+    return Promise.resolve({ ok: true, json: () => Promise.resolve(body) } as Response)
+  })
   vi.stubGlobal('fetch', fetchMock)
-  // jsdom has no canvas 2d context; return null so the decorative draw is skipped cleanly.
+  // jsdom has no canvas 2d context; return null so the globe engine is skipped cleanly.
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null)
 })
 
@@ -72,19 +78,29 @@ describe('CountriesPage', () => {
     expect(swedish.getByText(/✓ 2026-01-15/)).toBeInTheDocument()
   })
 
-  it('clicking a card cross-highlights its map pin', async () => {
+  it('selecting a country opens its jobs pane; the back button returns to the grid', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(await screen.findByRole('button', { name: 'Sweden details' }))
+
+    // The card grid is replaced by the jobs pane, filtered to that country.
+    expect(await screen.findByRole('heading', { name: 'Jobs · Sweden' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Sweden details' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /all countries/i }))
+    expect(await screen.findByRole('button', { name: 'Sweden details' })).toBeInTheDocument()
+  })
+
+  it('a globe pin control opens the selection', async () => {
     const user = userEvent.setup()
     renderPage()
     await screen.findByRole('button', { name: 'Sweden details' })
 
-    const pin = screen.getByRole('button', { name: 'Sweden on map' })
+    const pin = screen.getByRole('button', { name: 'Sweden on globe' })
     expect(pin).toHaveAttribute('aria-pressed', 'false')
 
-    await user.click(screen.getByRole('button', { name: 'Sweden details' }))
-    expect(pin).toHaveAttribute('aria-pressed', 'true')
-
-    // Clicking again deselects (DESIGN §4 map toggle).
-    await user.click(screen.getByRole('button', { name: 'Sweden details' }))
-    expect(pin).toHaveAttribute('aria-pressed', 'false')
+    await user.click(pin)
+    expect(await screen.findByRole('heading', { name: 'Jobs · Sweden' })).toBeInTheDocument()
   })
 })

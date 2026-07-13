@@ -3,22 +3,7 @@ import { useState } from 'react'
 import type { SortBy } from '../api/jobs'
 import type { SponsorTier } from '../api/types'
 import styles from './FilterBar.module.css'
-import { CATEGORY_OPTIONS, LEVEL_OPTIONS } from './taxonomy'
-
-// DESIGN.md §1 country dropdown list; tier P/☆ badges arrive with the countries table (slice 10).
-const COUNTRIES: ReadonlyArray<{ code: string; name: string }> = [
-  { code: 'SG', name: 'Singapore' },
-  { code: 'AU', name: 'Australia' },
-  { code: 'JP', name: 'Japan' },
-  { code: 'NL', name: 'Netherlands' },
-  { code: 'US', name: 'United States' },
-  { code: 'CA', name: 'Canada' },
-  { code: 'IE', name: 'Ireland' },
-  { code: 'SE', name: 'Sweden' },
-  { code: 'NO', name: 'Norway' },
-  { code: 'DK', name: 'Denmark' },
-  { code: 'CH', name: 'Switzerland' },
-]
+import { CATEGORY_OPTIONS, COUNTRY_OPTIONS, LEVEL_OPTIONS } from './taxonomy'
 
 // DESIGN.md §1 sponsor-tier dropdown; dot colors reuse the tier tokens.
 const TIER_OPTIONS: ReadonlyArray<{ value: SponsorTier; label: string; dot: string }> = [
@@ -113,14 +98,20 @@ export function FilterBar({
           <>
             <div className={styles.clickAway} onClick={() => setOpenMenu(null)} />
             <div className={styles.menu} role="group" aria-label="Filter by country">
-              {COUNTRIES.map(({ code, name }) => (
+              {COUNTRY_OPTIONS.map(({ code, name, tier }) => (
                 <label key={code} className={styles.menuRow}>
                   <input
                     type="checkbox"
                     checked={countries.includes(code)}
                     onChange={() => onToggleCountry(code)}
                   />
-                  <span>{name}</span>
+                  <span className={styles.menuRowLabel}>{name}</span>
+                  <span
+                    className={tier === 'primary' ? styles.tierBadgePrimary : styles.tierBadgeNice}
+                    aria-hidden
+                  >
+                    {tier === 'primary' ? 'P' : '☆'}
+                  </span>
                 </label>
               ))}
             </div>

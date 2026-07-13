@@ -101,20 +101,20 @@
 
 .segment,
 .segmentActive {
-  padding: 6px 12px;
+  padding: 7px 12px;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-seg-btn);
   background: transparent;
-  color: var(--text-secondary);
-  font-size: 13px;
+  color: var(--text-body-muted);
+  font-size: 12.5px;
+  font-family: inherit;
   cursor: pointer;
 }
 
 .segmentActive {
-  background: var(--surface);
-  color: var(--ink);
-  font-weight: 600;
-  box-shadow: var(--shadow-segment-active);
+  background: var(--accent-soft-bg-strong);
+  color: var(--accent-soft-fg);
+  font-weight: 500;
 }
 
 .dropdown {
@@ -155,10 +155,11 @@
   z-index: 10;
   width: 230px;
   padding: 8px;
-  background: var(--surface);
-  border: 1px solid var(--border-input);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-menu);
   border-radius: var(--radius-menu);
   box-shadow: var(--shadow-menu);
+  animation: bk-fade 0.12s ease;
 }
 
 .menuRow {
@@ -174,6 +175,28 @@
 
 .menuRow:hover {
   background: var(--bg-hover);
+}
+
+.menuRowLabel {
+  flex: 1;
+}
+
+.tierBadgePrimary,
+.tierBadgeNice {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 5px;
+}
+
+.tierBadgePrimary {
+  color: var(--accent);
+  background: rgba(94, 234, 212, 0.15);
+}
+
+.tierBadgeNice {
+  color: var(--text-body-muted);
+  background: rgba(148, 180, 186, 0.1);
 }
 
 .menuRow input[type='checkbox'] {

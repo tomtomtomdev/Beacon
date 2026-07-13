@@ -1,96 +1,109 @@
-/* Nordic Slate & Teal — DESIGN.md token tables, verbatim. Do not invent colors. */
+/* Dark holographic theme — Beacon.dc.html handoff (2026-07-13), verbatim hex. Do not invent colors. */
 :root {
   /* Surfaces / structure */
-  --bg-page: #eef1f3;
-  --surface: #ffffff;
-  --bg-sidebar: #f6f8f9;
-  --bg-table-header: #f4f7f8;
-  --bg-hover: #f4f7f8;
-  --bg-chip: #e9eef0;
-  --bg-segment-track: #e2e8eb;
-  --border-primary: #e0e6ea;
-  --border-input: #dbe2e6;
-  --border-row: #eef2f4;
+  --bg-page: #04121a;
+  --bg-sidebar: #071a22;
+  --surface: #0a2028; /* cards, inputs */
+  --surface-raised: #0c2831; /* segmented tracks, table header, menus */
+  --surface-hover: #0d2a33; /* row hover */
+  --bg-chip: #0f333c; /* neutral tag / info chips */
+  --bg-table-header: #0c2831;
+  --bg-hover: #0d2a33;
+  --bg-segment-track: #0c2831;
+  --border-primary: #123842; /* card / panel borders, dividers */
+  --border-input: #123842;
+  --border-row: #0f2c34;
+  --border-menu: #1a4650;
+  --border-sidebar: #123842;
 
   /* Text */
-  --ink: #16202a;
-  --text-body-muted: #5d6b76;
-  --text-chip: #4c5964;
-  --text-secondary: #6b7784;
-  --text-faint: #93a0aa;
-  --text-label: #97a3ac;
-  --text-mono-faint: #a3aeb6;
+  --ink: #e3fdf6; /* headings / primary on dark */
+  --text-body: #c4ebe4; /* body copy, values */
+  --text-body-muted: #7fa8a3; /* subtitles, secondary */
+  --text-chip: #9fc7c2;
+  --text-secondary: #9fc7c2;
+  --text-faint: #7fa8a3;
+  --text-label: #5f8f8a; /* uppercase section labels */
+  --text-mono-faint: #4f7873; /* mono slugs / verified dates */
+  --text-mono-dim: #3f7a76;
 
   /* Accent (teal) */
-  --accent: #0e8a7d;
-  --accent-hover: #0b7268;
-  --accent-soft-bg: #d7efec;
-  --accent-soft-fg: #0a6c62;
-  --accent-border: #a9dcd5;
+  --accent: #5eead4;
+  --accent-hover: #8ff3e2;
+  --accent-ink: #04121a; /* text/icon on a teal fill */
+  --accent-soft-bg: rgba(94, 234, 212, 0.15);
+  --accent-soft-bg-strong: rgba(94, 234, 212, 0.16);
+  --accent-soft-fg: #5eead4;
+  --accent-border: #14514c;
+  --accent-active-fg: #0a6c62; /* legacy light-pin label fg (DOM pins) */
+  --accent-active-bg: #d7efec; /* legacy light-pin label bg (DOM pins) */
 
-  /* Status pills (bg / fg) */
-  --pill-new-bg: #d7efec;
-  --pill-new-fg: #0a6c62;
-  --pill-seen-bg: #e7ecef;
-  --pill-seen-fg: #6b7784;
-  --pill-starred-bg: #cbeae4;
-  --pill-starred-fg: #0a6c62;
-  --pill-hidden-bg: #f6e3e1;
-  --pill-hidden-fg: #c0504a;
+  /* Status pills (bg / fg) — job user_status */
+  --pill-new-bg: rgba(94, 234, 212, 0.16);
+  --pill-new-fg: #5eead4;
+  --pill-seen-bg: rgba(148, 180, 186, 0.12);
+  --pill-seen-fg: #9fc7c2;
+  --pill-starred-bg: rgba(94, 234, 212, 0.16);
+  --pill-starred-fg: #5eead4;
+  --pill-hidden-bg: rgba(248, 113, 113, 0.14);
+  --pill-hidden-fg: #f7a6a2;
 
-  /* Job-detail drawer (DESIGN §2) */
-  --drawer-overlay: rgba(16, 24, 32, 0.22);
+  /* Job-detail drawer */
+  --drawer-overlay: rgba(2, 10, 14, 0.55);
+  --drawer-surface: #071a22;
 
-  /* Country visa panel (teal-tinted, DESIGN §2) */
-  --country-bg: #e6f4f1;
-  --country-border: #c9e6e1;
-  --country-label: #3d8a7e;
-  --country-value: #1f3b40;
+  /* Country visa panel (in-drawer, teal-tinted) */
+  --country-bg: rgba(94, 234, 212, 0.06);
+  --country-border: #14514c;
+  --country-label: #5eb5ab;
+  --country-value: #d6f5ee;
 
-  /* Countries view / world map (DESIGN §4) */
-  --geo-panel-bg: #f4f7f8;
-  --geo-nice: #7c8791;
-  --map-land: #cdd6db;
+  /* Globe scene (dark holographic) */
+  --geo-panel-border: #10424a;
+  --geo-atmos: #5eead4; /* land dots / graticule / rim / arc base */
+  --geo-overlay-strong: #e3fdf6;
+  --geo-overlay: #9fc7c2;
+  --geo-overlay-mono: #5f9a95;
+  --geo-caption: #3f7a76;
+  --geo-pin-primary: #5eead4;
+  --geo-pin-nice: #93a7ad;
+  --geo-origin: #fcd34d; /* Jakarta marker */
+  --geo-arc-pulse: #eafffb;
 
-  /* Source health (bg / fg / dot) — DESIGN §3 Companies view */
-  --health-ok-bg: #dcf0e4;
-  --health-ok-fg: #1b8a5a;
-  --health-ok-dot: #25a56a;
-  --health-degraded-bg: #faf1dd;
-  --health-degraded-fg: #9a6a12;
-  --health-degraded-dot: #d99a2b;
-  --health-quarantined-bg: #f6e3e1;
-  --health-quarantined-fg: #c0504a;
-  --health-quarantined-dot: #d26f68;
-  --health-pending-bg: #e7ecef;
-  --health-pending-fg: #6b7784;
-  --health-pending-dot: #a6b0ba;
+  /* Source-health widget (dots) */
+  --health-ok-dot: #34d399;
+  --health-degraded-dot: #fbbf24;
+  --health-quarantined-dot: #f87171;
 
-  /* Sponsorship tiers (bg / fg / dot) */
-  --tier-yes-bg: #dcf0e4;
-  --tier-yes-fg: #1b8a5a;
-  --tier-yes-dot: #25a56a;
-  --tier-registry-bg: #dde9f4;
-  --tier-registry-fg: #2f6fae;
-  --tier-registry-dot: #3f83c8;
-  --tier-unknown-bg: #e7ecef;
-  --tier-unknown-fg: #6b7784;
-  --tier-unknown-dot: #a6b0ba;
-  --tier-no-bg: #f6e3e1;
-  --tier-no-fg: #c0504a;
-  --tier-no-dot: #d26f68;
+  /* Sponsorship tiers (bg / fg / dot) — dark rgba fills */
+  --tier-yes-bg: rgba(52, 211, 153, 0.14);
+  --tier-yes-fg: #5fe3a3;
+  --tier-yes-dot: #34d399;
+  --tier-registry-bg: rgba(96, 165, 250, 0.14);
+  --tier-registry-fg: #7cc0fb;
+  --tier-registry-dot: #60a5fa;
+  --tier-unknown-bg: rgba(148, 180, 186, 0.12);
+  --tier-unknown-fg: #9fc7c2;
+  --tier-unknown-dot: #8296a0;
+  --tier-no-bg: rgba(248, 113, 113, 0.14);
+  --tier-no-fg: #f7a6a2;
+  --tier-no-dot: #f87171;
 
   /* Radius */
   --radius-card: 14px;
+  --radius-panel: 18px;
   --radius-input: 10px;
   --radius-menu: 12px;
   --radius-segment: 9px;
+  --radius-seg-btn: 7px;
   --radius-chip: 6px;
+  --radius-nav: 11px;
   --radius-pill: 999px;
 
   /* Shadow */
-  --shadow-menu: 0 12px 32px rgba(20, 32, 42, 0.12);
-  --shadow-drawer: -20px 0 50px rgba(20, 32, 42, 0.1);
+  --shadow-panel: 0 24px 60px rgba(4, 18, 26, 0.35), inset 0 0 90px rgba(45, 212, 191, 0.05);
+  --shadow-menu: 0 16px 40px rgba(2, 10, 14, 0.6);
+  --shadow-drawer: -20px 0 50px rgba(2, 10, 14, 0.55);
   --shadow-segment-active: 0 1px 2px rgba(0, 0, 0, 0.08);
 
   /* Typography */

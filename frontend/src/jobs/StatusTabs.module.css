@@ -10,18 +10,18 @@
 
 .segment,
 .segmentActive {
-  padding: 6px 14px;
+  padding: 7px 14px;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-seg-btn);
   background: transparent;
-  color: var(--text-secondary);
-  font-size: 13px;
+  color: var(--text-body-muted);
+  font-size: 12.5px;
+  font-family: inherit;
   cursor: pointer;
 }
 
 .segmentActive {
-  background: var(--surface);
-  color: var(--ink);
-  font-weight: 600;
-  box-shadow: var(--shadow-segment-active);
+  background: var(--accent-soft-bg-strong);
+  color: var(--accent-soft-fg);
+  font-weight: 500;
 }
