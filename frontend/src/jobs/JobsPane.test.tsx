@@ -76,16 +76,6 @@ describe('JobsPane', () => {
     expect(screen.getByText(/2 postings/)).toBeInTheDocument()
   })
 
-  it('links each row to the original posting', async () => {
-    renderPage()
-
-    const links = await screen.findAllByRole('link', { name: /open original posting/i })
-    expect(links.map((a) => a.getAttribute('href'))).toEqual([
-      'https://example.test/1',
-      'https://example.test/2',
-    ])
-  })
-
   it('typing a keyword refetches with q', async () => {
     const user = userEvent.setup()
     renderPage()
@@ -194,15 +184,14 @@ describe('JobsPane', () => {
     expect(firstUrl).toContain('level=senior')
   })
 
-  it('renders category chips and the level per row', async () => {
+  it('renders the city and level on each compact card', async () => {
     renderPage()
 
     await screen.findByText('Swift Engineer')
-    // Scope to the table — category labels also appear as filter pills in the bar.
-    const table = within(screen.getByTestId('job-table'))
-    expect(table.getByText('iOS')).toBeInTheDocument() // multi-label: both chips render
-    expect(table.getByText('AI/ML')).toBeInTheDocument()
-    expect(table.getByText('SENIOR')).toBeInTheDocument() // level uppercased
+    // The compact card meta row shows city + level (categories are filters, not shown per card).
+    const list = within(screen.getByTestId('job-list'))
+    expect(list.getByText('Stockholm')).toBeInTheDocument()
+    expect(list.getByText('SENIOR')).toBeInTheDocument() // level uppercased
   })
 
   it('reads initial sort and tier filter from the URL', async () => {

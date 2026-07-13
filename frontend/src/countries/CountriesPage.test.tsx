@@ -68,27 +68,30 @@ describe('CountriesPage', () => {
     expect(screen.getByRole('button', { name: 'Sweden details' })).toBeInTheDocument()
   })
 
-  it('surfaces Sweden’s no-registry note and verified date verbatim', async () => {
+  it('surfaces Sweden’s no-registry note and verified date verbatim on the card', async () => {
     renderPage()
 
     const card = await screen.findByRole('button', { name: 'Sweden details' })
     const swedish = within(card)
+    // The compact card shows the registry note + verified date; citizenship moves to the
+    // reference legend shown once the market is selected.
     expect(swedish.getByText(/scheme discontinued Dec 2023/)).toBeInTheDocument()
-    expect(swedish.getByText(/reform to 8yr/)).toBeInTheDocument()
     expect(swedish.getByText(/✓ 2026-01-15/)).toBeInTheDocument()
   })
 
-  it('selecting a country opens its jobs pane; the back button returns to the grid', async () => {
+  it('selecting a country opens its jobs pane + reference legend; back returns to the stack', async () => {
     const user = userEvent.setup()
     renderPage()
 
     await user.click(await screen.findByRole('button', { name: 'Sweden details' }))
 
-    // The card grid is replaced by the jobs pane, filtered to that country.
+    // The card stack is replaced by the jobs pane, filtered to that country.
     expect(await screen.findByRole('heading', { name: 'Jobs · Sweden' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Sweden details' })).not.toBeInTheDocument()
+    // The relocation-reference legend surfaces the country's citizenship figure verbatim.
+    expect(screen.getByText(/reform to 8yr/)).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /all countries/i }))
+    await user.click(screen.getByRole('button', { name: /all markets/i }))
     expect(await screen.findByRole('button', { name: 'Sweden details' })).toBeInTheDocument()
   })
 

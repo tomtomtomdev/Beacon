@@ -2,17 +2,22 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { fetchJobs, patchJobStatus, type SortBy, type StatusView } from '../api/jobs'
-import type { SponsorTier, UserStatus } from '../api/types'
+import type { Country, SponsorTier, UserStatus } from '../api/types'
 import { FilterBar } from './FilterBar'
 import { JobDrawer } from './JobDrawer'
+import { JobList } from './JobList'
 import styles from './JobsPage.module.css'
-import { JobTable } from './JobTable'
 import { StatusTabs } from './StatusTabs'
 import { countryName } from './taxonomy'
 
 const STATUS_VIEWS: readonly StatusView[] = ['new', 'starred', 'all', 'hidden']
 
-// Per-view empty states (DESIGN §2 jobs pane).
+const TIER_LABEL: Record<Country['priority_tier'], string> = {
+  primary: 'Primary',
+  nice_to_have: 'Nice-to-have',
+}
+
+// Per-view empty states (Beacon-2 §2 jobs pane).
 const EMPTY_TEXT: Record<StatusView, { title: string; subtitle: string }> = {
   new: {
     title: "You're all caught up",
@@ -26,9 +31,10 @@ const EMPTY_TEXT: Record<StatusView, { title: string; subtitle: string }> = {
   hidden: { title: 'Nothing hidden', subtitle: 'Jobs you hide land here, recoverable anytime.' },
 }
 
-// The Jobs list is not its own route — it renders inside the Countries view, below the globe,
-// once a country is selected. `onBack` clears the selection and returns to the card grid.
-export function JobsPane({ onBack }: { onBack: () => void }) {
+// The Jobs list is not its own route — it renders inside the Countries side panel, beside the
+// globe, once a country is selected. `country` is the selected market (drives the reference
+// legend); `onBack` clears the selection and returns to the all-markets card stack.
+export function JobsPane({ country, onBack }: { country?: Country; onBack: () => void }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const q = searchParams.get('q') ?? ''
   const countries = searchParams.getAll('country')
@@ -118,7 +124,7 @@ export function JobsPane({ onBack }: { onBack: () => void }) {
       },
       { replace: true },
     )
-    // Opening a `new` job marks it seen (DESIGN §2 status workflow).
+    // Opening a `new` job marks it seen (Beacon-2 §2 status workflow).
     const job = data?.jobs.find((candidate) => candidate.id === id)
     if (job?.user_status === 'new') statusMutation.mutate({ id, status: 'seen' })
   }
@@ -143,29 +149,43 @@ export function JobsPane({ onBack }: { onBack: () => void }) {
   return (
     <section className={styles.pane}>
       <header className={styles.header}>
-        <div>
-          <button type="button" className={styles.back} onClick={onBack}>
-            <ChevronLeft size={14} aria-hidden />
-            All countries
-          </button>
-          <h1 className={styles.h1}>{heading}</h1>
-          <p className={styles.subtitle}>{resultLabel}</p>
-        </div>
-        <div className={styles.legend}>
-          <span className={styles.legendItem}>
-            <span className={`${styles.legendDot} ${styles.dotYes}`} /> Sponsors
-          </span>
-          <span className={styles.legendItem}>
-            <span className={`${styles.legendDot} ${styles.dotRegistry}`} /> Registry
-          </span>
-          <span className={styles.legendItem}>
-            <span className={`${styles.legendDot} ${styles.dotUnknown}`} /> Unknown
-          </span>
-          <span className={styles.legendItem}>
-            <span className={`${styles.legendDot} ${styles.dotNo}`} /> No
-          </span>
-        </div>
+        <button type="button" className={styles.back} onClick={onBack}>
+          <ChevronLeft size={14} aria-hidden />
+          All markets
+        </button>
+        <h1 className={styles.h1}>{heading}</h1>
+        <p className={styles.subtitle}>{resultLabel}</p>
       </header>
+
+      {country && (
+        <div className={styles.reference}>
+          <div className={styles.refHead}>
+            <span className={styles.refTitle}>{country.name} — relocation reference</span>
+            <span
+              className={`${styles.tierPill} ${
+                country.priority_tier === 'primary' ? styles.tierPrimary : styles.tierNice
+              }`}
+            >
+              {TIER_LABEL[country.priority_tier]}
+            </span>
+          </div>
+          <div className={styles.refBlocks}>
+            <div>
+              <div className={styles.refLabel}>Work visa</div>
+              <div className={styles.refValue}>{country.visa_summary}</div>
+            </div>
+            <div>
+              <div className={styles.refLabel}>PR path</div>
+              <div className={styles.refValue}>{country.pr_summary}</div>
+            </div>
+            <div>
+              <div className={styles.refLabel}>Citizenship</div>
+              <div className={styles.refValue}>{country.citizenship_summary}</div>
+            </div>
+          </div>
+          <div className={styles.refVerified}>verified {country.verified_at}</div>
+        </div>
+      )}
 
       <div className={styles.filterBar}>
         <div className={styles.toolbar}>
@@ -188,20 +208,22 @@ export function JobsPane({ onBack }: { onBack: () => void }) {
         />
       </div>
 
-      {isError && <p className={styles.stateText}>Could not reach the Beacon API.</p>}
-      {!isError && !isPending && data && data.jobs.length === 0 && (
-        <div className={styles.empty}>
-          <p className={styles.emptyTitle}>{EMPTY_TEXT[view].title}</p>
-          <p className={styles.stateText}>{EMPTY_TEXT[view].subtitle}</p>
-        </div>
-      )}
-      {data && data.jobs.length > 0 && (
-        <JobTable
-          jobs={data.jobs}
-          onOpen={openJob}
-          onSetStatus={(id, status) => statusMutation.mutate({ id, status })}
-        />
-      )}
+      <div className={styles.listWrap}>
+        {isError && <p className={styles.stateText}>Could not reach the Beacon API.</p>}
+        {!isError && !isPending && data && data.jobs.length === 0 && (
+          <div className={styles.empty}>
+            <p className={styles.emptyTitle}>{EMPTY_TEXT[view].title}</p>
+            <p className={styles.stateText}>{EMPTY_TEXT[view].subtitle}</p>
+          </div>
+        )}
+        {data && data.jobs.length > 0 && (
+          <JobList
+            jobs={data.jobs}
+            onOpen={openJob}
+            onSetStatus={(id, status) => statusMutation.mutate({ id, status })}
+          />
+        )}
+      </div>
 
       {openJobId !== null && (
         <JobDrawer

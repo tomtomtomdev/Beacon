@@ -19,12 +19,13 @@ export function CountriesPage() {
   })
 
   // The selected country is a URL param (?focus=CODE) — shareable, and the pivot that decides
-  // globe auto-focus + whether the jobs pane (set) or the card grid (unset) shows below the globe.
+  // globe auto-focus + whether the side panel shows the jobs pane (set) or the card stack (unset).
   const [searchParams, setSearchParams] = useSearchParams()
   const focus = searchParams.get('focus')
+  const selectedCountry = focus ? countries?.find((c) => c.code === focus) : undefined
 
   // Selecting a country seeds the country filter + opens the jobs pane on the "All" status view;
-  // clearing (ocean tap, back button) returns to the card grid.
+  // clearing (ocean tap, back button) returns to the card stack.
   const setFocus = (code: string | null) =>
     setSearchParams(
       (params) => {
@@ -42,13 +43,12 @@ export function CountriesPage() {
     )
 
   return (
-    <main className={`${styles.main} bk-scroll`}>
+    <main className={styles.main}>
       <header className={styles.header}>
         <h1 className={styles.h1}>Country &amp; visa reference</h1>
         <p className={styles.subtitle}>
-          As-known Jan 2026 — thresholds and timelines change. Each row carries a verified date for
-          manual re-check. PR and citizenship are distinguished (Indonesia bars adult dual
-          citizenship).
+          As-known Jan 2026 — thresholds and timelines change. Tap a beacon to inspect that market
+          and its live postings in the panel beside the globe.
         </p>
       </header>
 
@@ -56,7 +56,7 @@ export function CountriesPage() {
       {isPending && <p className={styles.state}>Loading…</p>}
 
       {countries && (
-        <>
+        <div className={styles.row}>
           <section className={styles.geoPanel}>
             <Globe countries={countries} selectedCode={focus} onSelect={setFocus} />
             <div className={styles.geoTop}>
@@ -74,32 +74,38 @@ export function CountriesPage() {
                 </span>
               </div>
             </div>
-            <div className={styles.geoCaption}>live beacon field · 11 markets</div>
+            <div className={styles.geoCaption}>live beacon field · {countries.length} markets</div>
             <SourceHealth />
           </section>
 
-          {focus ? (
-            <JobsPane onBack={() => setFocus(null)} />
-          ) : (
-            <div className={styles.grid}>
-              {countries.map((country) => (
-                <CountryCard
-                  key={country.code}
-                  country={country}
-                  selected={false}
-                  onSelect={() => setFocus(country.code)}
-                />
-              ))}
-            </div>
-          )}
-        </>
+          <aside className={`${styles.sidePanel} bk-scroll`}>
+            {focus ? (
+              <JobsPane country={selectedCountry} onBack={() => setFocus(null)} />
+            ) : (
+              <div className={styles.markets}>
+                <div className={styles.marketsCaption}>
+                  {countries.length} markets · tap a beacon or a card
+                </div>
+                <div className={styles.cardStack}>
+                  {countries.map((country) => (
+                    <CountryCard
+                      key={country.code}
+                      country={country}
+                      onSelect={() => setFocus(country.code)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </aside>
+        </div>
       )}
     </main>
   )
 }
 
-// Static source-health summary folded into the globe legend (DESIGN: "static summary widget").
-// TODO: wire live counts + last-poll time from GET /companies health rollup.
+// Static source-health summary folded into the globe legend (Beacon-2: "static summary widget").
+// TODO: wire live counts + last-poll time from GET /companies/health rollup.
 function SourceHealth() {
   return (
     <div className={styles.health}>
@@ -125,21 +131,14 @@ function SourceHealth() {
   )
 }
 
-function CountryCard({
-  country,
-  selected,
-  onSelect,
-}: {
-  country: Country
-  selected: boolean
-  onSelect: () => void
-}) {
+// Compact country card in the narrow side panel (Beacon-2 §1): name + tier, Work visa + PR path
+// blocks (Citizenship moves to the reference legend on selection), registry note + verified date.
+function CountryCard({ country, onSelect }: { country: Country; onSelect: () => void }) {
   return (
     <button
       type="button"
-      className={`${styles.card} ${selected ? styles.cardSelected : ''}`}
+      className={styles.card}
       aria-label={`${country.name} details`}
-      aria-pressed={selected}
       onClick={onSelect}
     >
       <div className={styles.cardHeader}>
@@ -160,10 +159,6 @@ function CountryCard({
         <div>
           <div className={styles.blockLabel}>PR path</div>
           <div className={styles.blockValue}>{country.pr_summary}</div>
-        </div>
-        <div>
-          <div className={styles.blockLabel}>Citizenship</div>
-          <div className={styles.blockValue}>{country.citizenship_summary}</div>
         </div>
       </div>
       <div className={styles.cardFooter}>

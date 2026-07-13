@@ -1,21 +1,26 @@
-/* Jobs pane — rendered inside the Countries view, below the globe. */
+/* Jobs pane — rendered inside the Countries side panel, beside the globe. The side panel
+   (CountriesPage .sidePanel) owns the surface + scroll; sections set their own 20px insets. */
 .pane {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
 }
 
+/* Sticky within the scrolling side panel (Beacon-2 §2). */
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 16px;
-  padding: 6px 0 0;
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  padding: 17px 20px 13px;
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border-primary);
 }
 
 .back {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin: 0 0 8px;
+  margin: 0 0 9px;
   padding: 0;
   border: none;
   background: none;
@@ -28,58 +33,94 @@
 
 .h1 {
   margin: 0;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--ink);
 }
 
 .subtitle {
-  margin: 7px 0 0;
-  font-size: 13.5px;
-  color: var(--text-body-muted);
-}
-
-.legend {
-  display: flex;
-  gap: 14px;
-  padding-bottom: 2px;
-}
-
-.legendItem {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  margin: 6px 0 0;
   font-size: 12.5px;
+  line-height: 1.4;
   color: var(--text-body-muted);
 }
 
-.legendDot {
-  width: 8px;
-  height: 8px;
+/* ---- Country relocation-reference legend (shown for the selected market) ---- */
+.reference {
+  margin: 15px 20px 0;
+  padding: 15px 17px;
+  background: var(--country-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 13px;
+}
+
+.refHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.refTitle {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.tierPill {
+  flex-shrink: 0;
+  padding: 3px 10px;
   border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 600;
 }
 
-.dotYes {
-  background: var(--tier-yes-dot);
-}
-.dotRegistry {
-  background: var(--tier-registry-dot);
-}
-.dotUnknown {
-  background: var(--tier-unknown-dot);
-}
-.dotNo {
-  background: var(--tier-no-dot);
+.tierPrimary {
+  background: var(--accent-soft-bg);
+  color: var(--accent);
 }
 
-/* Sticky filter bar with a gradient fade over the page background (DESIGN §2). */
+.tierNice {
+  background: rgba(148, 180, 186, 0.12);
+  color: var(--text-chip);
+}
+
+.refBlocks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.refLabel {
+  margin-bottom: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--country-label);
+}
+
+.refValue {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--country-value);
+}
+
+.refVerified {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--accent-border);
+  font-size: 11px;
+  color: var(--country-label);
+  font-family: var(--font-mono);
+}
+
+/* Filter bar scrolls with the panel — not sticky (Beacon-2 §2). */
 .filterBar {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  padding: 16px 0;
-  background: linear-gradient(var(--bg-page) 78%, rgba(4, 18, 26, 0));
+  padding: 14px 20px 4px;
 }
 
 .toolbar {
@@ -88,22 +129,23 @@
   margin-bottom: 12px;
 }
 
+.listWrap {
+  padding: 4px 20px 22px;
+}
+
 .stateText {
-  font-size: 13.5px;
+  font-size: 12.5px;
   color: var(--text-body-muted);
 }
 
 .empty {
-  padding: 70px;
+  padding: 56px 20px;
   text-align: center;
-  background: var(--surface);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-card);
 }
 
 .emptyTitle {
   margin: 0 0 6px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--text-chip);
 }
