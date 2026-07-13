@@ -1,66 +1,104 @@
-.sidebar {
+.rail {
   display: flex;
   flex-direction: column;
-  width: 236px;
+  align-items: center;
+  width: 88px;
   flex-shrink: 0;
-  padding: 22px 16px;
+  padding: 20px 10px;
   background: var(--bg-sidebar);
-  border-right: 1px solid var(--border-primary);
+  border-right: 1px solid var(--border-sidebar);
 }
 
 .brand {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 0 11px 18px;
+  align-items: center;
+  gap: 7px;
+  padding-bottom: 22px;
 }
 
-.brandName {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+.brandGlyph {
   color: var(--accent);
 }
 
-.brandTag {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: var(--text-faint);
+.brandName {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
 }
 
 .nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
+  width: 100%;
+}
+
+.navItem,
+.navItemActive {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  padding: 11px 4px;
+  border: none;
+  border-radius: var(--radius-nav);
+  background: transparent;
+  color: #6c948f;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 .navItemActive {
-  width: 100%;
-  padding: 9px 11px;
-  border: none;
-  border-radius: 9px;
-  background: var(--accent-soft-bg);
-  color: var(--accent-soft-fg);
-  font-size: 13.5px;
-  font-weight: 600;
-  text-align: left;
-  cursor: pointer;
-}
-
-.navItem {
-  width: 100%;
-  padding: 9px 11px;
-  border: none;
-  border-radius: 9px;
-  background: transparent;
-  color: var(--text-chip);
-  font-size: 13.5px;
-  font-weight: 500;
-  text-align: left;
-  cursor: pointer;
+  background: rgba(94, 234, 212, 0.14);
+  color: var(--accent);
 }
 
 .navItem:hover {
-  background: var(--bg-hover);
+  color: var(--text-chip);
+}
+
+.navLabel {
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.navIconWrap {
+  position: relative;
+  display: flex;
+}
+
+.navBadge {
+  position: absolute;
+  top: -5px;
+  right: -8px;
+  min-width: 15px;
+  padding: 0 4px;
+  line-height: 15px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.liveTag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--geo-caption);
+  writing-mode: vertical-rl;
+  opacity: 0.8;
 }

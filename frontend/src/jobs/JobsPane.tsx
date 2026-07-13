@@ -1,16 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ChevronLeft } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { fetchJobs, patchJobStatus, type SortBy, type StatusView } from '../api/jobs'
 import type { SponsorTier, UserStatus } from '../api/types'
 import { FilterBar } from './FilterBar'
 import { JobDrawer } from './JobDrawer'
-import { JobTable } from './JobTable'
 import styles from './JobsPage.module.css'
+import { JobTable } from './JobTable'
 import { StatusTabs } from './StatusTabs'
+import { countryName } from './taxonomy'
 
 const STATUS_VIEWS: readonly StatusView[] = ['new', 'starred', 'all', 'hidden']
 
-// Per-view empty states (DESIGN.md §2).
+// Per-view empty states (DESIGN §2 jobs pane).
 const EMPTY_TEXT: Record<StatusView, { title: string; subtitle: string }> = {
   new: {
     title: "You're all caught up",
@@ -24,7 +26,9 @@ const EMPTY_TEXT: Record<StatusView, { title: string; subtitle: string }> = {
   hidden: { title: 'Nothing hidden', subtitle: 'Jobs you hide land here, recoverable anytime.' },
 }
 
-export function JobsPage() {
+// The Jobs list is not its own route — it renders inside the Countries view, below the globe,
+// once a country is selected. `onBack` clears the selection and returns to the card grid.
+export function JobsPane({ onBack }: { onBack: () => void }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const q = searchParams.get('q') ?? ''
   const countries = searchParams.getAll('country')
@@ -32,7 +36,7 @@ export function JobsPage() {
   const levels = searchParams.getAll('level')
   const tiers = searchParams.getAll('sponsor_tier') as SponsorTier[]
   const sort: SortBy = searchParams.get('sort') === 'date' ? 'date' : 'tier'
-  // Default view is New — the morning scan — so the daily list shows what's new, not the backlog.
+  // Selecting a country opens this pane with status=all (browse everything for that country).
   const statusParam = searchParams.get('status')
   const view: StatusView =
     statusParam && STATUS_VIEWS.includes(statusParam as StatusView)
@@ -79,7 +83,6 @@ export function JobsPage() {
   const setView = (value: StatusView) => {
     setSearchParams(
       (params) => {
-        // 'new' is the default landing view — keep it out of the URL for clean shared links.
         if (value === 'new') params.delete('status')
         else params.set('status', value)
         return params
@@ -101,8 +104,6 @@ export function JobsPage() {
 
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: UserStatus }) => patchJobStatus(id, status),
-    // The row leaves the current view once its status changes; the drawer's own detail
-    // reflects the new status — invalidate both.
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] })
       queryClient.invalidateQueries({ queryKey: ['job'] })
@@ -117,7 +118,7 @@ export function JobsPage() {
       },
       { replace: true },
     )
-    // Opening a `new` job marks it seen (DESIGN.md §2 status workflow).
+    // Opening a `new` job marks it seen (DESIGN §2 status workflow).
     const job = data?.jobs.find((candidate) => candidate.id === id)
     if (job?.user_status === 'new') statusMutation.mutate({ id, status: 'seen' })
   }
@@ -132,14 +133,23 @@ export function JobsPage() {
     )
   }
 
+  const heading = countries.length === 1 ? `Jobs · ${countryName(countries[0])}` : 'Jobs'
+  const resultLabel = data
+    ? `${view === 'all' ? '' : `${view[0].toUpperCase()}${view.slice(1)} · `}${data.jobs.length}` +
+      `${data.jobs.length === 1 ? ' posting' : ' postings'} · sorted by ` +
+      (sort === 'tier' ? 'sponsor tier' : 'date')
+    : 'Loading…'
+
   return (
-    <main className={styles.main}>
+    <section className={styles.pane}>
       <header className={styles.header}>
         <div>
-          <h1 className={styles.h1}>Jobs</h1>
-          <p className={styles.subtitle}>
-            {data ? `${data.total} postings · sorted by sponsor tier` : 'Loading…'}
-          </p>
+          <button type="button" className={styles.back} onClick={onBack}>
+            <ChevronLeft size={14} aria-hidden />
+            All countries
+          </button>
+          <h1 className={styles.h1}>{heading}</h1>
+          <p className={styles.subtitle}>{resultLabel}</p>
         </div>
         <div className={styles.legend}>
           <span className={styles.legendItem}>
@@ -157,24 +167,26 @@ export function JobsPage() {
         </div>
       </header>
 
-      <div className={styles.toolbar}>
-        <StatusTabs view={view} onViewChange={setView} />
-      </div>
+      <div className={styles.filterBar}>
+        <div className={styles.toolbar}>
+          <StatusTabs view={view} onViewChange={setView} />
+        </div>
 
-      <FilterBar
-        q={q}
-        countries={countries}
-        categories={categories}
-        levels={levels}
-        tiers={tiers}
-        sort={sort}
-        onQChange={setQ}
-        onToggleCountry={(code) => toggleParam('country', code)}
-        onToggleCategory={(value) => toggleParam('category', value)}
-        onToggleLevel={(value) => toggleParam('level', value)}
-        onToggleTier={(tier) => toggleParam('sponsor_tier', tier)}
-        onSortChange={setSort}
-      />
+        <FilterBar
+          q={q}
+          countries={countries}
+          categories={categories}
+          levels={levels}
+          tiers={tiers}
+          sort={sort}
+          onQChange={setQ}
+          onToggleCountry={(code) => toggleParam('country', code)}
+          onToggleCategory={(value) => toggleParam('category', value)}
+          onToggleLevel={(value) => toggleParam('level', value)}
+          onToggleTier={(tier) => toggleParam('sponsor_tier', tier)}
+          onSortChange={setSort}
+        />
+      </div>
 
       {isError && <p className={styles.stateText}>Could not reach the Beacon API.</p>}
       {!isError && !isPending && data && data.jobs.length === 0 && (
@@ -198,6 +210,6 @@ export function JobsPage() {
           onSetStatus={(id, status) => statusMutation.mutate({ id, status })}
         />
       )}
-    </main>
+    </section>
   )
 }

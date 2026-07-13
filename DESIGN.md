@@ -1,189 +1,219 @@
 # DESIGN.md — Beacon UI Handoff
 
-> Canonical UI spec (from Claude Design, "Nordic Slate & Teal" theme, 2026-07-04).
-> Product source of truth remains the top-level SPEC.md / PLAN.md / PROGRESS.md — where this
-> doc and SPEC.md ever disagree, SPEC.md wins. (The SPEC.md copy that shipped inside the design
-> zip was verified byte-identical to the canonical one on 2026-07-04; the top-level file remains
-> the authoritative copy and receives all future edits.) The prototype
-> `.dc.html` files and `support.js` are references only, not shipping code.
+> Canonical UI spec. Reflects the **dark holographic** design handoff
+> (`~/Downloads/Beacon.zip` → `Beacon.dc.html`, 2026-07-13), which **supersedes** the earlier
+> light "Nordic Slate & Teal" theme documented in prior versions of this file. The `.dc.html`
+> prototype + the delivered screenshots are ground truth; where this doc and the top-level SPEC.md
+> disagree on product behavior, SPEC.md wins. The prototype `.dc.html` and `support.js` are
+> references only, not shipping code.
+>
+> Implemented on branch `feat/dark-globe-redesign` (see PROGRESS.md, Decisions 2026-07-13).
 
 ---
 
 # Handoff: Beacon — personal tech-job scanner with visa-sponsorship awareness
 
 ## Overview
-Beacon is a single-user, self-hosted web app that polls ATS/job-board APIs, normalizes postings into one database, classifies them (category, level, sponsorship tier), and surfaces them in a filterable UI with a per-job "what's new" workflow. This bundle is the **front-end design** for that UI. The authoritative product spec is `SPEC.md` (copied into this folder) — read it for data model, sources, and back-end architecture. This README documents the UI to be built.
-
-## About the Design Files
-The files in this bundle are **design references created in HTML** — a working prototype showing the intended look and behavior. They are **not** production code to copy verbatim. The `.dc.html` files are authored in a bespoke "Design Component" runtime (`support.js`) that is a prototyping tool, **not** a shipping dependency.
-
-Your task: **recreate this UI in the target codebase's environment.** The spec calls for **React + TypeScript + Vite** (see `SPEC.md` §7) — build it there using idiomatic React (function components + hooks), the project's own component/styling conventions, and a real data layer hitting the FastAPI endpoints (`/jobs`, `/companies`, `/countries`, `/searches`, `/stats`). Where this doc gives exact hex/px values, match them; where it describes behavior, wire it to real state/data instead of the prototype's in-memory arrays.
+Beacon is a single-user, self-hosted web app that polls ATS/job-board APIs, classifies postings
+(category, level, sponsorship tier), and surfaces them filtered by **visa-sponsorship signal** and
+**target relocation country**. The **home page is a Countries & visa reference** dominated by an
+interactive **3D holographic dot-globe**. Selecting a country (tap a globe beacon pin or a country
+card) does not navigate away — it rotates the globe to frame a **beacon arc from Jakarta to the
+country**, and reveals a **Jobs list pane in-place below the globe**, filtered to that country.
+Clearing the selection returns to the country-card grid. A **Saved searches** page and a slide-in
+**Job-detail drawer** round out the app. There is **no standalone Jobs route and no Companies tab**
+— source health folds into a widget on the globe; Jobs is a pane inside Countries.
 
 ## Fidelity
-**High-fidelity.** Final colors, typography, spacing, and interactions. Recreate the UI pixel-close using the codebase's libraries. Palette is the **"Nordic Slate & Teal"** theme (chosen by the user from 5 explored options — the alternates live in `Beacon Palettes.dc.html` for reference only).
+**High-fidelity, dark holographic.** Match the exact hex/px/radius values in the token tables below.
+Body background `#04121a`; teal accent `#5eead4`. Fonts: **Geist** (UI) + **Geist Mono**
+(codes/slugs/timestamps). `-webkit-font-smoothing: antialiased`.
 
 ---
 
 ## Global Layout
-Full-viewport two-pane app: fixed **sidebar** (236px) + scrolling **main** (flex:1). A **job-detail drawer** (560px, max 92vw) slides in from the right over a dim overlay. Font: **Geist** (UI) + **Geist Mono** (metadata/slugs/timestamps). Body bg `#eef1f3`, ink `#16202a`.
+Full-viewport flex: a fixed **88px icon-rail** (left) + a scrolling **main** area (`flex:1`). A
+**job-detail drawer** (560px, max 100%) slides in from the right over a dim scrim, above everything.
 
-### Sidebar (236px, bg `#f6f8f9`, right border `#e0e6ea`, padding 22×16)
-- **Brand:** beacon-signal SVG logo (teal `#0e8a7d`), "Beacon" (17px/700/-0.02em) + "job scanner" (10.5px mono, muted `#93a0aa`).
-- **Nav** (4 items, each a full-width button, 9×11 padding, radius 9px, gap 11px icon↔label): Jobs, Saved searches, Companies, Countries. Active item: bg `#d7efec`, text `#0a6c62`, weight 600. Idle: text `#4c5964`, weight 500. Jobs and Saved-searches carry a right-aligned count badge (mono, 11px, radius 999px; active badge bg `#a9dcd5`/`#0a6c62`, idle `#e6ecee`/`#93a0aa`). **Jobs badge shows the count of `new`-status jobs**, not total.
-- **Source-health footer** (margin-top:auto, top border `#e6ecee`): uppercase label "Source health" (10.5px/600/0.06em, `#93a0aa`), then three legend rows with 7px dots — OK `#25a56a`, degraded `#d99a2b`, quarantined `#d26f68` — and a mono "last poll · 07:04" line (`#a3aeb6`).
+### Icon-rail (88px, bg `#071a22`, right border `#123842`, padding 20×10, flex column, centered)
+- **Brand:** a 26px teal beacon-signal glyph (concentric arcs + centre dot, `#5eead4`) over "Beacon"
+  (12.5px/700, `#e3fdf6`), gap 7px, 22px bottom padding.
+- **Nav** (2 items, stacked icon-over-label, gap 5px, 11×4 pad, radius 11px):
+  - **Globe** (globe icon) → the Countries home. Default/active view.
+  - **Saved** (bookmark icon + mono "4" count badge, top-right of the icon) → Saved searches.
+  - Active item: bg `rgba(94,234,212,0.14)`, color `#5eead4`. Idle: color `#6c948f`. Label 10.5px/600.
+  - Badge: absolute top:-5 right:-8, 9.5px/700 mono, bg `#5eead4`, color `#04121a`, radius 999px.
+- **Footer** (`margin-top:auto`): a **Settings gear** icon-button (off the main nav — reachable for
+  Telegram creds, slice 8) over a vertical mono tag "07:04 · LIVE" (9px, `#3f7a76`, `writing-mode:
+  vertical-rl`, letter-spacing 0.1em, opacity 0.8).
 
 ---
 
 ## Screens / Views
+The main area shows one of three views (`?view=` param, default **countries**): **Countries**
+(home), **Saved searches** (`?view=searches`), **Settings** (`?view=settings`, off-nav). The Jobs
+list is **not its own view** — it is a pane inside Countries, gated by a selected country
+(`?focus=CODE`). The **Job-detail drawer** (`?job=id`) overlays any view.
 
-The main pane renders one of four views (sidebar nav switches `view` state): **Jobs**, **Saved searches**, **Companies**, **Countries**. The **Job-detail drawer** overlays any view.
+### 1. Countries & visa reference (home)
+- **Header:** H1 "Country & visa reference" (24px/700/-0.02em, `#e3fdf6`); sub (13.5px, `#7fa8a3`,
+  max-width 760px): "As-known Jan 2026 — thresholds and timelines change. Each row carries a
+  verified date for manual re-check. PR and citizenship are distinguished (Indonesia bars adult
+  dual citizenship)."
+- **Globe panel** (always visible; radius 18px, overflow hidden, height 66vh / min 480px,
+  margin-bottom 22px; dark radial bg `radial-gradient(125% 105% at 50% 4%, #0c3138, #06181f 52%,
+  #04111a)`; border `#10424a`; shadow `0 24px 60px rgba(4,18,26,0.35), inset 0 0 90px
+  rgba(45,212,191,0.05)`):
+  - Full-bleed `<canvas>` renders the holographic 3D dot-globe (see **Globe rendering**).
+  - **Top overlay** (pointer-events:none): left = teal globe icon + "Target geography"
+    (14.5px/700, `#e3fdf6`) + hint "drag to rotate · tap a beacon" (12px mono, `#5f9a95`); right =
+    legend "Primary target" (dot `#5eead4`, teal glow) / "Nice-to-have" (dot `#93a7ad`), 12px `#9fc7c2`.
+  - **Bottom-left caption:** "live beacon field · 11 markets" (11px, uppercase, 0.06em mono, `#3f7a76`).
+  - **Bottom-right Source-health widget** (glass: bg `rgba(4,17,26,0.72)`, `backdrop-filter:blur(6px)`,
+    border `#10424a`, radius 12px, min-width 186px): "SOURCE HEALTH" label + "poll 07:04" (mono),
+    then three dot rows — "44 OK" (`#34d399`), "1 degraded" (`#fbbf24`), "2 quarantined" (`#f87171`),
+    12px `#9fc7c2` with mono counts `#c4ebe4`. A **static summary widget** (wire to live counts later).
+- Below the globe: the **country-card grid** (no selection) OR the **jobs pane** (a country selected).
 
-### 1. Jobs (default)
-The daily-driver list.
+- **Country cards** grid (`repeat(auto-fill, minmax(340px,1fr))`, gap 14px). Card: bg `#0a2028`,
+  border `#123842`, radius 14px, pad 20×22, cursor pointer. Name (17px/700, `#e3fdf6`) + tier badge
+  ("Primary" teal `rgba(94,234,212,0.15)`/`#5eead4`, "Nice-to-have" grey `rgba(148,180,186,0.12)`/`#9fc7c2`).
+  Three labelled blocks (Work visa / PR path / Citizenship; label 10.5px uppercase `#5f8f8a`, value
+  13px `#c4ebe4`). Footer (top border `#123842`): registry note (`#7fa8a3`) + "✓ {verified}" (mono,
+  `#4f7873`). Clicking a card selects that country (globe focus + arc + jobs pane). Selected card:
+  1.5px `#5eead4` border + `0 0 0 3px rgba(94,234,212,0.18)` ring. **Sweden has no sponsor registry**
+  (scheme discontinued Dec 2023) — surface exactly as written, do not invent one.
 
-**Header** (padding 26×34 top): H1 "Jobs" (24px/700/-0.02em); subtitle (13.5px, `#5d6b76`) = a result label like `New · 9 postings · sorted by sponsor tier`. Right side: the **4-dot tier legend** — Sponsors `#25a56a`, Registry `#3f83c8`, Unknown `#a6b0ba`, No `#d26f68` (8px dots, 12.5px labels).
+### 2. Jobs pane (inside Countries, below the globe; `?focus=CODE`)
+- **Header:** an "← All countries" back button (chevron + text, 12.5px/600, `#5eead4`, no bg) that
+  clears the selection; then H1 = "Jobs · {Country}" (24px/700) when exactly one country is filtered,
+  else "Jobs"; then a result sub-line ("New · N postings · sorted by sponsor tier"). Right: the
+  4-dot tier legend — Sponsors `#34d399`, Registry `#60a5fa`, Unknown `#8296a0`, No `#f87171`.
+- **Filter bar** (sticky, top:0, z-index 5, gradient fade `linear-gradient(#04121a 78%, transparent)`):
+  - **Status segmented control** (New / Starred / All / Hidden). Track bg `#0c2831`, border `#123842`,
+    3px pad, radius 9px. Active segment: bg `rgba(94,234,212,0.16)`, color `#5eead4`, radius 7px.
+    Idle: `#7fa8a3`. Selecting a country opens the pane on **All**; standalone default is **New**.
+  - **Search input** (flex, min 240px): bg `#0a2028`, border `#123842`, radius 10px, 40px left pad
+    for the magnifier (`#5f8f8a`). Placeholder "Search title, company, keyword…".
+  - **Sort** segmented control ("Sponsor tier" / "Date"), same segment style. Default Sponsor tier.
+  - **Country** + **Sponsor tier** pill dropdowns. Pill idle: bg `#0a2028`, border `#123842`, `#9fc7c2`.
+    Active (selection present): bg `rgba(94,234,212,0.15)`, border `#14514c`, `#5eead4`; label shows
+    count ("Country · 2"). Menus: bg `#0c2831`, border `#1a4650`, radius 12px, shadow `0 16px 40px
+    rgba(2,10,14,0.6)`, fade-in. Country rows carry a P/☆ tier badge; the Sponsor-tier menu opens
+    with "Opt-in filter. Off by default — nothing is hidden." **Tier filter is never on by default.**
+  - **Chip row:** "CATEGORY" label + 7 category pills (iOS, Backend, AI/ML, Android, Flutter,
+    Fullstack, Frontend) · divider · "LEVEL" + 3 pills (Senior, Staff, Lead). Pill styles as above.
+- **Jobs table** (card bg `#0a2028`, border `#123842`, radius 14px). Grid columns
+  `minmax(0,2.4fr) 1.15fr 1.35fr 0.72fr 1fr 100px`, gap 16px. Header row bg `#0c2831`, uppercase
+  10.5px `#5f8f8a`. Row (pad 16×24, border-bottom `#0f2c34`, hover `#0d2a33`): **Role** = 7px teal
+  "new" dot (`new` status) + title (15px/600, `#e3fdf6`, ellipsis) over company (`#9fc7c2`) + "{ats}·
+  {slug}" (11px mono, `#4f7873`); **Location** city/country; **Category** grey chips (`#0f333c`/`#9fc7c2`);
+  **Level** mono uppercase; **Sponsor · Posted** = tier chip + posted age; **Actions** = Star / Hide
+  (Restore when hidden) icon buttons (27px, hover `#0f333c`, star fills teal). Row click opens the
+  drawer; action clicks `stopPropagation`. Per-view empty states (New → "You're all caught up", etc.).
 
-**Filter bar** (sticky, top:0, z-index 5, gradient fade over page bg). Row 1:
-- **Status segmented control** (segment track bg `#e2e8eb`, radius 9px, 3px pad): `New · Starred · All · Hidden`, each with a live count in mono. Active segment: white bg, `#16202a` text, subtle shadow; count `#0a6c62`. Idle: text `#6b7784`, count `#97a3ac`. This is the primary "what am I looking at" switch — default **New**.
-- **Search input** (flex, min 240px): white, border `#dbe2e6`, radius 10px, 11px pad + 40px left for the search SVG (stroke `#93a0aa`). Placeholder "Search title, company, keyword…".
-- **Sort segmented control**: "Sort" label + `Sponsor tier` / `Date` toggle. Default **Sponsor tier**.
-- **Country** dropdown button + **Sponsor tier** dropdown button (pill style; active/filled when a selection exists, label shows count e.g. "Country · 2").
+### 3. Job-detail drawer (`?job=id`, overlays any view)
+Scrim `rgba(2,10,14,0.55)` + right drawer (560px, bg `#071a22`, left border `#123842`, shadow
+`-20px 0 50px rgba(2,10,14,0.55)`, slide-in `bk-slide` 0.22s). Opening a `new` job marks it `seen`.
+Header: company + mono slug over title (21px/700); a cluster of 34px icon buttons (bg `#0c2831`,
+border `#123842`, hover `#0f333c`): Star, Hide/Restore, Close. Meta chips: tier chip, status pill,
+grey info chips (city/remote/level), "posted {age}". **Sponsorship evidence** panel (border tinted by
+tier): colored header + body (explicit → italic quote with a tier-colored left accent; registry →
+registry list + "Match confidence 0.94 · company-level signal, not a per-role guarantee." — bitmask
+members `UK | NL | US | MANUAL`, no SE; unknown → grey "shown, ranked below … never excluded" note).
+**Description**. **Country relocation** panel (bg `rgba(94,234,212,0.06)`, border `#14514c`; Work visa
+/ PR / Citizenship, labels `#5eb5ab`, values `#d6f5ee`; "verified {date}"). **Sources** list (mono,
+small grey dot; "· deduped across N" when multi-source) + a teal CTA "Open original posting →" (bg
+`#5eead4`, text `#04121a`, radius 10px, hover `#8ff3e2`).
 
-Row 2 (chips, 12px top): "CATEGORY" label + 7 category pills (iOS, Backend, AI/ML, Android, Flutter, Fullstack, Frontend) · divider · "LEVEL" label + 3 pills (Senior, Staff, Lead) · divider · posted-window segmented control (All / 24h / 7d / 30d, default All).
-- **Pill (idle):** white, border `#dbe2e6`, text `#4c5964`, radius 999px, 6×13 pad. **Pill (active):** bg `#d7efec`, border `#a9dcd5`, text `#0a6c62`.
-- Dividers: 1px × 20px, `#dbe2e6`.
+### 4. Saved searches (`?view=searches`)
+H1 "Saved searches" + sub. Column of cards (max-width 820px, bg `#0a2028`, border `#123842`): name
+(16px/600) + status badge ("N new" teal / "up to date" grey) + mono filter string; right = channel
+("✈ Telegram" / "▸ Stdout") + "last run {time}". Footer: a dashed "New saved search from current
+filters" button (border `#1e5058`, hover border/text teal).
 
-**Country dropdown menu** (absolute, white, border `#dbe2e6`, radius 12px, shadow `0 12px 32px rgba(20,32,42,0.12)`, 230px): checkbox row per country (checkbox 17px, radius 5px; checked = teal `#0e8a7d` fill + white check). Each row shows a tier badge `P` (primary, `#0a6c62` on `#d7efec`) or `☆` (nice-to-have, `#a3aeb6` on `#e9eef0`). Countries: Singapore, Australia, Japan, Netherlands, United States, Canada, Ireland, Sweden, Norway, Denmark, Switzerland.
-
-**Sponsor-tier dropdown menu** (210px): note line "Opt-in filter. Off by default — nothing is hidden." + 4 checkbox rows (each with its tier dot): Sponsors, Registry, Unknown, No sponsor. **This filter is opt-in and never on by default** — a core product rule (`SPEC.md` §3).
-
-**Jobs table** (white card, border `#e0e6ea`, radius 14px). Grid columns: `minmax(0,2.4fr) 1.15fr 1.35fr 0.72fr 1fr 64px`, gap 16px. Header row (bg `#f4f7f8`, border-bottom `#e9eef0`, 12×24 pad): uppercase labels (10.5px/600/0.06em, `#97a3ac`) — Role, Location, Category, Level, "Sponsor · Posted" (right-aligned) + empty actions column.
-
-Each **job row** (16×24 pad, border-bottom `#eef2f4`, cursor pointer, hover bg `#f4f7f8`):
-- **Role cell:** a leading 7px dot (teal `#0e8a7d` when status is `new`, else transparent to preserve alignment), then title (15px/600/-0.01em, ellipsized) and a subline: company (12.5px/500, `#5d6b76`) + `ats · slug` in mono (11px, `#a3aeb6`).
-- **Location:** city (13px) + country (11.5px, `#93a0aa`).
-- **Category:** wrap of tag chips (11.5px, bg `#e9eef0`, text `#4c5964`, radius 6px).
-- **Level:** mono, uppercase (12px, `#5d6b76`).
-- **Sponsor · Posted:** right-aligned column = tier chip (pill: dot + label; colors per tier table below) stacked over "Xd ago" (11.5px, `#93a0aa`).
-- **Actions (64px):** star toggle + hide/restore toggle (27px icon buttons, transparent, hover bg `#e9eef0`). Star = outline (stroke `#a6b0ba`) or filled teal when starred. Hide = eye-off icon; in Hidden view it becomes a restore (undo) icon.
-
-**Empty state** (70px pad, centered): title + subtitle vary by status view — e.g. New → "You're all caught up" / "No new postings under these filters. Switch to All to browse everything."; Starred → "No starred postings yet"; Hidden → "Nothing hidden".
-
-### 2. Job-detail drawer (right slide-over, 560px)
-Opens on row click. bg `#f6f8f9`, left border `#e0e6ea`, shadow `-20px 0 50px rgba(20,32,42,0.1)`; overlay `rgba(16,24,32,0.22)`. **Opening a `new` job marks it `seen`.** Slide-in animation `bk-slide` 0.22s cubic-bezier(.2,.7,.2,1).
-
-- **Header:** company + mono slug; title (21px/700/-0.02em). Top-right action group (34px buttons, white, border `#dbe2e6`): Star, Hide (or Restore if hidden), Close.
-- **Chip row:** tier chip + a **status pill** (New/Seen/★ Starred/Hidden — colors in tokens) + city/remote/level chips (bg `#e9eef0`) + "posted Xd ago".
-- **Sponsorship evidence card** (radius 12px, border + header tinted to the tier): header icon + title ("Sponsorship offered" / "No sponsorship" / "Registry-inferred signal" / "No signal detected"). Body:
-  - `explicit_yes`/`explicit_no` → italic quoted evidence string, left border in tier accent.
-  - `registry_inferred` → "Posting text is silent…, but the company appears on:" + list of registries (blue dot rows) + "Match confidence 0.94 · company-level signal, not a per-role guarantee." Registry bitmask members are **`UK | NL | US | MANUAL`** (no SE — no Swedish register exists). The prototype's sample data demonstrates UK/NL only; **implement MANUAL too** (curated-board / hand-flagged sponsor signal at confidence 1.0 — see `SPEC.md` §5.3) — render it in this same list when a job's company carries the MANUAL flag.
-  - `unknown` → "No sponsorship language detected and no registry match. Shown, ranked below explicit and registry signals — never excluded."
-- **Description:** uppercase label + paragraphs (13.5px, line-height 1.6).
-- **Country visa panel** (teal-tinted: bg `#e6f4f1`, border `#c9e6e1`): globe icon + "<Country> — relocation reference"; three labeled blocks (Work visa / PR path / Citizenship; labels `#3d8a7e`, values `#1f3b40`) + mono "verified <date>".
-- **Sources:** uppercase label (+ "· deduped across N" when multi-source), mono source rows, then a teal CTA button "Open original posting →" (bg `#0e8a7d`, hover `#0b7268`, white, radius 10px).
-
-### 3. Companies (source health)
-H1 "Companies" + subtitle on source-health-as-first-class-state, plus a mono seed line: `seed 53 · greenhouse 24 · lever 10 · ashby 11 · 8 awaiting adapters (smartrecruiters next)`. All counts computed from the companies table, never hardcoded.
-**Summary cards** (white, border `#e0e6ea`, radius 12px, min 120px): 53 seed companies · 45 supported adapters · 42 healthy (`#1b8a5a`) · 1 degraded (`#9a6a12`) · 2 quarantined (`#c0504a`) · 8 adapter pending (`#93a0aa`). (Health-split numbers here are illustrative sample data; seed/supported/pending reflect the real CSV.)
-**Table** (grid `minmax(0,2fr) 1.2fr 1fr 1.4fr 1.4fr`): Company · ATS·slug (mono) · HQ · Last success · Health. Health cell = a status badge (dot + label, colors below) + optional mono reason ("gone · 404", "schema drift", "2 failures · 5xx", "adapter pending").
-
-### 4. Countries (visa reference)
-H1 "Country & visa reference" + subtitle (as-known dates; PR vs citizenship distinction — Indonesia bars adult dual citizenship).
-- **Target-geography panel** (bg `#f4f7f8`, border `#e0e6ea`, radius 16px): header "Target geography" (globe icon) + legend (Primary target `#0e8a7d` / Nice-to-have `#7c8791`). A **world map** drawn on `<canvas>` as a dot-grid (land dots `#cdd6db`), with absolutely-positioned country **pins** (13px dot, teal for primary / slate `#7c8791` for nice-to-have, white ring border, pulsing ring animation `bk-pulse`). Pins and cards cross-highlight on click.
-- **Country cards** grid (`repeat(auto-fill, minmax(340px,1fr))`): each card (white, border `#e0e6ea`, radius 14px; selected = teal border + `0 0 0 3px rgba(14,138,125,0.15)` ring) shows name + tier pill (Primary/Nice-to-have), three labeled blocks (Work visa / PR path / Citizenship), and a footer with registry note + mono "✓ <verified date>". Data for all 11 countries is in `SPEC.md` §4 (Singapore, Japan, Australia, Netherlands, US, Canada, Ireland, Sweden, Norway, Denmark, Switzerland). **Sweden has no sponsor registry** (scheme discontinued Dec 2023) — surface exactly as written, do not invent one.
-
-### Saved searches
-H1 + subtitle. List of cards (white, border `#e0e6ea`, radius 14px): name + "N new"/"up to date" pill + mono filter summary; right side = channel (Telegram ✈ / Stdout ▸) + mono "last run …". A dashed "New saved search from current filters" button (border `#cdd6db`, hover border/text teal).
+### Settings (`?view=settings`, off-nav)
+Telegram bot-token / chat_id form + "Send test" (slice 8). Reachable via the rail-footer gear only.
 
 ---
 
 ## Interactions & Behavior
-- **Nav:** switches the main view. Only one view visible at a time.
-- **Filtering (Jobs):** keyword (matches title/company/description/categories), country[], category[] (multi, any-match), level[], posted-since, sponsor-tier[] (opt-in). All combine (AND across dimensions, OR within a dimension). Results re-sort live.
-- **Sorting:** `Sponsor tier` → `ORDER BY sort_rank DESC, posted_at DESC` where explicit_yes=3, registry_inferred=2, unknown=1, explicit_no=0. `Date` → newest first. **`explicit_no` is shown last, never hidden by default.**
-- **Status workflow (per job):** `new → seen → starred/hidden`. Opening a job marks `new`→`seen`. Star toggles starred↔seen. Hide sets hidden (excluded from every non-Hidden view); Restore sets hidden→seen. Status view filters: New = `new` only; Starred = `starred`; All = everything except hidden; Hidden = `hidden`. Segment counts reflect the current keyword/country/etc. filters.
-- **Dropdown menus:** click button to open; a fixed full-screen invisible layer catches outside-clicks to close. Only one menu open at a time.
-- **Drawer:** click overlay or close/×/Esc to dismiss. `bk-fade` (0.15s) overlay, `bk-slide` (0.22s) panel.
-- **Countries map:** clicking a pin selects its country and highlights the matching card (and vice-versa); clicking again deselects.
-- **Hover:** rows (bg `#f4f7f8`), icon buttons (bg `#e9eef0`), CTA (darken to `#0b7268`), dashed add button (teal border/text).
+- **Navigation:** `?view=` (countries default / searches / settings). Within Countries, `?focus=CODE`
+  decides card grid (unset) vs jobs pane (set). Selecting a country sets `focus=CODE`, seeds
+  `country=CODE`, and `status=all`. Clearing (back button, ocean tap, Globe nav) removes them. All
+  filter/view/drawer state lives in URL search params (shareable, bookmarkable, Back-button undo).
+- **Globe:** drag rotates (yaw += dx·0.45, pitch clamped ±82°; a >3px drag is a rotate, not a click).
+  Pointer-up without a drag: on a pin (≤15px) selects that country; on empty ocean clears the selection.
+  With a selection, the globe eases to the Jakarta↔country great-circle midpoint; idle it slow-spins.
+- **Filtering (jobs pane):** keyword (title/company/description/categories), country[], category[],
+  level[], sponsor-tier[] (opt-in). AND across dimensions, OR within one. Re-fetches live.
+- **Sorting:** Sponsor tier → `sort_rank DESC, posted_at DESC` (yes=3, registry=2, unknown=1, no=0);
+  Date → newest first. **`explicit_no` shows last, never hidden by default.**
+- **Job triage:** row click opens the drawer (a `new` job becomes `seen`); Star toggles starred/seen;
+  Hide → hidden (excluded from all views but Hidden); Restore → seen.
+- **Sponsorship is a soft signal:** tier drives sort_rank + default order; the tier filter is opt-in,
+  never pre-selected.
 
-## State Management
-Prototype state (recreate as React state / server state as appropriate):
-- `view`: 'jobs' | 'searches' | 'companies' | 'countries'
-- `search` (string), `countries` (string[]), `categories` (string[]), `levels` (string[]), `posted` ('any'|'24h'|'7d'|'30d'), `tiers` (string[]), `sortBy` ('tier'|'date')
-- `menu`: null | 'country' | 'tier' (which dropdown is open)
-- `jobId`: selected job for the drawer (null = closed)
-- `selectedCountry`: highlighted country on the Countries view
-- `statuses`: map of jobId → user_status override (persist to backend `jobs.user_status`; default from server)
-- `statusView`: 'new' | 'starred' | 'all' | 'hidden'
+## Globe rendering
+Procedural holographic 3D dot-globe on a `<canvas>` 2D context, recomputed every frame
+(`requestAnimationFrame` while Countries is mounted). Real continent outlines (`LAND`) with inland
+seas (`SEA`) punched out build a 1024px equirectangular mask once; a 2° land-point cloud is sampled
+from it. Each frame draws (back→front): teal atmosphere glow; shaded globe face; graticule (30°/20°,
+brighter on the front hemisphere); the land dot cloud (1.35px, `rgba(94,234,212, 0.28→0.92)` by
+depth, back hemisphere culled); a bright rim; the **beacon arc** (Jakarta → selected country: 90-seg
+great circle bowed out `1+0.22·sin(πf)`, bright on the front / faint on the back, a `#eafffb`
+travelling pulse, amber `#fcd34d` Jakarta origin marker + label); then **pins** (front: glowing dot
+`#5eead4` primary / `#9fb6bb` nice-to-have + pulse ring + label chip; back: faint ghost). Screen
+positions of front pins are cached for 15px hit-testing. See `frontend/src/countries/globeGeo.ts`
+(data + math, ported verbatim) and `Globe.tsx` (canvas rAF engine, jsdom-guarded; sr-only pin
+buttons provide keyboard/test selection).
 
-Data fetching: jobs, companies, countries, saved searches, and status mutations should hit the FastAPI API (`SPEC.md` §7). The prototype hard-codes sample arrays; replace with real queries. Times display in Asia/Jakarta at day boundaries (`SPEC.md` §9).
+---
 
-## Design Tokens
+## Design Tokens (dark holographic)
 
-**Surfaces / structure**
-| Token | Hex |
-|---|---|
-| Page bg | `#eef1f3` |
-| Surface (cards, inputs) | `#ffffff` |
-| Sidebar bg | `#f6f8f9` |
-| Table header / hover bg | `#f4f7f8` |
-| Chip bg | `#e9eef0` |
-| Segment track / chip track | `#e2e8eb` |
-| Border (primary) | `#e0e6ea` |
-| Border (inputs/menus) | `#dbe2e6` |
-| Row divider | `#eef2f4` |
+### Colors
+- **Surfaces:** page `#04121a`; rail/drawer `#071a22`; card/input `#0a2028`; raised (segment track /
+  table header / menu) `#0c2831`; row hover `#0d2a33`; neutral chip `#0f333c`.
+- **Borders:** card/panel/divider `#123842`; menu `#1a4650`; globe panel `#10424a`; row `#0f2c34`;
+  accent border `#14514c`.
+- **Text:** heading `#e3fdf6`; body/value `#c4ebe4`; chip `#9fc7c2`; muted `#7fa8a3`; label `#5f8f8a`;
+  mono-faint `#4f7873`; caption `#3f7a76`.
+- **Teal accent:** `#5eead4` (primary), `#8ff3e2` (hover), `#04121a` (ink on teal); soft fills
+  `rgba(94,234,212,0.14–0.16)`, accent border `#14514c`.
+- **Globe scene:** radial `#0c3138 → #06181f → #04111a`, border `#10424a`; atmosphere/land/graticule/
+  rim/arc on `rgba(94,234,212, α)`; face `rgba(15,70,76,0.62) → rgba(4,20,27,0.5)`; overlay `#e3fdf6`/
+  `#9fc7c2`/`#5f9a95`/`#3f7a76`; primary pin `#5eead4`, nice-to-have `#93a7ad`/ghost `#9fb6bb`;
+  Jakarta origin `#fcd34d`; arc pulse `#eafffb`.
+- **Sponsorship tiers (bg / fg / dot):** yes `rgba(52,211,153,0.14)`/`#5fe3a3`/`#34d399`; registry
+  `rgba(96,165,250,0.14)`/`#7cc0fb`/`#60a5fa`; unknown `rgba(148,180,186,0.12)`/`#9fc7c2`/`#8296a0`;
+  no `rgba(248,113,113,0.14)`/`#f7a6a2`/`#f87171`.
+- **Status pills (bg / fg):** new `rgba(94,234,212,0.16)`/`#5eead4` · seen `rgba(148,180,186,0.12)`/
+  `#9fc7c2` · starred `rgba(94,234,212,0.16)`/`#5eead4` · hidden `rgba(248,113,113,0.14)`/`#f7a6a2`.
+- **Source-health dots:** OK `#34d399`, degraded `#fbbf24`, quarantined `#f87171`.
 
-**Text**
-| Role | Hex |
-|---|---|
-| Ink / primary | `#16202a` |
-| Body muted | `#5d6b76` |
-| Secondary muted | `#6b7784` |
-| Faint / labels | `#93a0aa` / `#97a3ac` |
-| Mono faint | `#a3aeb6` |
+### Typography
+Geist (UI, 400/500/600/700) + Geist Mono (400/500). H1 24/700/-0.02em; drawer title 21/700; card
+name 16–17/600–700; body 13–14; row title 15/600; labels 10.5–11/600 uppercase (0.05–0.06em);
+mono details 11–12.5.
 
-**Accent (teal)**
-| Token | Hex |
-|---|---|
-| Accent | `#0e8a7d` |
-| Accent hover | `#0b7268` |
-| Accent soft bg | `#d7efec` |
-| Accent soft fg | `#0a6c62` |
-| Accent border | `#a9dcd5` |
+### Radii / Shadows / Animations
+Radii: 999 (pills/dots), 18 (globe panel), 14 (cards), 12 (menus/panels), 11 (nav), 9–10
+(inputs/segment track), 7 (segment buttons), 6 (chips). Shadows: panel `0 24px 60px
+rgba(4,18,26,0.35), inset 0 0 90px rgba(45,212,191,0.05)`; menu `0 16px 40px rgba(2,10,14,0.6)`;
+drawer `-20px 0 50px rgba(2,10,14,0.55)`. Animations: `bk-fade` (opacity), `bk-slide` (translateX
+40px→0 + fade, 0.22s), `bk-pulse` (scale 0.55→1.9 + fade). Page padding 26×34.
 
-**Sponsorship tiers** (bg / fg / dot)
-| Tier | bg | fg | dot |
-|---|---|---|---|
-| explicit_yes (Sponsors) | `#dcf0e4` | `#1b8a5a` | `#25a56a` |
-| registry_inferred (Registry) | `#dde9f4` | `#2f6fae` | `#3f83c8` |
-| unknown (Unknown) | `#e7ecef` | `#6b7784` | `#a6b0ba` |
-| explicit_no (No sponsor) | `#f6e3e1` | `#c0504a` | `#d26f68` |
-
-**Source health** (bg / fg / dot): ok `#dcf0e4`/`#1b8a5a`/`#25a56a` · degraded `#faf1dd`/`#9a6a12`/`#d99a2b` · quarantined `#f6e3e1`/`#c0504a`/`#d26f68` · pending `#e7ecef`/`#6b7784`/`#a6b0ba`.
-
-**Status pills** (bg / fg): new `#d7efec`/`#0a6c62` · seen `#e7ecef`/`#6b7784` · starred `#cbeae4`/`#0a6c62` · hidden `#f6e3e1`/`#c0504a`.
-
-**Typography** — Geist (400/500/600/700), Geist Mono (400/500). H1 24px/700/-0.02em · drawer title 21px · section/card titles 15–17px/700 · body 13–13.5px · row title 15px/600 · uppercase labels 10.5px/600/0.06em · mono metadata 11–12px.
-
-**Radius:** cards/table 14px · geo panel 16px · inputs 10px · menus 12px · segment track 9px / item 6–7px · chips 6px · pills & dots 999px.
-
-**Shadow:** menu `0 12px 32px rgba(20,32,42,0.12)` · drawer `-20px 0 50px rgba(20,32,42,0.1)` · segment-active `0 1px 2px rgba(0,0,0,0.08)`.
-
-**Spacing:** page padding 26px 34px · card padding 18–24px · row padding 16px 24px · gap between filter controls 8–10px.
-
-**Animations (in `<style>`):** `bk-fade` (opacity 0→1), `bk-slide` (translateX 40px→0 + fade), `bk-pulse` (scale 0.55→1.9 + fade, used for map pin rings).
+All tokens live in `frontend/src/tokens.css` as CSS custom properties — do not invent colors.
 
 ## Assets
-- **Fonts:** Geist + Geist Mono (Google Fonts). Use the equivalent in the target codebase.
-- **Icons:** all inline SVG (stroke-based, 1.5–2px), hand-drawn in the prototype — nav glyphs, search, chevrons, checkmark, star, eye/eye-off, restore, globe, close, external-link, beacon logo. Replace with the codebase's icon set (e.g. Lucide) matching these shapes/weights.
-- **World map:** procedurally drawn dot-grid on `<canvas>` (no image asset) — see the `drawMap`/`ELLIPSES`/`PINS` logic in `Beacon.dc.html` if you want to reproduce it; otherwise any equatorial-projection dot/vector world map with lon/lat pin placement works.
-- No raster images or brand assets.
+No raster assets. Icons via Lucide (Globe, Bookmark, Settings, Search, ChevronDown/Left, Star,
+Eye/EyeOff, Check, ExternalLink, Plus, X) matching the prototype's stroke SVGs; the Beacon brand
+glyph is an inline SVG. The globe is procedurally generated on a canvas — no map image. Fonts:
+Geist + Geist Mono (Google Fonts).
 
-## Files
-- `Beacon.dc.html` — the full high-fidelity prototype (all four views + drawer). Primary reference.
-- `Beacon Palettes.dc.html` — the 5 explored color palettes; **1b "Nordic Slate & Teal" is the selected one** and is what `Beacon.dc.html` uses. Reference only.
-- `support.js` — the prototype runtime (needed only to open the `.dc.html` files in a browser). **Not** a production dependency.
-- `SPEC.md` — authoritative product spec: data model, sources, classification, sort semantics, source-health taxonomy, country reference data, back-end architecture.
-
-To preview the prototype: open `Beacon.dc.html` in a browser (it loads `support.js` from the same folder).
+## Files (prototype references, not shipping code)
+`~/Downloads/Beacon.zip` → `design_handoff_beacon/`: `Beacon.dc.html` (the hifi dark prototype:
+markup + `class Component` logic with seed data, `LAND`/`SEA`/`PINS`, the canvas globe engine, and
+`renderVals()` filter/sort derivations), `README.md` (this design's handoff prose), `support.js`
+(the `.dc.html` runtime — ignore), `SPEC.md` (product/architecture context).

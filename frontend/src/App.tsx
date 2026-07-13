@@ -1,32 +1,39 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Bookmark, Globe, Settings } from 'lucide-react'
 import { BrowserRouter, useSearchParams } from 'react-router-dom'
 import styles from './App.module.css'
-import { CompaniesPage } from './companies/CompaniesPage'
 import { CountriesPage } from './countries/CountriesPage'
-import { JobsPage } from './jobs/JobsPage'
 import { SavedSearchesPage } from './searches/SavedSearchesPage'
 import { SettingsPage } from './settings/SettingsPage'
 
 const queryClient = new QueryClient()
 
-type View = 'jobs' | 'searches' | 'companies' | 'countries' | 'settings'
+// The main area shows one of three views. Countries is home; the Jobs list is not its own
+// view — it is a pane inside Countries, gated by a selected country (?focus=).
+type View = 'countries' | 'searches' | 'settings'
 
-const VIEWS: readonly View[] = ['jobs', 'searches', 'companies', 'countries', 'settings']
+const VIEWS: readonly View[] = ['countries', 'searches', 'settings']
 
 function parseView(raw: string | null): View {
-  return VIEWS.includes(raw as View) ? (raw as View) : 'jobs'
+  return VIEWS.includes(raw as View) ? (raw as View) : 'countries'
 }
 
 function AppShell() {
   const [searchParams, setSearchParams] = useSearchParams()
-  // View is a URL param so filters set on Jobs survive a hop to Saved searches
-  // (that's how "save from current filters" reads them) and the view is shareable.
   const view: View = parseView(searchParams.get('view'))
-  const setView = (next: View) =>
+
+  const goTo = (next: View) =>
     setSearchParams(
       (params) => {
-        if (next === 'jobs') params.delete('view')
-        else params.set('view', next)
+        if (next === 'countries') {
+          params.delete('view')
+          // Returning to the globe home clears any selected-country jobs pane.
+          params.delete('focus')
+          params.delete('country')
+          params.delete('status')
+        } else {
+          params.set('view', next)
+        }
         return params
       },
       { replace: true },
@@ -34,58 +41,68 @@ function AppShell() {
 
   return (
     <>
-      <aside className={styles.sidebar}>
+      <aside className={styles.rail}>
         <div className={styles.brand}>
-          <h1 className={styles.brandName}>Beacon</h1>
-          <span className={styles.brandTag}>job scanner</span>
+          <svg
+            className={styles.brandGlyph}
+            width="26"
+            height="26"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            aria-hidden
+          >
+            <circle cx="12" cy="13" r="2.4" fill="currentColor" stroke="none" />
+            <path d="M6.5 7.5a8 8 0 000 11" />
+            <path d="M17.5 7.5a8 8 0 010 11" />
+            <path d="M9.2 10a4 4 0 000 6" />
+            <path d="M14.8 10a4 4 0 010 6" />
+          </svg>
+          <span className={styles.brandName}>Beacon</span>
         </div>
+
         <nav className={styles.nav}>
           <button
             type="button"
-            className={view === 'jobs' ? styles.navItemActive : styles.navItem}
-            aria-current={view === 'jobs'}
-            onClick={() => setView('jobs')}
+            className={view === 'countries' ? styles.navItemActive : styles.navItem}
+            aria-current={view === 'countries'}
+            onClick={() => goTo('countries')}
           >
-            Jobs
+            <Globe size={19} aria-hidden />
+            <span className={styles.navLabel}>Globe</span>
           </button>
           <button
             type="button"
             className={view === 'searches' ? styles.navItemActive : styles.navItem}
             aria-current={view === 'searches'}
-            onClick={() => setView('searches')}
+            onClick={() => goTo('searches')}
           >
-            Saved searches
+            <span className={styles.navIconWrap}>
+              <Bookmark size={19} aria-hidden />
+              <span className={styles.navBadge}>4</span>
+            </span>
+            <span className={styles.navLabel}>Saved</span>
           </button>
-          <button
-            type="button"
-            className={view === 'companies' ? styles.navItemActive : styles.navItem}
-            aria-current={view === 'companies'}
-            onClick={() => setView('companies')}
-          >
-            Companies
-          </button>
-          <button
-            type="button"
-            className={view === 'countries' ? styles.navItemActive : styles.navItem}
-            aria-current={view === 'countries'}
-            onClick={() => setView('countries')}
-          >
-            Countries
-          </button>
+        </nav>
+
+        <div className={styles.footer}>
           <button
             type="button"
             className={view === 'settings' ? styles.navItemActive : styles.navItem}
             aria-current={view === 'settings'}
-            onClick={() => setView('settings')}
+            aria-label="Settings"
+            onClick={() => goTo('settings')}
           >
-            Settings
+            <Settings size={18} aria-hidden />
           </button>
-        </nav>
+          <div className={styles.liveTag}>07:04 · LIVE</div>
+        </div>
       </aside>
-      {view === 'jobs' && <JobsPage />}
-      {view === 'searches' && <SavedSearchesPage />}
-      {view === 'companies' && <CompaniesPage />}
+
       {view === 'countries' && <CountriesPage />}
+      {view === 'searches' && <SavedSearchesPage />}
       {view === 'settings' && <SettingsPage />}
     </>
   )

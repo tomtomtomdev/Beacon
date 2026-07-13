@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { Globe as GlobeIcon } from 'lucide-react'
-import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { fetchCountries } from '../api/countries'
 import type { Country } from '../api/types'
+import { JobsPane } from '../jobs/JobsPane'
 import styles from './CountriesPage.module.css'
 import { Globe } from './Globe'
 
@@ -16,8 +17,29 @@ export function CountriesPage() {
     queryKey: ['countries'],
     queryFn: fetchCountries,
   })
-  // Which country is highlighted — transient UI state, so local (not a shareable URL param).
-  const [selected, setSelected] = useState<string | null>(null)
+
+  // The selected country is a URL param (?focus=CODE) — shareable, and the pivot that decides
+  // globe auto-focus + whether the jobs pane (set) or the card grid (unset) shows below the globe.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const focus = searchParams.get('focus')
+
+  // Selecting a country seeds the country filter + opens the jobs pane on the "All" status view;
+  // clearing (ocean tap, back button) returns to the card grid.
+  const setFocus = (code: string | null) =>
+    setSearchParams(
+      (params) => {
+        params.delete('country')
+        params.delete('status')
+        params.delete('focus')
+        if (code) {
+          params.set('focus', code)
+          params.append('country', code)
+          params.set('status', 'all')
+        }
+        return params
+      },
+      { replace: true },
+    )
 
   return (
     <main className={`${styles.main} bk-scroll`}>
@@ -36,7 +58,7 @@ export function CountriesPage() {
       {countries && (
         <>
           <section className={styles.geoPanel}>
-            <Globe countries={countries} selectedCode={selected} onSelect={setSelected} />
+            <Globe countries={countries} selectedCode={focus} onSelect={setFocus} />
             <div className={styles.geoTop}>
               <div className={styles.geoTitleGroup}>
                 <GlobeIcon size={18} aria-hidden />
@@ -56,16 +78,20 @@ export function CountriesPage() {
             <SourceHealth />
           </section>
 
-          <div className={styles.grid}>
-            {countries.map((country) => (
-              <CountryCard
-                key={country.code}
-                country={country}
-                selected={selected === country.code}
-                onSelect={() => setSelected((cur) => (cur === country.code ? null : country.code))}
-              />
-            ))}
-          </div>
+          {focus ? (
+            <JobsPane onBack={() => setFocus(null)} />
+          ) : (
+            <div className={styles.grid}>
+              {countries.map((country) => (
+                <CountryCard
+                  key={country.code}
+                  country={country}
+                  selected={false}
+                  onSelect={() => setFocus(country.code)}
+                />
+              ))}
+            </div>
+          )}
         </>
       )}
     </main>
