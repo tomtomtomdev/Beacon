@@ -13,7 +13,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND="$ROOT/backend"
 FRONTEND="$ROOT/frontend"
-API_PORT=8000   # hardcoded: frontend/vite.config proxies /jobs + /healthz to localhost:8000
+API_PORT=8000   # hardcoded: frontend/vite.config proxies the API routes (/jobs, /countries, /companies, /searches, /settings, /healthz) to localhost:8000
 
 INGEST=1
 SETUP=0

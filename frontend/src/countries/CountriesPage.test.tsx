@@ -77,7 +77,7 @@ describe('CountriesPage', () => {
     renderPage()
     await screen.findByRole('button', { name: 'Sweden details' })
 
-    const pin = screen.getByRole('button', { name: 'Sweden on map' })
+    const pin = screen.getByRole('button', { name: 'Sweden on globe' })
     expect(pin).toHaveAttribute('aria-pressed', 'false')
 
     await user.click(screen.getByRole('button', { name: 'Sweden details' }))
