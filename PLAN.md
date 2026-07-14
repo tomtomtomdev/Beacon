@@ -346,6 +346,85 @@ Note: the per-job "source stale since <date>" banner on the Jobs view (DESIGN §
 
 ---
 
+## Slice 12 — Resume upload + fit scoring (heuristic all-jobs; opt-in LLM per job)
+
+**Goal:** Upload a resume; every job gets a free, deterministic fit score you can sort by; one job at a time gets an optional budget-capped LLM rationale. SPEC §11. The two-tier split (heuristic over all jobs, LLM only on demand) is the whole feasibility argument — build Tier 1 first and fully; Tier 2 is a thin, gated upgrader on top.
+
+**Build order: 12a domain (pure) → 12b resume ingest → 12c heuristic scoring on `/jobs` → 12d UI → 12e LLM deep-match (last, gated).** Ship 12a–12d with zero LLM dependency; 12e is opt-in and parked-by-default like slice 9.
+
+### 12a — Domain: profile + heuristic score (pure, no IO)
+
+Tests first (table-driven, the highest-value tests in the slice — this is the correctness surface):
+- `test_build_profile_extracts_skills`: resume text → `ResumeProfile` with skill token set, inferred `categories`, `level`, years — **using the same keyword tables as the classifier** (a "Senior iOS Engineer, 8 yrs Swift/SwiftUI" resume → `{ios}`, `senior`, `yoe=8`, skills⊇{swift,swiftui})
+- `test_score_match_components`: parametrized — full skill overlap + category + level match → high overall; disjoint skills → low; senior resume vs junior post → level penalty; staff post → mild, not zero
+- `test_score_match_sponsorship_fit`: a target-country job with `explicit_yes`/`registry_inferred` scores its sponsor sub-score above an `explicit_no` or off-strategy-country job (Beacon's differentiator)
+- `test_matched_and_missing_skills`: score reports which resume skills hit the job and which job-required skills the resume lacks
+- `test_score_match_is_pure`: same `(profile, job)` → identical `MatchScore` (deterministic; no clock, no IO)
+
+Tasks:
+1. Domain: `ResumeProfile`, `MatchScore` (frozen/slots value objects), `build_profile(text)`, `score_match(profile, job)` — pure functions; skill vocabulary READ from the existing `keywords.py` data (do not duplicate it). Sub-score weights as named constants.
+
+**Refactor watch:** if `build_profile` and the classifier both start reaching into keyword data ad hoc, extract a shared read-only accessor — do not copy the tables (duplication trigger). Level-fit and category logic must stay in `score_match`, never leak a tier/level conditional into the API layer.
+
+### 12b — Resume ingest (parse → profile → store)
+
+Tests first:
+- `test_plaintext_parser`: pasted text / `.txt` bytes → text unchanged (no dep)
+- `test_pdf_parser`: fixture PDF bytes → extracted text (recorded fixture under `tests/fixtures/resume/`)
+- `test_ingest_resume_sets_active`: `ingest_resume` stores `source_text` + `profile_json` + `resume_hash`, marks it active, demotes the prior active
+- `test_resume_hash_dedup`: re-uploading identical text reuses the row (same `resume_hash`), does not re-profile
+
+Tasks:
+1. Migration: `resumes` + `job_match_scores` tables (SPEC §7 schema)
+2. `ResumeParser` port + `PlainTextResumeParser` (zero-dep, always available) and `PdfResumeParser` (pdf→text; add the pdf dep only here, scoped like `apscheduler`). DOCX deferred behind the same port.
+3. `ResumeRepo`, `MatchScoreRepo`; use case `ingest_resume`
+4. `POST /resumes` (upload/paste), `GET /resumes`, `PUT /resumes/{id}/active`, `DELETE /resumes/{id}`
+
+### 12c — Heuristic scoring wired into `/jobs` (Tier 1, cached, bounded)
+
+Tests first:
+- `test_score_jobs_for_resume_caches`: scoring a job twice with unchanged `(resume_hash, content_hash)` computes once (spy on `score_match`); a changed `content_hash` recomputes just that job
+- `test_jobs_sort_match`: `/jobs?resume=<id>&sort=match` orders by `overall DESC`; **without `sort=match` the default ordering is unchanged** (sponsor_rank, then posted_at) — fit is opt-in
+- `test_jobs_scores_current_page_only`: scoring is bounded to the returned window, not the whole table (assert the score lookup count == page size, not row count)
+- `test_jobs_no_resume_no_scores`: `/jobs` with no `resume` param returns rows with no `match_score` and behaves exactly as before
+
+Tasks:
+1. Use case `score_jobs_for_resume(resume, jobs)` — heuristic, reads/writes `MatchScoreRepo` cache keyed `(resume_hash, content_hash)`
+2. `/jobs` gains optional `resume=<id>` (attaches `match_score` to each row, scoring only the current page) and `sort=match`; default sort untouched
+3. `match_score` added to the jobs list read model + DTO + `types.ts` (one place)
+
+**Refactor watch:** reuse the existing `to_job_filters`/read-model projection; do not fork a parallel jobs query. Scoring joins onto the existing page, it does not become a second listing path.
+
+### 12d — UI: resume upload + fit surfacing
+
+Tasks:
+1. Resume upload/paste in Settings (or a small Resume view): paste box + file input, list of resumes, set-active, delete
+2. Fit badge/score on job rows when a resume is active; a `match` option in the sort control (alongside tier/date), default unchanged
+3. Drawer **Fit card**: overall + sub-scores + matched/missing skill chips — styled per DESIGN.md tokens, rendered as a soft signal like the sponsorship card (never a filter-out)
+
+Tests: rows render `match_score` when a resume is active and omit it otherwise; `sort=match` drives a refetch; Fit card renders sub-scores and matched/missing skills.
+
+### 12e — LLM deep-match (Tier 2, on-demand, budget-gated) — opt-in, parked by default
+
+Tests (fixtures only, never a live call — honors the offline-test rule, same as slice 9):
+- `test_deep_match_json_out`: fixture Anthropic response → `MatchRationale` (summary, strengths, gaps, verdict, sponsor note); tolerant parser, raises on unparseable
+- `test_deep_match_budget_gate`: budget exhausted → no call, returns the heuristic-only result (spy); under budget → one call, cached by `(resume_hash, content_hash)`
+- `test_deep_match_llm_failure_degrades`: any LLM error → heuristic score preserved, pipeline never crashes
+- `test_deep_match_single_job_only`: the endpoint scores exactly one job (no whole-DB fan-out path exists)
+
+Tasks:
+1. `Matcher` port + `LLMMatcher` (raw httpx to Anthropic, thin style of `LLMClassifier`; reuses the **existing `LLMBudget`** — no second budget); use case `deep_match_job`
+2. `POST /jobs/{id}/match?resume=<id>` → runs Tier 2 for one job, stores `llm_rationale`, returns it
+3. Drawer "Assess fit" button calls it; rationale renders under the Fit card
+4. Wired only at the composition root via `make_matcher` (mirrors `make_classifier`): heuristic-only until `BEACON_ANTHROPIC_API_KEY` is set — the key is the switch (Decisions 2026-07-11 precedent)
+
+Acceptance:
+- [ ] Upload a resume → every job on the current `/jobs` page shows a heuristic fit score; `sort=match` ranks by it; default sort unchanged; scoring a full result set is instant and free (Tier-1 covers all jobs)
+- [ ] Re-poll of an unchanged job reuses its cached score; a materially edited posting (new `content_hash`) re-scores only itself
+- [ ] "Assess fit" on one job produces an LLM rationale under budget (spot-check ≥5 jobs); budget-exhausted or key-absent degrades to the heuristic score with no crash; no path LLM-scores the whole DB — **live LLM run pending an Anthropic key, same shape as slices 8/9**
+
+---
+
 ## Cross-cutting rules
 
 - Every network adapter is tested against recorded fixtures only; live calls happen solely in manual acceptance checks
