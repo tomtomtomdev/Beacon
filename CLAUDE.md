@@ -57,7 +57,7 @@ New source = new adapter + fixture tests + one seed row. Zero changes to applica
 - Datetimes: UTC, timezone-aware, ISO-8601 in API. `posted_at` may be null (some boards omit it) — never fabricate.
 - Config via env with a single `Settings` dataclass; no config reads scattered in modules.
 - Logging: structlog-style key=value single lines. Every poll logs `source= company= fetched= upserted= errors=`.
-- Classifier keyword tables live in `adapters/classify/keywords.py` as data, not embedded in logic. Extending categories = editing the table + adding parametrized test rows.
+- Classifier/matcher keyword vocabulary lives in `domain/vocabulary.py` as data, not embedded in logic (moved there 2026-07-15 so the §11 resume matcher's pure `build_profile` can reuse it without a domain→adapter import). Extending categories = editing the table + adding parametrized test rows; the word-boundary extraction (`extract_categories`/`extract_skills`/`resolve_level`) is the shared pure primitive both the classifier adapter and the matcher read.
 - Sponsorship tier precedence is a single pure function: `explicit_no > explicit_yes > registry_inferred > unknown` — text beats registry, no beats yes. Never reimplement this logic elsewhere.
 - **Sponsorship is a soft signal.** Tier drives `sort_rank` (yes=3, registry=2, unknown=1, no=0) and the default ordering `sort_rank DESC, posted_at DESC`. It must never act as a default filter: `/jobs` without params returns all tiers, and no UI state ships with tier chips pre-selected. `explicit_no` sorts last, greyed badge, still visible.
 
