@@ -6,14 +6,9 @@ residue this leaves. The adapter owns the *policy* (which text feeds which extra
 word-boundary matching itself is the domain's, reused by the resume matcher (§11).
 """
 
-from beacon.domain.classification import Classification, Level
+from beacon.domain.classification import Classification
 from beacon.domain.job import NormalizedJob
-from beacon.domain.vocabulary import (
-    YEARS_SENIOR_THRESHOLD,
-    extract_categories,
-    match_level,
-    years_of_experience,
-)
+from beacon.domain.vocabulary import extract_categories, resolve_level
 
 
 class HeuristicClassifier:
@@ -22,14 +17,7 @@ class HeuristicClassifier:
         # AI company's every posting says "LLM", a fintech's says "backend" — so matching
         # the body cross-contaminates unrelated roles (proven in the slice-3 spot-check).
         # The title names the role; ambiguous/empty residue is the LLM fallback's job (slice 9).
-        return Classification(categories=extract_categories(job.title), level=self._level(job))
-
-    def _level(self, job: NormalizedJob) -> Level:
-        explicit = match_level(job.title)
-        if explicit is not None:
-            return explicit
-        # Years-of-experience is role-specific (not boilerplate), so it may come from the body.
-        years = years_of_experience(f"{job.title}\n{job.description}")
-        if years is not None and years >= YEARS_SENIOR_THRESHOLD:
-            return Level.SENIOR
-        return Level.UNSPECIFIED
+        # Level reads the explicit token from the title, but years-of-experience (role-specific,
+        # not boilerplate) may come from the body.
+        level = resolve_level(level_text=job.title, years_text=f"{job.title}\n{job.description}")
+        return Classification(categories=extract_categories(job.title), level=level)

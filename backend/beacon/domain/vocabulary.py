@@ -182,3 +182,18 @@ def years_of_experience(text: str) -> int | None:
     """The largest 'N years' figure in text, or None when it states none."""
     years = [int(match.group(1)) for match in _YEARS.finditer(text)]
     return max(years) if years else None
+
+
+def resolve_level(*, level_text: str, years_text: str) -> Level:
+    """The one level rule, shared by the classifier and the resume matcher: an explicit
+    seniority token wins; otherwise a years-of-experience figure at/above the threshold
+    reads senior; otherwise the level is honestly UNSPECIFIED. The two callers differ only
+    in scope — the classifier reads the token from the title but years from title+body,
+    while build_profile reads both from the whole resume text."""
+    explicit = match_level(level_text)
+    if explicit is not None:
+        return explicit
+    years = years_of_experience(years_text)
+    return (
+        Level.SENIOR if years is not None and years >= YEARS_SENIOR_THRESHOLD else Level.UNSPECIFIED
+    )
