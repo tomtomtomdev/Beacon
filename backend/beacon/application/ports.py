@@ -13,6 +13,7 @@ from beacon.domain.health import SourceHealth
 from beacon.domain.job import NormalizedJob
 from beacon.domain.notification import TelegramConfig
 from beacon.domain.registry import Registry, RegistryCompany, RegistryMeta
+from beacon.domain.resume import Resume
 from beacon.domain.saved_search import SavedSearch
 from beacon.domain.sponsorship import SponsorSignal
 from beacon.domain.visa import CountryReference
@@ -345,4 +346,42 @@ class SettingsRepo(Protocol):
 
     def set_telegram_config(self, config: TelegramConfig) -> None:
         """Persist the config verbatim — a None field clears that stored value."""
+        ...
+
+
+class ResumeParser(Protocol):
+    """Turns an uploaded resume into plain text (§11). PlainTextResumeParser (paste / .txt,
+    zero-dep) is always available; PdfResumeParser is a later drop-in behind this same port.
+    kind names the upload form (e.g. "text"/"txt"); a parser rejects kinds it can't handle."""
+
+    def parse(self, data: bytes | str, kind: str) -> str: ...
+
+
+class ResumeRepo(Protocol):
+    """Persists uploaded resumes. Dumb by design — the dedup/active-singleton policy lives in
+    the ingest_resume use case, not here."""
+
+    def insert(self, resume: Resume) -> Resume:
+        """Insert a resume; returns it with its assigned id."""
+        ...
+
+    def get(self, resume_id: int) -> Resume | None: ...
+
+    def get_by_hash(self, resume_hash: str) -> Resume | None:
+        """The resume with this content hash, or None — the dedup lookup."""
+        ...
+
+    def get_active(self) -> Resume | None:
+        """The one active resume, or None when none is active."""
+        ...
+
+    def list_all(self) -> list[Resume]: ...
+
+    def set_active(self, resume_id: int) -> bool:
+        """Make this resume the sole active one (all others become inactive), atomically.
+        False if the id is unknown (and nothing changes)."""
+        ...
+
+    def delete(self, resume_id: int) -> bool:
+        """Remove a resume. False if unknown."""
         ...

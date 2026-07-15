@@ -101,6 +101,45 @@ def test_countries_table_has_full_spec_schema(db: sqlite3.Connection) -> None:
     }
 
 
+def test_resumes_table_has_full_spec_schema(db: sqlite3.Connection) -> None:
+    assert columns(db, "resumes") == {
+        "id",
+        "label",
+        "source_text",
+        "profile_json",
+        "resume_hash",
+        "active",
+        "created_at",
+    }
+
+
+def test_job_match_scores_table_has_full_spec_schema(db: sqlite3.Connection) -> None:
+    assert columns(db, "job_match_scores") == {
+        "resume_hash",
+        "job_canonical_id",
+        "overall",
+        "skills_score",
+        "level_score",
+        "sponsor_score",
+        "matched_skills",
+        "missing_skills",
+        "llm_rationale",
+        "content_hash",
+        "computed_at",
+    }
+
+
+def test_resume_hash_is_unique(db: sqlite3.Connection) -> None:
+    insert = (
+        "INSERT INTO resumes (label, source_text, profile_json, resume_hash, created_at)"
+        " VALUES ('CV', 'text', '{}', 'abc', 't')"
+    )
+    db.execute(insert)
+
+    with pytest.raises(sqlite3.IntegrityError):
+        db.execute(insert)
+
+
 def test_jobs_reject_duplicate_source_external_id(db: sqlite3.Connection) -> None:
     db.execute(
         "INSERT INTO companies (name, ats_type, ats_slug, country_hq, priority)"

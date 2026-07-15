@@ -10,7 +10,10 @@ Fit is a soft signal exactly like sponsorship: an opt-in sort key, never a filte
 weights below shape the ranking; they are the one place to tune it.
 """
 
+import hashlib
+import json
 from dataclasses import dataclass, field
+from datetime import datetime
 
 from beacon.domain.classification import Category, Level
 from beacon.domain.sponsorship import SponsorTier
@@ -34,6 +37,52 @@ class ResumeProfile:
     years: int | None
     # Optional relocation strategy from a small form; empty means country-agnostic scoring.
     target_countries: frozenset[str] = field(default_factory=frozenset)
+
+
+@dataclass(frozen=True, slots=True)
+class Resume:
+    """An uploaded resume: its raw text, the extracted profile, and its content hash. The
+    ingest use case keeps exactly one active at a time. id/created_at are None only for an
+    unsaved instance; a persisted Resume always has both."""
+
+    id: int | None
+    label: str
+    source_text: str
+    profile: ResumeProfile
+    resume_hash: str
+    active: bool
+    created_at: datetime | None
+
+
+def resume_hash(source_text: str) -> str:
+    """Content address for a resume (SPEC §11): sha256 of the raw pasted/uploaded text, so
+    re-uploading identical text dedupes to the same row and reuses its cached scores."""
+    return hashlib.sha256(source_text.encode("utf-8")).hexdigest()
+
+
+def profile_to_json(profile: ResumeProfile) -> str:
+    """Serialize a profile for the resumes.profile_json column. Sets → sorted lists so the
+    JSON is stable and diffs cleanly."""
+    return json.dumps(
+        {
+            "skills": sorted(profile.skills),
+            "categories": sorted(category.value for category in profile.categories),
+            "level": profile.level.value,
+            "years": profile.years,
+            "target_countries": sorted(profile.target_countries),
+        }
+    )
+
+
+def profile_from_json(raw: str) -> ResumeProfile:
+    data = json.loads(raw)
+    return ResumeProfile(
+        skills=frozenset(data["skills"]),
+        categories=frozenset(Category(value) for value in data["categories"]),
+        level=Level(data["level"]),
+        years=data["years"],
+        target_countries=frozenset(data["target_countries"]),
+    )
 
 
 @dataclass(frozen=True, slots=True)

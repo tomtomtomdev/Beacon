@@ -12,6 +12,9 @@ from beacon.domain.resume import (
     MatchScore,
     ResumeProfile,
     build_profile,
+    profile_from_json,
+    profile_to_json,
+    resume_hash,
     score_match,
 )
 from beacon.domain.sponsorship import SponsorTier
@@ -169,3 +172,21 @@ def test_score_match_is_deterministic() -> None:
     assert first == second
     assert isinstance(first, MatchScore)
     assert 0 <= first.overall <= 100
+
+
+# --- persistence helpers: profile_json + resume_hash -----------------------------------
+
+
+def test_profile_json_roundtrips() -> None:
+    profile = build_profile(
+        "Senior iOS Engineer, 8 years Swift and SwiftUI", target_countries=frozenset({"NL", "SE"})
+    )
+
+    restored = profile_from_json(profile_to_json(profile))
+
+    assert restored == profile
+
+
+def test_resume_hash_is_stable_and_content_addressed() -> None:
+    assert resume_hash("same text") == resume_hash("same text")
+    assert resume_hash("one") != resume_hash("two")
