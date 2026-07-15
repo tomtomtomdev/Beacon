@@ -3,7 +3,7 @@ import { ExternalLink, Eye, EyeOff, Globe, Star, X } from 'lucide-react'
 import { useEffect } from 'react'
 import { fetchCountries } from '../api/countries'
 import { fetchJobDetail } from '../api/jobs'
-import type { JobDetail, SponsorTier, UserStatus } from '../api/types'
+import type { JobDetail, MatchScore, SponsorTier, UserStatus } from '../api/types'
 import styles from './JobDrawer.module.css'
 import { TIER_LABEL } from './taxonomy'
 import { postedAgo } from './postedAgo'
@@ -33,11 +33,14 @@ const REGISTRY_LABEL: Record<string, string> = {
 
 interface JobDrawerProps {
   jobId: number
+  // The resume-fit score for this job, already computed for the list row (§11); null when no
+  // resume is active. Passed down rather than refetched — the row is page-bounded-scored.
+  matchScore: MatchScore | null
   onClose: () => void
   onSetStatus: (id: number, status: UserStatus) => void
 }
 
-export function JobDrawer({ jobId, onClose, onSetStatus }: JobDrawerProps) {
+export function JobDrawer({ jobId, matchScore, onClose, onSetStatus }: JobDrawerProps) {
   const { data: job, isPending, isError } = useQuery({
     queryKey: ['job', jobId],
     queryFn: () => fetchJobDetail(jobId),
@@ -130,6 +133,8 @@ export function JobDrawer({ jobId, onClose, onSetStatus }: JobDrawerProps) {
             </div>
 
             <SponsorshipCard job={job} />
+
+            {matchScore && <FitCard score={matchScore} />}
 
             <section className={styles.section}>
               <div className={styles.sectionLabel}>Description</div>
@@ -240,6 +245,80 @@ function SponsorshipCard({ job }: { job: JobDetail }) {
           registry signals — never excluded.
         </p>
       )}
+    </section>
+  )
+}
+
+// Sub-scores in display order (category alignment folds into `overall` — no stored column, §11).
+const FIT_SUBSCORES: ReadonlyArray<{ key: keyof MatchScore; label: string }> = [
+  { key: 'skills_score', label: 'Skills' },
+  { key: 'level_score', label: 'Level' },
+  { key: 'sponsor_score', label: 'Sponsor / country' },
+]
+
+// Résumé-fit card — a soft signal rendered exactly like the sponsorship card (§11): overall
+// score, the sub-scores that built it, and the matched/missing skill breakdown. Never a filter.
+function FitCard({ score }: { score: MatchScore }) {
+  return (
+    <section className={styles.fitCard} data-testid="fit-card">
+      <div className={styles.fitHead}>
+        <div className={styles.fitHeader}>Résumé fit</div>
+        <div className={styles.fitOverall}>
+          <span className={styles.fitOverallValue}>{score.overall}</span>
+          <span className={styles.fitOverallMax}>/100</span>
+        </div>
+      </div>
+
+      <div className={styles.fitBars}>
+        {FIT_SUBSCORES.map(({ key, label }) => {
+          const value = score[key] as number
+          return (
+            <div key={key} className={styles.fitBarRow}>
+              <span className={styles.fitBarLabel}>{label}</span>
+              <span className={styles.fitBarTrack} aria-hidden>
+                <span className={styles.fitBarFill} style={{ width: `${value}%` }} />
+              </span>
+              <span className={styles.fitBarValue}>{value}</span>
+            </div>
+          )
+        })}
+      </div>
+
+      <div className={styles.fitSkills}>
+        <div className={styles.fitSkillGroup}>
+          <div className={styles.fitSkillLabel}>Matched skills</div>
+          {score.matched_skills.length > 0 ? (
+            <div className={styles.fitChips}>
+              {score.matched_skills.map((skill) => (
+                <span key={skill} className={styles.fitChipMatched}>
+                  {skill}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className={styles.fitSkillEmpty}>None of the job's skills are on your resume.</p>
+          )}
+        </div>
+        <div className={styles.fitSkillGroup}>
+          <div className={styles.fitSkillLabel}>Missing skills</div>
+          {score.missing_skills.length > 0 ? (
+            <div className={styles.fitChips}>
+              {score.missing_skills.map((skill) => (
+                <span key={skill} className={styles.fitChipMissing}>
+                  {skill}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className={styles.fitSkillEmpty}>You cover every skill this posting names.</p>
+          )}
+        </div>
+      </div>
+
+      <p className={styles.fitNote}>
+        Heuristic fit against your active resume — a soft signal, like the sponsorship badge. Never
+        hides a posting.
+      </p>
     </section>
   )
 }

@@ -46,7 +46,9 @@ function renderPage() {
 
 beforeEach(() => {
   fetchMock.mockImplementation((url: RequestInfo | URL) => {
-    const body = String(url).startsWith('/countries') ? countries : { total: 0, jobs: [] }
+    const u = String(url)
+    // The jobs pane reads the active resume; no resume is set in these tests.
+    const body = u.startsWith('/countries') ? countries : u === '/resumes' ? [] : { total: 0, jobs: [] }
     return Promise.resolve({ ok: true, json: () => Promise.resolve(body) } as Response)
   })
   vi.stubGlobal('fetch', fetchMock)

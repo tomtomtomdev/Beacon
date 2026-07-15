@@ -363,3 +363,139 @@
 .cta:hover {
   background: var(--accent-hover);
 }
+
+/* ---- Résumé-fit card (§11) — teal accent, styled like the sponsorship card ---- */
+.fitCard {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid var(--accent-border);
+  border-radius: 12px;
+  background: var(--accent-soft-bg);
+}
+
+.fitHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.fitHeader {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--accent-soft-fg);
+}
+
+.fitOverall {
+  display: flex;
+  align-items: baseline;
+  gap: 1px;
+  font-family: var(--font-mono);
+  color: var(--accent-soft-fg);
+}
+
+.fitOverallValue {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.fitOverallMax {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.fitBars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.fitBarRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fitBarLabel {
+  flex: 0 0 108px;
+  font-size: 11.5px;
+  color: var(--text-body-muted);
+}
+
+.fitBarTrack {
+  flex: 1;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-raised);
+  overflow: hidden;
+}
+
+.fitBarFill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+}
+
+.fitBarValue {
+  flex: 0 0 26px;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink);
+}
+
+.fitSkills {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.fitSkillLabel {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-label);
+  margin-bottom: 7px;
+}
+
+.fitChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.fitChipMatched,
+.fitChipMissing {
+  padding: 3px 9px;
+  border-radius: var(--radius-chip);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.fitChipMatched {
+  background: var(--tier-yes-bg);
+  color: var(--tier-yes-fg);
+}
+
+.fitChipMissing {
+  background: var(--bg-chip);
+  color: var(--text-secondary);
+}
+
+.fitSkillEmpty {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-body-muted);
+}
+
+.fitNote {
+  margin: 14px 0 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}

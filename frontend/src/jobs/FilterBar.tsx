@@ -28,6 +28,8 @@ interface FilterBarProps {
   onToggleLevel: (value: string) => void
   onToggleTier: (tier: SponsorTier) => void
   onSortChange: (sort: SortBy) => void
+  // The Fit sort option only appears once a resume is active (§11 — opt-in, never default).
+  showFitSort: boolean
 }
 
 export function FilterBar({
@@ -43,6 +45,7 @@ export function FilterBar({
   onToggleLevel,
   onToggleTier,
   onSortChange,
+  showFitSort,
 }: FilterBarProps) {
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null)
   const toggleMenu = (menu: 'country' | 'tier') =>
@@ -83,6 +86,16 @@ export function FilterBar({
         >
           Date
         </button>
+        {showFitSort && (
+          <button
+            type="button"
+            className={sort === 'match' ? styles.segmentActive : styles.segment}
+            aria-pressed={sort === 'match'}
+            onClick={() => onSortChange('match')}
+          >
+            Fit
+          </button>
+        )}
       </div>
 
       <div className={styles.dropdown}>

@@ -10,6 +10,7 @@ beforeEach(() => {
     let body: unknown = { total: 0, jobs: [] }
     if (String(url).startsWith('/countries')) body = []
     else if (String(url).startsWith('/searches')) body = []
+    else if (String(url).startsWith('/resumes')) body = []
     else if (String(url).startsWith('/settings/telegram')) {
       body = { chat_id: null, bot_token_set: false }
     }

@@ -1,6 +1,6 @@
 import type { JobDetail, JobsPageResponse, SponsorTier, UserStatus } from './types'
 
-export type SortBy = 'tier' | 'date'
+export type SortBy = 'tier' | 'date' | 'match'
 
 // The status segmented control (DESIGN.md §2). 'all' shows everything except hidden
 // (the API's param-less default), so it maps to omitting the status param entirely.
@@ -14,6 +14,8 @@ export interface JobsQuery {
   tiers: SponsorTier[]
   sort: SortBy
   status: StatusView
+  // The active resume's id, or null. When set, each row carries a fit `match_score` (§11).
+  resume: number | null
 }
 
 export async function fetchJobs({
@@ -24,6 +26,7 @@ export async function fetchJobs({
   tiers,
   sort,
   status,
+  resume,
 }: JobsQuery): Promise<JobsPageResponse> {
   const params = new URLSearchParams()
   if (q) params.set('q', q)
@@ -31,8 +34,12 @@ export async function fetchJobs({
   for (const category of categories) params.append('category', category)
   for (const level of levels) params.append('level', level)
   for (const tier of tiers) params.append('sponsor_tier', tier)
+  // A resume attaches a fit score to each row; sort=match then orders by it (§11).
+  if (resume !== null) params.set('resume', String(resume))
   // 'tier' is the API default — omit it so shared URLs stay clean.
   if (sort === 'date') params.set('sort', 'date')
+  // 'match' orders by fit; only meaningful with a resume (the caller gates the control on it).
+  else if (sort === 'match' && resume !== null) params.set('sort', 'match')
   // 'all' = the API's param-less default (everything but hidden); the rest filter to one status.
   if (status !== 'all') params.set('status', status)
   const qs = params.toString()

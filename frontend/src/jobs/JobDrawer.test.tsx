@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { Country, JobDetail } from '../api/types'
+import type { Country, JobDetail, MatchScore } from '../api/types'
 import { JobDrawer } from './JobDrawer'
 
 const seJob: JobDetail = {
@@ -71,13 +71,27 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-function renderDrawer(jobId = 1) {
+const fit: MatchScore = {
+  overall: 96,
+  skills_score: 100,
+  level_score: 80,
+  sponsor_score: 40,
+  matched_skills: ['swift', 'ios'],
+  missing_skills: ['kotlin'],
+}
+
+function renderDrawer(jobId = 1, matchScore: MatchScore | null = null) {
   const onClose = vi.fn()
   const onSetStatus = vi.fn()
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
     <QueryClientProvider client={client}>
-      <JobDrawer jobId={jobId} onClose={onClose} onSetStatus={onSetStatus} />
+      <JobDrawer
+        jobId={jobId}
+        matchScore={matchScore}
+        onClose={onClose}
+        onSetStatus={onSetStatus}
+      />
     </QueryClientProvider>,
   )
   return { onClose, onSetStatus }
@@ -153,5 +167,27 @@ describe('JobDrawer', () => {
     await user.click(screen.getByRole('button', { name: 'Star' }))
 
     expect(onSetStatus).toHaveBeenCalledWith(1, 'starred')
+  })
+
+  it('shows no Fit card when no resume score is passed', async () => {
+    renderDrawer()
+    await screen.findByRole('heading', { name: 'Senior iOS Engineer' })
+
+    expect(screen.queryByTestId('fit-card')).not.toBeInTheDocument()
+  })
+
+  it('renders the Fit card with overall, sub-scores and matched/missing skills', async () => {
+    renderDrawer(1, fit)
+    await screen.findByRole('heading', { name: 'Senior iOS Engineer' })
+
+    const card = within(await screen.findByTestId('fit-card'))
+    expect(card.getByText('96')).toBeInTheDocument() // overall
+    // Sub-scores are labelled and valued.
+    expect(card.getByText(/Skills/)).toBeInTheDocument()
+    expect(card.getByText(/Level/)).toBeInTheDocument()
+    expect(card.getByText(/Sponsor/)).toBeInTheDocument()
+    // Matched and missing skills surface as chips.
+    expect(card.getByText('swift')).toBeInTheDocument()
+    expect(card.getByText('kotlin')).toBeInTheDocument()
   })
 })

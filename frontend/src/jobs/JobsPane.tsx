@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { fetchJobs, patchJobStatus, type SortBy, type StatusView } from '../api/jobs'
+import { fetchResumes } from '../api/resumes'
 import type { Country, SponsorTier, UserStatus } from '../api/types'
 import { FilterBar } from './FilterBar'
 import { JobDrawer } from './JobDrawer'
@@ -41,7 +42,17 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
   const categories = searchParams.getAll('category')
   const levels = searchParams.getAll('level')
   const tiers = searchParams.getAll('sponsor_tier') as SponsorTier[]
-  const sort: SortBy = searchParams.get('sort') === 'date' ? 'date' : 'tier'
+  // The active resume (server-owned singleton) drives ?resume= scoring — a soft, opt-in signal.
+  const { data: resumes } = useQuery({ queryKey: ['resumes'], queryFn: fetchResumes })
+  const activeResume = resumes?.find((resume) => resume.active) ?? null
+  const resumeId = activeResume?.id ?? null
+
+  // sort=match only means anything with a resume; without one it decays to the default so the
+  // control never lies (the Fit segment is hidden anyway when no resume is active).
+  const sortParam = searchParams.get('sort')
+  const requestedSort: SortBy =
+    sortParam === 'date' ? 'date' : sortParam === 'match' ? 'match' : 'tier'
+  const sort: SortBy = requestedSort === 'match' && resumeId === null ? 'tier' : requestedSort
   // Selecting a country opens this pane with status=all (browse everything for that country).
   const statusParam = searchParams.get('status')
   const view: StatusView =
@@ -78,8 +89,9 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
   const setSort = (value: SortBy) => {
     setSearchParams(
       (params) => {
-        if (value === 'date') params.set('sort', 'date')
-        else params.delete('sort')
+        // 'tier' is the API default — omit it; 'date'/'match' are explicit.
+        if (value === 'tier') params.delete('sort')
+        else params.set('sort', value)
         return params
       },
       { replace: true },
@@ -104,8 +116,9 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
 
   const queryClient = useQueryClient()
   const { data, isPending, isError } = useQuery({
-    queryKey: ['jobs', q, countries, categories, levels, tiers, sort, view],
-    queryFn: () => fetchJobs({ q, countries, categories, levels, tiers, sort, status: view }),
+    queryKey: ['jobs', q, countries, categories, levels, tiers, sort, view, resumeId],
+    queryFn: () =>
+      fetchJobs({ q, countries, categories, levels, tiers, sort, status: view, resume: resumeId }),
   })
 
   const statusMutation = useMutation({
@@ -140,10 +153,10 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
   }
 
   const heading = countries.length === 1 ? `Jobs · ${countryName(countries[0])}` : 'Jobs'
+  const sortLabel = sort === 'tier' ? 'sponsor tier' : sort === 'date' ? 'date' : 'fit'
   const resultLabel = data
     ? `${view === 'all' ? '' : `${view[0].toUpperCase()}${view.slice(1)} · `}${data.jobs.length}` +
-      `${data.jobs.length === 1 ? ' posting' : ' postings'} · sorted by ` +
-      (sort === 'tier' ? 'sponsor tier' : 'date')
+      `${data.jobs.length === 1 ? ' posting' : ' postings'} · sorted by ${sortLabel}`
     : 'Loading…'
 
   return (
@@ -205,6 +218,7 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
           onToggleLevel={(value) => toggleParam('level', value)}
           onToggleTier={(tier) => toggleParam('sponsor_tier', tier)}
           onSortChange={setSort}
+          showFitSort={resumeId !== null}
         />
       </div>
 
@@ -228,6 +242,9 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
       {openJobId !== null && (
         <JobDrawer
           jobId={openJobId}
+          // The row is already scored (page-bounded, §11) — hand its fit down so the drawer's
+          // Fit card needs no extra fetch; null when no resume is active.
+          matchScore={data?.jobs.find((job) => job.id === openJobId)?.match_score ?? null}
           onClose={closeJob}
           onSetStatus={(id, status) => statusMutation.mutate({ id, status })}
         />

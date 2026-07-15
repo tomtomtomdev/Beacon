@@ -1,0 +1,231 @@
+.wrap {
+  max-width: 520px;
+  margin-top: 26px;
+  padding: 18px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-card);
+}
+
+.cardHead {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 14px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--text-body-muted);
+}
+
+.stateText {
+  font-size: 13px;
+  color: var(--text-body-muted);
+}
+
+.list {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 13px;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-menu);
+  background: var(--surface-raised);
+}
+
+.itemMain {
+  min-width: 0;
+}
+
+.itemTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.itemLabel {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.activeBadge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-fg);
+  border: 1px solid var(--accent-border);
+}
+
+.itemMeta {
+  margin-top: 3px;
+  font-size: 11.5px;
+  color: var(--text-body-muted);
+  font-family: var(--font-mono);
+}
+
+.itemActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.useButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.useButton:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.deleteButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--surface);
+  color: var(--text-label);
+  cursor: pointer;
+}
+
+.deleteButton:hover {
+  border-color: var(--tier-no-dot);
+  color: var(--tier-no-fg);
+}
+
+.useButton:disabled,
+.deleteButton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.label {
+  font-size: 12.5px;
+  color: var(--text-body-muted);
+}
+
+.input,
+.textarea {
+  padding: 9px 11px;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  font-size: 13.5px;
+  font-family: var(--font-ui);
+  color: var(--ink);
+  background: var(--surface-raised);
+}
+
+.textarea {
+  resize: vertical;
+  line-height: 1.5;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.addButton {
+  padding: 8px 18px;
+  border: none;
+  border-radius: var(--radius-input);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.addButton:hover {
+  background: var(--accent-hover);
+}
+
+.addButton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.fileButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-input);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.fileButton:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.fileInput {
+  display: none;
+}
+
+.errorNote {
+  font-size: 12.5px;
+  color: var(--tier-no-fg);
+}

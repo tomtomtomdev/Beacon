@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { FormEvent } from 'react'
 import { fetchTelegramSettings, sendTestMessage, updateTelegramSettings } from '../api/settings'
+import { ResumePanel } from './ResumePanel'
 import styles from './SettingsPage.module.css'
 
 export function SettingsPage() {
@@ -121,6 +122,8 @@ export function SettingsPage() {
           </section>
         </>
       )}
+
+      <ResumePanel />
     </main>
   )
 }

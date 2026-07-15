@@ -17,6 +17,34 @@ export interface MatchScore {
   missing_skills: string[]
 }
 
+// A resume's extracted profile (§11 Tier 0) — computed the same way a job's classification is,
+// so the two are directly comparable. Returned inside a Resume.
+export interface ResumeProfile {
+  categories: string[]
+  level: string
+  years: number | null
+  skills: string[]
+  target_countries: string[]
+}
+
+// GET/POST /resumes. One resume is `active` at a time; the active one drives ?resume= scoring
+// on /jobs. Paste/.txt text only for now (zero-dep parser); PDF is a later drop-in (§11).
+export interface Resume {
+  id: number
+  label: string
+  active: boolean
+  created_at: string | null
+  resume_hash: string
+  profile: ResumeProfile
+}
+
+// POST /resumes body — the frontend reads a .txt client-side into `text`.
+export interface ResumeCreate {
+  label: string
+  text: string
+  target_countries: string[]
+}
+
 export interface Job {
   id: number
   title: string

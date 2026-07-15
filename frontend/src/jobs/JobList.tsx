@@ -55,6 +55,9 @@ export function JobList({ jobs, onOpen, onSetStatus }: JobListProps) {
                 <span className={styles.tierDot} aria-hidden />
                 {TIER_LABEL[job.sponsor_tier]}
               </span>
+              {job.match_score && (
+                <span className={styles.fitChip}>Fit {job.match_score.overall}</span>
+              )}
               {job.city && <span className={styles.city}>{job.city}</span>}
               {job.level && <span className={styles.level}>{job.level.toUpperCase()}</span>}
               <span className={styles.posted}>{postedAgo(job.posted_at)}</span>

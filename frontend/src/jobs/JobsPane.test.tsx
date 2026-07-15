@@ -3,7 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { JobsPageResponse } from '../api/types'
+import type { JobsPageResponse, Resume } from '../api/types'
 import { JobsPane } from './JobsPane'
 
 const payload: JobsPageResponse = {
@@ -40,7 +40,60 @@ const payload: JobsPageResponse = {
   ],
 }
 
+// The scored variant the API returns only when ?resume= names an active resume (§11).
+const scoredPayload: JobsPageResponse = {
+  total: 2,
+  jobs: [
+    {
+      ...payload.jobs[0],
+      match_score: {
+        overall: 96,
+        skills_score: 100,
+        level_score: 80,
+        sponsor_score: 40,
+        matched_skills: ['swift', 'ios'],
+        missing_skills: ['kotlin'],
+      },
+    },
+    {
+      ...payload.jobs[1],
+      match_score: {
+        overall: 41,
+        skills_score: 20,
+        level_score: 70,
+        sponsor_score: 40,
+        matched_skills: [],
+        missing_skills: ['go'],
+      },
+    },
+  ],
+}
+
+const activeResume: Resume = {
+  id: 7,
+  label: 'My CV',
+  active: true,
+  created_at: '2026-07-15T00:00:00+00:00',
+  resume_hash: 'abc123',
+  profile: {
+    categories: ['ios'],
+    level: 'senior',
+    years: 8,
+    skills: ['swift', 'ios'],
+    target_countries: ['SE'],
+  },
+}
+
 const fetchMock = vi.fn()
+
+// Data-driven boundary mock: /resumes returns the resume list; a /jobs request that carries
+// ?resume= gets scored rows (mirrors the backend), everything else the unscored base.
+let jobsPayload: JobsPageResponse = payload
+let resumesPayload: Resume[] = []
+
+function ok(body: unknown): Promise<Response> {
+  return Promise.resolve({ ok: true, json: () => Promise.resolve(body) } as Response)
+}
 
 function renderPage(initialUrl = '/') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -53,11 +106,29 @@ function renderPage(initialUrl = '/') {
   )
 }
 
+// Every /jobs list request the component made (not detail/status), newest last.
+function jobListUrls(): string[] {
+  return fetchMock.mock.calls
+    .map((call) => String(call[0]))
+    .filter((u) => u === '/jobs' || u.startsWith('/jobs?'))
+}
+
+function firstJobsUrl(): string {
+  return jobListUrls()[0]
+}
+
 beforeEach(() => {
-  fetchMock.mockResolvedValue({
-    ok: true,
-    json: () => Promise.resolve(payload),
-  } as Response)
+  jobsPayload = payload
+  resumesPayload = []
+  fetchMock.mockImplementation((url: RequestInfo | URL, init?: RequestInit) => {
+    const u = String(url)
+    const method = init?.method ?? 'GET'
+    if (u === '/resumes' && method === 'GET') return ok(resumesPayload)
+    if (u === '/countries') return ok([])
+    if (u.startsWith('/jobs/')) return ok({}) // detail / status PATCH — overridden where asserted
+    if ((u === '/jobs' || u.startsWith('/jobs?')) && u.includes('resume=')) return ok(scoredPayload)
+    return ok(jobsPayload)
+  })
   vi.stubGlobal('fetch', fetchMock)
 })
 
@@ -84,8 +155,7 @@ describe('JobsPane', () => {
     await user.type(screen.getByPlaceholderText(/search title, company/i), 'swift')
 
     await waitFor(() => {
-      const urls = fetchMock.mock.calls.map((call) => String(call[0]))
-      expect(urls.some((u) => u.includes('q=swift'))).toBe(true)
+      expect(jobListUrls().some((u) => u.includes('q=swift'))).toBe(true)
     })
   })
 
@@ -99,8 +169,9 @@ describe('JobsPane', () => {
     await user.click(screen.getByRole('checkbox', { name: /ireland/i }))
 
     await waitFor(() => {
-      const urls = fetchMock.mock.calls.map((call) => String(call[0]))
-      expect(urls.some((u) => u.includes('country=SE') && u.includes('country=IE'))).toBe(true)
+      expect(jobListUrls().some((u) => u.includes('country=SE') && u.includes('country=IE'))).toBe(
+        true,
+      )
     })
   })
 
@@ -108,18 +179,16 @@ describe('JobsPane', () => {
     renderPage('/?q=swift&country=SE')
 
     await screen.findByText('Swift Engineer')
-    const firstUrl = String(fetchMock.mock.calls[0][0])
-    expect(firstUrl).toContain('q=swift')
-    expect(firstUrl).toContain('country=SE')
+    expect(firstJobsUrl()).toContain('q=swift')
+    expect(firstJobsUrl()).toContain('country=SE')
   })
 
   it('defaults to sponsor-tier sort with no sort or tier params (filter is opt-in)', async () => {
     renderPage()
     await screen.findByText('Swift Engineer')
 
-    const firstUrl = String(fetchMock.mock.calls[0][0])
-    expect(firstUrl).not.toContain('sort=')
-    expect(firstUrl).not.toContain('sponsor_tier=')
+    expect(firstJobsUrl()).not.toContain('sort=')
+    expect(firstJobsUrl()).not.toContain('sponsor_tier=')
   })
 
   it('switching sort to Date refetches with sort=date', async () => {
@@ -130,8 +199,7 @@ describe('JobsPane', () => {
     await user.click(screen.getByRole('button', { name: 'Date' }))
 
     await waitFor(() => {
-      const urls = fetchMock.mock.calls.map((call) => String(call[0]))
-      expect(urls.some((u) => u.includes('sort=date'))).toBe(true)
+      expect(jobListUrls().some((u) => u.includes('sort=date'))).toBe(true)
     })
   })
 
@@ -144,8 +212,7 @@ describe('JobsPane', () => {
     await user.click(screen.getByRole('checkbox', { name: /registry/i }))
 
     await waitFor(() => {
-      const urls = fetchMock.mock.calls.map((call) => String(call[0]))
-      expect(urls.some((u) => u.includes('sponsor_tier=registry_inferred'))).toBe(true)
+      expect(jobListUrls().some((u) => u.includes('sponsor_tier=registry_inferred'))).toBe(true)
     })
   })
 
@@ -157,8 +224,7 @@ describe('JobsPane', () => {
     await user.click(screen.getByRole('button', { name: 'iOS' }))
 
     await waitFor(() => {
-      const urls = fetchMock.mock.calls.map((call) => String(call[0]))
-      expect(urls.some((u) => u.includes('category=ios'))).toBe(true)
+      expect(jobListUrls().some((u) => u.includes('category=ios'))).toBe(true)
     })
   })
 
@@ -170,8 +236,7 @@ describe('JobsPane', () => {
     await user.click(screen.getByRole('button', { name: 'Senior' }))
 
     await waitFor(() => {
-      const urls = fetchMock.mock.calls.map((call) => String(call[0]))
-      expect(urls.some((u) => u.includes('level=senior'))).toBe(true)
+      expect(jobListUrls().some((u) => u.includes('level=senior'))).toBe(true)
     })
   })
 
@@ -179,9 +244,8 @@ describe('JobsPane', () => {
     renderPage('/?category=ios&level=senior')
 
     await screen.findByText('Swift Engineer')
-    const firstUrl = String(fetchMock.mock.calls[0][0])
-    expect(firstUrl).toContain('category=ios')
-    expect(firstUrl).toContain('level=senior')
+    expect(firstJobsUrl()).toContain('category=ios')
+    expect(firstJobsUrl()).toContain('level=senior')
   })
 
   it('renders the city and level on each compact card', async () => {
@@ -198,17 +262,15 @@ describe('JobsPane', () => {
     renderPage('/?sort=date&sponsor_tier=registry_inferred')
 
     await screen.findByText('Swift Engineer')
-    const firstUrl = String(fetchMock.mock.calls[0][0])
-    expect(firstUrl).toContain('sort=date')
-    expect(firstUrl).toContain('sponsor_tier=registry_inferred')
+    expect(firstJobsUrl()).toContain('sort=date')
+    expect(firstJobsUrl()).toContain('sponsor_tier=registry_inferred')
   })
 
   it('defaults to the New view — the morning scan', async () => {
     renderPage()
     await screen.findByText('Swift Engineer')
 
-    const firstUrl = String(fetchMock.mock.calls[0][0])
-    expect(firstUrl).toContain('status=new')
+    expect(firstJobsUrl()).toContain('status=new')
     expect(screen.getByRole('button', { name: 'New' })).toHaveAttribute('aria-pressed', 'true')
   })
 
@@ -220,10 +282,7 @@ describe('JobsPane', () => {
     await user.click(screen.getByRole('button', { name: 'All' }))
 
     await waitFor(() => {
-      const listCalls = fetchMock.mock.calls
-        .map((call) => String(call[0]))
-        .filter((u) => u.startsWith('/jobs?') || u === '/jobs')
-      expect(listCalls.some((u) => !u.includes('status'))).toBe(true)
+      expect(jobListUrls().some((u) => !u.includes('status'))).toBe(true)
     })
   })
 
@@ -235,8 +294,7 @@ describe('JobsPane', () => {
     await user.click(screen.getByRole('button', { name: 'Starred' }))
 
     await waitFor(() => {
-      const urls = fetchMock.mock.calls.map((call) => String(call[0]))
-      expect(urls.some((u) => u.includes('status=starred'))).toBe(true)
+      expect(jobListUrls().some((u) => u.includes('status=starred'))).toBe(true)
     })
   })
 
@@ -282,10 +340,10 @@ describe('JobsPane', () => {
     }
     fetchMock.mockImplementation((url: RequestInfo | URL) => {
       const u = String(url)
-      if (u === '/countries') return Promise.resolve({ ok: true, json: () => Promise.resolve([]) })
-      if (u.startsWith('/jobs/') && !u.includes('/status'))
-        return Promise.resolve({ ok: true, json: () => Promise.resolve(detail) })
-      return Promise.resolve({ ok: true, json: () => Promise.resolve(payload) })
+      if (u === '/resumes') return ok([])
+      if (u === '/countries') return ok([])
+      if (u.startsWith('/jobs/') && !u.includes('/status')) return ok(detail)
+      return ok(payload)
     })
     const user = userEvent.setup()
     renderPage()
@@ -304,13 +362,48 @@ describe('JobsPane', () => {
   })
 
   it('shows a per-view empty state when nothing matches (New = all caught up)', async () => {
-    fetchMock.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ total: 0, jobs: [] }),
-    } as Response)
+    jobsPayload = { total: 0, jobs: [] }
 
     renderPage()
 
     expect(await screen.findByText(/you're all caught up/i)).toBeInTheDocument()
+  })
+
+  // ---- §11 resume-fit (slice 12d) ----
+
+  it('with no active resume, sends no resume param and shows no fit badge', async () => {
+    renderPage()
+    await screen.findByText('Swift Engineer')
+
+    expect(jobListUrls().every((u) => !u.includes('resume='))).toBe(true)
+    expect(screen.queryByText(/^Fit\b/)).not.toBeInTheDocument()
+    // The Fit sort option is hidden until a resume is active.
+    expect(screen.queryByRole('button', { name: 'Fit' })).not.toBeInTheDocument()
+  })
+
+  it('with an active resume, scores the list with ?resume= and shows a fit badge per row', async () => {
+    resumesPayload = [activeResume]
+    renderPage()
+
+    // The scored rows carry a fit badge (overall score); soft signal like the tier chip.
+    expect(await screen.findByText('Fit 96')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(jobListUrls().some((u) => u.includes('resume=7'))).toBe(true)
+    })
+  })
+
+  it('with an active resume, switching sort to Fit refetches with sort=match', async () => {
+    resumesPayload = [activeResume]
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByText('Fit 96')
+
+    await user.click(screen.getByRole('button', { name: 'Fit' }))
+
+    await waitFor(() => {
+      expect(jobListUrls().some((u) => u.includes('sort=match') && u.includes('resume=7'))).toBe(
+        true,
+      )
+    })
   })
 })
