@@ -4,12 +4,26 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-from beacon.api.deps import JobRepoDep
+from beacon.api.deps import JobRepoDep, MatchScoreRepoDep, ResumeRepoDep
 from beacon.application.ports import JobDetail, JobFilters, JobListing
 from beacon.application.queries import get_job, list_jobs, set_job_status
+from beacon.application.scoring import list_scored_jobs
+from beacon.domain.resume import MatchScore
 from beacon.domain.status import UserStatus
 
 router = APIRouter()
+
+
+class MatchScoreOut(BaseModel):
+    """A resume's fit against one job (§11 Tier 1). Present only when the request names an
+    active resume; a soft, opt-in signal — never a filter."""
+
+    overall: int
+    skills_score: int
+    level_score: int
+    sponsor_score: int
+    matched_skills: list[str]
+    missing_skills: list[str]
 
 
 class JobOut(BaseModel):
@@ -25,6 +39,7 @@ class JobOut(BaseModel):
     posted_at: datetime | None
     sponsor_tier: str
     user_status: UserStatus
+    match_score: MatchScoreOut | None = None
 
 
 class JobsPageOut(BaseModel):
@@ -35,6 +50,8 @@ class JobsPageOut(BaseModel):
 @router.get("/jobs")
 def get_jobs(
     repo: JobRepoDep,
+    resumes: ResumeRepoDep,
+    match_scores: MatchScoreRepoDep,
     q: str | None = None,
     country: Annotated[list[str] | None, Query()] = None,
     category: Annotated[list[str] | None, Query()] = None,
@@ -42,12 +59,20 @@ def get_jobs(
     posted_since: datetime | None = None,
     sponsor_tier: Annotated[list[str] | None, Query()] = None,
     status: UserStatus | Literal["all"] | None = None,
-    sort: Literal["tier", "date"] = "tier",
+    sort: Literal["tier", "date", "match"] = "tier",
+    resume: Annotated[int | None, Query()] = None,
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> JobsPageOut:
     if posted_since is not None and posted_since.tzinfo is None:
         posted_since = posted_since.replace(tzinfo=UTC)
+
+    # ?resume=<id> attaches a fit score to each row (SPEC §11); an unknown id is a 404 so a
+    # stale reference surfaces rather than silently returning unscored rows.
+    active_resume = resumes.get(resume) if resume is not None else None
+    if resume is not None and active_resume is None:
+        raise HTTPException(status_code=404, detail="resume not found")
+
     filters = JobFilters(
         q=q,
         countries=tuple(c.upper() for c in country or ()),
@@ -57,10 +82,14 @@ def get_jobs(
         sponsor_tiers=tuple(sponsor_tier or ()),
         status=status,
         sort=sort,
+        resume_hash=active_resume.resume_hash if active_resume else None,
         limit=limit,
         offset=offset,
     )
-    page = list_jobs(repo, filters)
+    if active_resume is not None:
+        page = list_scored_jobs(repo, match_scores, active_resume, filters, now=datetime.now(UTC))
+    else:
+        page = list_jobs(repo, filters)
     return JobsPageOut(jobs=[_to_dto(job) for job in page.jobs], total=page.total)
 
 
@@ -142,4 +171,18 @@ def _to_dto(job: JobListing) -> JobOut:
         posted_at=job.posted_at,
         sponsor_tier=job.sponsor_tier,
         user_status=UserStatus(job.user_status),
+        match_score=_to_match_score(job.match_score),
+    )
+
+
+def _to_match_score(score: MatchScore | None) -> MatchScoreOut | None:
+    if score is None:
+        return None
+    return MatchScoreOut(
+        overall=score.overall,
+        skills_score=score.skills_score,
+        level_score=score.level_score,
+        sponsor_score=score.sponsor_score,
+        matched_skills=sorted(score.matched_skills),
+        missing_skills=sorted(score.missing_skills),
     )

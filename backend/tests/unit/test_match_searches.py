@@ -9,6 +9,7 @@ from beacon.application.ports import (
     JobFilters,
     JobListing,
     JobPage,
+    JobScoringInput,
 )
 from beacon.domain.classification import Classification
 from beacon.domain.dedup import DedupRow
@@ -53,6 +54,9 @@ class FakeJobRepo:
     def search(self, filters: JobFilters) -> JobPage:
         jobs = self._by_query.get(filters.q, [])
         return JobPage(jobs=jobs, total=len(jobs))
+
+    def get_scoring_inputs(self, job_ids: Sequence[int]) -> dict[int, JobScoringInput]:
+        raise NotImplementedError("saved-search matching never scores")
 
     def upsert(self, *args: object, **kwargs: object) -> None:
         raise NotImplementedError

@@ -11,6 +11,7 @@ from beacon.adapters.persistence.companies import SqliteCompanyRepo
 from beacon.adapters.persistence.countries import SqliteCountryRepo
 from beacon.adapters.persistence.db import connect
 from beacon.adapters.persistence.jobs import SqliteJobRepo
+from beacon.adapters.persistence.match_scores import SqliteMatchScoreRepo
 from beacon.adapters.persistence.resumes import SqliteResumeRepo
 from beacon.adapters.persistence.searches import SqliteSearchRepo
 from beacon.adapters.persistence.settings import SqliteSettingsRepo
@@ -75,6 +76,15 @@ def get_resume_repo(db: Annotated[sqlite3.Connection, Depends(get_db)]) -> Sqlit
 
 
 ResumeRepoDep = Annotated[SqliteResumeRepo, Depends(get_resume_repo)]
+
+
+def get_match_score_repo(
+    db: Annotated[sqlite3.Connection, Depends(get_db)],
+) -> SqliteMatchScoreRepo:
+    return SqliteMatchScoreRepo(db)
+
+
+MatchScoreRepoDep = Annotated[SqliteMatchScoreRepo, Depends(get_match_score_repo)]
 
 
 def get_resume_parser() -> ResumeParser:

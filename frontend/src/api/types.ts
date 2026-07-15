@@ -5,6 +5,18 @@ export type SponsorTier = 'explicit_yes' | 'registry_inferred' | 'unknown' | 'ex
 // The per-job daily-scan lifecycle: new → seen → starred/hidden (see PATCH /jobs/{id}/status).
 export type UserStatus = 'new' | 'seen' | 'hidden' | 'starred'
 
+// A resume's Tier-1 fit against one job (§11). Present on a Job only when GET /jobs is called
+// with ?resume=<id>; a soft, opt-in signal (like sponsorship) — never a filter. The drawer's
+// Fit card (slice 12d) shows overall + sub-scores + matched/missing skills.
+export interface MatchScore {
+  overall: number
+  skills_score: number
+  level_score: number
+  sponsor_score: number
+  matched_skills: string[]
+  missing_skills: string[]
+}
+
 export interface Job {
   id: number
   title: string
@@ -18,6 +30,8 @@ export interface Job {
   posted_at: string | null
   sponsor_tier: SponsorTier
   user_status: UserStatus
+  // Attached only when the request named an active resume; null / absent otherwise.
+  match_score?: MatchScore | null
 }
 
 export interface JobsPageResponse {

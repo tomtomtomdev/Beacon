@@ -341,6 +341,111 @@ def _ids_by_external(conn: sqlite3.Connection) -> dict[str, int]:
     }
 
 
+async def _upload_resume(client: httpx.AsyncClient) -> int:
+    """A senior-iOS resume: skills ⊇ {swift, swiftui}, category ios, level senior."""
+    response = await client.post(
+        "/resumes",
+        json={"label": "CV", "text": "Senior iOS Engineer, 8 years Swift and SwiftUI"},
+    )
+    assert response.status_code == 201, response.text
+    return int(response.json()["id"])
+
+
+async def test_jobs_no_resume_carry_no_match_score(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    payload = await get_jobs(client)
+
+    assert payload["total"] == 4
+    assert all(job["match_score"] is None for job in payload["jobs"])
+
+
+async def test_jobs_with_resume_attach_fit_score(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    seeded.execute(
+        "UPDATE jobs SET categories = 'ios', level = 'senior',"
+        " description = 'We build with Swift and SwiftUI.' WHERE external_id = '1'"
+    )
+    seeded.commit()
+    resume_id = await _upload_resume(client)
+
+    payload = await get_jobs(client, resume=resume_id)
+
+    swift = next(job for job in payload["jobs"] if job["title"] == "Swift Engineer")
+    score = swift["match_score"]
+    assert score is not None
+    assert score["overall"] > 80  # full skill + category + level match, only sponsor drags it
+    assert "swift" in score["matched_skills"]
+    assert set(score) >= {"overall", "skills_score", "level_score", "sponsor_score"}
+
+
+async def test_jobs_sort_match_orders_by_overall_desc(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    # A perfect-fit iOS role and a disjoint Kotlin role → very different fit scores.
+    seeded.execute(
+        "UPDATE jobs SET categories = 'ios', level = 'senior',"
+        " description = 'Swift and SwiftUI all day.' WHERE external_id = '1'"
+    )
+    seeded.execute(
+        "UPDATE jobs SET categories = 'android', level = 'junior',"
+        " description = 'Kotlin only, no Apple.' WHERE external_id = '3'"
+    )
+    seeded.commit()
+    resume_id = await _upload_resume(client)
+
+    payload = await get_jobs(client, resume=resume_id, sort="match")
+
+    titles = [job["title"] for job in payload["jobs"]]
+    assert titles.index("Swift Engineer") < titles.index("Swift Developer")
+    # Default sort with a resume attaches scores but leaves the ordering untouched (opt-in fit).
+    default = await get_jobs(client, resume=resume_id)
+    assert [j["title"] for j in default["jobs"]] == [
+        j["title"] for j in (await get_jobs(client))["jobs"]
+    ]
+
+
+async def test_jobs_sort_match_ranks_across_pages_from_warm_cache(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    # Platform Engineer has a null posted_at, so the default sort buries it last; make it the
+    # only strong iOS fit. Once the cache is warm, sort=match must surface it onto page one.
+    seeded.execute(
+        "UPDATE jobs SET categories = 'ios', level = 'senior',"
+        " description = 'Swift and SwiftUI throughout.' WHERE external_id = '4'"
+    )
+    seeded.commit()
+    resume_id = await _upload_resume(client)
+
+    await get_jobs(client, resume=resume_id, sort="match", limit=50)  # warm the whole cache
+    top = await get_jobs(client, resume=resume_id, sort="match", limit=1)
+
+    assert top["total"] == 4
+    assert [j["title"] for j in top["jobs"]] == ["Platform Engineer"]
+
+
+async def test_jobs_scores_current_page_only(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    resume_id = await _upload_resume(client)
+
+    payload = await get_jobs(client, resume=resume_id, limit=2)
+
+    assert len(payload["jobs"]) == 2
+    # Scoring is bounded to the returned window: exactly the page's jobs get cached, not all 4.
+    cached = seeded.execute("SELECT COUNT(*) AS n FROM job_match_scores").fetchone()["n"]
+    assert cached == 2
+
+
+async def test_jobs_unknown_resume_is_404(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    response = await client.get("/jobs", params={"resume": 999999})
+
+    assert response.status_code == 404
+
+
 async def test_jobs_list_excludes_duplicates(
     client: httpx.AsyncClient, seeded: sqlite3.Connection
 ) -> None:

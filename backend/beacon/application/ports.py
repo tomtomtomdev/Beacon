@@ -13,7 +13,7 @@ from beacon.domain.health import SourceHealth
 from beacon.domain.job import NormalizedJob
 from beacon.domain.notification import TelegramConfig
 from beacon.domain.registry import Registry, RegistryCompany, RegistryMeta
-from beacon.domain.resume import Resume
+from beacon.domain.resume import MatchScore, Resume
 from beacon.domain.saved_search import SavedSearch
 from beacon.domain.sponsorship import SponsorSignal
 from beacon.domain.visa import CountryReference
@@ -93,6 +93,9 @@ class JobFilters:
     # a specific status → only that status (e.g. "new" for the morning scan).
     status: str | None = None
     sort: str = "tier"
+    # Set only for sort="match": the active resume's hash, so the listing can ORDER BY the
+    # cached fit score (join onto job_match_scores). None leaves ordering resume-independent.
+    resume_hash: str | None = None
     limit: int = 50
     offset: int = 0
 
@@ -113,12 +116,34 @@ class JobListing:
     posted_at: datetime | None
     sponsor_tier: str
     user_status: str
+    # Attached only when the request names an active resume (?resume=<id>); None otherwise, so
+    # a fit score is a soft, opt-in signal exactly like sponsorship — never a filter-out.
+    match_score: MatchScore | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class JobPage:
     jobs: list[JobListing]
     total: int
+
+
+@dataclass(frozen=True, slots=True)
+class JobScoringInput:
+    """The stored canonical-job columns the application needs beyond the JobListing row to
+    score a page: the description (skill source) and content_hash (the cache gate). Fetched
+    only for the current page's ids — never a whole-table scan."""
+
+    content_hash: str
+    description: str
+
+
+@dataclass(frozen=True, slots=True)
+class CachedScore:
+    """A stored Tier-1 score plus the content_hash it was computed against, so the use case can
+    tell a fresh cache hit from a stale one (a re-polled posting whose content changed)."""
+
+    score: MatchScore
+    content_hash: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -228,6 +253,12 @@ class JobRepo(Protocol):
         ...
 
     def search(self, filters: JobFilters) -> JobPage: ...
+
+    def get_scoring_inputs(self, job_ids: Sequence[int]) -> dict[int, JobScoringInput]:
+        """content_hash + description for these canonical job ids (the skill source and the
+        cache gate for Tier-1 scoring), keyed by id. Bounded to the page's ids — the scoring
+        path joins onto the current page, it never scans the whole table."""
+        ...
 
     def resolve_registry_tier(self, company_id: int, tier: str) -> None:
         """Set the registry-derived tier on a company's jobs, leaving explicit-text
@@ -384,4 +415,26 @@ class ResumeRepo(Protocol):
 
     def delete(self, resume_id: int) -> bool:
         """Remove a resume. False if unknown."""
+        ...
+
+
+class MatchScoreRepo(Protocol):
+    """Caches Tier-1 heuristic scores keyed (resume_hash, job_canonical_id), gated by
+    content_hash. A re-poll of an unchanged posting reuses its score; a changed posting
+    (new content_hash) recomputes only itself. Persisting is free — Tier 1 costs nothing —
+    so the cache exists to make sort=match and page scoring instant, not to save money."""
+
+    def get_cached(self, resume_hash: str, job_ids: Sequence[int]) -> dict[int, CachedScore]:
+        """Cached scores for these job ids under this resume, keyed by id (missing = uncached)."""
+        ...
+
+    def upsert(
+        self,
+        resume_hash: str,
+        job_id: int,
+        content_hash: str,
+        score: MatchScore,
+        computed_at: datetime,
+    ) -> None:
+        """Persist one freshly computed score, replacing any prior row for the pair."""
         ...

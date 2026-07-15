@@ -1,4 +1,4 @@
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from datetime import UTC, datetime
 
@@ -15,6 +15,7 @@ from beacon.application.ports import (
     JobDetail,
     JobFilters,
     JobPage,
+    JobScoringInput,
     JobSource,
     RawPosting,
 )
@@ -132,6 +133,9 @@ class FakeJobRepo:
 
     def search(self, filters: JobFilters) -> JobPage:
         raise NotImplementedError("ingest never searches")
+
+    def get_scoring_inputs(self, job_ids: Sequence[int]) -> dict[int, JobScoringInput]:
+        raise NotImplementedError("ingest never scores")
 
     def resolve_registry_tier(self, company_id: int, tier: str) -> None:
         raise NotImplementedError("ingest never re-resolves tiers")

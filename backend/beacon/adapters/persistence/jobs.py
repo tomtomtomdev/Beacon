@@ -1,5 +1,5 @@
 import sqlite3
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 
 from beacon.application.ports import (
@@ -8,6 +8,7 @@ from beacon.application.ports import (
     JobFilters,
     JobListing,
     JobPage,
+    JobScoringInput,
 )
 from beacon.domain.classification import Classification, format_categories
 from beacon.domain.dedup import DedupRow
@@ -67,12 +68,26 @@ class SqliteJobRepo:
             params.append(filters.status)
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
 
-        # "date" ignores tier; the default keeps likely sponsors on top (posted_at breaks ties).
-        order_by = (
-            "jobs.posted_at DESC"
-            if filters.sort == "date"
-            else f"{_SORT_RANK_CASE} DESC, jobs.posted_at DESC"
-        )
+        # sort=match orders by the cached fit score (a LEFT JOIN so uncached jobs still appear,
+        # sorted last); the application re-sorts the returned window by the fresh score, so this
+        # join only biases which rows land in the window as the cache warms across page visits.
+        join = ""
+        join_params: list[str] = []
+        if filters.sort == "match" and filters.resume_hash is not None:
+            join = (
+                "LEFT JOIN job_match_scores ms"
+                " ON ms.job_canonical_id = jobs.id AND ms.resume_hash = ?"
+            )
+            join_params.append(filters.resume_hash)
+            order_by = (
+                f"ms.overall IS NULL, ms.overall DESC, {_SORT_RANK_CASE} DESC, jobs.posted_at DESC"
+            )
+        elif filters.sort == "date":
+            # "date" ignores tier — pure recency.
+            order_by = "jobs.posted_at DESC"
+        else:
+            # the default keeps likely sponsors on top (posted_at breaks ties).
+            order_by = f"{_SORT_RANK_CASE} DESC, jobs.posted_at DESC"
 
         total = self._conn.execute(
             f"SELECT COUNT(*) AS n FROM jobs {where}",
@@ -84,13 +99,29 @@ class SqliteJobRepo:
                    jobs.location_raw, jobs.country, jobs.city, jobs.categories,
                    jobs.level, jobs.posted_at, jobs.sponsor_tier, jobs.user_status
             FROM jobs JOIN companies ON companies.id = jobs.company_id
+            {join}
             {where}
             ORDER BY {order_by}
             LIMIT ? OFFSET ?
             """,
-            [*params, str(filters.limit), str(filters.offset)],
+            [*join_params, *params, str(filters.limit), str(filters.offset)],
         ).fetchall()
         return JobPage(jobs=[_row_to_listing(row) for row in rows], total=total)
+
+    def get_scoring_inputs(self, job_ids: Sequence[int]) -> dict[int, JobScoringInput]:
+        if not job_ids:
+            return {}
+        placeholders = ",".join("?" * len(job_ids))
+        rows = self._conn.execute(
+            f"SELECT id, content_hash, description FROM jobs WHERE id IN ({placeholders})",  # noqa: S608 — placeholders only
+            list(job_ids),
+        ).fetchall()
+        return {
+            row["id"]: JobScoringInput(
+                content_hash=row["content_hash"], description=row["description"]
+            )
+            for row in rows
+        }
 
     def resolve_registry_tier(self, company_id: int, tier: str) -> None:
         self._conn.execute(
