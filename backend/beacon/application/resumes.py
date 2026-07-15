@@ -48,3 +48,18 @@ def ingest_resume(
     assert inserted_id is not None  # noqa: S101 — insert always assigns an id
     repo.set_active(inserted_id)
     return replace(inserted, active=True)
+
+
+def list_resumes(repo: ResumeRepo) -> list[Resume]:
+    return repo.list_all()
+
+
+def activate_resume(repo: ResumeRepo, resume_id: int) -> Resume | None:
+    """Make this resume the sole active one; None when the id is unknown."""
+    if not repo.set_active(resume_id):
+        return None
+    return repo.get(resume_id)
+
+
+def delete_resume(repo: ResumeRepo, resume_id: int) -> bool:
+    return repo.delete(resume_id)

@@ -11,8 +11,11 @@ from beacon.adapters.persistence.companies import SqliteCompanyRepo
 from beacon.adapters.persistence.countries import SqliteCountryRepo
 from beacon.adapters.persistence.db import connect
 from beacon.adapters.persistence.jobs import SqliteJobRepo
+from beacon.adapters.persistence.resumes import SqliteResumeRepo
 from beacon.adapters.persistence.searches import SqliteSearchRepo
 from beacon.adapters.persistence.settings import SqliteSettingsRepo
+from beacon.adapters.resume.plaintext import PlainTextResumeParser
+from beacon.application.ports import ResumeParser
 from beacon.config import Settings
 
 
@@ -65,6 +68,21 @@ def get_company_repo(db: Annotated[sqlite3.Connection, Depends(get_db)]) -> Sqli
 
 
 CompanyRepoDep = Annotated[SqliteCompanyRepo, Depends(get_company_repo)]
+
+
+def get_resume_repo(db: Annotated[sqlite3.Connection, Depends(get_db)]) -> SqliteResumeRepo:
+    return SqliteResumeRepo(db)
+
+
+ResumeRepoDep = Annotated[SqliteResumeRepo, Depends(get_resume_repo)]
+
+
+def get_resume_parser() -> ResumeParser:
+    """The zero-dep paste/.txt parser. PDF becomes a drop-in here behind the same port."""
+    return PlainTextResumeParser()
+
+
+ResumeParserDep = Annotated[ResumeParser, Depends(get_resume_parser)]
 
 
 async def get_http_client() -> AsyncIterator[httpx.AsyncClient]:
