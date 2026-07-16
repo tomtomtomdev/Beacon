@@ -17,6 +17,23 @@ export interface MatchScore {
   missing_skills: string[]
 }
 
+// The Tier-2 LLM deep-match rationale (§11), fetched on demand via POST /jobs/{id}/match — the
+// drawer's "Assess fit". null when no Anthropic key is set or the monthly budget is spent (the
+// heuristic Fit card still shows); the LLM is an upgrader, never a dependency.
+export interface MatchRationale {
+  summary: string
+  strengths: string[]
+  gaps: string[]
+  verdict: string
+  sponsor_note: string
+}
+
+// POST /jobs/{id}/match?resume=<id> response: the heuristic score plus the optional rationale.
+export interface DeepMatchResponse {
+  match_score: MatchScore
+  rationale: MatchRationale | null
+}
+
 // A resume's extracted profile (§11 Tier 0) — computed the same way a job's classification is,
 // so the two are directly comparable. Returned inside a Resume.
 export interface ResumeProfile {

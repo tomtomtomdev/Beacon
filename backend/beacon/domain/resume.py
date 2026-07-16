@@ -114,6 +114,59 @@ class MatchScore:
     missing_skills: frozenset[str]
 
 
+@dataclass(frozen=True, slots=True)
+class MatchRationale:
+    """The Tier-2 LLM deep-match output (§11): a fit summary, concrete strengths, gaps to close,
+    a one-line 'worth applying?' verdict, and a sponsorship-fit note. Stored as JSON in
+    job_match_scores.llm_rationale and shown under the drawer's Fit card. The LLM is an upgrader:
+    this is null until the user asks for it, and any LLM failure leaves the heuristic score alone."""
+
+    summary: str
+    strengths: tuple[str, ...]
+    gaps: tuple[str, ...]
+    verdict: str
+    sponsor_note: str
+
+
+@dataclass(frozen=True, slots=True)
+class DeepMatchJob:
+    """The single-job context the Matcher port hands the LLM: the posting's own text (title +
+    description) plus the country/sponsor tier and the heuristic score, so the rationale can
+    speak to the matched/missing skills and Beacon's sponsorship signal. Assembled by the
+    deep-match use case from a canonical job — never the whole DB (Tier 2 is one job at a time)."""
+
+    title: str
+    description: str
+    country: str | None
+    sponsor_tier: SponsorTier
+    heuristic: MatchScore
+
+
+def rationale_to_json(rationale: MatchRationale) -> str:
+    """Serialize a rationale for the llm_rationale column — a readable JSON object, not a pickle,
+    so the stored value can be inspected and a later migration can read it."""
+    return json.dumps(
+        {
+            "summary": rationale.summary,
+            "strengths": list(rationale.strengths),
+            "gaps": list(rationale.gaps),
+            "verdict": rationale.verdict,
+            "sponsor_note": rationale.sponsor_note,
+        }
+    )
+
+
+def rationale_from_json(raw: str) -> MatchRationale:
+    data = json.loads(raw)
+    return MatchRationale(
+        summary=data["summary"],
+        strengths=tuple(data["strengths"]),
+        gaps=tuple(data["gaps"]),
+        verdict=data["verdict"],
+        sponsor_note=data["sponsor_note"],
+    )
+
+
 # Sub-score weights (sum to 1.0). Skills dominate; sponsorship/country is Beacon's edge over
 # a generic matcher but is the smallest slice — it nudges, it doesn't decide.
 SKILL_WEIGHT = 0.40

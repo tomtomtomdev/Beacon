@@ -1,4 +1,10 @@
-import type { JobDetail, JobsPageResponse, SponsorTier, UserStatus } from './types'
+import type {
+  DeepMatchResponse,
+  JobDetail,
+  JobsPageResponse,
+  SponsorTier,
+  UserStatus,
+} from './types'
 
 export type SortBy = 'tier' | 'date' | 'match'
 
@@ -59,6 +65,17 @@ export async function fetchJobDetail(id: number): Promise<JobDetail> {
     throw new Error(`GET /jobs/${id} failed: ${response.status}`)
   }
   return (await response.json()) as JobDetail
+}
+
+// POST /jobs/{id}/match?resume=<id> — the drawer's "Assess fit": a Tier-2 LLM rationale for one
+// job (§11). Degrades to a null rationale (heuristic-only) when no key/budget; there is no
+// whole-DB deep-match path.
+export async function assessFit(id: number, resume: number): Promise<DeepMatchResponse> {
+  const response = await fetch(`/jobs/${id}/match?resume=${resume}`, { method: 'POST' })
+  if (!response.ok) {
+    throw new Error(`POST /jobs/${id}/match failed: ${response.status}`)
+  }
+  return (await response.json()) as DeepMatchResponse
 }
 
 export async function patchJobStatus(id: number, status: UserStatus): Promise<void> {

@@ -11,10 +11,10 @@ from datetime import UTC, datetime
 
 import pytest
 
-from beacon.application.ports import CachedScore, JobListing
+from beacon.application.ports import CachedRationale, CachedScore, JobListing
 from beacon.application.scoring import ScorableJob, job_facts_from_listing, score_jobs_for_resume
 from beacon.domain.classification import Category, Level
-from beacon.domain.resume import JobFacts, MatchScore, Resume, ResumeProfile
+from beacon.domain.resume import JobFacts, MatchRationale, MatchScore, Resume, ResumeProfile
 from beacon.domain.sponsorship import SponsorTier
 
 NOW = datetime(2026, 7, 15, tzinfo=UTC)
@@ -54,6 +54,7 @@ class FakeMatchScoreRepo:
 
     def __init__(self) -> None:
         self._rows: dict[tuple[str, int], CachedScore] = {}
+        self._rationales: dict[tuple[str, int], CachedRationale] = {}
         self.upserts = 0
 
     def get_cached(self, resume_hash: str, job_ids: Sequence[int]) -> dict[int, CachedScore]:
@@ -73,6 +74,21 @@ class FakeMatchScoreRepo:
     ) -> None:
         self._rows[(resume_hash, job_id)] = CachedScore(score=score, content_hash=content_hash)
         self.upserts += 1
+
+    def get_rationale(self, resume_hash: str, job_id: int) -> CachedRationale | None:
+        return self._rationales.get((resume_hash, job_id))
+
+    def set_rationale(
+        self,
+        resume_hash: str,
+        job_id: int,
+        content_hash: str,
+        rationale: MatchRationale,
+        computed_at: datetime,
+    ) -> None:
+        self._rationales[(resume_hash, job_id)] = CachedRationale(
+            rationale=rationale, content_hash=content_hash
+        )
 
 
 def _spy_score_match(monkeypatch: pytest.MonkeyPatch) -> list[int]:

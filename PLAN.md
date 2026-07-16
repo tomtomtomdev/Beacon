@@ -419,9 +419,9 @@ Tasks:
 4. Wired only at the composition root via `make_matcher` (mirrors `make_classifier`): heuristic-only until `BEACON_ANTHROPIC_API_KEY` is set — the key is the switch (Decisions 2026-07-11 precedent)
 
 Acceptance:
-- [ ] Upload a resume → every job on the current `/jobs` page shows a heuristic fit score; `sort=match` ranks by it; default sort unchanged; scoring a full result set is instant and free (Tier-1 covers all jobs)
-- [ ] Re-poll of an unchanged job reuses its cached score; a materially edited posting (new `content_hash`) re-scores only itself
-- [ ] "Assess fit" on one job produces an LLM rationale under budget (spot-check ≥5 jobs); budget-exhausted or key-absent degrades to the heuristic score with no crash; no path LLM-scores the whole DB — **live LLM run pending an Anthropic key, same shape as slices 8/9**
+- [x] Upload a resume → every job on the current `/jobs` page shows a heuristic fit score; `sort=match` ranks by it; default sort unchanged; scoring a full result set is instant and free (Tier-1 covers all jobs) — **12c/12d, suite-verified + manual end-to-end spot-check 2026-07-15** (real app + temp DB: registry iOS/NL role 96, off-strategy junior Android 17, no-resume rows null); browser sign-off owed
+- [x] Re-poll of an unchanged job reuses its cached score; a materially edited posting (new `content_hash`) re-scores only itself — `test_score_jobs_for_resume_caches`, `test_changed_content_hash_recomputes_only_that_job` (12c); the Tier-2 rationale cache follows the same `(resume_hash, content_hash)` gate and drops a stale rationale on content change (12e)
+- [~] "Assess fit" on one job produces an LLM rationale under budget (spot-check ≥5 jobs); budget-exhausted or key-absent degrades to the heuristic score with no crash; no path LLM-scores the whole DB — **mechanism built + suite-verified 2026-07-16** (`LLMMatcher` behind the `Matcher` port; `deep_match_job` budget-gated + cached, degrades on None-key/exhausted/error; `POST /jobs/{id}/match` scores exactly one job; fixture/`FakeMatcher` tests, never a live call). **The live LLM run itself is pending an Anthropic key** (`BEACON_ANTHROPIC_API_KEY`) — set it, open a job drawer → "Assess fit with AI", spot-check ≥5 jobs; same shape as slices 8/9
 
 ---
 

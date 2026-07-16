@@ -13,7 +13,7 @@ from beacon.domain.health import SourceHealth
 from beacon.domain.job import NormalizedJob
 from beacon.domain.notification import TelegramConfig
 from beacon.domain.registry import Registry, RegistryCompany, RegistryMeta
-from beacon.domain.resume import MatchScore, Resume
+from beacon.domain.resume import DeepMatchJob, MatchRationale, MatchScore, Resume
 from beacon.domain.saved_search import SavedSearch
 from beacon.domain.sponsorship import SponsorSignal
 from beacon.domain.visa import CountryReference
@@ -65,6 +65,16 @@ class LLMBudget(Protocol):
         under the monthly cap; False when the cap is reached. Counts the attempt, so a
         failing/retrying call can never blow the budget."""
         ...
+
+
+class Matcher(Protocol):
+    """The Tier-2 resume<->job deep matcher (§11). LLMMatcher is the MVP; it makes one JSON-only
+    Anthropic call per job and returns a rationale. Sync (like the Classifier port): the deep-match
+    handler is a sync `def` so it shares the threadpool with the sync sqlite repos. The budget
+    gate, cache and fall-back-to-heuristic live in the deep_match_job use case — this port is only
+    ever asked about a single job (never the whole DB)."""
+
+    def deep_match(self, resume: Resume, job: DeepMatchJob) -> MatchRationale: ...
 
 
 class Notifier(Protocol):
@@ -143,6 +153,15 @@ class CachedScore:
     tell a fresh cache hit from a stale one (a re-polled posting whose content changed)."""
 
     score: MatchScore
+    content_hash: str
+
+
+@dataclass(frozen=True, slots=True)
+class CachedRationale:
+    """A stored Tier-2 LLM rationale plus the content_hash it was computed against. The deep-match
+    use case reuses it only when the content_hash still matches — a changed posting recomputes."""
+
+    rationale: MatchRationale
     content_hash: str
 
 
@@ -436,5 +455,24 @@ class MatchScoreRepo(Protocol):
         score: MatchScore,
         computed_at: datetime,
     ) -> None:
-        """Persist one freshly computed score, replacing any prior row for the pair."""
+        """Persist one freshly computed Tier-1 score, replacing any prior row for the pair. Leaves
+        a stored llm_rationale intact on an unchanged re-score, but drops it when the content_hash
+        changes — a stale rationale must never survive as if it were for the new content."""
+        ...
+
+    def get_rationale(self, resume_hash: str, job_id: int) -> CachedRationale | None:
+        """The stored Tier-2 rationale for this pair plus the content_hash it was computed
+        against, or None when none is stored. The use case gates freshness on the content_hash."""
+        ...
+
+    def set_rationale(
+        self,
+        resume_hash: str,
+        job_id: int,
+        content_hash: str,
+        rationale: MatchRationale,
+        computed_at: datetime,
+    ) -> None:
+        """Attach a Tier-2 rationale to an existing score row for the pair (the use case upserts
+        the Tier-1 score first, so the row exists)."""
         ...

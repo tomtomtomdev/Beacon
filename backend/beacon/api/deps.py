@@ -11,12 +11,14 @@ from beacon.adapters.persistence.companies import SqliteCompanyRepo
 from beacon.adapters.persistence.countries import SqliteCountryRepo
 from beacon.adapters.persistence.db import connect
 from beacon.adapters.persistence.jobs import SqliteJobRepo
+from beacon.adapters.persistence.llm_budget import SqliteLLMBudget
 from beacon.adapters.persistence.match_scores import SqliteMatchScoreRepo
 from beacon.adapters.persistence.resumes import SqliteResumeRepo
 from beacon.adapters.persistence.searches import SqliteSearchRepo
 from beacon.adapters.persistence.settings import SqliteSettingsRepo
+from beacon.adapters.resume.factory import make_matcher
 from beacon.adapters.resume.plaintext import PlainTextResumeParser
-from beacon.application.ports import ResumeParser
+from beacon.application.ports import Matcher, ResumeParser
 from beacon.config import Settings
 
 
@@ -95,6 +97,17 @@ def get_resume_parser() -> ResumeParser:
 ResumeParserDep = Annotated[ResumeParser, Depends(get_resume_parser)]
 
 
+def get_llm_budget(
+    db: Annotated[sqlite3.Connection, Depends(get_db)],
+    settings: SettingsDep,
+) -> SqliteLLMBudget:
+    """The shared monthly LLM cap (§9). Tier-2 deep-match reuses it — no second budget."""
+    return SqliteLLMBudget(db, cap=settings.llm_monthly_budget)
+
+
+LLMBudgetDep = Annotated[SqliteLLMBudget, Depends(get_llm_budget)]
+
+
 async def get_http_client() -> AsyncIterator[httpx.AsyncClient]:
     """A short-lived HTTP client for outbound calls (the Telegram test send). Overridden
     in tests with a MockTransport client so the suite never hits the network."""
@@ -103,3 +116,16 @@ async def get_http_client() -> AsyncIterator[httpx.AsyncClient]:
 
 
 HttpClientDep = Annotated[httpx.AsyncClient, Depends(get_http_client)]
+
+
+def get_matcher(settings: SettingsDep) -> Iterator[Matcher | None]:
+    """The Tier-2 deep matcher, or None when no Anthropic key is set — the key is the switch,
+    same as the LLM classifier. A sync generator dep (resolved in the threadpool alongside the
+    sync handler) that owns a blocking httpx.Client. Overridden in tests with a fake so the suite
+    never calls out."""
+    api_key = settings.anthropic_api_key.get_secret_value() if settings.anthropic_api_key else None
+    with httpx.Client(timeout=30.0) as client:
+        yield make_matcher(client, api_key=api_key, model=settings.llm_model)
+
+
+MatcherDep = Annotated[Matcher | None, Depends(get_matcher)]

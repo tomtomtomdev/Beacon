@@ -36,16 +36,34 @@ class ScorableJob:
     facts: JobFacts
 
 
-def job_facts_from_listing(listing: JobListing, description: str) -> JobFacts:
-    """Assemble a job's scoring facts from its read-model row plus its description (the skill
-    source). The listing already carries categories/level/country/sponsor_tier as stored
-    strings; this converts them to the domain enums score_match compares against."""
+def job_facts(
+    *,
+    categories: tuple[str, ...],
+    level: str | None,
+    country: str | None,
+    sponsor_tier: str,
+    description: str,
+) -> JobFacts:
+    """Assemble a job's scoring facts from its stored read-model fields plus its description (the
+    skill source). Converts the stored strings to the domain enums score_match compares against.
+    Shared by the list path (JobListing) and the deep-match path (JobDetail) — one assembly."""
     return JobFacts(
         skills=extract_skills(description),
-        categories=frozenset(Category(value) for value in listing.categories if value),
-        level=Level(listing.level) if listing.level else Level.UNSPECIFIED,
+        categories=frozenset(Category(value) for value in categories if value),
+        level=Level(level) if level else Level.UNSPECIFIED,
+        country=country,
+        sponsor_tier=SponsorTier(sponsor_tier),
+    )
+
+
+def job_facts_from_listing(listing: JobListing, description: str) -> JobFacts:
+    """A JobListing row + its description → JobFacts (the /jobs page scoring path)."""
+    return job_facts(
+        categories=listing.categories,
+        level=listing.level,
         country=listing.country,
-        sponsor_tier=SponsorTier(listing.sponsor_tier),
+        sponsor_tier=listing.sponsor_tier,
+        description=description,
     )
 
 

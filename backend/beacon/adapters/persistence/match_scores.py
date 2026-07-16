@@ -11,8 +11,13 @@ import sqlite3
 from collections.abc import Sequence
 from datetime import datetime
 
-from beacon.application.ports import CachedScore
-from beacon.domain.resume import MatchScore
+from beacon.application.ports import CachedRationale, CachedScore
+from beacon.domain.resume import (
+    MatchRationale,
+    MatchScore,
+    rationale_from_json,
+    rationale_to_json,
+)
 
 
 class SqliteMatchScoreRepo:
@@ -55,6 +60,11 @@ class SqliteMatchScoreRepo:
                 sponsor_score = excluded.sponsor_score,
                 matched_skills = excluded.matched_skills,
                 missing_skills = excluded.missing_skills,
+                -- Drop a Tier-2 rationale when the content changed (it was for the old text);
+                -- keep it on an unchanged re-score. Evaluated against the existing row values.
+                llm_rationale = CASE
+                    WHEN job_match_scores.content_hash != excluded.content_hash THEN NULL
+                    ELSE job_match_scores.llm_rationale END,
                 content_hash = excluded.content_hash,
                 computed_at = excluded.computed_at
             """,
@@ -69,6 +79,45 @@ class SqliteMatchScoreRepo:
                 json.dumps(sorted(score.missing_skills)),
                 content_hash,
                 computed_at.isoformat(),
+            ),
+        )
+        self._conn.commit()
+
+    def get_rationale(self, resume_hash: str, job_id: int) -> CachedRationale | None:
+        row = self._conn.execute(
+            """
+            SELECT llm_rationale, content_hash FROM job_match_scores
+            WHERE resume_hash = ? AND job_canonical_id = ?
+            """,
+            (resume_hash, job_id),
+        ).fetchone()
+        if row is None or row["llm_rationale"] is None:
+            return None
+        return CachedRationale(
+            rationale=rationale_from_json(row["llm_rationale"]),
+            content_hash=row["content_hash"],
+        )
+
+    def set_rationale(
+        self,
+        resume_hash: str,
+        job_id: int,
+        content_hash: str,
+        rationale: MatchRationale,
+        computed_at: datetime,
+    ) -> None:
+        self._conn.execute(
+            """
+            UPDATE job_match_scores
+            SET llm_rationale = ?, content_hash = ?, computed_at = ?
+            WHERE resume_hash = ? AND job_canonical_id = ?
+            """,
+            (
+                rationale_to_json(rationale),
+                content_hash,
+                computed_at.isoformat(),
+                resume_hash,
+                job_id,
             ),
         )
         self._conn.commit()

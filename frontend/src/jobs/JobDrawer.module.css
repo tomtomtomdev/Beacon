@@ -499,3 +499,67 @@
   color: var(--text-secondary);
   line-height: 1.5;
 }
+
+/* ---- Tier-2 LLM deep-match ("Assess fit", §11) ---- */
+.fitAssess {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--accent-border);
+}
+
+.fitAssessButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-input);
+  background: var(--surface-raised);
+  color: var(--accent-soft-fg);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.fitAssessButton:hover:not(:disabled) {
+  background: var(--bg-chip);
+}
+
+.fitAssessButton:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.fitRationale {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fitRationaleSummary {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+.fitVerdict {
+  align-self: flex-start;
+  padding: 4px 11px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-fg);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.fitRationaleList {
+  margin: 2px 0 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-body-muted);
+}

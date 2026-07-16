@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { Country, JobDetail, MatchScore } from '../api/types'
+import type { Country, JobDetail, MatchRationale, MatchScore } from '../api/types'
 import { JobDrawer } from './JobDrawer'
 
 const seJob: JobDetail = {
@@ -80,7 +80,19 @@ const fit: MatchScore = {
   missing_skills: ['kotlin'],
 }
 
-function renderDrawer(jobId = 1, matchScore: MatchScore | null = null) {
+const rationale: MatchRationale = {
+  summary: 'Strong iOS fit against a Swift-heavy senior role.',
+  strengths: ['8 years of Swift and SwiftUI'],
+  gaps: ['No Kotlin exposure'],
+  verdict: 'Worth applying.',
+  sponsor_note: 'Registry-inferred sponsor in a target country.',
+}
+
+function renderDrawer(
+  jobId = 1,
+  matchScore: MatchScore | null = null,
+  resumeId: number | null = null,
+) {
   const onClose = vi.fn()
   const onSetStatus = vi.fn()
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -89,6 +101,7 @@ function renderDrawer(jobId = 1, matchScore: MatchScore | null = null) {
       <JobDrawer
         jobId={jobId}
         matchScore={matchScore}
+        resumeId={resumeId}
         onClose={onClose}
         onSetStatus={onSetStatus}
       />
@@ -189,5 +202,55 @@ describe('JobDrawer', () => {
     // Matched and missing skills surface as chips.
     expect(card.getByText('swift')).toBeInTheDocument()
     expect(card.getByText('kotlin')).toBeInTheDocument()
+  })
+
+  it('offers an Assess fit button in the Fit card when a resume is active', async () => {
+    renderDrawer(1, fit, 5)
+
+    const card = within(await screen.findByTestId('fit-card'))
+    expect(card.getByRole('button', { name: /assess fit/i })).toBeInTheDocument()
+    // The rationale is not requested until the button is clicked.
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      expect.stringContaining('/match'),
+      expect.anything(),
+    )
+  })
+
+  it('fetches and renders the LLM rationale when Assess fit is clicked', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockImplementation((url: RequestInfo | URL) => {
+      const u = String(url)
+      if (u === '/countries') return ok([sweden])
+      if (u.includes('/match')) return ok({ match_score: fit, rationale })
+      return ok(seJob)
+    })
+    renderDrawer(1, fit, 5)
+
+    const card = within(await screen.findByTestId('fit-card'))
+    await user.click(card.getByRole('button', { name: /assess fit/i }))
+
+    expect(await screen.findByText(/Strong iOS fit/)).toBeInTheDocument()
+    expect(screen.getByText('Worth applying.')).toBeInTheDocument()
+    expect(screen.getByText(/8 years of Swift/)).toBeInTheDocument()
+    expect(screen.getByText(/No Kotlin exposure/)).toBeInTheDocument()
+    expect(screen.getByText(/Registry-inferred sponsor/)).toBeInTheDocument()
+    // The POST hit the right endpoint with the active resume id.
+    expect(fetchMock).toHaveBeenCalledWith('/jobs/1/match?resume=5', expect.anything())
+  })
+
+  it('shows a fallback note when the deep match is unavailable (no key/budget)', async () => {
+    const user = userEvent.setup()
+    fetchMock.mockImplementation((url: RequestInfo | URL) => {
+      const u = String(url)
+      if (u === '/countries') return ok([sweden])
+      if (u.includes('/match')) return ok({ match_score: fit, rationale: null })
+      return ok(seJob)
+    })
+    renderDrawer(1, fit, 5)
+
+    const card = within(await screen.findByTestId('fit-card'))
+    await user.click(card.getByRole('button', { name: /assess fit/i }))
+
+    expect(await screen.findByText(/unavailable/i)).toBeInTheDocument()
   })
 })

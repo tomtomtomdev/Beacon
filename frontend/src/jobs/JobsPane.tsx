@@ -245,6 +245,8 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
           // The row is already scored (page-bounded, §11) — hand its fit down so the drawer's
           // Fit card needs no extra fetch; null when no resume is active.
           matchScore={data?.jobs.find((job) => job.id === openJobId)?.match_score ?? null}
+          // The active resume id drives the drawer's on-demand "Assess fit" LLM deep-match (§11).
+          resumeId={resumeId}
           onClose={closeJob}
           onSetStatus={(id, status) => statusMutation.mutate({ id, status })}
         />

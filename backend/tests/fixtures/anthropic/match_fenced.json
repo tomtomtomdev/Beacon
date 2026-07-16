@@ -1,0 +1,12 @@
+{
+  "id": "msg_01MATCHfence",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-haiku-4-5-20251001",
+  "content": [
+    {"type": "text", "text": "Here is the assessment:\n```json\n{\"summary\": \"Partial fit.\", \"strengths\": [\"Relevant category\"], \"gaps\": [\"Missing several core skills\"], \"verdict\": \"Stretch — apply only if keen.\", \"sponsor_note\": \"No sponsorship signal detected.\"}\n```"}
+  ],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {"input_tokens": 498, "output_tokens": 71}
+}
