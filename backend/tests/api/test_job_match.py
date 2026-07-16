@@ -1,6 +1,9 @@
-"""POST /jobs/{id}/match — the drawer's 'Assess fit' (§11 12e). The LLM boundary is faked via
-dependency_overrides (the app is unconfigured for a key in tests); we prove the wiring, the
-response shape, the single-job scope, the degrade-when-no-matcher path, and the 404/422 edges."""
+"""POST /jobs/{id}/match — the drawer's 'Assess fit' (§11 12e), now deterministic.
+
+No overrides needed: the rationale is pure domain wording, so an unconfigured app (no key,
+no budget) serves the full response. We prove the wiring, the concrete deterministic body,
+repeatability, and the 404/422 edges.
+"""
 
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
@@ -15,31 +18,11 @@ from beacon.adapters.persistence.companies import SqliteCompanyRepo
 from beacon.adapters.persistence.db import connect
 from beacon.adapters.persistence.jobs import SqliteJobRepo
 from beacon.api.app import create_app
-from beacon.api.deps import get_matcher
 from beacon.config import Settings
 from beacon.domain.company import Company
 from beacon.domain.job import NormalizedJob
-from beacon.domain.resume import DeepMatchJob, MatchRationale, Resume
 
 NOW = datetime(2026, 7, 16, tzinfo=UTC)
-
-RATIONALE = MatchRationale(
-    summary="Strong iOS fit.",
-    strengths=("8 years Swift",),
-    gaps=("No Kotlin",),
-    verdict="Worth applying.",
-    sponsor_note="Registry-inferred in a target country.",
-)
-
-
-class FakeMatcher:
-    def __init__(self, rationale: MatchRationale) -> None:
-        self._rationale = rationale
-        self.calls: list[DeepMatchJob] = []
-
-    def deep_match(self, resume: Resume, job: DeepMatchJob) -> MatchRationale:
-        self.calls.append(job)
-        return self._rationale
 
 
 @pytest.fixture
@@ -95,46 +78,43 @@ async def _create_resume(client: httpx.AsyncClient) -> int:
     return int((await client.post("/resumes", json=body)).json()["id"])
 
 
-async def test_assess_fit_returns_score_and_rationale(
+async def test_assess_fit_returns_score_and_a_deterministic_rationale(
     app_and_client: tuple[FastAPI, httpx.AsyncClient], db_path: Path
 ) -> None:
-    app, client = app_and_client
+    _, client = app_and_client
     job_id = _seed_job(db_path)
     resume_id = await _create_resume(client)
-    matcher = FakeMatcher(RATIONALE)
-    app.dependency_overrides[get_matcher] = lambda: matcher
 
     response = await client.post(f"/jobs/{job_id}/match?resume={resume_id}")
 
     assert response.status_code == 200
     body = response.json()
     assert body["match_score"]["overall"] > 0
-    assert body["rationale"]["verdict"] == "Worth applying."
-    assert body["rationale"]["strengths"] == ["8 years Swift"]
-    assert len(matcher.calls) == 1  # exactly one job assessed
+    # Concrete deterministic wording: kotlin is the one posting skill the resume lacks,
+    # and the resume's SE relocation strategy matches the job's country.
+    assert any("kotlin" in line for line in body["rationale"]["gaps"])
+    assert body["rationale"]["sponsor_note"].endswith("SE is in your relocation strategy.")
+    assert body["rationale"]["verdict"] == "Good fit — worth applying."
 
 
-async def test_assess_fit_without_a_matcher_degrades_to_heuristic(
-    app_and_client: tuple[FastAPI, httpx.AsyncClient],
-    db_path: Path,
+async def test_assess_fit_is_repeatable(
+    app_and_client: tuple[FastAPI, httpx.AsyncClient], db_path: Path
 ) -> None:
-    app, client = app_and_client
+    _, client = app_and_client
     job_id = _seed_job(db_path)
     resume_id = await _create_resume(client)
-    # No override: the unconfigured app resolves get_matcher to None (no Anthropic key).
 
-    response = await client.post(f"/jobs/{job_id}/match?resume={resume_id}")
+    first = await client.post(f"/jobs/{job_id}/match?resume={resume_id}")
+    second = await client.post(f"/jobs/{job_id}/match?resume={resume_id}")
 
-    assert response.status_code == 200
-    body = response.json()
-    assert body["match_score"]["overall"] > 0  # heuristic score still returned
-    assert body["rationale"] is None  # ...with no rationale, no crash
+    assert first.status_code == second.status_code == 200
+    assert first.json() == second.json()  # pure wording — no state, no drift
 
 
 async def test_assess_fit_404s_for_unknown_job(
     app_and_client: tuple[FastAPI, httpx.AsyncClient], db_path: Path
 ) -> None:
-    app, client = app_and_client
+    _, client = app_and_client
     resume_id = await _create_resume(client)
 
     response = await client.post(f"/jobs/9999/match?resume={resume_id}")
@@ -145,7 +125,7 @@ async def test_assess_fit_404s_for_unknown_job(
 async def test_assess_fit_404s_for_unknown_resume(
     app_and_client: tuple[FastAPI, httpx.AsyncClient], db_path: Path
 ) -> None:
-    app, client = app_and_client
+    _, client = app_and_client
     job_id = _seed_job(db_path)
 
     response = await client.post(f"/jobs/{job_id}/match?resume=9999")
@@ -156,7 +136,7 @@ async def test_assess_fit_404s_for_unknown_resume(
 async def test_assess_fit_requires_a_resume_param(
     app_and_client: tuple[FastAPI, httpx.AsyncClient], db_path: Path
 ) -> None:
-    app, client = app_and_client
+    _, client = app_and_client
     job_id = _seed_job(db_path)
 
     response = await client.post(f"/jobs/{job_id}/match")

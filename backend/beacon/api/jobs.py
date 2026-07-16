@@ -6,8 +6,6 @@ from pydantic import BaseModel
 
 from beacon.api.deps import (
     JobRepoDep,
-    LLMBudgetDep,
-    MatcherDep,
     MatchScoreRepoDep,
     ResumeRepoDep,
 )
@@ -140,9 +138,8 @@ def patch_job_status(repo: JobRepoDep, job_id: int, body: StatusUpdate) -> Statu
 
 
 class MatchRationaleOut(BaseModel):
-    """The Tier-2 LLM deep-match (§11): a fit summary, strengths, gaps, a verdict, and a
-    sponsorship note. None when no key is set or the budget is spent — the drawer then shows
-    only the heuristic Fit card."""
+    """The Tier-2 deterministic deep-match (§11): a fit summary, strengths, gaps, a verdict,
+    and a sponsorship note — pure wording over the scored facts, so it is always present."""
 
     summary: str
     strengths: list[str]
@@ -153,28 +150,23 @@ class MatchRationaleOut(BaseModel):
 
 class DeepMatchOut(BaseModel):
     match_score: MatchScoreOut
-    rationale: MatchRationaleOut | None
+    rationale: MatchRationaleOut
 
 
 @router.post("/jobs/{job_id}/match")
 def post_job_match(
     repo: JobRepoDep,
     resumes: ResumeRepoDep,
-    match_scores: MatchScoreRepoDep,
-    matcher: MatcherDep,
-    budget: LLMBudgetDep,
     job_id: int,
     resume: Annotated[int, Query()],
 ) -> DeepMatchOut:
-    """'Assess fit' for one job (§11 Tier 2): the heuristic score plus, under budget and with a
-    key, an LLM rationale. One job only — there is no whole-DB deep-match path. Sync `def` so it
-    runs in the threadpool alongside the sync sqlite repos and the blocking LLM call."""
+    """'Assess fit' for one job (§11 Tier 2): the heuristic score plus its deterministic
+    rationale — no key, no budget, no degrade path. One job only — there is no whole-DB
+    deep-match path. Sync `def` so it runs in the threadpool alongside the sync sqlite repos."""
     active_resume = resumes.get(resume)
     if active_resume is None:
         raise HTTPException(status_code=404, detail="resume not found")
-    result = deep_match_job(
-        repo, match_scores, matcher, budget, active_resume, job_id, now=datetime.now(UTC)
-    )
+    result = deep_match_job(repo, active_resume, job_id)
     if result is None:
         raise HTTPException(status_code=404, detail="job not found")
     return DeepMatchOut(
@@ -241,9 +233,7 @@ def _to_match_score(score: MatchScore | None) -> MatchScoreOut | None:
     return _match_score_out(score) if score is not None else None
 
 
-def _rationale_out(rationale: MatchRationale | None) -> MatchRationaleOut | None:
-    if rationale is None:
-        return None
+def _rationale_out(rationale: MatchRationale) -> MatchRationaleOut:
     return MatchRationaleOut(
         summary=rationale.summary,
         strengths=list(rationale.strengths),

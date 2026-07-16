@@ -1,60 +1,27 @@
-"""deep_match_job use case (§11 12e) — the Tier-2 orchestration, against real repos with only
-the LLM boundary and the budget faked. Mirrors the tiered classifier's discipline: the heuristic
-score is always returned; the LLM only *upgrades* it with a rationale, only for the one job asked
-about, only under budget, and any failure degrades silently to the heuristic. Cached by
-(resume_hash, content_hash) — a repeat is free, a changed posting recomputes."""
+"""deep_match_job use case (§11 12e) — the deterministic Tier-2, against real repos.
+
+The heuristic score is computed fresh and build_rationale words the SAME facts, so a
+rationale always comes back (no key, no budget, no degrade path), identical calls word
+identically, and a changed posting re-derives with no cache to go stale.
+"""
 
 import sqlite3
 from datetime import UTC, datetime
 
 from beacon.adapters.persistence.companies import SqliteCompanyRepo
 from beacon.adapters.persistence.jobs import SqliteJobRepo
-from beacon.adapters.persistence.match_scores import SqliteMatchScoreRepo
 from beacon.application.deep_match import deep_match_job
 from beacon.domain.classification import Category, Level
 from beacon.domain.company import Company
 from beacon.domain.job import NormalizedJob
-from beacon.domain.resume import DeepMatchJob, MatchRationale, Resume, ResumeProfile
+from beacon.domain.resume import Resume, ResumeProfile
 
 NOW = datetime(2026, 7, 16, tzinfo=UTC)
-
-RATIONALE = MatchRationale(
-    summary="Strong iOS fit.",
-    strengths=("8 years Swift",),
-    gaps=("No Kotlin",),
-    verdict="Worth applying.",
-    sponsor_note="Registry-inferred in a target country.",
-)
-
-
-class FakeMatcher:
-    """Canned stand-in for LLMMatcher — records the jobs it was asked about, never hits the net."""
-
-    def __init__(self, rationale: MatchRationale, *, error: Exception | None = None) -> None:
-        self._rationale = rationale
-        self._error = error
-        self.calls: list[DeepMatchJob] = []
-
-    def deep_match(self, resume: Resume, job: DeepMatchJob) -> MatchRationale:
-        self.calls.append(job)
-        if self._error is not None:
-            raise self._error
-        return self._rationale
-
-
-class FakeBudget:
-    def __init__(self, *, allow: bool = True) -> None:
-        self._allow = allow
-        self.reserves = 0
-
-    def try_reserve(self) -> bool:
-        self.reserves += 1
-        return self._allow
 
 
 def _resume() -> Resume:
     profile = ResumeProfile(
-        skills=frozenset({"swift", "swiftui"}),
+        skills=frozenset({"ios", "swift", "swiftui"}),
         categories=frozenset({Category.IOS}),
         level=Level.SENIOR,
         years=8,
@@ -71,7 +38,12 @@ def _resume() -> Resume:
     )
 
 
-def _seed_job(conn: sqlite3.Connection, *, content_hash: str = "h1") -> int:
+def _seed_job(
+    conn: sqlite3.Connection,
+    *,
+    description: str = "Build the iOS app with Swift and SwiftUI. Kotlin a plus.",
+    content_hash: str = "h1",
+) -> int:
     company = SqliteCompanyRepo(conn).upsert(
         Company(name="Spotify", ats_type="lever", ats_slug="spotify", country_hq="SE", priority=1)
     )
@@ -83,7 +55,7 @@ def _seed_job(conn: sqlite3.Connection, *, content_hash: str = "h1") -> int:
             external_id="1",
             title="Senior iOS Engineer",
             url="https://example.test/1",
-            description="Build the iOS app with Swift and SwiftUI. Kotlin a plus.",
+            description=description,
             location_raw="Stockholm",
             country="SE",
             city="Stockholm",
@@ -95,129 +67,45 @@ def _seed_job(conn: sqlite3.Connection, *, content_hash: str = "h1") -> int:
     return int(conn.execute("SELECT id FROM jobs").fetchone()["id"])
 
 
-def test_returns_and_caches_a_rationale_under_budget(db: sqlite3.Connection) -> None:
+def test_returns_the_score_with_a_rationale_over_the_same_facts(db: sqlite3.Connection) -> None:
     job_id = _seed_job(db)
-    matcher = FakeMatcher(RATIONALE)
-    budget = FakeBudget()
 
-    result = deep_match_job(
-        SqliteJobRepo(db), SqliteMatchScoreRepo(db), matcher, budget, _resume(), job_id, now=NOW
-    )
+    result = deep_match_job(SqliteJobRepo(db), _resume(), job_id)
 
     assert result is not None
-    assert result.rationale == RATIONALE
     assert result.score.overall > 0  # the heuristic score rides along
-    assert len(matcher.calls) == 1 and budget.reserves == 1
-    # It was persisted — a second call is a free cache hit (no LLM, no budget).
-    again = deep_match_job(
-        SqliteJobRepo(db), SqliteMatchScoreRepo(db), matcher, budget, _resume(), job_id, now=NOW
-    )
-    assert again is not None and again.rationale == RATIONALE
-    assert len(matcher.calls) == 1  # not called again
-    assert budget.reserves == 1  # not reserved again
+    # The rationale words the scored facts: kotlin is the one skill the posting names
+    # that the resume lacks, and SE is in the resume's relocation strategy.
+    assert any("kotlin" in line for line in result.rationale.gaps)
+    assert result.rationale.sponsor_note.endswith("SE is in your relocation strategy.")
+    assert result.rationale.verdict  # never empty — there is no degrade path
 
 
-def test_budget_exhausted_degrades_to_heuristic(db: sqlite3.Connection) -> None:
+def test_is_deterministic_across_calls(db: sqlite3.Connection) -> None:
     job_id = _seed_job(db)
-    matcher = FakeMatcher(RATIONALE)
-    budget = FakeBudget(allow=False)
 
-    result = deep_match_job(
-        SqliteJobRepo(db), SqliteMatchScoreRepo(db), matcher, budget, _resume(), job_id, now=NOW
-    )
+    first = deep_match_job(SqliteJobRepo(db), _resume(), job_id)
+    second = deep_match_job(SqliteJobRepo(db), _resume(), job_id)
 
-    assert result is not None
-    assert result.rationale is None  # degraded
-    assert result.score.overall > 0  # ...but the heuristic score is intact
-    assert budget.reserves == 1  # budget was consulted
-    assert matcher.calls == []  # ...and refused, so no call
+    assert first is not None and second is not None
+    assert first.rationale == second.rationale
+    assert first.score == second.score
 
 
-def test_no_matcher_configured_degrades_to_heuristic(db: sqlite3.Connection) -> None:
-    job_id = _seed_job(db)
-    budget = FakeBudget()
+def test_changed_posting_re_derives_the_rationale(db: sqlite3.Connection) -> None:
+    job_id = _seed_job(db, content_hash="h1")
+    before = deep_match_job(SqliteJobRepo(db), _resume(), job_id)
 
-    result = deep_match_job(
-        SqliteJobRepo(db), SqliteMatchScoreRepo(db), None, budget, _resume(), job_id, now=NOW
-    )
+    # The posting is re-polled with materially changed content: Kotlin is gone.
+    _seed_job(db, description="Build the iOS app with Swift and SwiftUI.", content_hash="h2")
+    after = deep_match_job(SqliteJobRepo(db), _resume(), job_id)
 
-    assert result is not None
-    assert result.rationale is None
-    assert result.score.overall > 0
-    assert budget.reserves == 0  # without a matcher the budget is never touched
-
-
-def test_llm_failure_degrades_to_heuristic(db: sqlite3.Connection) -> None:
-    job_id = _seed_job(db)
-    matcher = FakeMatcher(RATIONALE, error=ValueError("LLM response is not valid JSON"))
-    budget = FakeBudget()
-
-    result = deep_match_job(
-        SqliteJobRepo(db), SqliteMatchScoreRepo(db), matcher, budget, _resume(), job_id, now=NOW
-    )
-
-    assert result is not None
-    assert result.rationale is None  # the error was swallowed
-    assert result.score.overall > 0  # heuristic preserved, pipeline never crashed
-    assert len(matcher.calls) == 1  # it was tried once
+    assert before is not None and after is not None
+    assert any("kotlin" in line for line in before.rationale.gaps)
+    assert not any("kotlin" in line for line in after.rationale.gaps)  # nothing stale survives
 
 
 def test_unknown_job_returns_none(db: sqlite3.Connection) -> None:
-    result = deep_match_job(
-        SqliteJobRepo(db),
-        SqliteMatchScoreRepo(db),
-        FakeMatcher(RATIONALE),
-        FakeBudget(),
-        _resume(),
-        9999,
-        now=NOW,
-    )
+    result = deep_match_job(SqliteJobRepo(db), _resume(), 9999)
 
     assert result is None
-
-
-def test_scores_exactly_one_job(db: sqlite3.Connection) -> None:
-    job_id = _seed_job(db)
-    matcher = FakeMatcher(RATIONALE)
-
-    deep_match_job(
-        SqliteJobRepo(db),
-        SqliteMatchScoreRepo(db),
-        matcher,
-        FakeBudget(),
-        _resume(),
-        job_id,
-        now=NOW,
-    )
-
-    # Exactly one job was ever handed to the LLM — there is no whole-DB fan-out path.
-    assert len(matcher.calls) == 1
-    assert matcher.calls[0].title == "Senior iOS Engineer"
-
-
-def test_changed_posting_recomputes_the_rationale(db: sqlite3.Connection) -> None:
-    job_id = _seed_job(db, content_hash="h1")
-    matcher = FakeMatcher(RATIONALE)
-    deep_match_job(
-        SqliteJobRepo(db),
-        SqliteMatchScoreRepo(db),
-        matcher,
-        FakeBudget(),
-        _resume(),
-        job_id,
-        now=NOW,
-    )
-
-    # The posting is re-polled with materially changed content (new content_hash).
-    _seed_job(db, content_hash="h2")
-    deep_match_job(
-        SqliteJobRepo(db),
-        SqliteMatchScoreRepo(db),
-        matcher,
-        FakeBudget(),
-        _resume(),
-        job_id,
-        now=NOW,
-    )
-
-    assert len(matcher.calls) == 2  # the stale h1 rationale was not reused for h2
