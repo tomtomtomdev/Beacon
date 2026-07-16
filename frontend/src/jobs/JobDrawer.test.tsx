@@ -216,7 +216,7 @@ describe('JobDrawer', () => {
     )
   })
 
-  it('fetches and renders the LLM rationale when Assess fit is clicked', async () => {
+  it('fetches and renders the rationale when Assess fit is clicked', async () => {
     const user = userEvent.setup()
     fetchMock.mockImplementation((url: RequestInfo | URL) => {
       const u = String(url)
@@ -236,21 +236,5 @@ describe('JobDrawer', () => {
     expect(screen.getByText(/Registry-inferred sponsor/)).toBeInTheDocument()
     // The POST hit the right endpoint with the active resume id.
     expect(fetchMock).toHaveBeenCalledWith('/jobs/1/match?resume=5', expect.anything())
-  })
-
-  it('shows a fallback note when the deep match is unavailable (no key/budget)', async () => {
-    const user = userEvent.setup()
-    fetchMock.mockImplementation((url: RequestInfo | URL) => {
-      const u = String(url)
-      if (u === '/countries') return ok([sweden])
-      if (u.includes('/match')) return ok({ match_score: fit, rationale: null })
-      return ok(seJob)
-    })
-    renderDrawer(1, fit, 5)
-
-    const card = within(await screen.findByTestId('fit-card'))
-    await user.click(card.getByRole('button', { name: /assess fit/i }))
-
-    expect(await screen.findByText(/unavailable/i)).toBeInTheDocument()
   })
 })

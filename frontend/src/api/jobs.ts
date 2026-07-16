@@ -67,9 +67,8 @@ export async function fetchJobDetail(id: number): Promise<JobDetail> {
   return (await response.json()) as JobDetail
 }
 
-// POST /jobs/{id}/match?resume=<id> — the drawer's "Assess fit": a Tier-2 LLM rationale for one
-// job (§11). Degrades to a null rationale (heuristic-only) when no key/budget; there is no
-// whole-DB deep-match path.
+// POST /jobs/{id}/match?resume=<id> — the drawer's "Assess fit": the Tier-2 deterministic
+// rationale for one job (§11), always present; there is no whole-DB deep-match path.
 export async function assessFit(id: number, resume: number): Promise<DeepMatchResponse> {
   const response = await fetch(`/jobs/${id}/match?resume=${resume}`, { method: 'POST' })
   if (!response.ok) {

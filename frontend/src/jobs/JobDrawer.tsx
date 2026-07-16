@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { ExternalLink, Eye, EyeOff, Globe, Sparkles, Star, X } from 'lucide-react'
+import { ExternalLink, Eye, EyeOff, Globe, ListChecks, Star, X } from 'lucide-react'
 import { useEffect } from 'react'
 import { fetchCountries } from '../api/countries'
 import { assessFit, fetchJobDetail } from '../api/jobs'
@@ -36,7 +36,7 @@ interface JobDrawerProps {
   // The resume-fit score for this job, already computed for the list row (§11); null when no
   // resume is active. Passed down rather than refetched — the row is page-bounded-scored.
   matchScore: MatchScore | null
-  // The active resume's id, or null. Drives the on-demand "Assess fit" LLM deep-match (§11 Tier 2).
+  // The active resume's id, or null. Drives the on-demand "Assess fit" deep-match (§11 Tier 2).
   resumeId: number | null
   onClose: () => void
   onSetStatus: (id: number, status: UserStatus) => void
@@ -260,7 +260,7 @@ const FIT_SUBSCORES: ReadonlyArray<{ key: keyof MatchScore; label: string }> = [
 
 // Résumé-fit card — a soft signal rendered exactly like the sponsorship card (§11): overall
 // score, the sub-scores that built it, and the matched/missing skill breakdown. Never a filter.
-// When a resume is active it also offers the on-demand LLM deep-match ("Assess fit", Tier 2).
+// When a resume is active it also offers the on-demand deep-match ("Assess fit", Tier 2).
 function FitCard({
   score,
   jobId,
@@ -336,8 +336,8 @@ function FitCard({
   )
 }
 
-// The Tier-2 LLM deep-match (§11): one budget-capped Anthropic call for this single job, on
-// demand. Degrades to a note when no key/budget — the heuristic Fit card above always stands.
+// The Tier-2 deep-match (§11): a deterministic explanation of this job's score, worded server-
+// side from the same facts — always available, on demand so the drawer stays scannable.
 function AssessFit({ jobId, resumeId }: { jobId: number; resumeId: number }) {
   const assess = useMutation({ mutationFn: () => assessFit(jobId, resumeId) })
 
@@ -350,27 +350,19 @@ function AssessFit({ jobId, resumeId }: { jobId: number; resumeId: number }) {
           onClick={() => assess.mutate()}
           disabled={assess.isPending}
         >
-          <Sparkles size={14} aria-hidden />
-          {assess.isPending ? 'Assessing…' : 'Assess fit with AI'}
+          <ListChecks size={14} aria-hidden />
+          {assess.isPending ? 'Assessing…' : 'Assess fit'}
         </button>
       )}
       {assess.isError && (
-        <p className={styles.fitSkillEmpty}>Deep match failed — try again in a moment.</p>
+        <p className={styles.fitSkillEmpty}>Could not assess fit — try again.</p>
       )}
       {assess.data && <Rationale rationale={assess.data.rationale} />}
     </div>
   )
 }
 
-function Rationale({ rationale }: { rationale: MatchRationale | null }) {
-  if (rationale === null) {
-    return (
-      <p className={styles.fitSkillEmpty}>
-        AI deep match unavailable — no Anthropic key is set or the monthly budget is spent. The
-        heuristic fit above still applies.
-      </p>
-    )
-  }
+function Rationale({ rationale }: { rationale: MatchRationale }) {
   return (
     <div className={styles.fitRationale} data-testid="fit-rationale">
       <p className={styles.fitRationaleSummary}>{rationale.summary}</p>
