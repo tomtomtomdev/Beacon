@@ -123,7 +123,6 @@ def test_job_match_scores_table_has_full_spec_schema(db: sqlite3.Connection) -> 
         "sponsor_score",
         "matched_skills",
         "missing_skills",
-        "llm_rationale",
         "content_hash",
         "computed_at",
     }
