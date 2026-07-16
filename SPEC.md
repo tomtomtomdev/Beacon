@@ -33,7 +33,7 @@ This is a personal tool. Correctness of the *sponsorship signal* and *dedup* mat
 - Filter UI: keyword, country, category, level, posted-since; sponsorship tier as opt-in filter + primary sort control
 - Saved searches + digest of new matches (Telegram or WhatsApp via Courier)
 - Per-job user status (new / seen / hidden / starred) so the daily list shows only what's actually new
-- Resume-fit scoring: upload a resume once, score how well each posting fits it (heuristic tier over **all** jobs, free/deterministic) with an opt-in, budget-capped **LLM deep-match rationale** per job — a soft signal and an optional sort key, never a filter-out (see §11)
+- Resume-fit scoring: upload a resume once, score how well each posting fits it (heuristic tier over **all** jobs, free/deterministic) with an on-demand **deterministic deep-match rationale** per job (worded from the scored facts — no LLM; 2026-07-16 deviation, see §11) — a soft signal and an optional sort key, never a filter-out (see §11)
 
 ### Non-Goals (explicitly deferred)
 - ❌ LinkedIn / Indeed / Glassdoor scraping (anti-bot, ToS, redundant with ATS sources)
@@ -135,7 +135,7 @@ beacon/
 │   │   │                #   HNAdapter, RemoteOKAdapter, WWRAdapter, JobTechAdapter
 │   │   ├── registries/  # UKSponsorRegistry, INDRegistry, H1BLCARegistry (+ MANUAL flag path)
 │   │   ├── classify/    # HeuristicClassifier, LLMClassifier (Anthropic API)
-│   │   ├── resume/      # PlainTextResumeParser, PdfResumeParser (+ LLMMatcher, §11)
+│   │   ├── resume/      # PlainTextResumeParser, PdfResumeParser (§11)
 │   │   ├── notify/      # TelegramNotifier (Bot API, direct), StdoutNotifier; CourierNotifier deferred
 │   │   └── persistence/ # SQLite repos (sqlite3/SQLModel)
 │   ├── api/             # FastAPI routers: /jobs, /companies, /countries, /searches, /resumes, /stats
@@ -214,7 +214,7 @@ Sort semantics: `sponsor_tier` maps to a numeric `sort_rank` (explicit_yes=3, re
 | 9 | LLM fallback classifier w/ content-hash cache | Ambiguity cleanup |
 | 10 | CountryPanel (visa/PR data surfaced in job detail) + RemoteOK/WWR | Polish + breadth |
 | 11 | Source health & recovery (failure taxonomy, quarantine, weekly probe, health in digest) | Resilience: sources die without lying about data |
-| 12 | Resume upload + heuristic fit scoring (all jobs) + opt-in LLM deep-match (per job) | Personalized ranking without blowing the LLM budget |
+| 12 | Resume upload + heuristic fit scoring (all jobs) + deterministic deep-match rationale (per job) | Personalized ranking at zero cost |
 
 Each slice: red test → green → refactor → `make verify` → commit.
 
@@ -236,7 +236,7 @@ Each slice: red test → green → refactor → `make verify` → commit.
 
 ## 11. Resume Match — score fit against postings
 
-Upload a resume once; Beacon scores how well each posting fits it, exposes fit as an **opt-in sort key** (never a default filter-out — same rule as sponsorship), and on demand produces an LLM rationale (strengths, gaps, sponsorship-fit verdict) for a single posting. This is *scoring*, not CV generation (§2 Non-Goals).
+Upload a resume once; Beacon scores how well each posting fits it, exposes fit as an **opt-in sort key** (never a default filter-out — same rule as sponsorship), and on demand produces a deterministic rationale (strengths, gaps, sponsorship-fit verdict) for a single posting. This is *scoring*, not CV generation (§2 Non-Goals).
 
 ### Design: two tiers, mirroring the heuristic→LLM classifier (slice 9)
 
@@ -254,22 +254,23 @@ The whole feasibility story is the split between a free tier that runs over ever
   - **Sponsorship/country fit** — does the job's country + sponsor tier match the relocation strategy? This is where Beacon's unique data makes its match score better than a generic resume matcher.
 - Output: overall `0–100` + the sub-scores + `matched_skills` / `missing_skills`. Deterministic and explainable, so it can rank the **entire** DB and is the default fit signal.
 
-**Tier 2 — LLM deep match** (on demand or bounded top-N; budget-capped; opt-in, off by default like slice 9):
-- An `LLMMatcher` behind a `Matcher` port; one JSON-only call per unseen `(resume_hash, content_hash)` pair, reusing the **existing slice-9 `LLMBudget` monthly cap** (no second budget). Produces the rationale: fit summary, concrete strengths, gaps to close, a one-line "worth applying?" verdict, sponsorship-fit note. Stored in `job_match_scores.llm_rationale`.
-- **Never scores the whole DB.** It fires only for (a) the job the user opens in the drawer ("Assess fit"), or (b) an explicit "deep-rank my top N" action, N bounded (default 20) and drawn from the Tier-1 ranking. Any LLM failure degrades silently to the heuristic score — the LLM is an upgrader, never a dependency (CLAUDE.md LLM rule).
+**Tier 2 — Deterministic deep match** (on demand; always available, free — **2026-07-16 deviation**: replaced the originally-specced LLM tier, see PROGRESS Decisions):
+- A pure domain function `build_rationale(profile, job_facts, score)` (`domain/rationale.py`) words the rationale from the SAME facts `score_match` scored: fit summary, concrete strengths, gaps to close, a one-line "worth applying?" verdict, sponsorship-fit note. Table-driven wording (verdict bands, tier notes, predicate rows) — tuning it is editing data + a parametrized test row.
+- No key, no budget, no cache, no degrade path: recomputation is microseconds and infallible, so nothing is stored and nothing can go stale. The slice-9 classifier's LLM tier and its `LLMBudget` are untouched by this.
+- **Never scores the whole DB.** It fires only for the job the user opens in the drawer ("Assess fit") — one job per action.
 
 ### Feasibility across many jobs (the crux of the request)
 
 - **Tier 1 is O(jobs) pure CPU, cached** → scoring thousands of postings is milliseconds and $0; safe to compute over a whole result set and sort by it.
-- **Tier 2 is O(1) per user action, hard-capped** by the shared monthly budget → cost stays inside the existing <$2/mo envelope. LLM-ranking the whole DB would be O(jobs)×cost and is explicitly out of scope; the two-tier split is exactly what makes multi-job scoring feasible.
+- **Tier 2 is O(1) per user action and $0** (pure wording over already-computed facts). Ranking or explaining the whole DB in one action is still out of scope by design — the rationale is a per-drawer action, not a batch path.
 - **Compute is bounded to the current `/jobs` page** (score the returned window, not the table) and cached by `(resume_hash, content_hash)`, so pagination never re-scores and a re-poll of an unchanged posting reuses its cached score. A changed posting (new `content_hash`) invalidates just its own score — the same gate classification and sponsorship already use.
 
 ### Ports, use cases, placement (Clean Architecture)
 
 - **Domain (pure):** `ResumeProfile`, `MatchScore`, `build_profile`, `score_match`.
-- **Ports (`application/ports.py`):** `ResumeParser` (`parse(bytes|str, kind) -> str`), `Matcher` (`deep_match(profile, job) -> MatchRationale`). Reuses existing `JobRepo` and `LLMBudget`; adds `ResumeRepo`, `MatchScoreRepo`.
-- **Use cases:** `ingest_resume` (parse → profile → store, set active), `score_jobs_for_resume` (heuristic, cached; the read-side path `/jobs` calls for the current page), `deep_match_job` (LLM, budget-gated, single job).
-- **Adapters:** `resume/PlainTextResumeParser`, `resume/PdfResumeParser`, `resume/LLMMatcher` (raw httpx to Anthropic, same thin style as `LLMClassifier`).
+- **Ports (`application/ports.py`):** `ResumeParser` (`parse(bytes|str, kind) -> str`). Reuses existing `JobRepo`; adds `ResumeRepo`, `MatchScoreRepo`. (No `Matcher` port — Tier 2 is a pure domain function, not IO; 2026-07-16.)
+- **Use cases:** `ingest_resume` (parse → profile → store, set active), `score_jobs_for_resume` (heuristic, cached; the read-side path `/jobs` calls for the current page), `deep_match_job` (deterministic, single job).
+- **Adapters:** `resume/PlainTextResumeParser`, `resume/PdfResumeParser`.
 - **Zero changes to the ingest/classify use cases.** Matching is a separate read-side concern layered on canonical jobs — it never touches the poll pipeline. New capability = new ports + adapters, existing application/domain untouched (golden rule 1).
 
 ### API / UI
@@ -277,7 +278,7 @@ The whole feasibility story is the split between a free tier that runs over ever
 - `POST /resumes` (upload or paste), `GET /resumes`, `PUT /resumes/{id}/active`, `DELETE /resumes/{id}`.
 - `/jobs?resume=<id>&sort=match` — `match` joins `tier` / `date` as a sort option. **Default sort is unchanged** (sponsor-tier-first stays the default; fit is opt-in). When a resume is active, each returned job carries its Tier-1 `match_score`.
 - `POST /jobs/{id}/match?resume=<id>` — triggers the Tier-2 rationale for one job (the drawer's "Assess fit" button).
-- UI: resume upload/paste in Settings (or a small Resume view); a fit badge on job rows when a resume is active; a **Fit card** in the job-detail drawer (overall + sub-scores, matched/missing skills, and the optional LLM rationale behind an "Assess fit" button). Fit renders as a soft signal, exactly like the sponsorship badge — visible, sortable, never a default exclusion.
+- UI: resume upload/paste in Settings (or a small Resume view); a fit badge on job rows when a resume is active; a **Fit card** in the job-detail drawer (overall + sub-scores, matched/missing skills, and the deterministic rationale behind an "Assess fit" button). Fit renders as a soft signal, exactly like the sponsorship badge — visible, sortable, never a default exclusion.
 
 ## 12. Deferred / Future
 
