@@ -14,8 +14,10 @@ Category keywords are matched against the job TITLE only by the classifier (heur
 explains why), while build_profile matches the whole resume text. Every keyword matches on
 word boundaries, so short tokens like "ml" fire on the word, never inside "html". Bare
 "ai"/"go" were removed — they misfire on "AI Native" sales titles and "go-to-market"; use
-phrases ("ai engineer") or the specific form ("golang"). Keep keywords to letters, digits,
-spaces, hyphens and slashes — other punctuation breaks \\b.
+phrases ("ai engineer") or the specific form ("golang"). A keyword must START and END with a
+letter or digit, since the alternation is wrapped in \\b: interior punctuation is fine
+("next.js", "objective-c", "ai/ml"), but an edge symbol ("c++", ".net") would put \\b against
+a non-word character and never match.
 """
 
 import re
@@ -58,6 +60,10 @@ CATEGORY_KEYWORDS: dict[Category, tuple[str, ...]] = {
         "tensorflow",
         "llm",
         "llms",
+        # Role-form only: "Applied AI" is a team name at Anthropic/OpenAI and heads
+        # architect/GTM/ops titles too — bare "applied ai" repeats the bare-"ai" mistake.
+        # ("Applied AI Engineer" needs no entry; "ai engineer" already covers it.)
+        "applied ai scientist",
         "rag",
         "cuda",
         "nlp",
@@ -90,6 +96,15 @@ CATEGORY_KEYWORDS: dict[Category, tuple[str, ...]] = {
         "sre",
         "devops",
         "systems engineer",
+        "distributed systems",
+        "networking",
+        "database",
+        "kernel",
+        "python",
+        # The phrase only: bare "platform"/"cloud"/"aws" head go-to-market titles
+        # ("Cloud Partner Enablement Lead", "AWS Specialist Seller") far more often
+        # than engineering ones — see the rejected-candidate guards in test_classifier.
+        "platform engineer",
     ),
     Category.FRONTEND: (
         "frontend",
@@ -102,6 +117,10 @@ CATEGORY_KEYWORDS: dict[Category, tuple[str, ...]] = {
         "css",
         "tailwind",
         "javascript",
+        "typescript",
+        "next.js",
+        "nextjs",
+        "ui engineer",
     ),
     Category.FULLSTACK: (
         "fullstack",

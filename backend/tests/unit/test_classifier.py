@@ -44,8 +44,26 @@ CATEGORY_CASES = [
     ("backend-java", "Software Engineer (Java)", "", {Category.BACKEND}),
     ("backend-sre", "Senior Site Reliability Engineer", "", {Category.BACKEND}),
     ("backend-infra", "Staff Infrastructure Engineer", "", {Category.BACKEND}),
+    # Coverage misses found in the 2026-08-18 corpus spot-check (real Databricks/Agoda/
+    # OpenAI/Stripe titles): named backend specialisms the table did not carry.
+    ("backend-distributed", "Software Engineer, Distributed Systems", "", {Category.BACKEND}),
+    ("backend-networking", "Senior Software Engineer - Networking", "", {Category.BACKEND}),
+    (
+        "backend-database",
+        "Senior Software Engineer - Database Engine Internals",
+        "",
+        {Category.BACKEND},
+    ),
+    ("backend-kernel", "TPU Kernel Engineer", "", {Category.BACKEND}),
+    ("backend-python", "Agentic Python Engineer", "", {Category.BACKEND}),
+    ("backend-platform-eng", "Senior Data Platform Engineer", "", {Category.BACKEND}),
+    ("aiml-applied-ai-engineer", "Senior Applied AI Engineer", "", {Category.AI_ML}),
+    ("aiml-applied-ai-scientist", "Staff Applied AI Scientist", "", {Category.AI_ML}),
     ("frontend-title", "Frontend Engineer", "Build the web UI", {Category.FRONTEND}),
     ("frontend-space", "Lead Software Engineer - Front End", "", {Category.FRONTEND}),
+    ("frontend-typescript", "Principal Engineer (TypeScript)", "", {Category.FRONTEND}),
+    ("frontend-nextjs", "Manager of the Technical Staff - Next.js", "", {Category.FRONTEND}),
+    ("frontend-ui-engineer", "UI Engineer II", "", {Category.FRONTEND}),
     ("fullstack-title", "Full-Stack Engineer", "End to end", {Category.FULLSTACK}),
     ("multi-ios-aiml", "iOS ML Engineer", "On-device models", {Category.IOS, Category.AI_ML}),
     (
@@ -62,6 +80,19 @@ CATEGORY_CASES = [
     ("ai-native-not-aiml", "Account Executive, AI Native", "Sell to AI startups", set()),
     # Honest empty: nothing matched (LLM fallback cleans residue in slice 9).
     ("empty", "Project Manager", "Own the roadmap and stakeholders", set()),
+    # Precision guards for candidates REJECTED in the 2026-08-18 spot-check: these tokens
+    # read as tech but head mostly go-to-market titles in the corpus, so the table carries
+    # the narrow phrase ("platform engineer") and never the bare word ("platform").
+    ("bare-platform-not-backend", "Cloud Partner Enablement Lead", "", set()),
+    ("bare-aws-not-backend", "AWS Specialist Seller, Strategic Pursuits", "", set()),
+    ("bare-web-not-frontend", "Manager, Web Engineering", "", set()),
+    # A plain SWE title names no specialism — honest residue for the LLM tier, not a guess.
+    ("plain-swe-stays-empty", "Senior Software Engineer", "", set()),
+    # "Applied AI" is an org/team name at Anthropic and OpenAI, so it heads architect, GTM
+    # and ops titles too — the same trap bare "ai" was removed for. Only the role-form
+    # phrases ("applied ai engineer"/"scientist") are in the table.
+    ("applied-ai-architect-not-aiml", "Applied AI Architect, Commercial", "", set()),
+    ("applied-ai-ops-not-aiml", "Strategy & Operations, Applied AI - AMER", "", set()),
 ]
 
 
