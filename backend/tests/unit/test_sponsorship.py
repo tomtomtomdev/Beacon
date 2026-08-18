@@ -72,6 +72,18 @@ def test_tier_sort_rank_matches_domain_table() -> None:
         # able to sponsor" — words between the negation and the verb must not read as YES.
         ("We are not currently able to sponsor visas for fellows.", SponsorTier.EXPLICIT_NO),
         ("We do not offer visa sponsorship for this position.", SponsorTier.EXPLICIT_NO),
+        # Real spot-check misses (2026-08-18, live corpus): a refusal phrased with
+        # "support"/"assistance" instead of "sponsor" inverted to EXPLICIT_YES, because
+        # every negation pattern required the word "sponsor" while the YES table matched
+        # the bare phrase "visa support". These are verbatim Airbnb/HN posting text.
+        ("NOTE: NO VISA SUPPORT", SponsorTier.EXPLICIT_NO),
+        ("No Relocation and Visa Support", SponsorTier.EXPLICIT_NO),
+        ("no visa support now or in the future", SponsorTier.EXPLICIT_NO),
+        ("This role is not eligible for relocation support.", SponsorTier.EXPLICIT_NO),
+        (
+            "This role is based in Milan, and is not eligible for visa or relocation support.",
+            SponsorTier.EXPLICIT_NO,
+        ),
     ],
     ids=[
         "yes-visa-sponsorship-available",
@@ -89,6 +101,11 @@ def test_tier_sort_rank_matches_domain_table() -> None:
         "yes-relocation-provided",
         "yes-relocation-and-family-support-offered",
         "yes-provide-complete-relocation",
+        "no-bare-no-visa-support",
+        "no-relocation-and-visa-support",
+        "no-visa-support-now-or-future",
+        "no-not-eligible-for-relocation-support",
+        "no-not-eligible-for-visa-or-relocation",
     ],
 )
 def test_detect_sponsorship_tier(text: str, expected: SponsorTier) -> None:
@@ -155,8 +172,21 @@ def test_detect_sponsorship_no_beats_yes_when_both_appear() -> None:
         # "sponsorship" in a non-visa sense — organizational, not a work-permit signal.
         "Provide mentorship and horizontal sponsorship across the organization.",
         "Serve as the executive sponsor for our largest UK merchants.",
+        # Real corpus false-NO (2026-08-18): an unbounded gap between the negation and the
+        # object let a distant, unrelated "not" pair with investor "sponsors". The negation
+        # must stay near its object, so a far-apart pair reads as no signal at all.
+        (
+            "In this senior role, you will not only manage a portfolio of high-value "
+            "PE/VC sponsors but will also own the commercial relationship."
+        ),
     ],
-    ids=["no-signal", "relocation-requirement", "org-sponsorship", "executive-sponsor"],
+    ids=[
+        "no-signal",
+        "relocation-requirement",
+        "org-sponsorship",
+        "executive-sponsor",
+        "distant-not-with-investor-sponsors",
+    ],
 )
 def test_detect_sponsorship_returns_none_when_no_signal(text: str) -> None:
     assert detect_sponsorship(text) is None

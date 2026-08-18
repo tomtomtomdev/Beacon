@@ -24,24 +24,47 @@ class SponsorSignal:
 
 # Explicit-text signal tables (data not logic — extend a row when a spot-check finds a
 # miss, mirroring the classifier keyword tables). NO is scanned before YES so "no beats
-# yes". NO uses regex because negations put words between the negator and the verb
-# ("not currently able to sponsor"), which a fixed substring like "able to sponsor" would
-# read as a YES; [^.!?]* keeps the gap inside one sentence.
-_EXPLICIT_NO_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
-    re.compile(pattern, re.IGNORECASE)
-    for pattern in (
-        r"\bno\b[^.!?]*\bsponsor",  # "no visa sponsorship", "no sponsorship"
-        r"\bnot\b[^.!?]*\bsponsor",  # "not able to sponsor", "do not sponsor"
-        r"\bcannot\b[^.!?]*\bsponsor",  # "cannot sponsor"
-        r"\bunable\b[^.!?]*\bsponsor",  # "unable to sponsor"
-        r"\bwithout\b[^.!?]*\bsponsor",  # "without visa sponsorship"
-        r"\bright to work\b",  # "must have the right to work in ..."
-        r"\bwork authori[sz]ation\b",  # "EU work authorization required"
-        r"\bauthori[sz]ed to work\b",  # "must be authorized to work"
-        r"\bgreen card holders?\b",  # "US citizens or green card holders only"
-        r"\bno relocation\b",
-    )
+# yes".
+#
+# The NO table is GENERATED from negator x object, because a refusal names the same thing
+# the YES table does and merely negates it: any object the YES side matches ("visa
+# support") needs a negated twin, or the refusal falls through to YES and inverts the tier
+# — the 2026-08-18 "NOTE: NO VISA SUPPORT" bug, where every negation demanded the literal
+# word "sponsor". Adding an object here is therefore the fix for a whole class, not one
+# phrasing.
+_NEGATORS: tuple[str, ...] = ("no", "not", "cannot", "unable", "without", "nor")
+
+# The sponsorship-ish objects a negator can flip. Substring-open on the right so
+# "sponsor" also covers "sponsors"/"sponsorship".
+_NEGATED_OBJECTS: tuple[str, ...] = (
+    "sponsor",
+    "visa support",
+    "visa assistance",
+    "work permit",
+    "relocation",
 )
+
+# Max characters between a negator and its object. Descriptions arrive with newlines
+# collapsed, so a bullet list is ONE run-on "sentence" and an unbounded gap pairs a
+# stray "not" with an unrelated object 200 words later ("you will not only manage a
+# portfolio of high-value PE/VC sponsors" read as a visa refusal). 40 comfortably spans
+# real interjections ("not currently able to sponsor", "not eligible for visa or
+# relocation support") while keeping the pair in the same clause.
+_NEGATION_GAP = 40
+
+# Requirements that are refusals on their own — no negator needed.
+_WORK_AUTHORIZATION_PATTERNS: tuple[str, ...] = (
+    r"\bright to work\b",  # "must have the right to work in ..."
+    r"\bwork authori[sz]ation\b",  # "EU work authorization required"
+    r"\bauthori[sz]ed to work\b",  # "must be authorized to work"
+    r"\bgreen card holders?\b",  # "US citizens or green card holders only"
+)
+
+_EXPLICIT_NO_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
+    re.compile(rf"\b{negator}\b[^.!?]{{0,{_NEGATION_GAP}}}\b{obj}", re.IGNORECASE)
+    for negator in _NEGATORS
+    for obj in _NEGATED_OBJECTS
+) + tuple(re.compile(pattern, re.IGNORECASE) for pattern in _WORK_AUTHORIZATION_PATTERNS)
 # YES is also regex: postings phrase offers loosely ("relocation and family support are
 # offered", "with relocation and work visa provided"), so [^.!?]* bridges the gap between
 # the perk and the offering verb. relocation is treated as a positive signal here per the
