@@ -28,6 +28,31 @@ done
 
 log() { printf '\n\033[36m▶ %s\033[0m\n' "$*"; }
 
+# --- node/npm on PATH -------------------------------------------------------
+# This script runs under a non-interactive shell, where nvm's shell function is
+# never loaded — so `npm` can be missing even though node is installed. Resolve
+# it ourselves: whatever is already on PATH wins, then nvm's `default` alias,
+# then the highest installed nvm version.
+if ! command -v npm >/dev/null 2>&1; then
+  NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+  npm_bin=""
+  default_alias=""
+  [[ -f "$NVM_DIR/alias/default" ]] && default_alias="$(cat "$NVM_DIR/alias/default")"
+  while IFS= read -r dir; do
+    [[ -x "$dir/bin/npm" ]] || continue
+    if [[ -n "$default_alias" && "$(basename "$dir")" == "v$default_alias"* ]]; then
+      npm_bin="$dir/bin"; break
+    fi
+    [[ -z "$npm_bin" ]] && npm_bin="$dir/bin"   # highest version, as fallback
+  done < <(find "$NVM_DIR/versions/node" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | sort -Vr)
+  if [[ -z "$npm_bin" ]]; then
+    echo "npm not found: install Node (e.g. \`nvm install --lts\`) or put npm on PATH" >&2
+    exit 127
+  fi
+  PATH="$npm_bin:$PATH"
+  export PATH
+fi
+
 # --- dependencies -----------------------------------------------------------
 if [[ $SETUP -eq 1 || ! -d "$BACKEND/.venv" ]]; then
   log "Installing backend deps (uv sync)"
