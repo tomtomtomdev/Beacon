@@ -1,0 +1,31 @@
+{
+  "version": "https://jsonfeed.org/version/1.1",
+  "title": "Voi",
+  "items": [
+    {
+      "id": "edge-0000-remote",
+      "title": "Backend Engineer (Java, remote)",
+      "url": "https://careers.voi.com/jobs/9999999-backend-engineer-java-remote",
+      "date_published": null,
+      "content_html": "<p>Java &amp; Spring backend, work from anywhere.</p>",
+      "_jobposting": {
+        "@context": "http://schema.org/",
+        "@type": "JobPosting",
+        "title": "Senior Machine Learning Engineer",
+        "description": "<p><span><strong>YOUR MISSION AT VOI</strong></span></p><p><span>You will be joining a team focused on predicting the near-future demand for our vehicles. Specifically, where and when they will be needed, and how to handle this at scale for a fleet of 150 thousand vehicles spread across over more than 100 cities. This is a complex and meaningful problem from both an analytical as well as an engineering perspective, and you'll be handed ambiguous, high-leverage problems and are expected to reason from first principles about what to build — not a spec to implement.</span></p><p><span>As a Senior Machine Learning Engineer at Voi, you'll work closely with a small, cross-functional team to design, build and maintain machine learning models. You will work on problems where you will get to utilize your skills in such interrelated disciplines as machine learning, AI engineering, software engineering, data science, optimization as well as data engineering.</span></p><p><span><em>Your responsibilities will include:</em></span></p><ul><li><p><span>Own and contribute to end-to-end machine learning and AI projects, in close collaboration with business stakeholders, and the rest of your team</span></p></li><li><p><span>Formulating solution hypotheses, defining data requirements, prototyping, implementing in production, and continuously monitoring model health and business impact</span></p></li><li><p><span>Maintain and improve Voi's machine learning platform to ensure our machine learning products adhere to state-of-the-art MLOps standards, with support from the team</span></p></li><li><p><span>Work with colleagues to improve team processes and support mutual learning and knowledge sharing</span></p></li></ul><p><span><strong>WHAT YOU NEED TO EMBARK</strong></span></p><p><span>We’re looking for a Machine Learning professional with experience from a fast-paced environment. In addition to being fluent in English, we believe the right person has:</span></p><ul><li><p><span>A clear focus on business value and user impact</span></p></li><li><p><span>A strong analytical mindset, and comfortable setting up simplified first-principles models for complex problems, built on well-thought-through assumptions</span></p></li><li><p><span>Forward-leaning attitude towards LLM-based and agentic approaches: you explore new AI tooling before it’s obviously the standard, and pair that curiosity with strong Python and software engineering fundamentals</span></p></li><li><p><span>Experience contributing to projects from start to finish, from understanding business challenges to planning, building, launching and following up on results</span></p></li><li><p><span>Hands-on experience with real-time inference and/or MLOps in one of the major cloud environments</span></p></li><li><p><span>Experience writing production-quality, maintainable software</span></p></li><li><p><span>Higher education in one of the mathematical sciences such as computer science, mathematics, physics, bioinformatics or with a similar data-centric degree</span></p></li></ul><p><span><em>Don’t meet every requirement? If you are excited about this role and our mission, and have relevant, transferable skills, we encourage you to apply – even if you don’t check every box.</em></span></p><p><span><strong>WHY VOI?</strong></span></p><p><span>Working at Voi is more than just a job; our People Promise includes a personal voyage where you will grow as a professional and be a part of a team and culture that builds something meaningful for society. In addition to this you’ll have the opportunity to:</span></p><ul><li><p><span>Join Europe’s #1 micromobility operator and one of the fastest growing scale-ups</span></p></li><li><p><span>Get “skin in the game” through our employee options programme</span></p></li><li><p><span>Enjoy unlimited free Voi rides and a dog-friendly office</span></p></li><li><p><span>Work together with inspiring, motivated and fun colleagues towards a common goal</span></p></li><li><p><span>Join the micromobility revolution and be a part of creating sustainable cities made for living, free from noise and pollution</span></p></li></ul>",
+        "identifier": {
+          "@type": "PropertyValue",
+          "name": "Voi Technology",
+          "value": 8254522
+        },
+        "datePosted": null,
+        "hiringOrganization": {
+          "@type": "Organization",
+          "name": "Voi Technology",
+          "sameAs": "https://careers.voi.com"
+        },
+        "jobLocation": []
+      }
+    }
+  ]
+}

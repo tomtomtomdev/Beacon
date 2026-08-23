@@ -1,0 +1,430 @@
+[
+  {
+    "id": "744000145032469",
+    "name": "Software Engineer, Backend (AI)",
+    "uuid": "553f4ee3-a53e-43d7-9034-84ad33859983",
+    "jobId": "c695b4a4-66f1-44b4-81b3-d47caa040383",
+    "jobAdId": "46e71c02-9156-42df-a7e5-b4ed3fa21294",
+    "defaultJobAd": true,
+    "refNumber": "REF5903P",
+    "company": {
+      "name": "Grab",
+      "identifier": "Grab"
+    },
+    "location": {
+      "city": "Petaling Jaya",
+      "country": "my",
+      "address": "First Avenue",
+      "remote": false,
+      "hybrid": false,
+      "fullLocation": "Petaling Jaya, , Malaysia"
+    },
+    "customField": [
+      {
+        "fieldId": "6556edfbb1660e2542150180",
+        "fieldLabel": "Department Name",
+        "valueId": "APEX Engineering",
+        "valueLabel": "APEX Engineering"
+      },
+      {
+        "fieldId": "642b4ec24bb9036658bf66bd",
+        "fieldLabel": "Brands",
+        "valueId": "default",
+        "valueLabel": "Grab"
+      },
+      {
+        "fieldId": "COUNTRY",
+        "fieldLabel": "Country/Region",
+        "valueId": "my",
+        "valueLabel": "Malaysia"
+      },
+      {
+        "fieldId": "6556ee9a4009a938a8c5d65a",
+        "fieldLabel": "Division",
+        "valueId": "Tech_Division",
+        "valueLabel": "Tech"
+      },
+      {
+        "fieldId": "6556eece4009a938a8c5d65b",
+        "fieldLabel": "Job Family",
+        "valueId": "Software Engineering",
+        "valueLabel": "Software Engineering"
+      }
+    ],
+    "releasedDate": "2026-08-23T10:44:36.088Z",
+    "creator": {
+      "name": "",
+      "avatarUrl": ""
+    },
+    "postingUrl": "https://jobs.smartrecruiters.com/Grab/744000145032469-software-engineer-backend-ai-",
+    "applyUrl": "https://jobs.smartrecruiters.com/Grab/744000145032469-software-engineer-backend-ai-?oga=true",
+    "referralUrl": "https://jobs.smartrecruiters.com/external-referrals/company/Grab/publication/553f4ee3-a53e-43d7-9034-84ad33859983?dcr_ci=Grab",
+    "jobAd": {
+      "sections": {
+        "companyDescription": {
+          "title": "Company Description",
+          "text": "<p><strong>About Grab and Our Workplace</strong></p><p>Grab is Southeast Asia's leading superapp. From getting your favourite meals delivered to helping you manage your finances and getting around town hassle-free, we've got your back with everything. In Grab, purpose gives us joy and habits build excellence, while harnessing the power of Technology and AI to deliver the mission of driving Southeast Asia forward by economically empowering everyone, with heart, hunger, honour, and humility.</p>"
+        },
+        "jobDescription": {
+          "title": "Job Description",
+          "text": "<p><strong>Get to Know the Team</strong></p><p>Applied AI Team is a group of passionate engineers committed to architecting, crafting, and maintaining internal tooling systems, frameworks and platforms that elevate the very core of our business operations. With unyielding, we create functional applications that not only enhance productivity but also redefine efficiency for Grab employees. Join us in this journey as we pioneer the future of technology, pushing the boundaries of what's possible to shape Grab's success.</p><p><strong>Get to Know the Role</strong></p><p>As a Software Engineer on our team, you will be the technical backbone of LLM-Kit, Grab's framework for building, deploying, and monitoring LLM and agentic applications, and the standard starting point through which teams across the organization ship AI products. You will build the libraries, scaffolding, and CLI that give engineers a paved road from empty repo to a production LLM service: pre-configured FastAPI project structure, a default ReAct agent with MCP integration, GrabGPT connectivity, Vault-backed secret management, auth helpers, guardrails, built-in observability, and evaluations wired in out of the box.</p><p>You will report to the Engineering Manager and work onsite at the Grab Office.</p><p>This role is onsite based in our Petaling Jaya, Malaysia office.</p><p><strong>The Critical Tasks You Will Perform</strong></p><ul><li><strong>Develop Framework Features End-to-End</strong></li></ul><p>Independently build complex library and tooling features, agent and MCP integrations, scaffolding templates, CLI subcommands, config and secret management, auth helpers, guardrails, and evaluation hooks, from conception through release and adoption.</p><ul><li><strong>Design Clean and Composable Abstractions</strong></li></ul><p>Design the abstractions teams build on: clean, composable interfaces over LangChain, LangGraph, FastAPI, and MCP adapters.</p><ul><li><strong>Build Well-Architected Python Libraries and CLIs</strong></li></ul><p>Build well-architected Python libraries and CLIs (and Go where it fits Grab's tooling), with rigorous packaging and dependency hygiene on uv, strict semantic versioning, backwards compatibility guarantees, and consistent API conventions across the SDKs.</p><ul><li><strong>Implement Quality and Governance Layers</strong></li></ul><p>Build and operate the platform's quality and governance layers: OpenTelemetry distributed tracing and Datadog metrics baked into generated services, structured logging, Vault secret injection, OIDC/workload-identity authentication, prompt-level guardrails against common adversarial attacks.</p><ul><li><strong>Ensure Framework Reliability and Support</strong></li></ul><p>Ensure the framework is for the teams that depend on it. Participate in on-call and support rotations, triage breakages in scaffolding, dependency, and deployment paths, conduct root cause analysis, and be part of post-mortems.</p>"
+        },
+        "qualifications": {
+          "title": "Qualifications",
+          "text": "<p><strong>What Essential Skills You Will Need</strong></p><ul><li>2+ years of professional software development experience with a history of delivering successful solutions. Fresh Graduates are welcome.</li><li>Proficiency in server-side programming, specifically Python and Golang.</li><li>Hands-on experience with LLMs (Large Language Models), LangChain, and LangGraph for conversational AI development.</li><li>Practical experience with cloud providers (AWS), containerization (Kubernetes), and CI/CD pipelines.</li><li>Grasp of data structures, algorithms, distributed systems, and multi-threading.</li><li>An advocate for automated testing (unit, integration) and writing concise technical documentation.</li><li>Experience with a relational database such as MySQL, PostgreSQL, or Oracle</li></ul>"
+        },
+        "additionalInformation": {
+          "title": "Additional Information",
+          "text": "<p><strong>Life at Grab</strong></p><p>We care about your well-being at Grab, here are some of the global benefits we offer:</p><ul><li>We have your back with <strong>Term Life Insurance </strong>and comprehensive <strong>Medical Insurance.</strong></li><li>With <strong>GrabFlex, </strong>create a benefits package that suits your needs and aspirations.</li><li>Celebrate moments that matter in life with loved ones through <strong>Parental</strong> and <strong>Birthday leave</strong>, and give back to your communities through <strong>Love-all-Serve-all (LASA)</strong> volunteering leave</li><li>We have a confidential <strong>Grabber Assistance Programme</strong> to guide and uplift you and your loved ones through life's challenges.</li></ul><p><strong>What We Stand For at Grab</strong></p><p>We are committed to building an inclusive and equitable workplace that enables diverse Grabbers to grow and perform at their best. As an equal opportunity employer, we consider all candidates fairly and equally regardless of nationality, ethnicity, religion, age, gender identity, sexual orientation, family commitments, physical and mental impairments or disabilities, and other attributes that make them unique.</p>"
+        }
+      }
+    },
+    "active": true,
+    "visibility": "PUBLIC",
+    "industry": {
+      "id": "internet",
+      "label": "Internet"
+    },
+    "function": {
+      "id": "engineering",
+      "label": "Engineering"
+    },
+    "experienceLevel": {
+      "id": "associate",
+      "label": "Associate"
+    },
+    "typeOfEmployment": {
+      "id": "permanent",
+      "label": "Full-time"
+    },
+    "language": {
+      "code": "en",
+      "label": "English",
+      "labelNative": "English (US)"
+    }
+  },
+  {
+    "id": "744000145029449",
+    "name": "Senior Software Engineer, Mobile (Android)",
+    "uuid": "5c50f473-e912-4de6-8efd-5ee50a4d6a42",
+    "jobId": "1fac8d88-ac8d-443d-be85-447ba31cd38e",
+    "jobAdId": "d05dddc7-4b97-4e3b-8e07-72b9c9250663",
+    "defaultJobAd": true,
+    "refNumber": "REF5406L",
+    "company": {
+      "name": "Grab",
+      "identifier": "Grab"
+    },
+    "location": {
+      "city": "Bangalore",
+      "country": "in",
+      "address": "Aster (East Wing), Embassy Tech Village, Kadubesanahalli",
+      "remote": false,
+      "hybrid": false,
+      "fullLocation": "Bangalore, , India"
+    },
+    "customField": [
+      {
+        "fieldId": "642b4ec24bb9036658bf66bd",
+        "fieldLabel": "Brands",
+        "valueId": "default",
+        "valueLabel": "Grab"
+      },
+      {
+        "fieldId": "6556edfbb1660e2542150180",
+        "fieldLabel": "Department Name",
+        "valueId": "Financial Engineering (Dept)",
+        "valueLabel": "Financial Engineering"
+      },
+      {
+        "fieldId": "COUNTRY",
+        "fieldLabel": "Country/Region",
+        "valueId": "in",
+        "valueLabel": "India"
+      },
+      {
+        "fieldId": "6556ee9a4009a938a8c5d65a",
+        "fieldLabel": "Division",
+        "valueId": "Tech_Division",
+        "valueLabel": "Tech"
+      },
+      {
+        "fieldId": "6556eece4009a938a8c5d65b",
+        "fieldLabel": "Job Family",
+        "valueId": "Software Engineering",
+        "valueLabel": "Software Engineering"
+      },
+      {
+        "fieldId": "680ef063b7561e7a54bdc32c",
+        "fieldLabel": "Hot Job",
+        "valueId": "d45df6ad-27cd-4c49-beae-7a07e3aee823",
+        "valueLabel": "Yes"
+      }
+    ],
+    "releasedDate": "2026-08-23T07:45:40.398Z",
+    "creator": {
+      "name": "",
+      "avatarUrl": ""
+    },
+    "postingUrl": "https://jobs.smartrecruiters.com/Grab/744000145029449-senior-software-engineer-mobile-android-",
+    "applyUrl": "https://jobs.smartrecruiters.com/Grab/744000145029449-senior-software-engineer-mobile-android-?oga=true",
+    "referralUrl": "https://jobs.smartrecruiters.com/external-referrals/company/Grab/publication/5c50f473-e912-4de6-8efd-5ee50a4d6a42?dcr_ci=Grab",
+    "jobAd": {
+      "sections": {
+        "companyDescription": {
+          "title": "Company Description",
+          "text": "<p><strong>About Grab and Our Workplace</strong></p><p>Grab is Southeast Asia's leading superapp. From getting your favourite meals delivered to helping you manage your finances and getting around town hassle-free, we've got your back with everything. In Grab, purpose gives us joy and habits build excellence, while harnessing the power of Technology and AI to deliver the mission of driving Southeast Asia forward by economically empowering everyone, with heart, hunger, honour, and humility.</p>"
+        },
+        "jobDescription": {
+          "title": "Job Description",
+          "text": "<p><strong>Get to Know the Team</strong></p><p>The Payments team sits at the center of the Grab experience. We build the mobile payment journeys that users rely on every day from checkout and stored payment methods to transaction reliability and security. Our work directly impacts conversion, user confidence, and platform growth across multiple products and markets.</p><p>&#xa0;</p><p><strong>Get to know the Role:</strong></p><p>We are looking for a strong Android engineer to help shape the future of payments on Grab. This is a role for someone who cares deeply about product quality, technical craft, and building systems that perform reliably at scale.</p><p>You will work on highly visible, business-critical flows used by millions of users across Southeast Asia. You'll partner closely with product, design, backend, risk, and platform teams to build intuitive payment experiences that are fast, secure.</p><p>You will be reporting to Software Engineering Manager II</p><p><strong>The Day-to-Day Activities:</strong></p><ul><li>Design, build, and maintain Android features powering Grab's payment experience</li><li>Deliver high-quality, scalable, and resilient mobile solutions for critical user journeys</li><li>Improve app performance, reliability, observability, and engineering quality in payment flows</li><li>Collaborate with cross-functional teams to translate product goals into robust technical solutions</li><li>Contribute to architecture, technical design, code reviews, and engineering standards</li><li>Troubleshoot production issues and help drive operational excellence</li><li>Use data and experimentation to improve customer experience and business outcomes</li><li>Improve code quality, maintainability, and developer productivity within the team</li></ul>"
+        },
+        "qualifications": {
+          "title": "Qualifications",
+          "text": "<p><strong>What Essential Skills You Will Need</strong></p><ul><li>Strong software engineering fundamentals with solid 5+ years experience building Android applications in production</li><li>Proficiency in Kotlin and a strong understanding of modern Android development</li><li>Experience building maintainable mobile architectures and shipping user-facing features at scale</li><li>Good understanding of performance, reliability, testing, debugging, and release best practices on Android</li><li>Experience integrating with backend services and handling complex client-server interactions</li><li>Break down ambiguous problems and deliver pragmatic, high-quality solutions</li><li>Strong collaboration in a cross-functional environment</li><li>A product mindset and a high standard for user experience</li><li>Experience working on payments, fintech, checkout, authentication, or other high-trust product areas</li><li>Familiarity with Android architecture components, Coroutines, Jetpack, and modern development tooling</li><li>Experience with experimentation, instrumentation, and data-informed product development</li><li>Knowledge of secure coding and mobile application security practices</li><li>Experience working in large-scale consumer technology environments</li></ul>"
+        },
+        "additionalInformation": {
+          "title": "Additional Information",
+          "text": "<p><strong>Life at Grab</strong></p><p>We care about your well-being at Grab, here are some of the global benefits we offer:</p><ul><li>We have your back with <strong>Term Life Insurance </strong>and comprehensive <strong>Medical Insurance.</strong></li><li>With <strong>GrabFlex, </strong>create a benefits package that suits your needs and aspirations.</li><li>Celebrate moments that matter in life with loved ones through <strong>Parental</strong> and <strong>Birthday leave</strong>, and give back to your communities through <strong>Love-all-Serve-all (LASA)</strong> volunteering leave</li><li>We have a confidential <strong>Grabber Assistance Programme</strong> to guide and uplift you and your loved ones through life's challenges.</li><li>Balancing personal commitments and life's demands are made easier with our FlexWork arrangements such as differentiated hours</li></ul><p><strong>What We Stand For At Grab</strong></p><p>We are committed to building an inclusive and equitable workplace that provides equal opportunity for Grabbers to grow and perform at their best. We consider all candidates fairly and equally regardless of nationality, ethnicity, race, religion, age, gender, family commitments, physical and mental impairments or disabilities, and other attributes that make them unique.</p><p>&#xa0;</p>"
+        }
+      }
+    },
+    "active": true,
+    "visibility": "PUBLIC",
+    "industry": {
+      "id": "it_and_services",
+      "label": "Information Technology And Services"
+    },
+    "function": {
+      "id": "engineering",
+      "label": "Engineering"
+    },
+    "experienceLevel": {
+      "id": "associate",
+      "label": "Associate"
+    },
+    "typeOfEmployment": {
+      "id": "permanent",
+      "label": "Full-time"
+    },
+    "language": {
+      "code": "en",
+      "label": "English",
+      "labelNative": "English (US)"
+    }
+  },
+  {
+    "id": "744000145029439",
+    "name": "Software Engineer, iOS",
+    "uuid": "b17f3396-301f-4380-9572-38674ef9b200",
+    "jobId": "737537b3-4a53-4ec1-9f83-d17c370bd078",
+    "jobAdId": "d285f33b-d1e1-419b-909c-80b012b7ed31",
+    "defaultJobAd": true,
+    "refNumber": "REF5851C",
+    "company": {
+      "name": "Grab",
+      "identifier": "Grab"
+    },
+    "location": {
+      "city": "Bangalore",
+      "country": "in",
+      "address": "Aster (East Wing), Embassy Tech Village, Kadubesanahalli",
+      "remote": false,
+      "hybrid": false,
+      "fullLocation": "Bangalore, , India"
+    },
+    "customField": [
+      {
+        "fieldId": "6556edfbb1660e2542150180",
+        "fieldLabel": "Department Name",
+        "valueId": "Financial Engineering (Dept)",
+        "valueLabel": "Financial Engineering"
+      },
+      {
+        "fieldId": "642b4ec24bb9036658bf66bd",
+        "fieldLabel": "Brands",
+        "valueId": "default",
+        "valueLabel": "Grab"
+      },
+      {
+        "fieldId": "COUNTRY",
+        "fieldLabel": "Country/Region",
+        "valueId": "in",
+        "valueLabel": "India"
+      },
+      {
+        "fieldId": "6556ee9a4009a938a8c5d65a",
+        "fieldLabel": "Division",
+        "valueId": "Tech_Division",
+        "valueLabel": "Tech"
+      },
+      {
+        "fieldId": "6556eece4009a938a8c5d65b",
+        "fieldLabel": "Job Family",
+        "valueId": "Software Engineering",
+        "valueLabel": "Software Engineering"
+      }
+    ],
+    "releasedDate": "2026-08-23T07:44:39.357Z",
+    "creator": {
+      "name": "",
+      "avatarUrl": ""
+    },
+    "postingUrl": "https://jobs.smartrecruiters.com/Grab/744000145029439-software-engineer-ios",
+    "applyUrl": "https://jobs.smartrecruiters.com/Grab/744000145029439-software-engineer-ios?oga=true",
+    "referralUrl": "https://jobs.smartrecruiters.com/external-referrals/company/Grab/publication/b17f3396-301f-4380-9572-38674ef9b200?dcr_ci=Grab",
+    "jobAd": {
+      "sections": {
+        "companyDescription": {
+          "title": "Company Description",
+          "text": "<p><strong>About Grab and Our Workplace</strong></p><p>Grab is Southeast Asia's leading superapp. From getting your favourite meals delivered to helping you manage your finances and getting around town hassle-free, we've got your back with everything. In Grab, purpose gives us joy and habits build excellence, while harnessing the power of Technology and AI to deliver the mission of driving Southeast Asia forward by economically empowering everyone, with heart, hunger, honour, and humility.</p>"
+        },
+        "jobDescription": {
+          "title": "Job Description",
+          "text": "<p>We're looking for a Experience writing clean, concise code with comments and analytics Software Engineer, iOS to join our lending team within Grab Financial Services in Bangalore, India. You will design high-quality iOS applications for our FinTech lending platform while collaborating with teams to provide mobile solutions. You will write clean, efficient code and ensuring app performance across multiple iOS devices and versions, with a focus on secure financial transactions and user data protection.</p><ul><li>Maintain iOS applications using Swift and Objective-C, following best practices, coding standards, and financial services compliance requirements</li><li>Design and implement user interfaces using UIKit, SwiftUI, or other relevant iOS frameworks that prioritise security and user trust in financial transactions</li><li>Integrate RESTful APIs and manage network communication to ensure seamless and secure data exchange for lending operations and financial data</li><li>Write and build unit tests to resolve bugs, ensuring code quality, reliability, and compliance with FinTech standards</li><li>Collaborate with product managers, designers, backend engineers, and compliance teams to translate lending requirements into technical specifications</li><li>Optimise application performance and memory usage for smooth user experiences across different devices, for handling financial transactions and large datasets</li><li>Use version control systems (Git) to manage code repositories and maintain organised development workflows with audit trails for financial compliance</li><li>Participate in code reviews and provide constructive feedback to team members, with emphasis on security and data protection best practices</li><li>Stay current with iOS development trends and tools, particularly those relevant to fintech and financial services security</li><li>Troubleshoot and debug issues, documenting solutions for future reference and compliance documentation</li><li>Implement and maintain iOS security best practices and data protection mechanisms specific to sensitive financial information and lending operations</li></ul>"
+        },
+        "qualifications": {
+          "title": "Qualifications",
+          "text": "<ul><li>Proficiency in Swift and Objective-C programming languages</li><li>2+ years experience with iOS SDK, Xcode, and iOS development tools</li><li>Experience with iOS architecture, design patterns (MVC, MVVM), and best practices</li><li>Demonstrated experience building and integrating RESTful APIs and managing network requests</li><li>Proficiency with version control systems, Git</li><li>Experience writing unit tests and debugging iOS applications</li><li>Familiarity with iOS frameworks such as UIKit, SwiftUI, CoreData, or similar technologies</li><li>Experience building scalable, resilient, and observable distributed systems and set Experience writing clean, concise code with comments</li><li>And Experience being on call for bugs or other issues that may arise during a sprint</li><li>Experience with Agile development methodologies</li><li>Knowledge of CI/CD pipelines and automated testing frameworks</li><li>Familiarity with third-party libraries and dependency management tools like CocoaPods</li><li>Understanding of iOS security best practices and data protection mechanisms</li><li>Experience with mobile app performance optimization and profiling tools (preferred)</li></ul>"
+        },
+        "additionalInformation": {
+          "title": "Additional Information",
+          "text": "<p><strong>Life at Grab</strong></p><p>We care about your well-being at Grab, here are some of the global benefits we offer:</p><ul><li>We have your back with <strong>Term Life Insurance </strong>and comprehensive <strong>Medical Insurance.</strong></li><li>With <strong>GrabFlex, </strong>create a benefits package that suits your needs and aspirations.</li><li>Celebrate moments that matter in life with loved ones through <strong>Parental</strong> and <strong>Birthday leave</strong>, and give back to your communities through <strong>Love-all-Serve-all (LASA)</strong> volunteering leave</li><li>We have a confidential <strong>Grabber Assistance Programme</strong> to guide and uplift you and your loved ones through life's challenges.</li><li>Balancing personal commitments and life's demands are made easier with our FlexWork arrangements such as differentiated hours</li></ul><p><strong>What We Stand For At Grab</strong></p><p>We are committed to building an inclusive and equitable workplace that provides equal opportunity for Grabbers to grow and perform at their best. We consider all candidates fairly and equally regardless of nationality, ethnicity, race, religion, age, gender, family commitments, physical and mental impairments or disabilities, and other attributes that make them unique.</p>"
+        }
+      }
+    },
+    "active": true,
+    "visibility": "PUBLIC",
+    "industry": {
+      "id": "it_and_services",
+      "label": "Information Technology And Services"
+    },
+    "function": {
+      "id": "engineering",
+      "label": "Engineering"
+    },
+    "experienceLevel": {
+      "id": "associate",
+      "label": "Associate"
+    },
+    "typeOfEmployment": {
+      "id": "permanent",
+      "label": "Full-time"
+    },
+    "language": {
+      "code": "en",
+      "label": "English",
+      "labelNative": "English (US)"
+    }
+  },
+  {
+    "id": "744000144751689",
+    "name": "Senior Database Engineer",
+    "uuid": "6ea0df02-c5a8-47a0-8d1a-8e49d8161d58",
+    "jobId": "029355d5-505a-464e-868b-e6900fe25f41",
+    "jobAdId": "7d49535f-3f27-4e25-8110-5334072c7a98",
+    "defaultJobAd": true,
+    "refNumber": "REF5912W",
+    "company": {
+      "name": "Grab",
+      "identifier": "Grab"
+    },
+    "location": {
+      "city": "Bangalore",
+      "country": "in",
+      "address": "Aster (East Wing), Embassy Tech Village, Kadubesanahalli",
+      "remote": false,
+      "hybrid": false,
+      "fullLocation": "Bangalore, , India"
+    },
+    "customField": [
+      {
+        "fieldId": "642b4ec24bb9036658bf66bd",
+        "fieldLabel": "Brands",
+        "valueId": "default",
+        "valueLabel": "Grab"
+      },
+      {
+        "fieldId": "6556edfbb1660e2542150180",
+        "fieldLabel": "Department Name",
+        "valueId": "APEX Engineering",
+        "valueLabel": "APEX Engineering"
+      },
+      {
+        "fieldId": "COUNTRY",
+        "fieldLabel": "Country/Region",
+        "valueId": "in",
+        "valueLabel": "India"
+      },
+      {
+        "fieldId": "6556ee9a4009a938a8c5d65a",
+        "fieldLabel": "Division",
+        "valueId": "Tech_Division",
+        "valueLabel": "Tech"
+      },
+      {
+        "fieldId": "6556eece4009a938a8c5d65b",
+        "fieldLabel": "Job Family",
+        "valueId": "Software Engineering",
+        "valueLabel": "Software Engineering"
+      },
+      {
+        "fieldId": "680ef063b7561e7a54bdc32c",
+        "fieldLabel": "Hot Job",
+        "valueId": "d45df6ad-27cd-4c49-beae-7a07e3aee823",
+        "valueLabel": "Yes"
+      }
+    ],
+    "releasedDate": "2026-08-21T12:15:23.999Z",
+    "creator": {
+      "name": "",
+      "avatarUrl": ""
+    },
+    "postingUrl": "https://jobs.smartrecruiters.com/Grab/744000144751689-senior-database-engineer",
+    "applyUrl": "https://jobs.smartrecruiters.com/Grab/744000144751689-senior-database-engineer?oga=true",
+    "referralUrl": "https://jobs.smartrecruiters.com/external-referrals/company/Grab/publication/6ea0df02-c5a8-47a0-8d1a-8e49d8161d58?dcr_ci=Grab",
+    "jobAd": {
+      "sections": {
+        "companyDescription": {
+          "title": "Company Description",
+          "text": "<p>&#xa0;</p><p><strong>Life at Grab</strong></p><p>At Grab, every Grabber is guided by The Grab Way, which spells out our mission, how we believe we can achieve it, and our operating principles - the 4Hs: Heart, Hunger, Honour and Humility. These principles guide and help us make decisions as we work to create economic empowerment for the people of Southeast Asia.</p>"
+        },
+        "jobDescription": {
+          "title": "Job Description",
+          "text": "<p>&#xa0;</p><p>Senior Database Reliability Engineers (DBRE) keep database systems that support all user-facing services and many other Grab production systems running smoothly 24/7/365. DBREs are a blend of database engineering and software developers. They apply sound engineering principles, operational discipline, and mature software development and automation (with Agentive AI capabilities). They specialize in databases, such as MySQL, PostgreSQL, and Vector databases. In that capacity, DBREs are peers to SREs and bring database expertise to the SRE and Infrastructure teams and our engineering teams.</p><p>&#xa0;</p><p><strong>The Day-to-Day Activities</strong></p><ul><li>You will implement best practices across supported datastores ( MySQL, PostgreSQL, and Vector database's).</li><li>Improve the end-to-end platformization of the database lifecycle to support feature-ready agentic workflows.</li><li>Transform database platform self-service capabilities into reusable APIs for cross-platform integration.</li><li>Enhance database reliability and performance across Grab while partnering with application teams to ship solutions.</li><li>Improve database observability through metric tracking, anomaly detection, and preventive automated actions.</li><li>Collaborate across platform and application engineering teams to safely deploy production changes and reduce database-related incidents.</li><li>Provide database expertise to engineering teams through schema migration reviews, query optimization, and performance tuning solutions.</li><li>Automate database infrastructure and empower engineering teams by delivering self-service tools.</li><li>Improve database client library, connection pooling, stability, scalability, capacity planning, and performance tuning for Grab's infrastructure.</li><li>Develop database infrastructure that can scale to support hundreds of thousands of concurrent users.</li><li>Build the best High Availability (HA) and Business Continuity / Disaster Recovery (BC/DR) solutions.</li><li>Participate in an on-call rotation to support database production issues across services.</li></ul>"
+        },
+        "qualifications": {
+          "title": "Qualifications",
+          "text": "<p>&#xa0;</p><p><strong>The Must-Haves</strong></p><ul><li>At least 6 years of experience running MySQL/PostgreSQL databases in large Environments</li><li>Knowledge in infrastructure automation (Python Programming)</li><li>Awareness of cloud infrastructure (AWS/GCP)</li><li>Experience with SQL</li><li>Experience with Linux</li><li>Experience with stable and secure systems management practices.</li><li>Knowledge of data modelling and data structure design skills.</li><li>Experience with AI and Agenting AI capabilities to enhance the automation and platform features.</li></ul>"
+        },
+        "additionalInformation": {
+          "title": "Additional Information",
+          "text": "<p>&#xa0;</p><p><strong>Life at Grab</strong></p><p>We care about your well-being at Grab, here are some of the global benefits we offer:</p><ul><li>We have your back with <strong>Term Life Insurance </strong>and comprehensive <strong>Medical Insurance.</strong></li><li>With <strong>GrabFlex, </strong>create a benefits package that suits your needs and aspirations.</li><li>Celebrate moments that matter in life with loved ones through <strong>Parental</strong> and <strong>Birthday leave</strong>, and give back to your communities through <strong>Love-all-Serve-all (LASA)</strong> volunteering leave</li><li>We have a confidential <strong>Grabber Assistance Programme</strong> to guide and uplift you and your loved ones through life's challenges.</li><li>Balancing personal commitments and life's demands are made easier with our FlexWork arrangements such as differentiated hours</li></ul><p>&#xa0;</p><p><strong>What We Stand For At Grab</strong></p><p>We are committed to building an inclusive and equitable workplace that provides equal opportunity for Grabbers to grow and perform at their best. We consider all candidates fairly and equally regardless of nationality, ethnicity, race, religion, age, gender, family commitments, physical and mental impairments or disabilities, and other attributes that make them unique.</p>"
+        }
+      }
+    },
+    "active": true,
+    "visibility": "PUBLIC",
+    "industry": {
+      "id": "internet",
+      "label": "Internet"
+    },
+    "function": {
+      "id": "engineering",
+      "label": "Engineering"
+    },
+    "experienceLevel": {
+      "id": "mid_senior_level",
+      "label": "Mid-Senior Level"
+    },
+    "typeOfEmployment": {
+      "id": "permanent",
+      "label": "Full-time"
+    },
+    "language": {
+      "code": "en",
+      "label": "English",
+      "labelNative": "English (US)"
+    }
+  }
+]

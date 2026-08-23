@@ -1,0 +1,681 @@
+[
+  {
+    "uuid": "a7fb9bf68a62114381c48b515abe95d7",
+    "sourceCode": "Employer Portal",
+    "title": "iOS SDK Engineer",
+    "description": "<p>Responsibilities</p><ul><li>Own the development of iOS SDKs, and deliver high-quality code on time according to product and technical requirements.</li><li>Participate in SDK architecture design, technical problem-solving, and performance & stability optimization.</li><li>Drive SDK adoption, integration, and maintenance across internal and external projects.</li><li>Continuously research industry trends, competitive products, and latest iOS technologies, and proactively apply insights to daily development and improvement.</li></ul><p>Requirements</p><ul><li>Bachelor’s degree or above in Computer Science or a related field; <strong>5+ years of professional iOS development experience</strong>.</li><li>Solid computer science fundamentals and strong object-oriented design skills; deep understanding and practical experience with common design patterns.</li><li>Proficient in <strong>Objective-C and Swift</strong>; familiarity with C/C++.</li><li>Deep understanding of iOS fundamentals, network programming, and mainstream iOS frameworks.</li><li>Strong passion for technology, innovation mindset, ability to collaborate cross-functionally and drive execution, excellent communication skills, and ability to thrive in a fast-paced environment.</li></ul>",
+    "minimumYearsExperience": 5,
+    "shiftPattern": null,
+    "schemes": [],
+    "skills": [
+      {
+        "skill": "Communication",
+        "uuid": "07a3dd247ad6bec7fe401aa11619959f",
+        "confidence": null,
+        "isKeySkill": true
+      },
+      {
+        "skill": "iOS SDK",
+        "uuid": "0f93aa9aa35ffb3ad62a4f66fecfc4bc",
+        "confidence": null,
+        "isKeySkill": true
+      },
+      {
+        "skill": "iOS",
+        "uuid": "1bdf605991920db11cbdf8508204c4eb",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "iOS Development",
+        "uuid": "452d755cc69f3eef17048a6980ebcf48",
+        "confidence": null,
+        "isKeySkill": true
+      },
+      {
+        "skill": "Cross-functional Coordination",
+        "uuid": "6ae2a85e78a791279128f4f7f69221ea",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Coding",
+        "uuid": "7099464747ad04622e1a6575ead55a11",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Architecture Design",
+        "uuid": "ae64194051878ec826a5a24ebf799d69",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Solve Technical Problems",
+        "uuid": "deaa325dd4e959a87321c371be3c0358",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Competitive Product Analysis",
+        "uuid": "e07f560f1b74d21cd5236aedd6b790d6",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "SDK",
+        "uuid": "f20e3c5e54c0ab3d375d660b3f896f6a",
+        "confidence": null,
+        "isKeySkill": true
+      }
+    ],
+    "flexibleWorkArrangements": [
+      {
+        "id": 1,
+        "flexibleWorkArrangement": "Flexi-Hours"
+      }
+    ],
+    "otherRequirements": null,
+    "ssocCode": "25190",
+    "occupationId": "OCC013825",
+    "ssocVersion": "2020v3",
+    "workingHours": null,
+    "numberOfVacancies": 7,
+    "psdUrl": null,
+    "categories": [
+      {
+        "id": 11,
+        "category": "Engineering"
+      }
+    ],
+    "employmentTypes": [
+      {
+        "id": 8,
+        "employmentType": "Full Time"
+      }
+    ],
+    "positionLevels": [
+      {
+        "id": 7,
+        "position": "Professional"
+      }
+    ],
+    "status": {
+      "id": 102,
+      "jobStatus": "Open"
+    },
+    "ssecEqa": "70",
+    "ssecFos": "1140",
+    "postedCompany": {
+      "uen": "202211163N",
+      "description": "<p>Ozion is a technology company based in Singapore. Currently we are a group of 12 outstanding talents focusing on developing the best products for everyone. King James Bible is our product loved by many people around the world. This app is the one that helps people pray and understand different words in the Bible. Besides that, Ozion continues to make significant contributions to the world where people want to enjoy the happiness from apps.</p>",
+      "name": "OZION TECH PTE. LTD.",
+      "ssicCode": null,
+      "employeeCount": null,
+      "companyUrl": "www.oziontech.com",
+      "lastSyncDate": "2026-08-21T03:58:41.000Z",
+      "ssicCode2020": "62011",
+      "badges": [],
+      "_links": {
+        "self": {
+          "href": "https://api.mycareersfuture.gov.sg/v2/companies/202211163N"
+        },
+        "jobs": {
+          "href": "https://api.mycareersfuture.gov.sg/v2/companies/202211163N/jobs"
+        },
+        "addresses": {
+          "href": "https://api.mycareersfuture.gov.sg/v2/companies/202211163N/addresses"
+        },
+        "schemes": {
+          "href": "https://api.mycareersfuture.gov.sg/v2/companies/202211163N/schemes"
+        }
+      },
+      "ssicDescription2020": "DEVELOPMENT OF SOFTWARE AND APPLICATIONS (EXCEPT GAMES AND CYBERSECURITY)",
+      "logoFileName": "25b8021960a36d7a9df24f842841f7da/ozion-tech.png",
+      "logoUploadPath": "https://static.mycareersfuture.gov.sg/images/company/logos/25b8021960a36d7a9df24f842841f7da/ozion-tech.png",
+      "responsiveEmployer": {
+        "isResponsive": false
+      }
+    },
+    "hiringCompany": null,
+    "screeningQuestions": [],
+    "address": {
+      "overseasCountry": null,
+      "foreignAddress1": null,
+      "foreignAddress2": null,
+      "block": "400",
+      "street": "ORCHARD ROAD",
+      "floor": null,
+      "unit": null,
+      "building": "ORCHARD TOWERS",
+      "postalCode": "238875",
+      "isOverseas": false,
+      "districts": [
+        {
+          "id": 9,
+          "location": "D09 Cairnhill, Orchard, River Valley",
+          "region": "Central",
+          "sectors": [
+            "22",
+            "23"
+          ],
+          "regionId": "Central"
+        }
+      ],
+      "lat": 1.30689712703259,
+      "lng": 103.82907360153
+    },
+    "metadata": {
+      "jobPostId": "MCF-2026-1452979",
+      "deletedAt": null,
+      "createdBy": "6c8cc0f5-5b16-4783-b794-2950f325de23",
+      "createdAt": "2026-08-21T04:03:08.000Z",
+      "updatedAt": "2026-08-21T04:03:08.000Z",
+      "emailRecipient": "6c8cc0f5-5b16-4783-b794-2950f325de23",
+      "editCount": 0,
+      "repostCount": 0,
+      "totalNumberOfView": 41,
+      "newPostingDate": "2026-08-21",
+      "originalPostingDate": "2026-08-21",
+      "expiryDate": "2026-09-20",
+      "totalNumberJobApplication": 0,
+      "isJdEnhanced": false,
+      "isPostedOnBehalf": false,
+      "isHideSalary": false,
+      "isHideCompanyAddress": false,
+      "isHideHiringEmployerName": false,
+      "isHideEmployerName": false,
+      "jobDetailsUrl": "https://www.mycareersfuture.gov.sg/job/engineering/ios-sdk-engineer-ozion-tech-a7fb9bf68a62114381c48b515abe95d7"
+    },
+    "salary": {
+      "maximum": 14000,
+      "minimum": 10000,
+      "type": {
+        "id": 4,
+        "salaryType": "Monthly"
+      }
+    },
+    "_links": {
+      "self": {
+        "href": "https://api.mycareersfuture.gov.sg/v2/jobs/a7fb9bf68a62114381c48b515abe95d7"
+      },
+      "screeningQuestions": {
+        "href": "https://api.mycareersfuture.gov.sg/v2/jobs/a7fb9bf68a62114381c48b515abe95d7/screening-questions"
+      }
+    }
+  },
+  {
+    "uuid": "bcffb9829af1d086acf861af1464a1ee",
+    "sourceCode": "Employer Portal",
+    "title": "Software Engineer, Mobile (iOS) - Singapore",
+    "description": "<h3>Job description</h3><p>Google's software engineers develop the next-generation technologies that change how billions of users connect, explore, and interact with information and one another. Our products need to handle information at massive scale, and extend well beyond web search. We're looking for engineers who bring fresh ideas from all areas, including information retrieval, distributed computing, large-scale system design, networking and data storage, security, artificial intelligence, natural language processing, UI design and mobile; the list goes on and is growing every day. As a software engineer, you will work on a specific project critical to Google’s needs with opportunities to switch teams and projects as you and our fast-paced business grow and evolve. We need our engineers to be versatile, display leadership qualities and be enthusiastic to take on new problems across the full-stack as we continue to push technology forward.</p><h3>Additional job description</h3><p>We are building solutions and leverage Artificial Intelligence (AI)-powered development tools like Jetski, Gemini CLI, and others to iterate quickly and make a big impact.</p><p>In this role, you will be building new capabilities and collaborating closely with local and global cross-functional teams (including Product Manager (PM), User Experience (UX), and other engineering teams in Singapore and the United States (US)). You will have end-to-end responsibility for key areas, from design to deployment, directly impacting how millions of users digitize and use their everyday essentials.<br /></p><h2>Qualifications</h2><h3>Job responsibilities</h3><ul><li>Design, develop, test, deploy, maintain, and improve software with a primary focus on the iOS platform. Write high-quality, well-tested, and maintainable code in Swift and SwiftUI.</li><li>Collaborate effectively with product managers, UX designers, and other engineers to define and implement user-facing features.</li><li>Contribute across the full stack, including designing and integrating with server-side Application Programming Interfaces (APIs).</li><li>Thrive in a fast-paced environment, contributing to all phases of the software development lifecycle. Advocate product excellence and ensure features are comprehensive, considering accessibility and internationalization.</li><li>Leverage Artificial Intelligence (AI) tools to enhance and accelerate development workflows.</li></ul><h3>Minimum qualifications</h3><ul><li>Bachelor’s degree or equivalent practical experience.</li><li>2 years of experience with software development in one or more programming languages.</li><li>2 years of experience with native iOS application development (e.g., Swift, SwiftUI).</li></ul><h3>Preferred qualifications</h3><ul><li>Experience with the full software development lifecycle.</li><li>Experience with full-stack development. Solid understanding of testing methodologies and best practices for mobile applications.</li><li>Experience working in a collaborative environment with cross-functional teams across different time zones.</li><li>Proven track record of launching and maintaining iOS applications.</li><li>Demonstrated interest and experience in using AI tools for development workflows.</li><li>Passion for user-facing features and a strong sense of product excellence.</li></ul>",
+    "minimumYearsExperience": 2,
+    "shiftPattern": null,
+    "schemes": [],
+    "skills": [
+      {
+        "skill": "Ai",
+        "uuid": "0a40e3c91a3a55c9a37428c6d194d0e5",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Design",
+        "uuid": "1afa74da05ca145d3418aad9af510109",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "iOS",
+        "uuid": "1bdf605991920db11cbdf8508204c4eb",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Medical Degree",
+        "uuid": "2974c7f210f04f09e8b29e609ecf03b4",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Collaborating With Product Managers",
+        "uuid": "2f5035136e5b315e24aac77ce859671a",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Product Support",
+        "uuid": "3290d1d843bc3f10edd4b8fca66e42f9",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Full Stack Development",
+        "uuid": "6bfd8292276fa84259c7c17a235050ee",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Workflow Development",
+        "uuid": "7df1136f740f66ca9df279f3566b9425",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Mobile Application Testing",
+        "uuid": "879858f751bda37c84b9c523bde92a9f",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Cross Functional Team Building",
+        "uuid": "87c609c58caffee206311061beb20cf8",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Feature Engineering",
+        "uuid": "aa55370a0f5e60a50198fa962841917b",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Swift (Programming Language)",
+        "uuid": "b9e9120b98bfe199ba974115dedafe81",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Software Development Lifecycle",
+        "uuid": "bf01ad9b7667e225a0ab2a30262045df",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Ios Applications",
+        "uuid": "c90283d0634c16b797bdee52ef6ae233",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Deployment",
+        "uuid": "ea355214fd4bc7c57f471bd92918879b",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Testing",
+        "uuid": "fa6a5a3224d7da66d9e0bdec25f62cf0",
+        "confidence": null,
+        "isKeySkill": false
+      }
+    ],
+    "flexibleWorkArrangements": [],
+    "otherRequirements": null,
+    "ssocCode": "25121",
+    "occupationId": "OCC002119",
+    "ssocVersion": "2020v3",
+    "workingHours": null,
+    "numberOfVacancies": 1,
+    "psdUrl": null,
+    "categories": [
+      {
+        "id": 21,
+        "category": "Information Technology"
+      }
+    ],
+    "employmentTypes": [
+      {
+        "id": 8,
+        "employmentType": "Full Time"
+      }
+    ],
+    "positionLevels": [
+      {
+        "id": 7,
+        "position": "Professional"
+      }
+    ],
+    "status": {
+      "id": 102,
+      "jobStatus": "Open"
+    },
+    "ssecEqa": "70",
+    "ssecFos": "0599",
+    "postedCompany": {
+      "uen": "200817984R",
+      "description": "<p>GOOGLE ASIA PACIFIC PTE. LTD.</p>\r\n",
+      "name": "GOOGLE ASIA PACIFIC PTE. LTD.",
+      "ssicCode": "63120",
+      "employeeCount": null,
+      "companyUrl": null,
+      "lastSyncDate": "2026-08-23T11:18:09.000Z",
+      "ssicCode2020": "63901",
+      "badges": [],
+      "_links": {
+        "self": {
+          "href": "https://api.mycareersfuture.gov.sg/v2/companies/200817984R"
+        },
+        "jobs": {
+          "href": "https://api.mycareersfuture.gov.sg/v2/companies/200817984R/jobs"
+        },
+        "addresses": {
+          "href": "https://api.mycareersfuture.gov.sg/v2/companies/200817984R/addresses"
+        },
+        "schemes": {
+          "href": "https://api.mycareersfuture.gov.sg/v2/companies/200817984R/schemes"
+        }
+      },
+      "ssicDescription2020": "INTERNET SEARCH ENGINES",
+      "logoFileName": "26b00abe7acb9b5449204a64fb45ab5a/google-asia-pacific.png",
+      "logoUploadPath": "https://static.mycareersfuture.gov.sg/images/company/logos/26b00abe7acb9b5449204a64fb45ab5a/google-asia-pacific.png",
+      "responsiveEmployer": {
+        "isResponsive": true
+      }
+    },
+    "hiringCompany": null,
+    "screeningQuestions": [],
+    "address": {
+      "overseasCountry": null,
+      "foreignAddress1": null,
+      "foreignAddress2": null,
+      "block": "70",
+      "street": "PASIR PANJANG ROAD",
+      "floor": null,
+      "unit": null,
+      "building": "MAPLETREE BUSINESS CITY",
+      "postalCode": "117371",
+      "isOverseas": false,
+      "districts": [
+        {
+          "id": 5,
+          "location": "D05 Pasir Panjang, Hong Leong Garden, Clementi New Town",
+          "region": "West",
+          "sectors": [
+            "11",
+            "12",
+            "13"
+          ],
+          "regionId": "West"
+        }
+      ],
+      "lat": 1.27617859659935,
+      "lng": 103.800039933678
+    },
+    "metadata": {
+      "jobPostId": "MCF-2026-1454698",
+      "deletedAt": null,
+      "createdBy": "70ebb640-be95-4769-a575-550ec0816578",
+      "createdAt": "2026-08-21T06:53:08.000Z",
+      "updatedAt": "2026-08-21T06:53:08.000Z",
+      "emailRecipient": "70ebb640-be95-4769-a575-550ec0816578",
+      "editCount": 0,
+      "repostCount": 0,
+      "totalNumberOfView": 58,
+      "newPostingDate": "2026-08-21",
+      "originalPostingDate": "2026-08-21",
+      "expiryDate": "2026-09-04",
+      "totalNumberJobApplication": 0,
+      "isJdEnhanced": false,
+      "isPostedOnBehalf": false,
+      "isHideSalary": false,
+      "isHideCompanyAddress": false,
+      "isHideHiringEmployerName": false,
+      "isHideEmployerName": false,
+      "jobDetailsUrl": "https://www.mycareersfuture.gov.sg/job/information-technology/software-engineer-mobile-singapore-google-asia-pacific-bcffb9829af1d086acf861af1464a1ee"
+    },
+    "salary": {
+      "maximum": 18000,
+      "minimum": 9000,
+      "type": {
+        "id": 4,
+        "salaryType": "Monthly"
+      }
+    },
+    "_links": {
+      "self": {
+        "href": "https://api.mycareersfuture.gov.sg/v2/jobs/bcffb9829af1d086acf861af1464a1ee"
+      },
+      "screeningQuestions": {
+        "href": "https://api.mycareersfuture.gov.sg/v2/jobs/bcffb9829af1d086acf861af1464a1ee/screening-questions"
+      }
+    }
+  },
+  {
+    "uuid": "c65ffb90f493ce582a8085a7fe530333",
+    "sourceCode": "Employer Portal",
+    "title": "Senior Software Engineer, Mobile (iOS) - Singapore",
+    "description": "<h3>Job description</h3><p>Google's software engineers develop the next-generation technologies that change how billions of users connect, explore, and interact with information and one another. Our products need to handle information at massive scale, and extend well beyond web search. We're looking for engineers who bring fresh ideas from all areas, including information retrieval, distributed computing, large-scale system design, networking and data storage, security, artificial intelligence, natural language processing, UI design and mobile; the list goes on and is growing every day. As a software engineer, you will work on a specific project critical to Google’s needs with opportunities to switch teams and projects as you and our fast-paced business grow and evolve. We need our engineers to be versatile, display leadership qualities and be enthusiastic to take on new problems across the full-stack as we continue to push technology forward.</p><h3>Additional job description</h3><p>We are building solutions and leveraging Artificial Intelligence (AI)-powered development tools like Jetski, Gemini CLI, and others to iterate quickly and make a big impact. This role involves building new capabilities and collaborating closely with local and global cross-functional teams (including Product Manager (PM), User Experience (UX), and other engineering teams in Singapore and the US).</p><p>In this role, you will have end-to-end ownership of significant areas, driving technical direction, influencing architectural decisions, and delivering solutions that impact how millions of users digitize and use their everyday essentials.</p><h3>Qualifications</h3><h3>Job responsibilities</h3><ul><li>Lead the design, development, testing, deployment, and improvement of complex software systems, with a strong focus on the iOS platform. Write high-quality, well-tested, scalable, and maintainable code in Swift and SwiftUI.</li><li>Drive technical decisions and architecture for key features and components. Own and contribute across the full stack, including designing robust and scalable server-side Application Programming Interfaces (APIs). Take ownership of multi-quarter projects and guide them through the entire software development lifecycle.</li><li>Collaborate effectively with product managers, UX designers, and other engineers to define and implement user-facing features, often taking the lead on technical designs.</li><li>Advocate product excellence and ensure features are comprehensive, considering accessibility, internationalization, and long-term maintainability.</li><li>Leverage the use of AI tools to enhance and accelerate development workflows within the team. Mentor junior engineers and contribute to team growth and best practices.</li></ul><h3>Minimum qualifications</h3><ul><li>Bachelor’s degree or equivalent practical experience.</li><li>5 years of experience with software development in one or more programming languages.</li><li>3 years of experience with native iOS application development (e.g., Swift, SwiftUI).</li><li>3 years of experience testing, maintaining, or launching software products, and 1 year of experience with large-scale application design and architecture.</li></ul><h3>Preferred qualifications</h3><ul><li>Experience with the full software development lifecycle, from ideation to production.</li><li>Experience with full-stack development and large-scale system design.</li><li>Experience mentoring and coaching other engineers. Demonstrated interest and experience in using and promoting AI tools for development workflows.</li><li>Proven track record of leading the development and launch of complex features or applications. Deep understanding of mobile architecture, testing methodologies, and best practices.</li><li>Demonstrated ability to lead and deliver on complex, ambiguous projects. Excellent problem-solving, investigative, and technical leadership skills.</li><li>Passion for user-facing features and a strong sense of product ownership and excellence, particularly in mobile software domain.</li></ul>",
+    "minimumYearsExperience": 5,
+    "shiftPattern": null,
+    "schemes": [],
+    "skills": [
+      {
+        "skill": "iOS",
+        "uuid": "1bdf605991920db11cbdf8508204c4eb",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Applications",
+        "uuid": "1ddf333c6654f7f89c739dddfb4cc429",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Project Leadership",
+        "uuid": "25d65cc9e8e19a8f466af4e6f99417e3",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Medical Degree",
+        "uuid": "2974c7f210f04f09e8b29e609ecf03b4",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Product Support",
+        "uuid": "3290d1d843bc3f10edd4b8fca66e42f9",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Job Coaching",
+        "uuid": "44e4e1cd4b06bfb9bccbe1a9fc8e71d4",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "coordinating developers",
+        "uuid": "6a04083ff8569e60f1dd3123132f7ca8",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Full Stack Development",
+        "uuid": "6bfd8292276fa84259c7c17a235050ee",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Architecture Analysis",
+        "uuid": "7bd11c0674f0a6f0c86c1ba33dbba04d",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Workflow Development",
+        "uuid": "7df1136f740f66ca9df279f3566b9425",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Project Lifecycle Management",
+        "uuid": "8dc38ba389637b7854d03d2d62651c4a",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Feature Engineering",
+        "uuid": "aa55370a0f5e60a50198fa962841917b",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Technical Architecture",
+        "uuid": "b322c67080fc659809148c6e44a82fc3",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Swift (Programming Language)",
+        "uuid": "b9e9120b98bfe199ba974115dedafe81",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Software Development Lifecycle",
+        "uuid": "bf01ad9b7667e225a0ab2a30262045df",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "lead negotiation",
+        "uuid": "f4f57fe33effb7607228774ba95a3207",
+        "confidence": null,
+        "isKeySkill": false
+      }
+    ],
+    "flexibleWorkArrangements": [],
+    "otherRequirements": null,
+    "ssocCode": "25121",
+    "occupationId": "OCC002119",
+    "ssocVersion": "2020v3",
+    "workingHours": null,
+    "numberOfVacancies": 1,
+    "psdUrl": null,
+    "categories": [
+      {
+        "id": 21,
+        "category": "Information Technology"
+      }
+    ],
+    "employmentTypes": [
+      {
+        "id": 8,
+        "employmentType": "Full Time"
+      }
+    ],
+    "positionLevels": [
+      {
+        "id": 7,
+        "position": "Professional"
+      }
+    ],
+    "status": {
+      "id": 102,
+      "jobStatus": "Open"
+    },
+    "ssecEqa": "70",
+    "ssecFos": "0599",
+    "postedCompany": {
+      "uen": "200817984R",
+      "description": "<p>GOOGLE ASIA PACIFIC PTE. LTD.</p>\r\n",
+      "name": "GOOGLE ASIA PACIFIC PTE. LTD.",
+      "ssicCode": "63120",
+      "employeeCount": null,
+      "companyUrl": null,
+      "lastSyncDate": "2026-08-23T11:18:09.000Z",
+      "ssicCode2020": "63901",
+      "badges": [],
+      "_links": {
+        "self": {
+          "href": "https://api.mycareersfuture.gov.sg/v2/companies/200817984R"
+        },
+        "jobs": {
+          "href": "https://api.mycareersfuture.gov.sg/v2/companies/200817984R/jobs"
+        },
+        "addresses": {
+          "href": "https://api.mycareersfuture.gov.sg/v2/companies/200817984R/addresses"
+        },
+        "schemes": {
+          "href": "https://api.mycareersfuture.gov.sg/v2/companies/200817984R/schemes"
+        }
+      },
+      "ssicDescription2020": "INTERNET SEARCH ENGINES",
+      "logoFileName": "26b00abe7acb9b5449204a64fb45ab5a/google-asia-pacific.png",
+      "logoUploadPath": "https://static.mycareersfuture.gov.sg/images/company/logos/26b00abe7acb9b5449204a64fb45ab5a/google-asia-pacific.png",
+      "responsiveEmployer": {
+        "isResponsive": true
+      }
+    },
+    "hiringCompany": null,
+    "screeningQuestions": [],
+    "address": {
+      "overseasCountry": null,
+      "foreignAddress1": null,
+      "foreignAddress2": null,
+      "block": "70",
+      "street": "PASIR PANJANG ROAD",
+      "floor": null,
+      "unit": null,
+      "building": "MAPLETREE BUSINESS CITY",
+      "postalCode": "117371",
+      "isOverseas": false,
+      "districts": [
+        {
+          "id": 5,
+          "location": "D05 Pasir Panjang, Hong Leong Garden, Clementi New Town",
+          "region": "West",
+          "sectors": [
+            "11",
+            "12",
+            "13"
+          ],
+          "regionId": "West"
+        }
+      ],
+      "lat": 1.27617859659935,
+      "lng": 103.800039933678
+    },
+    "metadata": {
+      "jobPostId": "MCF-2026-1453425",
+      "deletedAt": null,
+      "createdBy": "dd134370-1448-4e72-8afc-1ce12a0fee97",
+      "createdAt": "2026-08-21T04:43:00.000Z",
+      "updatedAt": "2026-08-21T04:42:59.000Z",
+      "emailRecipient": "dd134370-1448-4e72-8afc-1ce12a0fee97",
+      "editCount": 0,
+      "repostCount": 0,
+      "totalNumberOfView": 50,
+      "newPostingDate": "2026-08-21",
+      "originalPostingDate": "2026-08-21",
+      "expiryDate": "2026-09-04",
+      "totalNumberJobApplication": 0,
+      "isJdEnhanced": false,
+      "isPostedOnBehalf": false,
+      "isHideSalary": false,
+      "isHideCompanyAddress": false,
+      "isHideHiringEmployerName": false,
+      "isHideEmployerName": false,
+      "jobDetailsUrl": "https://www.mycareersfuture.gov.sg/job/information-technology/senior-software-engineer-mobile-singapore-google-asia-pacific-c65ffb90f493ce582a8085a7fe530333"
+    },
+    "salary": {
+      "maximum": 22000,
+      "minimum": 11000,
+      "type": {
+        "id": 4,
+        "salaryType": "Monthly"
+      }
+    },
+    "_links": {
+      "self": {
+        "href": "https://api.mycareersfuture.gov.sg/v2/jobs/c65ffb90f493ce582a8085a7fe530333"
+      },
+      "screeningQuestions": {
+        "href": "https://api.mycareersfuture.gov.sg/v2/jobs/c65ffb90f493ce582a8085a7fe530333/screening-questions"
+      }
+    }
+  }
+]

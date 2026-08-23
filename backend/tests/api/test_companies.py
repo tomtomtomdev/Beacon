@@ -37,7 +37,9 @@ def _seed(db_path: Path) -> SqliteCompanyRepo:
     repo = SqliteCompanyRepo(connect(db_path))
     repo.upsert(Company("Healthy", "greenhouse", "healthy", "IE", 1))
     repo.upsert(Company("Sick", "lever", "sick", "US", 1))
-    repo.upsert(Company("Dormant", "smartrecruiters", "dormant", "SG", 3))  # no adapter → pending
+    repo.upsert(
+        Company("Dormant", "gem", "dormant", "AU", 3)
+    )  # captcha-gated ATS, no adapter → pending
     repo.upsert(Company("Shadow", "none", "", "US", 5))  # shadow employer → excluded
     return repo
 
@@ -69,8 +71,8 @@ async def test_health_view_summarizes_and_lists_seed_companies(
     assert summary["supported"] == 2  # greenhouse + lever have adapters
     assert summary["healthy"] == 1
     assert summary["quarantined"] == 1
-    assert summary["pending"] == 1  # the smartrecruiters seed
-    assert summary["by_ats"] == {"greenhouse": 1, "lever": 1, "smartrecruiters": 1}
+    assert summary["pending"] == 1  # the gem seed
+    assert summary["by_ats"] == {"greenhouse": 1, "lever": 1, "gem": 1}
 
     by_name = {row["name"]: row for row in body["companies"]}
     assert set(by_name) == {"Healthy", "Sick", "Dormant"}

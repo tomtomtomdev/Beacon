@@ -1,0 +1,209 @@
+{
+  "comments": "21/08/2026: Cursor pagination is now available and is the preferred way to page through the feed. Pass the nextCursor value from each response back as ?cursor=. It is faster than offset and will never return the same job twice. The offset parameter is deprecated and will be removed in a future release. 13/03/2026: The API has been updated to include the companySlug field in the response.",
+  "updatedAt": 1787480897,
+  "offset": 0,
+  "limit": 20,
+  "totalCount": 565,
+  "jobs": [
+    {
+      "title": "Senior IOS Developer (Swift/Objective-C & REST) | $120-150K | Exciting IT Consul",
+      "excerpt": "We are looking for a Senior IOS Developer with practical development experience, drive, and who has great experience with all aspects of native mobile application development.",
+      "companyName": "Chariot Solutions",
+      "companySlug": "chariot-solutions",
+      "companyLogo": "https://cdn-images.himalayas.app/7jcoup61fmkz2aatpl57vzj8l6oo",
+      "employmentType": "Full Time",
+      "minSalary": 120000,
+      "maxSalary": 150000,
+      "salaryPeriod": "annual",
+      "seniority": [
+        "Senior"
+      ],
+      "currency": "USD",
+      "locationRestrictions": [
+        "United States"
+      ],
+      "timezoneRestrictions": [
+        -10,
+        -9,
+        -8,
+        -7,
+        -6,
+        -5,
+        14
+      ],
+      "categories": [
+        "iOS-Development",
+        "Mobile-Development",
+        "Software-Engineer",
+        "Mobile-Application-Developer",
+        "Senior-IOS-Developer",
+        "Senior-IOS-Engineer",
+        "IOS-Mobile-Engineer",
+        "iOS-Developer",
+        "Objective-C-Developer"
+      ],
+      "parentCategories": [
+        "Developer"
+      ],
+      "description": "<p><strong>We are looking for a Senior IOS Developer with practical development experience, drive, and who has great experience with all aspects of native mobile application development. </strong></p><ul>\n<li>Contribute to the design and development of new features.</li>\n<li>Design, build and maintain high performance IOS applications.</li>\n<li>Use the latest tools and frameworks for native IOS development.</li>\n<li>Writing and troubleshooting code in a multi-threaded environment.</li>\n<li>Apply pertinent design patterns to mobile application architectures.</li>\n<li>Work with mobile data persistence frameworks like CoreData, Realm, Firebase, etc.</li>\n</ul><ul>\n<li><p>You MUST have 5+ years of experience with Swift/Objective-C and REST/Web Services using JSON, XML.</p></li>\n<li><p>Significant experience with all aspects of native mobile application development on IOS (Swift/Objective-C).</p></li>\n<li>Experience with developing software that communicates with back-end servers via REST/Web Services using JSON, XML.</li>\n<li><p>Worked with data persistence frameworks like CoreData, Realm, Firebase, etc.</p></li>\n<li><p>Ability to clearly articulate complex issues and technologies.</p></li>\n<li><p>Excellent problem-solving, communication and analytical skills.</p></li>\n<li>Bonus points for: AWS experience, Android development skills.</li>\n</ul><h3><strong>Benefits</strong></h3><ul>\n<li><p>Benefits for a single subscriber &gt; $30K; family &gt; $40K.</p></li>\n<li><p>Cover full cost (no premium, no deductible) to employees and their dependents health care, dental and vision.</p></li>\n<li><p>Top of the line MacBook Pro or equivalent.</p></li>\n<li><h3>Short and long term disability.</h3></li>\n<li><h3>401K retirement plan.</h3></li>\n<li><h3>Flexible spending account.</h3></li>\n<li><h3>Subsidized gym membership.</h3></li>\n<li><p>Company stock (stock is given out to all new employees on Jan 1st following your first year anniversary with us. The company stock vests over 3 years at no commitment to you. More details are provided at the interview with CEO). </p></li>\n</ul><p><strong><strong>***</strong>YOU MUST BE A CITIZEN OF THE UNITED STATES, HAVE YOUR GREEN CARD OR LONG TERM VISA TO APPLY TO THIS POSITION<strong>. You can Work Remotely anywhere in the United States for this position but the Greater Philadelphia Area is ideal. </strong>We are currently 100% remote, but when businesses open back up there may be occasional travel for meetings.***</strong></p><p><a href=\"https://himalayas.app/companies/chariot-solutions\">Chariot Solutions</a> has 18+ years of experience solving challenging business problems with technology and is a top IT consulting firm specializing in software, mobile, cloud and data pipeline engineering. Our team includes many of the top software architects in the Philly area, with deep technical expertise, industry knowledge and a genuine passion to help your organization be on the forefront of digital transformation.</p><h3>\n<a href=\"https://himalayas.app/companies/chariot-solutions\">Chariot Solutions</a> Specializes in: </h3><ul>\n<li><p><strong><strong>Software Development </strong>- </strong>Quality is something we never compromise on – from the user experience, to the code, we craft solutions using best practices including agile development and automated testing, leaving you with a solid foundation to achieve success, growth and ROI.</p></li>\n<li><p><strong><strong>Mobile Development</strong> – </strong>Our iOS and Android engineers and designers are passionate about creating the ultimate user experience for you and your customers. That’s why we focus on usability and performance to design, build, and deliver best-in-class mobile applications.</p></li>\n<li><p><strong><strong>Cloud Development </strong>-</strong> Find out what AWS cloud computing can do for your business. It takes an expert to guide you through the cloud journey. Understand the hidden challenges of developing software in the cloud.</p></li>\n<li><p><strong><strong>Data Pipeline Engineering </strong>- </strong>Support your Business Intelligence, Machine Learning and AI initiatives with innovative, production ready, Data Engineering and Data Pipeline Optimization strategies powered by tools such as Apache Airflow, AWS Redshift and Lambda. </p></li>\n</ul><p>Originally posted on <a href=\"https://himalayas.app\">Himalayas</a></p>",
+      "pubDate": 1786520367,
+      "expiryDate": 1791704363,
+      "applicationLink": "https://himalayas.app/companies/chariot-solutions/jobs/senior-ios-developer-swift-objective-c-rest-120-150k-exciting-it-consul",
+      "guid": "https://himalayas.app/companies/chariot-solutions/jobs/senior-ios-developer-swift-objective-c-rest-120-150k-exciting-it-consul"
+    },
+    {
+      "title": "Senior iOS Engineer (w. Swift)",
+      "excerpt": "You will join our client’s mobile team as an embedded engineer building new features for their flagship iOS news app.",
+      "companyName": "Curotec",
+      "companySlug": "curotec",
+      "companyLogo": "https://cdn-images.himalayas.app/95ph6zz3m44p4l6p5w1hj2ttuyup",
+      "employmentType": "Full Time",
+      "minSalary": null,
+      "maxSalary": null,
+      "salaryPeriod": "annual",
+      "seniority": [
+        "Senior"
+      ],
+      "currency": null,
+      "locationRestrictions": [],
+      "timezoneRestrictions": [
+        -11,
+        -10,
+        -9.5,
+        -9,
+        -8,
+        -7,
+        -6,
+        -5,
+        -4,
+        -3.5,
+        -3,
+        -2,
+        -1,
+        0,
+        1,
+        2,
+        3,
+        3.5,
+        4,
+        4.5,
+        5,
+        5.5,
+        5.75,
+        6,
+        6.5,
+        7,
+        8,
+        8.75,
+        9,
+        9.5,
+        10,
+        10.5,
+        11,
+        12,
+        12.75,
+        13,
+        14
+      ],
+      "categories": [
+        "IOS-Engineering",
+        "Mobile-Development",
+        "Swift-Development",
+        "Senior-IOS-Engineer",
+        "Native-App-Development",
+        "Senior-IOS-Developer",
+        "iOS-Developer"
+      ],
+      "parentCategories": [
+        "Developer"
+      ],
+      "description": "<p>You will join our client’s mobile team as an embedded engineer building new features for their flagship iOS news app. You’ll work inside their Jira board, attend their standups, and ship code alongside their internal team. They handle back-end services; you own the native Swift layer.</p><h3>What You’ll Build</h3><ul>\n<li>A redesigned home screen with dynamic, personalizable content feeds</li>\n</ul><h3>• Revamped navigation across the app</h3><ul>\n<li>Audio integration for continuous play and CarPlay support (AVFoundation)</li>\n</ul><h3>• Vertical video playback</h3><ul>\n<li>Food and Sports brand destinations including a Discover map and live scoreboards</li>\n<li>Embedded web views for games, puzzles, and interactive content from the CMS</li>\n<li>Architecture review of the existing ~85K-line Swift codebase during the design sprint</li>\n</ul><h3>Requirements</h3><ul>\n<li>5+ years of production Swift experience in consumer-facing iOS apps</li>\n<li>Strong UIKit skills (the existing codebase uses UIKit, no SwiftUI)</li>\n<li>Experience with GraphQL clients, specifically Apollo iOS SDK</li>\n<li>Familiarity with Coordinator pattern + MVC architecture</li>\n<li>Experience with WKWebView integration and native-to-web bridge patterns (WKScriptMessageHandler)</li>\n<li>Audio/video playback using AVFoundation</li>\n</ul><h3>• CocoaPods dependency management</h3><ul>\n<li>Comfortable working inside an existing large codebase with an established team</li>\n</ul><h3>Nice to Have</h3><ul>\n<li>Experience with media or publishing apps (news, streaming, content-heavy products)</li>\n<li>Ad SDK integration (Google Ad Manager, Prebid, Amazon APS)</li>\n<li>Firebase (Analytics, Crashlytics, Remote Config, Cloud Messaging)</li>\n</ul><h3>• Auth0 authentication flows</h3><ul>\n<li>StoreKit / in-app purchase implementation</li>\n<li>WidgetKit, Live Activities, Dynamic Island</li>\n</ul><h3>• CarPlay development experience</h3><p>Originally posted on <a href=\"https://himalayas.app\">Himalayas</a></p>",
+      "pubDate": 1787259608,
+      "expiryDate": 1792443608,
+      "applicationLink": "https://himalayas.app/companies/curotec/jobs/senior-ios-engineer-w-swift",
+      "guid": "https://himalayas.app/companies/curotec/jobs/senior-ios-engineer-w-swift"
+    },
+    {
+      "title": "iOS Software Engineer",
+      "excerpt": "Role OverviewWe are looking for a talented iOS Software Engineer to build and evolve mobile applications that power insurance and financial products.",
+      "companyName": "Parallel Partners",
+      "companySlug": "parallel-partners",
+      "companyLogo": "",
+      "employmentType": "Full Time",
+      "minSalary": null,
+      "maxSalary": null,
+      "salaryPeriod": "annual",
+      "seniority": [
+        "Entry-level"
+      ],
+      "currency": null,
+      "locationRestrictions": [
+        "United States"
+      ],
+      "timezoneRestrictions": [
+        -10,
+        -9,
+        -8,
+        -7,
+        -6,
+        -5,
+        14
+      ],
+      "categories": [
+        "Mobile-Software-Engineer-(IOS-Android)",
+        "IOS-Mobile-Engineer",
+        "Mid-Level-IOS-Engineer",
+        "iOS-Developer"
+      ],
+      "parentCategories": [
+        "Developer"
+      ],
+      "description": "<h3>Role Overview</h3><p>We are looking for a talented iOS Software Engineer to build and evolve mobile applications that power insurance and financial products. This is a fully remote position where you will be part of a global engineering team working across multiple countries to build reliable, scalable mobile systems.</p><h3>What You Will Do</h3><p>Build and ship iOS features using Swift. Create clean mobile flows for insurance, payments, claims, renewals and financial services. Work with product and design to simplify complex user journeys.</p><h3>Why It Might Be a Fit</h3><p>3+ years of iOS development experience using SwiftUI. Strong iOS fundamentals and experience shipping production apps. Good knowledge of SwiftUI, UIKit, async/await and iOS architecture patterns.</p><h3>Requirements</h3><ul>\n<li>3+ years of iOS development experience using SwiftUI</li>\n<li>Strong iOS fundamentals and experience shipping production apps</li>\n<li>Good knowledge of SwiftUI, UIKit, async/await and iOS architecture patterns</li>\n<li>Strong sense of mobile UX, usability, edge cases and user flows</li>\n<li>Experience integrating REST APIs and debugging production issues</li>\n<li>Fast execution, high ownership and strong attention to product quality</li>\n</ul><h3>Benefits</h3><ul>\n<li>medical insurance</li>\n<li>Dental</li>\n<li>Vision</li>\n<li>Savings Plan Options</li>\n<li>PTO</li>\n</ul><p>Originally posted on <a href=\"https://himalayas.app\">Himalayas</a></p>",
+      "pubDate": 1783158246,
+      "expiryDate": 1788325022,
+      "applicationLink": "https://himalayas.app/companies/parallel-partners/jobs/ios-software-engineer",
+      "guid": "https://himalayas.app/companies/parallel-partners/jobs/ios-software-engineer"
+    },
+    {
+      "title": "iOS Software Engineer",
+      "excerpt": "Role OverviewWe are looking for a talented iOS Software Engineer to build and evolve mobile applications that power insurance and financial products.",
+      "companyName": "Ginas Tech Jobs",
+      "companySlug": "ginas-tech-jobs",
+      "companyLogo": "https://cdn-images.himalayas.app/7cu9t39r4mfjpcumbn6m78uc4xpx",
+      "employmentType": "Full Time",
+      "minSalary": null,
+      "maxSalary": null,
+      "salaryPeriod": "annual",
+      "seniority": [
+        "Entry-level"
+      ],
+      "currency": null,
+      "locationRestrictions": [
+        "United States"
+      ],
+      "timezoneRestrictions": [
+        -10,
+        -9,
+        -8,
+        -7,
+        -6,
+        -5,
+        14
+      ],
+      "categories": [
+        "Mobile-Software-Engineer-(IOS-Android)",
+        "IOS-Mobile-Engineer",
+        "Mid-Level-IOS-Engineer",
+        "iOS-Developer"
+      ],
+      "parentCategories": [
+        "Developer"
+      ],
+      "description": "<h3>Role Overview</h3><p>We are looking for a talented iOS Software Engineer to build and evolve mobile applications that power insurance and financial products. This is a fully remote position where you will be part of a global engineering team working across multiple countries to build reliable, scalable mobile systems.</p><h3>What You Will Do</h3><p>Build and ship iOS features using Swift, create clean mobile flows for insurance, payments, claims, renewals and financial services, work with product and design to simplify complex user journeys, integrate backend APIs and ensure mobile flows are stable and reliable.</p><h3>Why It Might Be a Fit</h3><p>3+ years of iOS development experience using SwiftUI, strong iOS fundamentals and experience shipping production apps, good knowledge of SwiftUI, UIKit, async/await and iOS architecture patterns, strong sense of mobile UX, usability, edge cases and user flows.</p><h3>Requirements</h3><ul>\n<li>3+ years of iOS development experience using SwiftUI</li>\n<li>Strong iOS fundamentals and experience shipping production apps</li>\n<li>Good knowledge of SwiftUI, UIKit, async/await and iOS architecture patterns</li>\n<li>Strong sense of mobile UX, usability, edge cases and user flows</li>\n<li>Experience integrating REST APIs and debugging production issues</li>\n</ul><h3>Benefits</h3><ul>\n<li>medical insurance</li>\n<li>Dental</li>\n<li>Vision</li>\n<li>Savings Plan Options</li>\n<li>PTO</li>\n</ul><p>Originally posted on <a href=\"https://himalayas.app\">Himalayas</a></p>",
+      "pubDate": 1783079773,
+      "expiryDate": 1788263772,
+      "applicationLink": "https://himalayas.app/companies/ginas-tech-jobs/jobs/ios-software-engineer",
+      "guid": "https://himalayas.app/companies/ginas-tech-jobs/jobs/ios-software-engineer"
+    }
+  ]
+}

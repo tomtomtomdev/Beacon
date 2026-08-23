@@ -1,0 +1,327 @@
+{
+  "offset": 0,
+  "limit": 4,
+  "totalFound": 4,
+  "content": [
+    {
+      "id": "744000145032469",
+      "name": "Software Engineer, Backend (AI)",
+      "uuid": "553f4ee3-a53e-43d7-9034-84ad33859983",
+      "jobAdId": "46e71c02-9156-42df-a7e5-b4ed3fa21294",
+      "defaultJobAd": true,
+      "refNumber": "REF5903P",
+      "company": {
+        "identifier": "Grab",
+        "name": "Grab"
+      },
+      "releasedDate": "2026-08-23T10:44:36.088Z",
+      "location": {
+        "city": "Petaling Jaya",
+        "country": "my",
+        "address": "First Avenue",
+        "remote": false,
+        "hybrid": false,
+        "fullLocation": "Petaling Jaya, , Malaysia"
+      },
+      "industry": {
+        "id": "internet",
+        "label": "Internet"
+      },
+      "department": {},
+      "function": {
+        "id": "engineering",
+        "label": "Engineering"
+      },
+      "typeOfEmployment": {
+        "id": "permanent",
+        "label": "Full-time"
+      },
+      "experienceLevel": {
+        "id": "associate",
+        "label": "Associate"
+      },
+      "customField": [
+        {
+          "fieldId": "6556edfbb1660e2542150180",
+          "fieldLabel": "Department Name",
+          "valueId": "APEX Engineering",
+          "valueLabel": "APEX Engineering"
+        },
+        {
+          "fieldId": "6556eece4009a938a8c5d65b",
+          "fieldLabel": "Job Family",
+          "valueId": "Software Engineering",
+          "valueLabel": "Software Engineering"
+        },
+        {
+          "fieldId": "642b4ec24bb9036658bf66bd",
+          "fieldLabel": "Brands",
+          "valueId": "default",
+          "valueLabel": "Grab"
+        },
+        {
+          "fieldId": "COUNTRY",
+          "fieldLabel": "Country/Region",
+          "valueId": "my",
+          "valueLabel": "Malaysia"
+        },
+        {
+          "fieldId": "6556ee9a4009a938a8c5d65a",
+          "fieldLabel": "Division",
+          "valueId": "Tech_Division",
+          "valueLabel": "Tech"
+        }
+      ],
+      "visibility": "PUBLIC",
+      "ref": "https://api.smartrecruiters.com/v1/companies/Grab/postings/744000145032469",
+      "language": {
+        "code": "en",
+        "label": "English",
+        "labelNative": "English (US)"
+      }
+    },
+    {
+      "id": "744000145029449",
+      "name": "Senior Software Engineer, Mobile (Android)",
+      "uuid": "5c50f473-e912-4de6-8efd-5ee50a4d6a42",
+      "jobAdId": "d05dddc7-4b97-4e3b-8e07-72b9c9250663",
+      "defaultJobAd": true,
+      "refNumber": "REF5406L",
+      "company": {
+        "identifier": "Grab",
+        "name": "Grab"
+      },
+      "releasedDate": "2026-08-23T07:45:40.398Z",
+      "location": {
+        "city": "Bangalore",
+        "country": "in",
+        "address": "Aster (East Wing), Embassy Tech Village, Kadubesanahalli",
+        "remote": false,
+        "hybrid": false,
+        "fullLocation": "Bangalore, , India"
+      },
+      "industry": {
+        "id": "it_and_services",
+        "label": "Information Technology And Services"
+      },
+      "department": {},
+      "function": {
+        "id": "engineering",
+        "label": "Engineering"
+      },
+      "typeOfEmployment": {
+        "id": "permanent",
+        "label": "Full-time"
+      },
+      "experienceLevel": {
+        "id": "associate",
+        "label": "Associate"
+      },
+      "customField": [
+        {
+          "fieldId": "642b4ec24bb9036658bf66bd",
+          "fieldLabel": "Brands",
+          "valueId": "default",
+          "valueLabel": "Grab"
+        },
+        {
+          "fieldId": "COUNTRY",
+          "fieldLabel": "Country/Region",
+          "valueId": "in",
+          "valueLabel": "India"
+        },
+        {
+          "fieldId": "6556edfbb1660e2542150180",
+          "fieldLabel": "Department Name",
+          "valueId": "Financial Engineering (Dept)",
+          "valueLabel": "Financial Engineering"
+        },
+        {
+          "fieldId": "6556eece4009a938a8c5d65b",
+          "fieldLabel": "Job Family",
+          "valueId": "Software Engineering",
+          "valueLabel": "Software Engineering"
+        },
+        {
+          "fieldId": "6556ee9a4009a938a8c5d65a",
+          "fieldLabel": "Division",
+          "valueId": "Tech_Division",
+          "valueLabel": "Tech"
+        },
+        {
+          "fieldId": "680ef063b7561e7a54bdc32c",
+          "fieldLabel": "Hot Job",
+          "valueId": "d45df6ad-27cd-4c49-beae-7a07e3aee823",
+          "valueLabel": "Yes"
+        }
+      ],
+      "visibility": "PUBLIC",
+      "ref": "https://api.smartrecruiters.com/v1/companies/Grab/postings/744000145029449",
+      "language": {
+        "code": "en",
+        "label": "English",
+        "labelNative": "English (US)"
+      }
+    },
+    {
+      "id": "744000145029439",
+      "name": "Software Engineer, iOS",
+      "uuid": "b17f3396-301f-4380-9572-38674ef9b200",
+      "jobAdId": "d285f33b-d1e1-419b-909c-80b012b7ed31",
+      "defaultJobAd": true,
+      "refNumber": "REF5851C",
+      "company": {
+        "identifier": "Grab",
+        "name": "Grab"
+      },
+      "releasedDate": "2026-08-23T07:44:39.357Z",
+      "location": {
+        "city": "Bangalore",
+        "country": "in",
+        "address": "Aster (East Wing), Embassy Tech Village, Kadubesanahalli",
+        "remote": false,
+        "hybrid": false,
+        "fullLocation": "Bangalore, , India"
+      },
+      "industry": {
+        "id": "it_and_services",
+        "label": "Information Technology And Services"
+      },
+      "department": {},
+      "function": {
+        "id": "engineering",
+        "label": "Engineering"
+      },
+      "typeOfEmployment": {
+        "id": "permanent",
+        "label": "Full-time"
+      },
+      "experienceLevel": {
+        "id": "associate",
+        "label": "Associate"
+      },
+      "customField": [
+        {
+          "fieldId": "6556edfbb1660e2542150180",
+          "fieldLabel": "Department Name",
+          "valueId": "Financial Engineering (Dept)",
+          "valueLabel": "Financial Engineering"
+        },
+        {
+          "fieldId": "6556eece4009a938a8c5d65b",
+          "fieldLabel": "Job Family",
+          "valueId": "Software Engineering",
+          "valueLabel": "Software Engineering"
+        },
+        {
+          "fieldId": "642b4ec24bb9036658bf66bd",
+          "fieldLabel": "Brands",
+          "valueId": "default",
+          "valueLabel": "Grab"
+        },
+        {
+          "fieldId": "COUNTRY",
+          "fieldLabel": "Country/Region",
+          "valueId": "in",
+          "valueLabel": "India"
+        },
+        {
+          "fieldId": "6556ee9a4009a938a8c5d65a",
+          "fieldLabel": "Division",
+          "valueId": "Tech_Division",
+          "valueLabel": "Tech"
+        }
+      ],
+      "visibility": "PUBLIC",
+      "ref": "https://api.smartrecruiters.com/v1/companies/Grab/postings/744000145029439",
+      "language": {
+        "code": "en",
+        "label": "English",
+        "labelNative": "English (US)"
+      }
+    },
+    {
+      "id": "744000144751689",
+      "name": "Senior Database Engineer",
+      "uuid": "6ea0df02-c5a8-47a0-8d1a-8e49d8161d58",
+      "jobAdId": "7d49535f-3f27-4e25-8110-5334072c7a98",
+      "defaultJobAd": true,
+      "refNumber": "REF5912W",
+      "company": {
+        "identifier": "Grab",
+        "name": "Grab"
+      },
+      "releasedDate": "2026-08-21T12:15:23.999Z",
+      "location": {
+        "city": "Bangalore",
+        "country": "in",
+        "address": "Aster (East Wing), Embassy Tech Village, Kadubesanahalli",
+        "remote": false,
+        "hybrid": false,
+        "fullLocation": "Bangalore, , India"
+      },
+      "industry": {
+        "id": "internet",
+        "label": "Internet"
+      },
+      "department": {},
+      "function": {
+        "id": "engineering",
+        "label": "Engineering"
+      },
+      "typeOfEmployment": {
+        "id": "permanent",
+        "label": "Full-time"
+      },
+      "experienceLevel": {
+        "id": "mid_senior_level",
+        "label": "Mid-Senior Level"
+      },
+      "customField": [
+        {
+          "fieldId": "642b4ec24bb9036658bf66bd",
+          "fieldLabel": "Brands",
+          "valueId": "default",
+          "valueLabel": "Grab"
+        },
+        {
+          "fieldId": "COUNTRY",
+          "fieldLabel": "Country/Region",
+          "valueId": "in",
+          "valueLabel": "India"
+        },
+        {
+          "fieldId": "6556edfbb1660e2542150180",
+          "fieldLabel": "Department Name",
+          "valueId": "APEX Engineering",
+          "valueLabel": "APEX Engineering"
+        },
+        {
+          "fieldId": "6556eece4009a938a8c5d65b",
+          "fieldLabel": "Job Family",
+          "valueId": "Software Engineering",
+          "valueLabel": "Software Engineering"
+        },
+        {
+          "fieldId": "6556ee9a4009a938a8c5d65a",
+          "fieldLabel": "Division",
+          "valueId": "Tech_Division",
+          "valueLabel": "Tech"
+        },
+        {
+          "fieldId": "680ef063b7561e7a54bdc32c",
+          "fieldLabel": "Hot Job",
+          "valueId": "d45df6ad-27cd-4c49-beae-7a07e3aee823",
+          "valueLabel": "Yes"
+        }
+      ],
+      "visibility": "PUBLIC",
+      "ref": "https://api.smartrecruiters.com/v1/companies/Grab/postings/744000144751689",
+      "language": {
+        "code": "en",
+        "label": "English",
+        "labelNative": "English (US)"
+      }
+    }
+  ]
+}

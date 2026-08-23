@@ -1,0 +1,466 @@
+{
+  "_links": {
+    "next": {
+      "href": "https://api.mycareersfuture.gov.sg/v2/search?limit=4&page=1"
+    },
+    "self": {
+      "href": "https://api.mycareersfuture.gov.sg/v2/search?limit=4"
+    },
+    "first": {
+      "href": "https://api.mycareersfuture.gov.sg/v2/search?limit=4"
+    },
+    "last": {
+      "href": "https://api.mycareersfuture.gov.sg/v2/search?limit=4&page=3"
+    }
+  },
+  "searchRankingId": "31077d2c-2432-4b19-b0d8-64fa089743a7-1787502337.4175198",
+  "results": [
+    {
+      "uuid": "a7fb9bf68a62114381c48b515abe95d7",
+      "score": 0.5695569503736769,
+      "title_match_score": 4,
+      "job_role_score": 2.5681827,
+      "skills_match_score": 0,
+      "recency_score": 1.0492433,
+      "metadata": {
+        "jobPostId": "MCF-2026-1452979",
+        "updatedAt": "2026-08-21T04:03:08",
+        "newPostingDate": "2026-08-21",
+        "totalNumberJobApplication": 0,
+        "isPostedOnBehalf": false,
+        "isHideSalary": false,
+        "isHideHiringEmployerName": false,
+        "jobDetailsUrl": "https://www.mycareersfuture.gov.sg/job/engineering/ios-sdk-engineer-ozion-tech-a7fb9bf68a62114381c48b515abe95d7"
+      },
+      "address": {
+        "overseasCountry": null,
+        "foreignAddress1": null,
+        "foreignAddress2": null,
+        "block": "400",
+        "street": "ORCHARD ROAD",
+        "floor": null,
+        "unit": null,
+        "building": "ORCHARD TOWERS",
+        "postalCode": "238875",
+        "isOverseas": false,
+        "districts": [
+          {
+            "id": 9,
+            "location": "D09 Cairnhill, Orchard, River Valley",
+            "region": "Central",
+            "sectors": [
+              "22",
+              "23"
+            ],
+            "regionId": "Central"
+          }
+        ],
+        "lat": 1.30689712703259,
+        "lng": 103.82907360153
+      },
+      "hiringCompany": null,
+      "positionLevels": [
+        {
+          "id": 7,
+          "position": "Professional"
+        }
+      ],
+      "schemes": [],
+      "flexibleWorkArrangements": [
+        {
+          "id": 1,
+          "flexibleWorkArrangement": "Flexi-Hours"
+        }
+      ],
+      "salary": {
+        "minimum": 10000,
+        "maximum": 14000,
+        "type": {
+          "salaryType": "Monthly"
+        }
+      },
+      "postedCompany": {
+        "uen": "202211163N",
+        "name": "OZION TECH PTE. LTD.",
+        "logoFileName": "25b8021960a36d7a9df24f842841f7da/ozion-tech.png",
+        "logoUploadPath": "https://static.mycareersfuture.gov.sg/images/company/logos/25b8021960a36d7a9df24f842841f7da/ozion-tech.png",
+        "responsiveEmployer": {
+          "isResponsive": false
+        }
+      },
+      "skills": [
+        {
+          "skill": "Communication",
+          "uuid": "07a3dd247ad6bec7fe401aa11619959f"
+        },
+        {
+          "skill": "iOS SDK",
+          "uuid": "0f93aa9aa35ffb3ad62a4f66fecfc4bc"
+        },
+        {
+          "skill": "iOS",
+          "uuid": "1bdf605991920db11cbdf8508204c4eb"
+        },
+        {
+          "skill": "iOS Development",
+          "uuid": "452d755cc69f3eef17048a6980ebcf48"
+        },
+        {
+          "skill": "Cross-functional Coordination",
+          "uuid": "6ae2a85e78a791279128f4f7f69221ea"
+        },
+        {
+          "skill": "Coding",
+          "uuid": "7099464747ad04622e1a6575ead55a11"
+        },
+        {
+          "skill": "Architecture Design",
+          "uuid": "ae64194051878ec826a5a24ebf799d69"
+        },
+        {
+          "skill": "Solve Technical Problems",
+          "uuid": "deaa325dd4e959a87321c371be3c0358"
+        },
+        {
+          "skill": "Competitive Product Analysis",
+          "uuid": "e07f560f1b74d21cd5236aedd6b790d6"
+        },
+        {
+          "skill": "SDK",
+          "uuid": "f20e3c5e54c0ab3d375d660b3f896f6a"
+        }
+      ],
+      "employmentTypes": [
+        {
+          "id": 8,
+          "employmentType": "Full Time"
+        }
+      ],
+      "categories": [
+        {
+          "id": 11,
+          "category": "Engineering"
+        }
+      ],
+      "shiftPattern": null,
+      "title": "iOS SDK Engineer",
+      "status": {
+        "id": "102",
+        "jobStatus": "Open"
+      },
+      "retriever_score": 8.400483
+    },
+    {
+      "uuid": "bcffb9829af1d086acf861af1464a1ee",
+      "score": 0.22686084853545213,
+      "title_match_score": 3.3145285,
+      "job_role_score": 2.2167006,
+      "skills_match_score": 0,
+      "recency_score": 1.0492433,
+      "metadata": {
+        "jobPostId": "MCF-2026-1454698",
+        "updatedAt": "2026-08-21T06:53:08",
+        "newPostingDate": "2026-08-21",
+        "totalNumberJobApplication": 0,
+        "isPostedOnBehalf": false,
+        "isHideSalary": false,
+        "isHideHiringEmployerName": false,
+        "jobDetailsUrl": "https://www.mycareersfuture.gov.sg/job/information-technology/software-engineer-mobile-singapore-google-asia-pacific-bcffb9829af1d086acf861af1464a1ee"
+      },
+      "address": {
+        "overseasCountry": null,
+        "foreignAddress1": null,
+        "foreignAddress2": null,
+        "block": "70",
+        "street": "PASIR PANJANG ROAD",
+        "floor": null,
+        "unit": null,
+        "building": "MAPLETREE BUSINESS CITY",
+        "postalCode": "117371",
+        "isOverseas": false,
+        "districts": [
+          {
+            "id": 5,
+            "location": "D05 Pasir Panjang, Hong Leong Garden, Clementi New Town",
+            "region": "West",
+            "sectors": [
+              "11",
+              "12",
+              "13"
+            ],
+            "regionId": "West"
+          }
+        ],
+        "lat": 1.27617859659935,
+        "lng": 103.800039933678
+      },
+      "hiringCompany": null,
+      "positionLevels": [
+        {
+          "id": 7,
+          "position": "Professional"
+        }
+      ],
+      "schemes": [],
+      "flexibleWorkArrangements": [],
+      "salary": {
+        "minimum": 9000,
+        "maximum": 18000,
+        "type": {
+          "salaryType": "Monthly"
+        }
+      },
+      "postedCompany": {
+        "uen": "200817984R",
+        "name": "GOOGLE ASIA PACIFIC PTE. LTD.",
+        "logoFileName": "26b00abe7acb9b5449204a64fb45ab5a/google-asia-pacific.png",
+        "logoUploadPath": "https://static.mycareersfuture.gov.sg/images/company/logos/26b00abe7acb9b5449204a64fb45ab5a/google-asia-pacific.png",
+        "responsiveEmployer": {
+          "isResponsive": true
+        }
+      },
+      "skills": [
+        {
+          "skill": "Ai",
+          "uuid": "0a40e3c91a3a55c9a37428c6d194d0e5"
+        },
+        {
+          "skill": "Design",
+          "uuid": "1afa74da05ca145d3418aad9af510109"
+        },
+        {
+          "skill": "iOS",
+          "uuid": "1bdf605991920db11cbdf8508204c4eb"
+        },
+        {
+          "skill": "Medical Degree",
+          "uuid": "2974c7f210f04f09e8b29e609ecf03b4"
+        },
+        {
+          "skill": "Collaborating With Product Managers",
+          "uuid": "2f5035136e5b315e24aac77ce859671a"
+        },
+        {
+          "skill": "Product Support",
+          "uuid": "3290d1d843bc3f10edd4b8fca66e42f9"
+        },
+        {
+          "skill": "Full Stack Development",
+          "uuid": "6bfd8292276fa84259c7c17a235050ee"
+        },
+        {
+          "skill": "Workflow Development",
+          "uuid": "7df1136f740f66ca9df279f3566b9425"
+        },
+        {
+          "skill": "Mobile Application Testing",
+          "uuid": "879858f751bda37c84b9c523bde92a9f"
+        },
+        {
+          "skill": "Cross Functional Team Building",
+          "uuid": "87c609c58caffee206311061beb20cf8"
+        },
+        {
+          "skill": "Feature Engineering",
+          "uuid": "aa55370a0f5e60a50198fa962841917b"
+        },
+        {
+          "skill": "Swift (Programming Language)",
+          "uuid": "b9e9120b98bfe199ba974115dedafe81"
+        },
+        {
+          "skill": "Software Development Lifecycle",
+          "uuid": "bf01ad9b7667e225a0ab2a30262045df"
+        },
+        {
+          "skill": "Ios Applications",
+          "uuid": "c90283d0634c16b797bdee52ef6ae233"
+        },
+        {
+          "skill": "Deployment",
+          "uuid": "ea355214fd4bc7c57f471bd92918879b"
+        },
+        {
+          "skill": "Testing",
+          "uuid": "fa6a5a3224d7da66d9e0bdec25f62cf0"
+        }
+      ],
+      "employmentTypes": [
+        {
+          "id": 8,
+          "employmentType": "Full Time"
+        }
+      ],
+      "categories": [
+        {
+          "id": 21,
+          "category": "Information Technology"
+        }
+      ],
+      "shiftPattern": null,
+      "title": "Software Engineer, Mobile (iOS) - Singapore",
+      "status": {
+        "id": "102",
+        "jobStatus": "Open"
+      },
+      "retriever_score": 7.017162
+    },
+    {
+      "uuid": "c65ffb90f493ce582a8085a7fe530333",
+      "score": 0.15335981331382362,
+      "title_match_score": 3.0481515,
+      "job_role_score": 2.2167006,
+      "skills_match_score": 0,
+      "recency_score": 1.0492433,
+      "metadata": {
+        "jobPostId": "MCF-2026-1453425",
+        "updatedAt": "2026-08-21T04:42:59",
+        "newPostingDate": "2026-08-21",
+        "totalNumberJobApplication": 0,
+        "isPostedOnBehalf": false,
+        "isHideSalary": false,
+        "isHideHiringEmployerName": false,
+        "jobDetailsUrl": "https://www.mycareersfuture.gov.sg/job/information-technology/senior-software-engineer-mobile-singapore-google-asia-pacific-c65ffb90f493ce582a8085a7fe530333"
+      },
+      "address": {
+        "overseasCountry": null,
+        "foreignAddress1": null,
+        "foreignAddress2": null,
+        "block": "70",
+        "street": "PASIR PANJANG ROAD",
+        "floor": null,
+        "unit": null,
+        "building": "MAPLETREE BUSINESS CITY",
+        "postalCode": "117371",
+        "isOverseas": false,
+        "districts": [
+          {
+            "id": 5,
+            "location": "D05 Pasir Panjang, Hong Leong Garden, Clementi New Town",
+            "region": "West",
+            "sectors": [
+              "11",
+              "12",
+              "13"
+            ],
+            "regionId": "West"
+          }
+        ],
+        "lat": 1.27617859659935,
+        "lng": 103.800039933678
+      },
+      "hiringCompany": null,
+      "positionLevels": [
+        {
+          "id": 7,
+          "position": "Professional"
+        }
+      ],
+      "schemes": [],
+      "flexibleWorkArrangements": [],
+      "salary": {
+        "minimum": 11000,
+        "maximum": 22000,
+        "type": {
+          "salaryType": "Monthly"
+        }
+      },
+      "postedCompany": {
+        "uen": "200817984R",
+        "name": "GOOGLE ASIA PACIFIC PTE. LTD.",
+        "logoFileName": "26b00abe7acb9b5449204a64fb45ab5a/google-asia-pacific.png",
+        "logoUploadPath": "https://static.mycareersfuture.gov.sg/images/company/logos/26b00abe7acb9b5449204a64fb45ab5a/google-asia-pacific.png",
+        "responsiveEmployer": {
+          "isResponsive": true
+        }
+      },
+      "skills": [
+        {
+          "skill": "iOS",
+          "uuid": "1bdf605991920db11cbdf8508204c4eb"
+        },
+        {
+          "skill": "Applications",
+          "uuid": "1ddf333c6654f7f89c739dddfb4cc429"
+        },
+        {
+          "skill": "Project Leadership",
+          "uuid": "25d65cc9e8e19a8f466af4e6f99417e3"
+        },
+        {
+          "skill": "Medical Degree",
+          "uuid": "2974c7f210f04f09e8b29e609ecf03b4"
+        },
+        {
+          "skill": "Product Support",
+          "uuid": "3290d1d843bc3f10edd4b8fca66e42f9"
+        },
+        {
+          "skill": "Job Coaching",
+          "uuid": "44e4e1cd4b06bfb9bccbe1a9fc8e71d4"
+        },
+        {
+          "skill": "coordinating developers",
+          "uuid": "6a04083ff8569e60f1dd3123132f7ca8"
+        },
+        {
+          "skill": "Full Stack Development",
+          "uuid": "6bfd8292276fa84259c7c17a235050ee"
+        },
+        {
+          "skill": "Architecture Analysis",
+          "uuid": "7bd11c0674f0a6f0c86c1ba33dbba04d"
+        },
+        {
+          "skill": "Workflow Development",
+          "uuid": "7df1136f740f66ca9df279f3566b9425"
+        },
+        {
+          "skill": "Project Lifecycle Management",
+          "uuid": "8dc38ba389637b7854d03d2d62651c4a"
+        },
+        {
+          "skill": "Feature Engineering",
+          "uuid": "aa55370a0f5e60a50198fa962841917b"
+        },
+        {
+          "skill": "Technical Architecture",
+          "uuid": "b322c67080fc659809148c6e44a82fc3"
+        },
+        {
+          "skill": "Swift (Programming Language)",
+          "uuid": "b9e9120b98bfe199ba974115dedafe81"
+        },
+        {
+          "skill": "Software Development Lifecycle",
+          "uuid": "bf01ad9b7667e225a0ab2a30262045df"
+        },
+        {
+          "skill": "lead negotiation",
+          "uuid": "f4f57fe33effb7607228774ba95a3207"
+        }
+      ],
+      "employmentTypes": [
+        {
+          "id": 8,
+          "employmentType": "Full Time"
+        }
+      ],
+      "categories": [
+        {
+          "id": 21,
+          "category": "Information Technology"
+        }
+      ],
+      "shiftPattern": null,
+      "title": "Senior Software Engineer, Mobile (iOS) - Singapore",
+      "status": {
+        "id": "102",
+        "jobStatus": "Open"
+      },
+      "retriever_score": 6.52889
+    }
+  ],
+  "total": 14,
+  "countWithoutFilters": 14
+}

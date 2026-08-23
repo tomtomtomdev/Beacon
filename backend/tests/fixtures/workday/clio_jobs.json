@@ -1,0 +1,282 @@
+{
+  "total": 150,
+  "jobPostings": [
+    {
+      "title": "Machine Learning Engineer",
+      "externalPath": "/job/Vancouver/Machine-Learning-Engineer_BF-REQ-3169",
+      "timeType": "Full time",
+      "locationsText": "4 Locations",
+      "postedOn": "Posted 4 Days Ago",
+      "bulletFields": [
+        "BF-REQ-3169"
+      ]
+    },
+    {
+      "title": "Senior AI Builder and Analyst, Customer Support",
+      "externalPath": "/job/Vancouver/Senior-AI-Builder-and-Analyst--Customer-Support_REQ-5249",
+      "timeType": "Full time",
+      "locationsText": "3 Locations",
+      "postedOn": "Posted 4 Days Ago",
+      "bulletFields": [
+        "REQ-5249"
+      ]
+    },
+    {
+      "title": "Technical Trainer",
+      "externalPath": "/job/London/Technical-Trainer_BF-REQ-3525",
+      "timeType": "Full time",
+      "locationsText": "London",
+      "postedOn": "Posted 4 Days Ago",
+      "bulletFields": [
+        "BF-REQ-3525"
+      ]
+    }
+  ],
+  "facets": [
+    {
+      "facetParameter": "jobFamilyGroup",
+      "descriptor": "Job Category",
+      "values": [
+        {
+          "descriptor": "Administration",
+          "id": "29827a73287b010338397606a5ab0000",
+          "count": 1
+        },
+        {
+          "descriptor": "Business Operations",
+          "id": "29827a73287b01033839756d2cb80000",
+          "count": 1
+        },
+        {
+          "descriptor": "Content Department",
+          "id": "2cc8d07738e910015452a67e34430000",
+          "count": 1
+        },
+        {
+          "descriptor": "Customer Success",
+          "id": "29827a73287b010338397a3b8a320000",
+          "count": 20
+        },
+        {
+          "descriptor": "Editorial Department",
+          "id": "2cc8d07738e910015452b74b3dc10000",
+          "count": 3
+        },
+        {
+          "descriptor": "Engineering",
+          "id": "29827a73287b0103383979088de50000",
+          "count": 45
+        },
+        {
+          "descriptor": "Finance",
+          "id": "29827a73287b01033839773ad6310000",
+          "count": 7
+        },
+        {
+          "descriptor": "Marketing",
+          "id": "29827a73287b01033839739f2bbd0000",
+          "count": 14
+        },
+        {
+          "descriptor": "People",
+          "id": "29827a73287b01033839786f05920000",
+          "count": 12
+        },
+        {
+          "descriptor": "Product",
+          "id": "29827a73287b010338397ca3dc620000",
+          "count": 18
+        },
+        {
+          "descriptor": "Revenue Operations",
+          "id": "29827a73287b0103383976a0a9fa0000",
+          "count": 9
+        },
+        {
+          "descriptor": "Sales",
+          "id": "29827a73287b010338397c09d4c20000",
+          "count": 18
+        }
+      ]
+    },
+    {
+      "facetParameter": "workerSubType",
+      "descriptor": "Job Type",
+      "values": [
+        {
+          "descriptor": "Independent Contractor",
+          "id": "1aab45765e191000c8661809c2200001",
+          "count": 2
+        },
+        {
+          "descriptor": "Regular",
+          "id": "29827a73287b0103383999ceb88b0000",
+          "count": 140
+        },
+        {
+          "descriptor": "Temporary (Fixed Term)",
+          "id": "29827a73287b0103383999ceb88b0001",
+          "count": 8
+        }
+      ]
+    },
+    {
+      "facetParameter": "timeType",
+      "descriptor": "Full/Part-time",
+      "values": [
+        {
+          "descriptor": "Full time",
+          "id": "9bb02f4ce5fd010258c93069611b0002",
+          "count": 149
+        },
+        {
+          "descriptor": "Part time",
+          "id": "9bb02f4ce5fd010258c93069611b0001",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "facetParameter": "locationMainGroup",
+      "values": [
+        {
+          "facetParameter": "locations",
+          "descriptor": "Locations",
+          "values": [
+            {
+              "descriptor": "Barcelona",
+              "id": "5355d93b7bb71000fa864a08f89a0000",
+              "count": 9
+            },
+            {
+              "descriptor": "Bogotá",
+              "id": "264a5836ffdc1001ef02ce98b1490000",
+              "count": 3
+            },
+            {
+              "descriptor": "Calgary",
+              "id": "951c033a9bfe1000bb1588990a0a0000",
+              "count": 60
+            },
+            {
+              "descriptor": "Cape Town",
+              "id": "05076fe1ea8310010e26668d4e970000",
+              "count": 1
+            },
+            {
+              "descriptor": "Dublin",
+              "id": "951c033a9bfe1000bb8bbc5fd1940000",
+              "count": 21
+            },
+            {
+              "descriptor": "London",
+              "id": "91fe713229fb1001af047c5658c10000",
+              "count": 13
+            },
+            {
+              "descriptor": "Manchester",
+              "id": "3ac7d7c7fb34100157b0bb55f5f20000",
+              "count": 8
+            },
+            {
+              "descriptor": "New York",
+              "id": "e1c8366c45f310019be973f84ca00000",
+              "count": 13
+            },
+            {
+              "descriptor": "Remote - Australia",
+              "id": "af3f90f6a82f1001a0011f97e8b10000",
+              "count": 2
+            },
+            {
+              "descriptor": "Remote - Canada",
+              "id": "1b6969fbfbca0101f164999ecea20000",
+              "count": 43
+            },
+            {
+              "descriptor": "Remote - Canada",
+              "id": "951c033a9bfe1000bb3da2ca53a70000",
+              "count": 2
+            },
+            {
+              "descriptor": "Remote - England",
+              "id": "9b4682c02285100157ba0997233e0000",
+              "count": 4
+            },
+            {
+              "descriptor": "Remote - Ireland",
+              "id": "951c033a9bfe1000bba36d9954be0000",
+              "count": 1
+            },
+            {
+              "descriptor": "Remote - MD, USA",
+              "id": "84fd8a83d42b1001b81f9928b6170000",
+              "count": 1
+            },
+            {
+              "descriptor": "Remote - Mexico",
+              "id": "5e7ee044b8a010011d09b2fd58840000",
+              "count": 3
+            },
+            {
+              "descriptor": "Remote - NY, USA",
+              "id": "29827a73287b0103387645973d490000",
+              "count": 1
+            },
+            {
+              "descriptor": "Remote - OH, USA",
+              "id": "38998396d7d61001539647a6c2520000",
+              "count": 1
+            },
+            {
+              "descriptor": "Remote - Spain",
+              "id": "123c34bf769710010c8cd75648690000",
+              "count": 1
+            },
+            {
+              "descriptor": "Remote - USA",
+              "id": "c946f162886610016531cdb24e520000",
+              "count": 27
+            },
+            {
+              "descriptor": "Remote - USA",
+              "id": "1b6969fbfbca0101f18d831a40780000",
+              "count": 4
+            },
+            {
+              "descriptor": "Remote - VA, USA",
+              "id": "423013de2bdb1001b80691495d8a0000",
+              "count": 1
+            },
+            {
+              "descriptor": "Santiago",
+              "id": "aded36882fc81001eef2cc48b54e0000",
+              "count": 3
+            },
+            {
+              "descriptor": "Sydney",
+              "id": "9f76b56736ca1001035afadbe9b70000",
+              "count": 1
+            },
+            {
+              "descriptor": "Toronto",
+              "id": "951c033a9bfe1000bb26907c9ac60000",
+              "count": 72
+            },
+            {
+              "descriptor": "Toronto",
+              "id": "29827a73287b01033876963ab3300000",
+              "count": 1
+            },
+            {
+              "descriptor": "Vancouver",
+              "id": "951c033a9bfe1000baf025938f160000",
+              "count": 68
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "userAuthenticated": false
+}

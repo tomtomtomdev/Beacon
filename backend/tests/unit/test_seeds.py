@@ -23,7 +23,7 @@ def test_parse_seed_csv_maps_pinned_schema_to_companies() -> None:
 def test_delivered_seed_file_parses_completely() -> None:
     companies = parse_seed_csv(REAL_SEED_FILE.read_text())
 
-    assert len(companies) == 53
+    assert len(companies) == 58
     assert {c.ats_type for c in companies} <= {
         "greenhouse",
         "lever",
@@ -31,6 +31,7 @@ def test_delivered_seed_file_parses_completely() -> None:
         "smartrecruiters",
         "workable",
         "workday",
+        "teamtailor",
         "gem",
         "bendingspoons",
     }

@@ -87,7 +87,8 @@ async def run_ingest(
                         f" upserted={result.upserted} errors={result.errors}"
                     )
 
-            # Company-less sources (HN, JobTech): one source, many employers per posting.
+            # Company-less sources (HN, JobTech, Himalayas, MyCareersFuture, …): one source,
+            # many employers per posting.
             if only_company is None and poll_boards:
                 sources = make_companyless_sources(fetcher)
                 if only_source is not None:
@@ -171,7 +172,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Poll ATS boards and company-less sources.")
     target = parser.add_mutually_exclusive_group()
     target.add_argument("--company", metavar="SLUG", help="only the ATS company with this ats_slug")
-    target.add_argument("--source", metavar="ID", help="only this company-less source (hn/jobtech)")
+    target.add_argument(
+        "--source",
+        metavar="ID",
+        help="only this company-less source (hn/jobtech/remoteok/weworkremotely/himalayas/mycareersfuture)",
+    )
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")

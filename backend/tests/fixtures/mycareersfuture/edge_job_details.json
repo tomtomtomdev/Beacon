@@ -1,0 +1,207 @@
+[
+  {
+    "uuid": "edge0000000000000000000000000001",
+    "sourceCode": "Employer Portal",
+    "title": "Java Backend Engineer (Tokyo posting)",
+    "description": "<p>Spring Boot &amp; Kafka backend, Tokyo office.</p>",
+    "minimumYearsExperience": 5,
+    "shiftPattern": null,
+    "schemes": [],
+    "skills": [
+      {
+        "skill": "Communication",
+        "uuid": "07a3dd247ad6bec7fe401aa11619959f",
+        "confidence": null,
+        "isKeySkill": true
+      },
+      {
+        "skill": "iOS SDK",
+        "uuid": "0f93aa9aa35ffb3ad62a4f66fecfc4bc",
+        "confidence": null,
+        "isKeySkill": true
+      },
+      {
+        "skill": "iOS",
+        "uuid": "1bdf605991920db11cbdf8508204c4eb",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "iOS Development",
+        "uuid": "452d755cc69f3eef17048a6980ebcf48",
+        "confidence": null,
+        "isKeySkill": true
+      },
+      {
+        "skill": "Cross-functional Coordination",
+        "uuid": "6ae2a85e78a791279128f4f7f69221ea",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Coding",
+        "uuid": "7099464747ad04622e1a6575ead55a11",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Architecture Design",
+        "uuid": "ae64194051878ec826a5a24ebf799d69",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Solve Technical Problems",
+        "uuid": "deaa325dd4e959a87321c371be3c0358",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "Competitive Product Analysis",
+        "uuid": "e07f560f1b74d21cd5236aedd6b790d6",
+        "confidence": null,
+        "isKeySkill": false
+      },
+      {
+        "skill": "SDK",
+        "uuid": "f20e3c5e54c0ab3d375d660b3f896f6a",
+        "confidence": null,
+        "isKeySkill": true
+      }
+    ],
+    "flexibleWorkArrangements": [
+      {
+        "id": 1,
+        "flexibleWorkArrangement": "Flexi-Hours"
+      }
+    ],
+    "otherRequirements": null,
+    "ssocCode": "25190",
+    "occupationId": "OCC013825",
+    "ssocVersion": "2020v3",
+    "workingHours": null,
+    "numberOfVacancies": 7,
+    "psdUrl": null,
+    "categories": [
+      {
+        "id": 11,
+        "category": "Engineering"
+      }
+    ],
+    "employmentTypes": [
+      {
+        "id": 8,
+        "employmentType": "Full Time"
+      }
+    ],
+    "positionLevels": [
+      {
+        "id": 7,
+        "position": "Professional"
+      }
+    ],
+    "status": {
+      "id": 102,
+      "jobStatus": "Open"
+    },
+    "ssecEqa": "70",
+    "ssecFos": "1140",
+    "postedCompany": {
+      "uen": "202211163N",
+      "description": "<p>Ozion is a technology company based in Singapore. Currently we are a group of 12 outstanding talents focusing on developing the best products for everyone. King James Bible is our product loved by many people around the world. This app is the one that helps people pray and understand different words in the Bible. Besides that, Ozion continues to make significant contributions to the world where people want to enjoy the happiness from apps.</p>",
+      "name": "OZION TECH PTE. LTD.",
+      "ssicCode": null,
+      "employeeCount": null,
+      "companyUrl": "www.oziontech.com",
+      "lastSyncDate": "2026-08-21T03:58:41.000Z",
+      "ssicCode2020": "62011",
+      "badges": [],
+      "_links": {
+        "self": {
+          "href": "https://api.mycareersfuture.gov.sg/v2/companies/202211163N"
+        },
+        "jobs": {
+          "href": "https://api.mycareersfuture.gov.sg/v2/companies/202211163N/jobs"
+        },
+        "addresses": {
+          "href": "https://api.mycareersfuture.gov.sg/v2/companies/202211163N/addresses"
+        },
+        "schemes": {
+          "href": "https://api.mycareersfuture.gov.sg/v2/companies/202211163N/schemes"
+        }
+      },
+      "ssicDescription2020": "DEVELOPMENT OF SOFTWARE AND APPLICATIONS (EXCEPT GAMES AND CYBERSECURITY)",
+      "logoFileName": "25b8021960a36d7a9df24f842841f7da/ozion-tech.png",
+      "logoUploadPath": "https://static.mycareersfuture.gov.sg/images/company/logos/25b8021960a36d7a9df24f842841f7da/ozion-tech.png",
+      "responsiveEmployer": {
+        "isResponsive": false
+      }
+    },
+    "hiringCompany": null,
+    "screeningQuestions": [],
+    "address": {
+      "overseasCountry": "Japan",
+      "foreignAddress1": null,
+      "foreignAddress2": null,
+      "block": "400",
+      "street": "ORCHARD ROAD",
+      "floor": null,
+      "unit": null,
+      "building": "ORCHARD TOWERS",
+      "postalCode": "238875",
+      "isOverseas": true,
+      "districts": [
+        {
+          "id": 9,
+          "location": "D09 Cairnhill, Orchard, River Valley",
+          "region": "Central",
+          "sectors": [
+            "22",
+            "23"
+          ],
+          "regionId": "Central"
+        }
+      ],
+      "lat": 1.30689712703259,
+      "lng": 103.82907360153
+    },
+    "metadata": {
+      "jobPostId": "MCF-2026-1452979",
+      "deletedAt": null,
+      "createdBy": "6c8cc0f5-5b16-4783-b794-2950f325de23",
+      "createdAt": "2026-08-21T04:03:08.000Z",
+      "updatedAt": "2026-08-21T04:03:08.000Z",
+      "emailRecipient": "6c8cc0f5-5b16-4783-b794-2950f325de23",
+      "editCount": 0,
+      "repostCount": 0,
+      "totalNumberOfView": 41,
+      "newPostingDate": null,
+      "originalPostingDate": null,
+      "expiryDate": "2026-09-20",
+      "totalNumberJobApplication": 0,
+      "isJdEnhanced": false,
+      "isPostedOnBehalf": false,
+      "isHideSalary": false,
+      "isHideCompanyAddress": false,
+      "isHideHiringEmployerName": false,
+      "isHideEmployerName": false,
+      "jobDetailsUrl": "https://www.mycareersfuture.gov.sg/job/engineering/ios-sdk-engineer-ozion-tech-a7fb9bf68a62114381c48b515abe95d7"
+    },
+    "salary": {
+      "maximum": 14000,
+      "minimum": 10000,
+      "type": {
+        "id": 4,
+        "salaryType": "Monthly"
+      }
+    },
+    "_links": {
+      "self": {
+        "href": "https://api.mycareersfuture.gov.sg/v2/jobs/a7fb9bf68a62114381c48b515abe95d7"
+      },
+      "screeningQuestions": {
+        "href": "https://api.mycareersfuture.gov.sg/v2/jobs/a7fb9bf68a62114381c48b515abe95d7/screening-questions"
+      }
+    }
+  }
+]

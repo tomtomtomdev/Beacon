@@ -8,10 +8,16 @@ from collections.abc import Callable
 
 from beacon.adapters.sources.ashby import AshbyAdapter
 from beacon.adapters.sources.greenhouse import GreenhouseAdapter
+from beacon.adapters.sources.himalayas import HimalayasAdapter
 from beacon.adapters.sources.hn import HNAdapter
 from beacon.adapters.sources.jobtech import JobTechAdapter
 from beacon.adapters.sources.lever import LeverAdapter
+from beacon.adapters.sources.mycareersfuture import MyCareersFutureAdapter
 from beacon.adapters.sources.remoteok import RemoteOKAdapter
+from beacon.adapters.sources.smartrecruiters import SmartRecruitersAdapter
+from beacon.adapters.sources.teamtailor import TeamtailorAdapter
+from beacon.adapters.sources.workable import WorkableAdapter
+from beacon.adapters.sources.workday import WorkdayAdapter
 from beacon.adapters.sources.wwr import WWRAdapter
 from beacon.application.ingest import SourceFactory
 from beacon.application.ports import Fetcher, JobSource
@@ -23,6 +29,10 @@ _ADAPTERS: dict[str, _BuildAdapter] = {
     "greenhouse": GreenhouseAdapter,
     "lever": LeverAdapter,
     "ashby": AshbyAdapter,
+    "smartrecruiters": SmartRecruitersAdapter,
+    "workable": WorkableAdapter,
+    "workday": WorkdayAdapter,
+    "teamtailor": TeamtailorAdapter,
 }
 
 SUPPORTED_ATS = frozenset(_ADAPTERS)
@@ -44,4 +54,6 @@ def make_companyless_sources(fetcher: Fetcher) -> list[JobSource]:
         JobTechAdapter(fetcher),
         RemoteOKAdapter(fetcher),
         WWRAdapter(fetcher),
+        HimalayasAdapter(fetcher),
+        MyCareersFutureAdapter(fetcher),
     ]
