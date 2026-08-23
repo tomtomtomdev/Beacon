@@ -57,24 +57,42 @@ class PoliteClient:
         self._cache: dict[str, tuple[dict[str, str], Any]] = {}
 
     async def get_json(self, url: str, *, params: Mapping[str, str] | None = None) -> Any:
-        return await self._get(url, params, lambda response: response.json())
+        return await self._request("GET", url, params, None, lambda response: response.json())
 
     async def get_text(self, url: str, *, params: Mapping[str, str] | None = None) -> str:
         """The raw response body — for feeds that aren't JSON (WWR's RSS/XML)."""
-        return cast(str, await self._get(url, params, lambda response: response.text))
+        return cast(
+            str, await self._request("GET", url, params, None, lambda response: response.text)
+        )
 
-    async def _get(
+    async def post_json(
         self,
         url: str,
+        *,
+        json: Mapping[str, Any],
+        params: Mapping[str, str] | None = None,
+    ) -> Any:
+        """A JSON POST through the same door — Workday CxS and MyCareersFuture only expose
+        their search as POST. No conditional caching: a POST response carries no validators."""
+        return await self._request("POST", url, params, json, lambda response: response.json())
+
+    async def _request(
+        self,
+        method: str,
+        url: str,
         params: Mapping[str, str] | None,
+        json: Mapping[str, Any] | None,
         parse: Callable[[httpx.Response], Any],
     ) -> Any:
         host = urlsplit(url).netloc
+        conditional = method == "GET"  # only a GET has cached validators to revalidate
         key = self._cache_key(url, params)
         try:
             async with self._host_lock(host):
                 await self._throttle(host)
-                response = await self._get_with_retry(url, params, self._conditional_headers(key))
+                response = await self._send_with_retry(
+                    method, url, params, json, self._conditional_headers(key) if conditional else {}
+                )
             if response.status_code == httpx.codes.NOT_MODIFIED:
                 logger.info("http_304 url=%s served=cache", url)
                 return self._cache[key][1]
@@ -86,7 +104,8 @@ class PoliteClient:
             # DNS/connect/timeout — reachability, not a response. Always transient.
             raise SourceUnavailable(FailureKind.UNREACHABLE, str(exc)) from exc
         data = parse(response)
-        self._store(key, response, data)
+        if conditional:
+            self._store(key, response, data)
         return data
 
     def _host_lock(self, host: str) -> asyncio.Lock:
@@ -102,14 +121,19 @@ class PoliteClient:
                 await self._sleep(wait)
         self._last_request[host] = self._monotonic()
 
-    async def _get_with_retry(
-        self, url: str, params: Mapping[str, str] | None, headers: dict[str, str]
+    async def _send_with_retry(
+        self,
+        method: str,
+        url: str,
+        params: Mapping[str, str] | None,
+        json: Mapping[str, Any] | None,
+        headers: dict[str, str],
     ) -> httpx.Response:
         for attempt in range(self._max_retries):
             last = attempt == self._max_retries - 1
             try:
-                response = await self._client.get(
-                    url, params=params, headers=headers, timeout=self._timeout
+                response = await self._client.request(
+                    method, url, params=params, json=json, headers=headers, timeout=self._timeout
                 )
             except httpx.TransportError:
                 if last:

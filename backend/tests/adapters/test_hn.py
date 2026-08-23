@@ -124,6 +124,11 @@ class ConcurrencyProbe:
     async def get_text(self, url: str, *, params: Mapping[str, str] | None = None) -> str:
         raise NotImplementedError  # HN uses JSON only
 
+    async def post_json(
+        self, url: str, *, json: Mapping[str, Any], params: Mapping[str, str] | None = None
+    ) -> Any:
+        raise NotImplementedError  # HN is GET-only
+
 
 async def test_item_fetches_are_bounded_by_the_concurrency_limit(
     hn_fixture: dict[str, Any],
@@ -157,6 +162,11 @@ class FlakyFetcher:
 
     async def get_text(self, url: str, *, params: Mapping[str, str] | None = None) -> str:
         raise NotImplementedError  # HN uses JSON only
+
+    async def post_json(
+        self, url: str, *, json: Mapping[str, Any], params: Mapping[str, str] | None = None
+    ) -> Any:
+        raise NotImplementedError  # HN is GET-only
 
 
 async def test_a_raised_item_fetch_never_kills_the_poll_and_is_retried(

@@ -30,6 +30,12 @@ class Fetcher(Protocol):
 
     async def get_text(self, url: str, *, params: Mapping[str, str] | None = None) -> str: ...
 
+    async def post_json(
+        self, url: str, *, json: Mapping[str, Any], params: Mapping[str, str] | None = None
+    ) -> Any:
+        """For the boards whose search is POST-only (Workday CxS, MyCareersFuture)."""
+        ...
+
 
 class JobSource(Protocol):
     source_id: str

@@ -2,6 +2,7 @@
 exponential backoff. Time is injected (fake clock/sleep) so the suite never really waits.
 """
 
+import json
 from typing import Any
 
 import httpx
@@ -152,3 +153,49 @@ async def test_transport_error_raises_unreachable() -> None:
     with pytest.raises(SourceUnavailable) as exc_info:
         await client.get_json("https://host.example/jobs")
     assert exc_info.value.kind is FailureKind.UNREACHABLE
+
+
+async def test_post_json_sends_the_body_and_returns_the_parsed_response() -> None:
+    # Workday CxS and MyCareersFuture expose their search as POST-only — the same politeness
+    # door serves them, minus the conditional-GET cache (a POST has no validators).
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return httpx.Response(200, json={"total": 1, "jobPostings": [{"title": "iOS Engineer"}]})
+
+    clock = FakeClock()
+    data = await _client(httpx.MockTransport(handler), clock).post_json(
+        "https://acme.wd3.myworkdayjobs.com/wday/cxs/acme/Careers/jobs",
+        json={"limit": 20, "offset": 0},
+    )
+
+    assert data == {"total": 1, "jobPostings": [{"title": "iOS Engineer"}]}
+    assert seen[0].method == "POST"
+    assert json.loads(seen[0].content) == {"limit": 20, "offset": 0}
+
+
+async def test_post_json_shares_the_per_host_rate_limit_with_get() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={})
+
+    clock = FakeClock()
+    client = _client(httpx.MockTransport(handler), clock, min_interval=1.0)
+
+    await client.post_json("https://host.example/search", json={"page": 0})
+    await client.get_json("https://host.example/jobs/1")  # same host → must wait ~1s
+
+    assert clock.sleeps == [1.0]
+
+
+async def test_post_json_maps_http_failure_to_source_unavailable() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(404)
+
+    clock = FakeClock()
+    client = _client(httpx.MockTransport(handler), clock, min_interval=0.0)
+
+    with pytest.raises(SourceUnavailable) as excinfo:
+        await client.post_json("https://host.example/search", json={})
+
+    assert excinfo.value.kind is FailureKind.GONE
