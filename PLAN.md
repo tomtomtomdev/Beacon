@@ -425,6 +425,36 @@ Acceptance:
 
 ---
 
+## Slice 13 — More boards for iOS / Java backend / AI
+
+**Goal:** widen source coverage for the three role families without touching `application/` or `domain/`. Four per-company ATS adapters (SmartRecruiters, Workable, Workday CxS, Teamtailor) and two company-less boards (Himalayas, MyCareersFuture). SPEC §5.1/§5.2.
+
+**Build order: port → per-company adapters → company-less adapters → factory + seeds.** Each adapter is one RED fixture test → GREEN adapter; the factory entry is the last step so a half-built adapter can never be polled.
+
+### 13a — `Fetcher.post_json`
+
+- `test_post_json_sends_the_body_and_returns_the_parsed_response`, `test_post_json_shares_the_per_host_rate_limit_with_get`, `test_post_json_maps_http_failure_to_source_unavailable` — Workday CxS and MyCareersFuture expose search as POST only. GET keeps the conditional-GET cache; POST has no validators to send.
+
+### 13b — Per-company adapters (fixtures under `tests/fixtures/{source}/`)
+
+- **SmartRecruiters** — list pages (`limit`/`offset` against `totalFound`), then one detail GET per posting (the list has no ad text); description = the four `jobAd.sections` joined; `location.country` is lowercase ISO-2.
+- **Workable** — one widget call with `details=true`; `locations[].countryCode` is the authoritative country; `published_on` is a bare date → midnight UTC.
+- **Workday CxS** — slug `tenant/wdN/site` parsed into the CxS base (malformed slug → `ValueError`); POST search paged at 20; GET `{externalPath}` per posting for `jobDescription`; `postedOn` ("Posted 4 Days Ago") is relative prose and never used.
+- **Teamtailor** — `{host}/jobs.json`; slug accepts a career domain or a bare tenant; the embedded schema.org `jobLocation` gives an ISO-2 country, and a remote ad with no place stays country-less.
+
+### 13c — Company-less boards
+
+- **Himalayas** — role queries (data, not logic: `ROLE_QUERIES`), paged to a cap, deduped by guid; hitting the cap logs `himalayas_page_cap` so a partial sweep never reads as complete; empty `locationRestrictions` = work-anywhere, no country invented.
+- **MyCareersFuture** — POST search per role query + one detail GET per uuid; Singapore unless `address.isOverseas`, then the named country only; agency postings resolve `hiringCompany` over `postedCompany`.
+
+Acceptance:
+- [x] Every new adapter satisfies the `JobSource` protocol via the factory, and `SUPPORTED_ATS` covers every seeded ats_type that has one — `test_source_factory.py`
+- [x] Seed rows dormant for want of an adapter now poll: smartrecruiters (3), workable (1), workday (2 → 4 with Autodesk/Workday Inc), plus teamtailor (3 new SE/NO rows) — 58 seed rows, 56 pollable
+- [x] **Live acceptance 2026-08-23** on a temp DB, zero errors: Voi 83/83 (teamtailor), SmartNews 21/21 (workable), Carousell 44/44 (smartrecruiters), Clio 150/150 (workday), Himalayas 70/70, MyCareersFuture 70/70. Role density on the query-scoped boards: Himalayas 37 backend / 17 ios / 15 ai-ml, MCF 32 ai-ml / 12 ios; sponsorship text tiers fired (himalayas 1 yes, 5 no)
+- [x] `make verify` green (backend 651, frontend 61)
+
+---
+
 ## Cross-cutting rules
 
 - Every network adapter is tested against recorded fixtures only; live calls happen solely in manual acceptance checks

@@ -81,8 +81,12 @@ Stored as seed data in `countries` table; shown in UI as context panel per job. 
 | Greenhouse | `boards-api.greenhouse.io/v1/boards/{slug}/jobs?content=true` | Largest coverage of target companies |
 | Lever | `api.lever.co/v0/postings/{slug}?mode=json` | |
 | Ashby | `api.ashbyhq.com/posting-api/job-board/{slug}` | Growing among startups |
+| SmartRecruiters | `api.smartrecruiters.com/v1/companies/{slug}/postings` (+ `/{id}` per posting) | Public, no auth; the list carries no ad text → one detail GET per posting |
+| Workable | `apply.workable.com/api/v1/widget/accounts/{slug}?details=true` | Whole board with descriptions in one call (the v3 accounts endpoint is not public) |
+| Workday CxS | `POST {tenant}.{wdN}.myworkdayjobs.com/wday/cxs/{tenant}/{site}/jobs` (+ GET `{externalPath}`) | Seed slug is `tenant/wdN/site`; search is POST-only and caps at 20 rows/page. Where enterprise Java backend lives |
+| Teamtailor | `{career-host}/jobs.json` (JSON Feed) | Dominant Nordic ATS (SE); slug is a career domain (`careers.voi.com`) or a bare tenant (`tibber`). Embedded schema.org address gives an ISO-2 country |
 
-Company slugs live in a `companies` seed table loaded from `seeds/companies.csv` with pinned schema: `name,ats_type,ats_slug,country_hq,priority` (priority 1–3; `active` and `registry_flags` are DB columns defaulted at load, not CSV columns). Initial seed: **53 verified companies delivered 2026-07-04** across SG/JP/AU/NL/IE/CA/US/SE. The seed contains eight ATS types; MVP adapters cover greenhouse (24), lever (10), ashby (11) — 45 companies. Rows with unsupported ats_type (smartrecruiters, workable, workday, gem, bendingspoons) load normally but are skipped by `ingest_all`, which filters to supported types — they activate automatically when their adapter ships (candidate future slices, smartrecruiters first at 3 companies). Adding a company = one CSV row, no code.
+Company slugs live in a `companies` seed table loaded from `seeds/companies.csv` with pinned schema: `name,ats_type,ats_slug,country_hq,priority` (priority 1–3; `active` and `registry_flags` are DB columns defaulted at load, not CSV columns). Seed: **53 verified companies delivered 2026-07-04**, grown to **58 (2026-08-23, slice 13)** across SG/JP/AU/NL/IE/CA/US/SE/NO. Adapters cover greenhouse (24), ashby (11), lever (10), workday (4), teamtailor (3), smartrecruiters (3), workable (1) — **56 of 58 rows pollable**. Two ats_types stay dormant by decision, not omission: **gem** (job board is captcha-gated: `CAPTCHA_REQUIRED` on the board page, no JSON endpoint) and **bendingspoons** (no public feed). A row whose ats_type has no adapter loads normally and is skipped by `ingest_all` (which filters to supported types) and shown as `pending` in the health view. Adding a company = one CSV row, no code.
 
 ### 5.2 Board adapters (API/RSS)
 | Source | Access | Notes |
@@ -91,6 +95,8 @@ Company slugs live in a `companies` seed table loaded from `seeds/companies.csv`
 | RemoteOK | Public JSON API | Remote roles; tag-rich |
 | We Work Remotely | RSS | |
 | Arbetsförmedlingen JobTech | Open API (jobtechdev.se) | Sweden-wide coverage, official |
+| Himalayas | Public JSON search API (`himalayas.app/jobs/api/search`) | ~100k live remote postings — polled **per role family** (iOS / Java backend / ML), never as a firehose. Attribution: postings keep their himalayas.app URL |
+| MyCareersFuture (SG) | Official government API: `POST /v2/search` + `GET /v2/jobs/{uuid}` | The only source shipping structured salary bands — the figure the Employment Pass threshold is measured against. Role-scoped queries; search rows carry no ad text → one detail GET each |
 
 ### 5.3 Registry ingesters (company-level, not job-level)
 | Registry | Format | Refresh |
@@ -215,6 +221,7 @@ Sort semantics: `sponsor_tier` maps to a numeric `sort_rank` (explicit_yes=3, re
 | 10 | CountryPanel (visa/PR data surfaced in job detail) + RemoteOK/WWR | Polish + breadth |
 | 11 | Source health & recovery (failure taxonomy, quarantine, weekly probe, health in digest) | Resilience: sources die without lying about data |
 | 12 | Resume upload + heuristic fit scoring (all jobs) + deterministic deep-match rationale (per job) | Personalized ranking at zero cost |
+| 13 | Six more sources: SmartRecruiters, Workable, Workday CxS, Teamtailor (per-company) + Himalayas, MyCareersFuture (company-less) | The port survives POST-only search and two-step (list→detail) boards; iOS/Java/AI coverage in the target countries |
 
 Each slice: red test → green → refactor → `make verify` → commit.
 
