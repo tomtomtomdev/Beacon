@@ -455,6 +455,73 @@ Acceptance:
 
 ---
 
+## Slice 14 — Sponsorship reach (IE/CA) + supply past the seed list
+
+**Goal:** close the two gaps the 2026-08-26 resume-match spot check exposed — every company sits at `registry_flags = 0`, and the seed list yields 24 iOS postings out of 7,507 canonical jobs. SPEC §5.3/§5.4. Registries first: they need no new port surface and they fix a systemic scoring bias, whereas every new board makes the bias worse by adding volume.
+
+**Build order: vocabulary fix → registries → no-auth adapters → `Fetcher` auth → NAV.** 14a is first because 14c–14d multiply the volume that 14a's bugs distort.
+
+**Blocking prerequisite — a §4 decision.** The 2026-08-26 survey assumed a target set that adds **UK** and the **Mediterranean** to §4. Arbeitnow and Reed were rejected 2026-08-23 on *geography*, and that reason holds until §4 changes. 14a/14b/14c/14d/14e are all clear of it — **do not start any UK/Mediterranean source work until §4 is settled.**
+
+### 14a — Vocabulary + skill-fit corrections (domain, pure)
+
+The spot check surfaced two ranking defects; both are domain-pure and testable without a single network call.
+
+- `test_swift_the_payment_network_is_not_the_swift_language` — Anthropic's "Cash Manager, Treasury" scored **80** against an iOS resume off *"bank connectivity (SWIFT, APIs, host-to-host)"*; Adyen's "Head of Global Credit Risk" scored 76 the same way. `extract_skills` is case-insensitive, so the payments network reads as the language. Fix in `domain/vocabulary.py` as data (a negative-context guard), not as logic in the caller.
+- `test_a_one_skill_job_does_not_score_full_coverage` — `_skill_fit` is `len(matched) / len(job.skills)`, so a job yielding exactly one extracted skill scores `skills_score = 100` on a single hit. That is how Spotify's C++/auth role (1 skill) outranked Truecaller's actual iOS role (3 of 4 matched). Needs a denominator floor; the weights stay where they are.
+- Both misclassifications become **appended** parametrized rows per the testing conventions — never deleted.
+
+### 14b — Registry ingesters: Ireland + Canada
+
+Both are `RegistryIngester` implementations reading a hand-downloaded snapshot through the existing `_csvfile.iter_rows` contract. No port change, no migration — `registry_flags` is an integer column, so `Registry.IE` and `Registry.CA` are additive enum members.
+
+- **`IEPermitsRegistry`** — DETE `employment-permits-issued-to-companies-{year}.xlsx` → CSV, refreshed monthly, company-name column. Ireland currently holds 100 postings in the DB with zero sponsorship signal.
+- **`CALMIARegistry`** — TFWP positive-LMIA employers list, quarterly on open.canada.ca. **Structural twin of `H1BLCARegistry`**: aggregate filings per employer so a large sponsor reads differently from a two-filing shop. Publisher caveat to encode in the docstring, not to hide: personal-name employers are excluded, so absence is not evidence of non-sponsorship.
+- `test_registry_flags_bitmask` extends `UK|NL|US|MANUAL` → `UK|NL|US|MANUAL|IE|CA`.
+- Both wire into `_available_ingesters` with the same **missing snapshot is skipped, not fatal** rule, and both write `registries_meta` so the 45-day staleness nag covers them.
+
+### 14c — The Muse adapter — **built, then dropped 2026-08-26**
+
+Built as planned (adapter, verbatim fixture, `NormalizedJob.source_level` so the board's own `levels[]` beat the title regex, page cap logged like Himalayas), then reverted the same day when live acceptance re-probed the API:
+
+- `q=` and `location=` are **ignored** — `q=ios engineer` and `location=Dublin, Ireland` both return the identical `total: 100845` and the identical page 1. A second filter also degrades the first: `descending=true` + category returns "Rotisserie Chicken Associate".
+- There is **no ordering** — page 1 mixes 2025-04 and 2026-08 postings — and page 1 is **byte-stable across an hour** (20/20 identical ids).
+- So a page-capped poll re-ingests the same 60 rows forever. The advertised 5,043 pages are reach we cannot reach, and sweeping them costs ~84 min/poll at 1 rps — slice 13 already rejected 33 min. Measured live before the revert: 60 rows → 6 classified (3 backend, 3 fullstack), **0 iOS**, 44 of 60 US.
+- `source_level` went with it: a domain field no adapter sets is a schema that lies, and keeping it for a producer that may never arrive is speculative generality.
+- **The lesson worth keeping:** a page count is not reach. Ask whether a firehose can be *steered* (keyword/location) or *advanced* (ordering, cursor) before counting its postings as supply.
+
+### 14d — Recruitee / Rippling adapters (per-company ATS) — **Breezy dropped 2026-08-26**
+
+Two factory entries shipped; each was one RED fixture test → GREEN adapter, factory entry last so a half-built adapter can never be polled.
+
+- **Recruitee** — `GET {slug}.recruitee.com/api/offers/`, public, no auth. NL-origin: the Benelux widener. One call per board (ad text inline), the ad split across `description` + `requirements`, `country_code` authoritative, and `published_at` in the board's own `"… UTC"` format. Seeds: **bunq**, **Channable**.
+- **Rippling ATS** — `GET api.rippling.com/platform/api/ats/v1/board/{slug}/jobs`. Two-step (the list carries no ad text) and the list repeats a posting per work location — 744 rows → 376 uuids on Rippling's own board — so dedup precedes the detail calls, and a detail that fails is skipped, not fatal. Seed: **Rippling**.
+- ~~**Breezy HR**~~ — **dropped, not deferred.** Its public `{slug}.breezy.hr/json` carries no ad text at all (id/name/url/location/company) and `api.breezy.hr/v3` needs a token, so every posting would land with no `content_hash`, no sponsorship tier and no resume score — the failure slice 13 refused when it paid for two-step fetching instead. 36 slug probes found no live board but the vendor's own demo, so there was no honest seed row either. Reason recorded in SPEC §5.5 and PROGRESS.
+- No seeded company used any of them, so **14d shipped with its seed rows or it shipped nothing** — an adapter with no seed row is untested reach.
+
+### 14e — Auth-capable `Fetcher` → NAV Norway
+
+- Credentials as `SecretStr` on `Settings`, exactly like `telegram_bot_token`, and configured on the **door keyed by host** (`PoliteClient(bearer_tokens={host: SecretStr})`) rather than passed to adapters — an adapter that never holds a token cannot leak one into a log, a repr, or another host's request, which is what the three tests pin. The politeness contract (1 rps/host, conditional GET, backoff, `SourceUnavailable`) is unchanged.
+- **Second port extension, found while building:** `get_json(modified_since=…)`. NAV's feed is *historical* (from ~2019) and NAV documents `If-Modified-Since` as the way to choose where it starts — a filter, not a cache validator. A pinned request therefore bypasses the conditional-GET cache: two windows are two different questions sharing one url. Like `post_json` in slice 13, this is an HTTP verb on the door, not business logic.
+- **What the feed actually required** (all fixture-pinned): ACTIVE filtering is mandatory because an INACTIVE item returns with its title and employer *stripped to `"..."`*; the ad text needs a detail call whose payload key is `ad_content` (the published docs still say `json`); an entry that closes between the two calls has no `ad_content` and is dropped; and titles are vocabulary-filtered before a detail call is spent — measured 4,711 ACTIVE ads over five days, **48 with a tech-shaped title (~1%)**.
+- **NAV Norway** (`GET pam-stilling-feed.nav.no/api/v1/feed`, bearer token) is the payload: Norway's official register, the NO twin of JobTech, and **NO is already a §4 target** — so it needs no §4 decision. The old `arbeidsplassen.nav.no/public-feed/...` path is dead (404); do not seed it.
+- Absent credentials → the adapter is simply not wired, matching the `anthropic_api_key` / Telegram precedent. It must never be a hard dependency.
+- **Adzuna is NOT the justification for this port change** — it was rejected 2026-08-23 on *quota*, not auth, and the arithmetic still fails: 1,000 calls/month free tier vs. ~4,860 needed for nine countries × three pages at a 4h cycle. Auth does not fix a quota. It returns only behind a separate slower cadence, which is a scheduler change and out of scope here.
+- Reed (UK) is a one-adapter follow-on **iff** SPEC §4 adds the UK as a target country.
+
+Acceptance:
+- [x] The SWIFT false positive and the one-skill-coverage inflation both have appended parametrized rows and are green (`test_vocabulary`, `test_classifier`, `test_resume`)
+- [x] `Registry` covers IE + CA; `test_registry_flags_bitmask` green (and pins the bit *values* as frozen); the hypothesis invariant (`registry_inferred` ⇒ `registry_flags != 0`) still holds
+- [x] A real IE and a real CA snapshot each match ≥1 seeded company — full snapshots (IE 6,360 employers / CA 7,884) match **7**: Cohere (CA), Stripe (IE+CA), OpenAI, Anthropic, Notion, Spotify, Workday (IE), plus Rippling (IE) once it was seeded. `spot_check_registry.py` diff eyeballed against both the fixtures and the full snapshots: **exactly one change either way** (Stripe gains IE off "Stripe Technology Company Limited", 57 permits), nothing lost, no trap matched
+- [x] Every new adapter satisfies `JobSource` via the factory; `SUPPORTED_ATS` covers every seeded `ats_type` that has one — `test_source_factory.py`
+- [x] Recruitee and Rippling each land with seed rows that poll green (Breezy dropped — see 14d)
+- [x] **Live acceptance 2026-08-26** on temp DBs, zero errors: bunq 10/10, Channable 15/15 (recruitee), Rippling 376/376 (rippling; dedup found 8 duplicate groups), NAV 2/2 → 1 row (the duplicate uuid that exposed the cross-page dedup bug, fixed with its own test). Country reach from Rippling alone: US 153, IN 101, **IE 26, CA 15, AU 9, SG 3**. Registry refresh on the same DB moved **371 of 401 jobs `unknown` → `registry_inferred`** while the 5 `explicit_yes` and 1 `explicit_no` correctly kept text precedence — the first non-zero `registry_flags` in Beacon's history
+- [x] Resume match re-run — **iOS supply did NOT move, and here is why.** The new sources added 402 postings and **zero iOS**: Rippling's 376 have no mobile roles at all, bunq/Channable are backend/AI shops, NAV's window yielded one fullstack ad, and The Muse (the volume play) was dropped as unsteerable. The registry half of the 2026-08-26 finding *is* fixed — every job of a matched employer moves sponsor fit 0.40 → 0.75 and `sort_rank` 1 → 2. **The structural conclusion: iOS supply is limited by which employers hire iOS, not by how many boards Beacon reads.** Widening ATS coverage buys backend/AI volume. The two sources that actually produce iOS postings are the keyword-steerable ones already shipped in slice 13 (Himalayas 17 iOS, MyCareersFuture 12 iOS). Next lever is iOS-first *seed companies* in the nine target countries, not more boards — carried to slice 15
+- [x] Every source re-listed from the 2026-08-23 rejection set carries its reversal reason in PROGRESS Decisions; the two sources dropped *during* this slice (Breezy, The Muse) carry their probe evidence in SPEC §5.5
+- [x] `make verify` green (backend 702, frontend 61)
+
+---
+
 ## Cross-cutting rules
 
 - Every network adapter is tested against recorded fixtures only; live calls happen solely in manual acceptance checks

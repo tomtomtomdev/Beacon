@@ -75,6 +75,8 @@ Stored as seed data in `countries` table; shown in UI as context panel per job. 
 
 ## 5. Data Sources (MVP)
 
+This section is the decision record: which sources, why, and what was rejected. The per-source operating detail for what is *shipped* — endpoint, auth, pagination, field-by-field normalization, timestamp quirks — lives in **SOURCES.md**, which is subordinate to this section. When a §5.4 candidate ships, it moves into SOURCES.md §3–§5 and leaves §5.4.
+
 ### 5.1 ATS adapters (structured JSON, per-company)
 | Source | Endpoint pattern | Notes |
 |---|---|---|
@@ -85,8 +87,10 @@ Stored as seed data in `countries` table; shown in UI as context panel per job. 
 | Workable | `apply.workable.com/api/v1/widget/accounts/{slug}?details=true` | Whole board with descriptions in one call (the v3 accounts endpoint is not public) |
 | Workday CxS | `POST {tenant}.{wdN}.myworkdayjobs.com/wday/cxs/{tenant}/{site}/jobs` (+ GET `{externalPath}`) | Seed slug is `tenant/wdN/site`; search is POST-only and caps at 20 rows/page. Where enterprise Java backend lives |
 | Teamtailor | `{career-host}/jobs.json` (JSON Feed) | Dominant Nordic ATS (SE); slug is a career domain (`careers.voi.com`) or a bare tenant (`tibber`). Embedded schema.org address gives an ISO-2 country |
+| Recruitee | `{slug}.recruitee.com/api/offers/` | Public, no auth; whole board with ad text in one call. NL-origin — the Benelux widener. The ad is split across `description` + `requirements` (both halves are real copy); `published_at` is `"2026-06-02 10:10:41 UTC"`, not ISO |
+| Rippling ATS | `api.rippling.com/platform/api/ats/v1/board/{slug}/jobs` (+ `/{uuid}` per posting) | Public, no auth; the list carries no ad text → one detail GET per posting, and it repeats a posting once per work location (744 rows → 376 uuids), so dedup precedes the detail calls |
 
-Company slugs live in a `companies` seed table loaded from `seeds/companies.csv` with pinned schema: `name,ats_type,ats_slug,country_hq,priority` (priority 1–3; `active` and `registry_flags` are DB columns defaulted at load, not CSV columns). Seed: **53 verified companies delivered 2026-07-04**, grown to **58 (2026-08-23, slice 13)** across SG/JP/AU/NL/IE/CA/US/SE/NO. Adapters cover greenhouse (24), ashby (11), lever (10), workday (4), teamtailor (3), smartrecruiters (3), workable (1) — **56 of 58 rows pollable**. Two ats_types stay dormant by decision, not omission: **gem** (job board is captcha-gated: `CAPTCHA_REQUIRED` on the board page, no JSON endpoint) and **bendingspoons** (no public feed). A row whose ats_type has no adapter loads normally and is skipped by `ingest_all` (which filters to supported types) and shown as `pending` in the health view. Adding a company = one CSV row, no code.
+Company slugs live in a `companies` seed table loaded from `seeds/companies.csv` with pinned schema: `name,ats_type,ats_slug,country_hq,priority` (priority 1–3; `active` and `registry_flags` are DB columns defaulted at load, not CSV columns). Seed: **53 verified companies delivered 2026-07-04**, grown to **58 (2026-08-23, slice 13)** and **61 (2026-08-26, slice 14)** across SG/JP/AU/NL/IE/CA/US/SE/NO. Adapters cover greenhouse (24), ashby (11), lever (10), workday (4), teamtailor (3), smartrecruiters (3), recruitee (2), workable (1), rippling (1) — **59 of 61 rows pollable**. Two ats_types stay dormant by decision, not omission: **gem** (job board is captcha-gated: `CAPTCHA_REQUIRED` on the board page, no JSON endpoint) and **bendingspoons** (no public feed). A row whose ats_type has no adapter loads normally and is skipped by `ingest_all` (which filters to supported types) and shown as `pending` in the health view. Adding a company = one CSV row, no code.
 
 ### 5.2 Board adapters (API/RSS)
 | Source | Access | Notes |
@@ -97,6 +101,7 @@ Company slugs live in a `companies` seed table loaded from `seeds/companies.csv`
 | Arbetsförmedlingen JobTech | Open API (jobtechdev.se) | Sweden-wide coverage, official |
 | Himalayas | Public JSON search API (`himalayas.app/jobs/api/search`) | ~100k live remote postings — polled **per role family** (iOS / Java backend / ML), never as a firehose. Attribution: postings keep their himalayas.app URL |
 | MyCareersFuture (SG) | Official government API: `POST /v2/search` + `GET /v2/jobs/{uuid}` | The only source shipping structured salary bands — the figure the Employment Pass threshold is measured against. Role-scoped queries; search rows carry no ad text → one detail GET each |
+| NAV Norway | Official register, **bearer token required**: `GET pam-stilling-feed.nav.no/api/v1/feed` (+ `GET /api/v1/feedentry/{uuid}`) | The NO twin of JobTech. A continuous historical feed from ~2019, so a poll pins its window with `If-Modified-Since` and follows `next_url` to a page cap. An INACTIVE item comes back with title and employer **stripped**, so ACTIVE filtering is mandatory; ~1% of the feed is software, so titles are vocabulary-filtered before a detail call is spent. No token → the source is not wired at all |
 
 ### 5.3 Registry ingesters (company-level, not job-level)
 | Registry | Format | Refresh |
@@ -105,12 +110,59 @@ Company slugs live in a `companies` seed table loaded from `seeds/companies.csv`
 | NL IND recognised sponsors | HTML table / list | Monthly |
 | US H-1B LCA disclosures | Quarterly XLSX (DOL) | Quarterly |
 | MANUAL — curated sponsor boards | Hand-entered flag; evidence note + date required | Ad hoc |
+| **IE DETE employment permits** *(slice 14)* | Monthly XLSX — `employment-permits-issued-to-companies-{year}.xlsx` (332 KB), company-name column | Monthly |
+| **CA TFWP positive LMIA employers** *(slice 14)* | Quarterly CSV/XLSX on open.canada.ca — employer, program stream, NOC 2021, business location | Quarterly |
 
 ~~SE Migrationsverket certified employers~~ — **does not exist**: the certification scheme was discontinued Dec 2023 (Sweden has no employer licensing for sponsorship; see §4).
 
 The `MANUAL` flag encodes human-verified sponsorship signals that have no machine-readable register: a company listed on relocate.me / swedishtechjobs / jobbatical (posting there is a self-declaration of sponsorship), a confirmed sponsorship from an application, or direct knowledge. It is **never scraped** — curated boards' lists are their product and off-limits to automation per Non-Goals; the workflow is: browse occasionally, flag companies by hand (one CLI/UI action storing `evidence` + `flagged_at`). MANUAL participates in `registry_inferred` exactly like the machine registries.
 
-Registry match is fuzzy company-name matching (normalized legal suffixes, token overlap) → sets `companies.registry_flags` (bitmask per registry) with a `match_confidence`. MANUAL flags are set directly (confidence 1.0, no fuzzy matching). **Bitmask members: `UK | NL | US | MANUAL`** (no SE — no Swedish register exists; the bit is not reserved).
+Registry match is fuzzy company-name matching (normalized legal suffixes, token overlap) → sets `companies.registry_flags` (bitmask per registry) with a `match_confidence`. MANUAL flags are set directly (confidence 1.0, no fuzzy matching). **Bitmask members: `UK | NL | US | MANUAL`**, extended to `| IE | CA` by slice 14 (no SE — no Swedish register exists; the bit is not reserved). `registry_flags` is a plain integer column, so new members are additive — a new `Registry` enum value and its ingester, no migration.
+
+### 5.4 Evaluated, not yet built (slice 14 candidates)
+
+Source survey run **2026-08-26**, prompted by the resume-match spot check: the seed list yields only 24 iOS-classified postings across 7,507 canonical jobs, and every one of the 746 companies sits at `registry_flags = 0`. Each row below was probed live, not recalled — status records what the probe actually returned.
+
+> **§4 gates this section.** The survey was run against a target set of *Canada, US, Scandinavia, UK, Mediterranean, Japan, Singapore, Australia, New Zealand* — which is **not** §4's target list (SG/JP/AU/NL/IE/CA/US/SE/NO/DK/CH). It adds **UK** and the **Mediterranean** (ES/IT/PT/GR/MT/CY) as destinations rather than registry-signal-only. Several 2026-08-23 rejections were geography-based and **flip if and only if §4 is widened** — that decision has not been taken. Nothing in §5.4 is buildable until it is.
+
+> **Overlaps the 2026-08-23 slice-13 survey.** That survey already probed and rejected Adzuna, Arbeitnow, Remotive, EURES, TokyoDev, Japan Dev and Canada Job Bank (see PROGRESS Decisions). Where 2026-08-26 reaches a different conclusion, the reason is stated below — a re-listed source is a reversal on the record, never a rediscovery.
+
+**Shipped in slice 14** (they now live in §5.1/§5.2 with their operating detail in SOURCES.md): **Recruitee** (bunq, Channable), **Rippling ATS** (Rippling), **NAV Norway**, and the **IE**/**CA** registries in §5.3. **The Muse was built and then dropped** — see §5.5. What remains below is what is still *not* built.
+
+**Still conditional — public, no auth, but blocked on §4:**
+
+| Source | Kind | Endpoint | Probe result |
+|---|---|---|---|
+| Arbeitnow | board | `GET arbeitnow.com/api/job-board-api` | 200 — 175 rows/page, cursor via `links.next`; UK + DE weighted. **Rejected 2026-08-23 as off-target geography — that reason holds unless §4 adds the UK.** Conditional, not cleared |
+
+> **Arbeitnow's `visa_sponsorship` is a query filter, not a response field.** The 2026-08-23 note called the `visa_sponsorship=true` filter "genuinely interesting"; the 2026-08-26 pull of `/api/job-board-api` returns exactly `company_name, created_at, description, job_types, location, remote, slug, tags, title, url` — **no per-posting visa flag**. Both are true and they are not the same thing: an adapter cannot read a tier off a row, it can only fetch a pre-filtered subset. Do not design a sponsorship shortcut around a field that isn't in the payload.
+
+**Auth is no longer a blocker.** The door gained per-host bearer tokens in slice 14e and NAV Norway shipped on it (the public experimentation token is published at `/api/publicToken`; the older `arbeidsplassen.nav.no/public-feed/...` path is **dead — 404**). What is left behind that port change:
+
+| Source | Credential | Status |
+|---|---|---|
+| Reed (UK) | free API key | UK's largest board — one adapter, but blocked behind the same §4 decision as Arbeitnow. The port no longer stands in the way |
+
+**Adzuna stays rejected.** Its country reach is genuinely the best on offer (`ca us gb es it fr sg au nz` — seven of nine targets, no `jp`, no Nordics), and the 2026-08-26 probe confirms the endpoint is live (`400` without a key). But the 2026-08-23 rejection was **quota**, not auth, and the arithmetic is unchanged: the free tier is **1,000 calls/month** against a 4h poll cycle — 6 polls/day × 30 days = **180 calls/month per country per page**, so nine countries at three pages each is ~4,860, roughly 5× over. An auth-capable `Fetcher` does not fix this. Adzuna becomes viable only on a *separate, slower* cadence (e.g. one country-scoped daily sweep) — which is a scheduler change, not an adapter, and is not proposed here.
+
+### 5.5 Rejected sources (probed, with the reason)
+
+Recorded so they are not re-evaluated every survey:
+
+| Source | Probe | Verdict |
+|---|---|---|
+| TokyoDev | `403` Cloudflare interstitial on `/jobs.rss` and `/feed.xml` | Anti-bot. Non-Goals |
+| Japan Dev | `404` on `/api/jobs`; no published API | Scraper-only (Apify). Non-Goals |
+| EURES | API is **input-only** — national services push vacancies *in* | No public read endpoint exists; every EURES dataset in the wild is a scrape |
+| NZ accredited employers (AEWV) | Bulk list withdrawn at scheme launch; one-employer check tool only (~24,441 accredited, Jul 2025) | No ingester possible — `MANUAL` flags only |
+| Personio | `{slug}.jobs.personio.de/xml` is real | DACH-only; Germany/Austria are off the target list |
+| Adzuna | `400` without key — endpoint live | Free tier 1,000 calls/month vs. ~4,860 needed at 4h polling. Rejected 2026-08-23 on quota; **re-confirmed 2026-08-26** |
+| Remotive | `200`, no auth | Redundant with RemoteOK + WWR. Rejected 2026-08-23; **re-confirmed** |
+| Canada Job Bank | `/xmlfeed/` → `403` | Rejected 2026-08-23. The CA signal comes from the LMIA **registry** (§5.3) instead |
+| The Muse | Built in slice 14c, **dropped the same day**. `category=Software Engineering` works (100,845 postings / 5,043 pages), but `q=` and `location=` are **ignored** (identical totals, identical page 1), a second filter degrades the first (`descending=true` + category returns "Rotisserie Chicken Associate"), there is **no ordering** (page 1 mixes 2025-04 and 2026-08), and page 1 is **byte-stable across an hour** | A page-capped poll therefore re-ingests the same 60 rows forever — the 5,043 pages are reach we cannot reach, and a full sweep is ~84 min/poll at 1 rps (slice 13 rejected 33 min). Measured live: 60 rows → 6 classified, **0 iOS**, 44/60 US. An unsteerable fixed sample would inflate the supply denominator the resume matcher divides by |
+| Breezy HR | `200 []` on the vendor's own demo board; its public `/json` carries **no ad text** (id/name/url/location/company only), and `api.breezy.hr/v3` answers `missingAccessToken` | **Rejected 2026-08-26**, after being listed as ready-to-build above. The endpoint contract was right; what it does not carry is the thing that matters — every posting would land with no `content_hash`, no sponsorship tier and no resume score, the exact failure slice 13 refused when it accepted two-step fetching instead. 36 slug probes also found no live board but the vendor's demo, so there was no honest seed row either (14d's rule: an adapter with no seed row is untested reach) |
+
+**Japan is a `MANUAL`-flag market, not an adapter market.** The two English-language boards that actually carry visa-sponsoring Japanese employers are both closed to automation. Coverage there comes from seeded companies plus hand-flagging, exactly as §5.3 describes for curated boards.
 
 ## 6. Classification
 
@@ -222,6 +274,7 @@ Sort semantics: `sponsor_tier` maps to a numeric `sort_rank` (explicit_yes=3, re
 | 11 | Source health & recovery (failure taxonomy, quarantine, weekly probe, health in digest) | Resilience: sources die without lying about data |
 | 12 | Resume upload + heuristic fit scoring (all jobs) + deterministic deep-match rationale (per job) | Personalized ranking at zero cost |
 | 13 | Six more sources: SmartRecruiters, Workable, Workday CxS, Teamtailor (per-company) + Himalayas, MyCareersFuture (company-less) | The port survives POST-only search and two-step (list→detail) boards; iOS/Java/AI coverage in the target countries |
+| 14 | IE + CA registries, The Muse board, Recruitee/Rippling ATS, auth-capable `Fetcher` → NAV Norway | Sponsorship signal reaches IE/CA (the first non-zero `registry_flags` in the DB); supply widens past the seed list. Breezy dropped — its public board carries no ad text |
 
 Each slice: red test → green → refactor → `make verify` → commit.
 
