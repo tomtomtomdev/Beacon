@@ -43,3 +43,34 @@ LEVEL_CASES = [
 )
 def test_resolve_level(level_text: str, years_text: str, expected: Level) -> None:
     assert resolve_level(level_text=level_text, years_text=years_text) == expected
+
+
+# Homograph guards. A vocabulary keyword that also names something non-technical is dropped
+# when the text puts it in the colliding context and no sibling keyword corroborates it.
+# Appended from spot checks, never deleted (testing conventions).
+HOMOGRAPH_CASES = [
+    # 2026-08-26 spot check: Anthropic's "Cash Manager, Treasury" scored 80 against an iOS
+    # resume off this phrase, and Adyen's "Head of Global Credit Risk" 76 the same way.
+    (
+        "swift-the-payment-network",
+        "Own bank connectivity (SWIFT, APIs, host-to-host) for treasury operations",
+        False,
+    ),
+    (
+        "swift-messaging-in-a-credit-risk-ad",
+        "Head of Global Credit Risk — SWIFT messaging across correspondent banks",
+        False,
+    ),
+    # The guard must not cost us real iOS ads: a sibling iOS keyword corroborates the language.
+    ("swift-in-an-ios-payments-ad", "Senior iOS Engineer, Payments — Swift and SwiftUI", True),
+    ("swift-with-no-payments-context", "Swift and Kotlin mobile engineer", True),
+]
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [(text, expected) for _, text, expected in HOMOGRAPH_CASES],
+    ids=[cid for cid, *_ in HOMOGRAPH_CASES],
+)
+def test_swift_the_payment_network_is_not_the_swift_language(text: str, expected: bool) -> None:
+    assert ("swift" in extract_skills(text)) is expected

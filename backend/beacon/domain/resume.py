@@ -153,6 +153,12 @@ _SPONSOR_TIER_FIT: dict[SponsorTier, float] = {
 # A job outside the relocation strategy keeps only this fraction of its tier fit.
 OFF_STRATEGY_FACTOR = 0.5
 
+# Coverage denominator floor. A job whose text yields one or two vocabulary skills is a thin
+# signal, not a fully-covered job: without the floor a single lucky hit reads as 100% coverage
+# and outranks a real match (2026-08-26 spot check — Spotify's 1-skill C++/auth role beat
+# Truecaller's iOS role at 3 of 4). Weights are unchanged; only the denominator is.
+SKILL_COVERAGE_FLOOR = 3
+
 
 def build_profile(text: str, *, target_countries: frozenset[str] = frozenset()) -> ResumeProfile:
     """Extract a structured profile from resume text using the shared job vocabulary."""
@@ -169,10 +175,12 @@ def _skill_fit(
     profile: ResumeProfile, job: JobFacts
 ) -> tuple[float, frozenset[str], frozenset[str]]:
     """Coverage of the job's skills by the resume, plus the matched/missing breakdown.
-    Coverage (not raw Jaccard) so a broad resume isn't penalised against a focused job."""
+    Coverage (not raw Jaccard) so a broad resume isn't penalised against a focused job, but
+    over at least SKILL_COVERAGE_FLOOR skills so a thin extraction can't read as full
+    coverage. A job with no extracted skills scores 0.0, as it always did."""
     matched = profile.skills & job.skills
     missing = job.skills - profile.skills
-    fit = len(matched) / len(job.skills) if job.skills else 0.0
+    fit = len(matched) / max(len(job.skills), SKILL_COVERAGE_FLOOR)
     return fit, matched, missing
 
 

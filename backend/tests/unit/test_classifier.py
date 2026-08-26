@@ -93,6 +93,11 @@ CATEGORY_CASES = [
     # phrases ("applied ai engineer"/"scientist") are in the table.
     ("applied-ai-architect-not-aiml", "Applied AI Architect, Commercial", "", set()),
     ("applied-ai-ops-not-aiml", "Strategy & Operations, Applied AI - AMER", "", set()),
+    # 2026-08-26 spot check: SWIFT the interbank network is not Swift the language. The
+    # vocabulary's homograph guard drops it in a payments context with no iOS sibling
+    # keyword, and keeps it when one is there.
+    ("swift-the-payment-network-not-ios", "SWIFT Payments Integration Engineer", "", set()),
+    ("swift-in-an-ios-payments-title", "iOS Engineer, Payments (Swift)", "", {Category.IOS}),
 ]
 
 

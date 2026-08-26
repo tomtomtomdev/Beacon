@@ -342,10 +342,10 @@ def _ids_by_external(conn: sqlite3.Connection) -> dict[str, int]:
 
 
 async def _upload_resume(client: httpx.AsyncClient) -> int:
-    """A senior-iOS resume: skills ⊇ {swift, swiftui}, category ios, level senior."""
+    """A senior-iOS resume: skills ⊇ {swift, swiftui, uikit}, category ios, level senior."""
     response = await client.post(
         "/resumes",
-        json={"label": "CV", "text": "Senior iOS Engineer, 8 years Swift and SwiftUI"},
+        json={"label": "CV", "text": "Senior iOS Engineer, 8 years Swift, SwiftUI and UIKit"},
     )
     assert response.status_code == 201, response.text
     return int(response.json()["id"])
@@ -365,7 +365,7 @@ async def test_jobs_with_resume_attach_fit_score(
 ) -> None:
     seeded.execute(
         "UPDATE jobs SET categories = 'ios', level = 'senior',"
-        " description = 'We build with Swift and SwiftUI.' WHERE external_id = '1'"
+        " description = 'We build with Swift, SwiftUI and UIKit.' WHERE external_id = '1'"
     )
     seeded.commit()
     resume_id = await _upload_resume(client)

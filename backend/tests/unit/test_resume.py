@@ -81,8 +81,9 @@ def test_score_match_full_alignment_scores_high() -> None:
     profile = _profile(
         skills={"swift", "swiftui", "uikit"}, categories={Category.IOS}, level=Level.SENIOR
     )
+    # Three skills asked, three matched: coverage is full at or above SKILL_COVERAGE_FLOOR.
     job = _job(
-        skills={"swift", "swiftui"},
+        skills={"swift", "swiftui", "uikit"},
         categories={Category.IOS},
         level=Level.SENIOR,
         tier=SponsorTier.EXPLICIT_YES,
@@ -190,3 +191,27 @@ def test_profile_json_roundtrips() -> None:
 def test_resume_hash_is_stable_and_content_addressed() -> None:
     assert resume_hash("same text") == resume_hash("same text")
     assert resume_hash("one") != resume_hash("two")
+
+
+def test_a_one_skill_job_does_not_score_full_coverage() -> None:
+    """Coverage needs a denominator floor. 2026-08-26 spot check: Spotify's C++/auth role
+    extracted exactly one vocabulary skill and so scored skills 100 on a single hit,
+    outranking Truecaller's actual iOS role which matched 3 of the 4 skills it asked for."""
+    profile = _profile(
+        skills={"swift", "swiftui", "uikit", "python"},
+        categories={Category.IOS},
+        level=Level.SENIOR,
+    )
+    thin = _job(skills={"python"}, categories={Category.BACKEND}, level=Level.SENIOR)
+    real_ios = _job(
+        skills={"swift", "swiftui", "uikit", "kotlin"},
+        categories={Category.IOS},
+        level=Level.SENIOR,
+    )
+
+    thin_score = score_match(profile, thin)
+    ios_score = score_match(profile, real_ios)
+
+    assert thin_score.skills_score < 100  # one lucky hit is a thin signal, not full coverage
+    assert ios_score.skills_score > thin_score.skills_score
+    assert ios_score.overall > thin_score.overall

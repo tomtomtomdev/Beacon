@@ -21,6 +21,7 @@ a non-word character and never match.
 """
 
 import re
+from dataclasses import dataclass
 
 from beacon.domain.classification import Category, Level
 
@@ -129,6 +130,48 @@ CATEGORY_KEYWORDS: dict[Category, tuple[str, ...]] = {
     ),
 }
 
+
+@dataclass(frozen=True, slots=True)
+class HomographGuard:
+    """A keyword that also names something non-technical. The keyword is dropped from a text
+    when one of `contexts` appears there and none of `corroborators` does — the corroborators
+    are the sibling keywords the real technical sense practically always travels with, so a
+    genuine ad keeps its skill even when it also talks about the colliding domain."""
+
+    contexts: tuple[str, ...]
+    corroborators: tuple[str, ...]
+
+
+# DATA, like every other table here: a new collision is a new row plus a parametrized test
+# row, never a branch in extract_skills or in a caller.
+HOMOGRAPH_GUARDS: dict[str, HomographGuard] = {
+    # SWIFT is the interbank messaging network as often as Swift is the language, and
+    # matching is case-insensitive so the two are indistinguishable by spelling. The 2026-08-26
+    # spot check had Anthropic's "Cash Manager, Treasury" (80) and Adyen's "Head of Global
+    # Credit Risk" (76) reading as iOS roles off "bank connectivity (SWIFT, APIs, ...)".
+    "swift": HomographGuard(
+        contexts=(
+            "payment",
+            "payments",
+            "treasury",
+            "bank",
+            "banks",
+            "banking",
+            "iso 20022",
+            "sepa",
+            "remittance",
+            "remittances",
+            "correspondent",
+            "settlement",
+            "settlements",
+            "wire transfer",
+            "wire transfers",
+            "host-to-host",
+        ),
+        corroborators=("ios", "swiftui", "uikit", "xcode", "objective-c", "cocoa", "app store"),
+    ),
+}
+
 # Level title tokens. Ranked most-senior-wins when several appear ("Senior Staff" → staff).
 LEVEL_KEYWORDS: dict[Level, tuple[str, ...]] = {
     Level.PRINCIPAL: ("principal",),
@@ -173,13 +216,37 @@ _LEVEL_PATTERNS: dict[Level, re.Pattern[str]] = {
 _ALL_SKILLS: re.Pattern[str] = _compile(
     tuple(keyword for keywords in CATEGORY_KEYWORDS.values() for keyword in keywords)
 )
+_GUARD_PATTERNS: dict[str, tuple[re.Pattern[str], re.Pattern[str]]] = {
+    keyword: (_compile(guard.contexts), _compile(guard.corroborators))
+    for keyword, guard in HOMOGRAPH_GUARDS.items()
+}
+
+
+def _is_homograph(keyword: str, lowered: str) -> bool:
+    """True when keyword matched only its non-technical homograph in this text — see
+    HOMOGRAPH_GUARDS. Applied by both extractors, so the classifier and the resume matcher
+    inherit the same guard from the one vocabulary."""
+    patterns = _GUARD_PATTERNS.get(keyword)
+    if patterns is None:
+        return False
+    contexts, corroborators = patterns
+    return bool(contexts.search(lowered)) and not corroborators.search(lowered)
+
+
+def _keywords_present(pattern: re.Pattern[str], lowered: str) -> frozenset[str]:
+    """The pattern's keywords occurring in already-casefolded text, homographs dropped."""
+    return frozenset(
+        keyword for keyword in pattern.findall(lowered) if not _is_homograph(keyword, lowered)
+    )
 
 
 def extract_categories(text: str) -> frozenset[Category]:
     """The categories whose keywords appear in text (word-boundary matched, case-insensitive)."""
     lowered = text.casefold()
     return frozenset(
-        category for category, pattern in _CATEGORY_PATTERNS.items() if pattern.search(lowered)
+        category
+        for category, pattern in _CATEGORY_PATTERNS.items()
+        if _keywords_present(pattern, lowered)
     )
 
 
@@ -187,7 +254,7 @@ def extract_skills(text: str) -> frozenset[str]:
     """The category keyword tokens present in text — the comparable skill set shared by
     build_profile (over resume text) and score_match (over a job's title+description). The
     tokens are the vocabulary's own casefolded form, so the two sides intersect cleanly."""
-    return frozenset(_ALL_SKILLS.findall(text.casefold()))
+    return _keywords_present(_ALL_SKILLS, text.casefold())
 
 
 def match_level(text: str) -> Level | None:
