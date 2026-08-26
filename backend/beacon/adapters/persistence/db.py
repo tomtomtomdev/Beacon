@@ -6,7 +6,17 @@ MIGRATIONS_DIR = Path(__file__).parents[3] / "migrations"
 
 
 def connect(db_path: Path | str) -> sqlite3.Connection:
-    conn = sqlite3.connect(db_path)
+    """Open a connection that may cross threads.
+
+    `check_same_thread=False` is required, not a shortcut: FastAPI resolves a sync `Depends`
+    and runs a sync endpoint as two separate `run_in_threadpool` hops, and anyio may place
+    them on different worker threads — so a request-scoped connection is opened in one thread
+    and queried in another. It stays safe because every holder of a connection here is
+    single-threaded in effect: the API opens one per request and the event loop serialises
+    that request's dependency, endpoint and teardown; the CLI entrypoints and scripts open
+    their own. Never share one connection between threads that run concurrently.
+    """
+    conn = sqlite3.connect(db_path, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
