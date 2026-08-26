@@ -13,6 +13,7 @@ from beacon.adapters.sources.hn import HNAdapter
 from beacon.adapters.sources.jobtech import JobTechAdapter
 from beacon.adapters.sources.lever import LeverAdapter
 from beacon.adapters.sources.mycareersfuture import MyCareersFutureAdapter
+from beacon.adapters.sources.nav import NAVAdapter
 from beacon.adapters.sources.recruitee import RecruiteeAdapter
 from beacon.adapters.sources.remoteok import RemoteOKAdapter
 from beacon.adapters.sources.rippling import RipplingAdapter
@@ -51,10 +52,15 @@ def make_source_factory(fetcher: Fetcher) -> SourceFactory:
     return source_for
 
 
-def make_companyless_sources(fetcher: Fetcher) -> list[JobSource]:
+def make_companyless_sources(
+    fetcher: Fetcher, *, nav_authenticated: bool = False
+) -> list[JobSource]:
     """Sources not tied to a seed company; each yields jobs across many employers parsed
-    from the postings (see ingest_companyless_source). Not part of the per-company factory."""
-    return [
+    from the postings (see ingest_companyless_source). Not part of the per-company factory.
+
+    NAV is the one source that needs a credential, so it joins only when one is configured —
+    an unauthenticated NAV poll is a guaranteed 401, not a source (the Telegram/LLM rule)."""
+    sources: list[JobSource] = [
         HNAdapter(fetcher),
         JobTechAdapter(fetcher),
         RemoteOKAdapter(fetcher),
@@ -63,3 +69,6 @@ def make_companyless_sources(fetcher: Fetcher) -> list[JobSource]:
         MyCareersFutureAdapter(fetcher),
         TheMuseAdapter(fetcher),
     ]
+    if nav_authenticated:
+        sources.append(NAVAdapter(fetcher))
+    return sources

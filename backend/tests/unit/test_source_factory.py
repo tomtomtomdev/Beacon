@@ -72,3 +72,15 @@ def test_companyless_sources_are_the_board_sources() -> None:
         "themuse",
     }
     assert all(callable(s.fetch) and callable(s.normalize) for s in sources)
+
+
+def test_nav_joins_the_board_sources_only_when_a_token_is_configured() -> None:
+    fetcher = PoliteClient(httpx.AsyncClient())
+
+    unauthenticated = make_companyless_sources(fetcher)
+    authenticated = make_companyless_sources(fetcher, nav_authenticated=True)
+
+    # An unauthenticated NAV poll is a guaranteed 401, so the source is not wired at all —
+    # the same rule the Anthropic key and the Telegram creds already follow.
+    assert "nav" not in {s.source_id for s in unauthenticated}
+    assert "nav" in {s.source_id for s in authenticated}

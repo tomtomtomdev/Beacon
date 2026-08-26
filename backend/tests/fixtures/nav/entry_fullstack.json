@@ -1,0 +1,78 @@
+{
+ "uuid": "5498f46d-4ae2-47c9-a15e-cbd2b78961b4",
+ "ad_content": {
+  "uuid": "5498f46d-4ae2-47c9-a15e-cbd2b78961b4",
+  "published": "2026-08-25T12:19:44+02:00",
+  "expires": "2026-09-15T00:00:00+02:00",
+  "updated": "2026-08-25T12:44:01.07679+02:00",
+  "workLocations": [
+   {
+    "country": "NORGE",
+    "address": "Lille Grensen 5",
+    "city": "OSLO",
+    "postalCode": "0159",
+    "county": "OSLO",
+    "municipal": "OSLO"
+   }
+  ],
+  "contactList": [
+   {
+    "name": "Anders Skjetne",
+    "email": "anders@ansettr.no",
+    "phone": "90519426",
+    "role": null,
+    "title": "Rekrutteringsansvarlig"
+   }
+  ],
+  "title": "Bli med å bygge noen av Norges mest samfunnskritiske digitale løsninger som Fullstack-utvikler i itverket (Søk uten CV og søknadsbrev)",
+  "description": "<p><strong>itverket er et rendyrket fagmiljø innen systemutvikling, der erfarne utviklere jobber tett på kundenes mest kritiske løsninger. Nå ser vi etter en erfaren fullstack-utvikler som vil jobbe med moderne prosjekter og bidra faglig i teamene vi er en del av.</strong></p>\n<p>Gjennom 26 år har itverket bygget et av Norges sterkeste fagmiljøer innen systemutvikling, sikkerhet, prosjektledelse og rådgivning. Etter en periode som en del av et større konsern, står vi nå på egne ben igjen. Vi har funnet tilbake til det som alltid har vært kjernevirksomheten vår: et rendyrket og sosialt konsulenthus drevet av teknologer.</p>\n<p>Hos oss blir du en del av et inkluderende fellesskap med fagkvelder, kompetansedager og sosiale arrangementer (som vår tradisjonsrike tur til Hafjell).</p>\n<p><strong>Stillingen</strong></p>\n<p>Som fullstack-utvikler hos itverket vil du jobbe ute hos kunder eller som del av større leveranser sammen med kollegaer fra itverket.</p>\n<p>Du vil få ansvar og påvirkning i prosjektene du deltar i, samtidig som du får muligheten til å jobbe med moderne teknologi og skybaserte løsninger.</p>\n<p><strong>Arbeidsoppgaver</strong>:</p>\n<ul><li>\n<p>Utvikling av nye digitale tjenester og applikasjoner</p>\n</li><li>\n<p>Design og implementering av backend-løsninger</p>\n</li><li>\n<p>Fullstack-utvikling i moderne teknologistakker</p>\n</li><li>\n<p>Skyutvikling og plattformarbeid</p>\n</li><li>\n<p>Teknisk rådgivning og arkitektur</p>\n</li><li>\n<p>Samarbeid med kunder, utviklingsteam og andre fagressurser</p>\n</li><li>\n<p>Bidra til faglig utvikling internt i selskapet</p>\n</li></ul>\n<br />\n<p><strong>Vi ser etter deg som har:</strong></p>\n<ul><li>\n<p>Minimum 5 års erfaring med systemutvikling</p>\n</li><li>\n<p>Erfaring med .NET</p>\n</li><li>\n<p>Gjerne noe frontend-kompetanse, men vi ser også etter rene backendutviklere</p>\n</li><li>\n<p>Erfaring med skyteknologi og moderne utviklingsplattformer</p>\n</li><li>\n<p>Gode norskkunnskaper, både muntlig og skriftlig</p>\n</li></ul>\n<br />\n<p><strong>Vi tilbyr</strong></p>\n<ul><li>\n<p>Relevante prosjekter innen finans, energi og offentlig sektor.</p>\n</li><li>\n<p>Et sammensveiset og sosialt miljø med fagkvelder, kompetansedager og sosiale arrangementer.</p>\n</li><li>\n<p>50 000 kr i årlig budsjett til kurs, sertifiseringer og konferanser.</p>\n</li><li>\n<p>En bred forsikringspakke med livsforsikring, behandlingsforsikring, yrkesskade, fritidsulykke og full reiseforsikring.</p>\n</li><li>\n<p>Fritt utstyrsvalg med dekning av mobil, bredbånd, skjerm og stol til hjemmekontor.</p>\n</li><li>\n<p>Gode permisjonsordninger med 100 % lønn i foreldrepermisjon og 2 uker lønn til far/medmor ved fødsel.</p>\n</li><li>\n<p>6 % innskuddspensjon og SATS-avtale med støtte til trening og løp.</p>\n</li></ul>\n<br />\n<p><em>Og du? Vi vet at ingen kan alt. Så lenge du har relevant erfaring innen utvikling, ønsker vi å bli kjent med deg! Søk uten CV og søknadsbrev ved å klikke på &#34;Søk her&#34;-knappen.</em></p>\n",
+  "sourceurl": "",
+  "source": "Stillingsregistrering",
+  "applicationUrl": "https://itverket.ansettr.no/ledige-stillinger/oslo-sentrum/fullstack/?utm_source=arbeidsplassen&utm_medium=arbeidsplassen&utm_campaign=arbeidsplassen#sok-jobb",
+  "applicationDue": "Snarest",
+  "occupationCategories": [
+   {
+    "level1": "IT",
+    "level2": "Utvikling"
+   }
+  ],
+  "categoryList": [
+   {
+    "categoryType": "ESCO",
+    "code": "http://data.europa.eu/esco/occupation/f2b15a0e-e65a-438a-affb-29b9d50b77d1",
+    "name": "Fullstackutvikler",
+    "description": "",
+    "score": 1.0
+   },
+   {
+    "categoryType": "JANZZ",
+    "code": "262001",
+    "name": "Fullstackutvikler",
+    "description": "",
+    "score": 1.0
+   },
+   {
+    "categoryType": "STYRK08",
+    "code": "2512",
+    "name": "Programvareutviklere",
+    "description": "",
+    "score": 1.0
+   }
+  ],
+  "jobtitle": "Fullstackutvikler",
+  "link": "https://arbeidsplassen.nav.no/stillinger/stilling/5498f46d-4ae2-47c9-a15e-cbd2b78961b4",
+  "employer": {
+   "name": "Ansettr AS",
+   "orgnr": "981900111",
+   "description": "<p>Ansettr hjelper spennende virksomheter med å finne topp kandidater. Vi hjelper bedrifter i hele landet og har en søknadsprosess hvor du enkelt kan melde din interesse for stillingen helt uten CV og søknadsbrev. Vi gleder oss til å bli kjent med deg!</p>\n",
+   "homepage": "https://ansettr.no/"
+  },
+  "engagementtype": "Fast",
+  "extent": "Heltid",
+  "starttime": "Etter avtale",
+  "positioncount": "1",
+  "sector": "Privat"
+ },
+ "sistEndret": "2026-08-25T12:44:01.076+02:00",
+ "status": "ACTIVE"
+}

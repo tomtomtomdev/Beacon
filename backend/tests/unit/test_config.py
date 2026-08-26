@@ -68,3 +68,13 @@ def test_llm_settings_from_env_override_and_keep_the_key_secret() -> None:
     assert settings.anthropic_api_key.get_secret_value() == "sk-ant-secret"
     assert settings.llm_model == "claude-something-newer"
     assert settings.llm_monthly_budget == 1200
+
+
+def test_nav_token_is_absent_by_default_and_secret_when_set() -> None:
+    assert Settings.from_env({}).nav_api_token is None
+
+    settings = Settings.from_env({"BEACON_NAV_API_TOKEN": "nav-jwt-secret"})
+
+    assert settings.nav_api_token is not None
+    assert repr(settings.nav_api_token) == "SecretStr('**********')"
+    assert settings.nav_api_token.get_secret_value() == "nav-jwt-secret"

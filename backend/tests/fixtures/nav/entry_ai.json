@@ -1,0 +1,78 @@
+{
+ "uuid": "09652092-0b2c-4d9e-ae84-8e3475497b1a",
+ "ad_content": {
+  "uuid": "09652092-0b2c-4d9e-ae84-8e3475497b1a",
+  "published": "2026-08-25T12:34:26+02:00",
+  "expires": "2026-09-15T00:00:00+02:00",
+  "updated": "2026-08-25T12:43:18.434297+02:00",
+  "workLocations": [
+   {
+    "country": "NORGE",
+    "address": "Schweigaards gate 15",
+    "city": "OSLO",
+    "postalCode": "0191",
+    "county": "OSLO",
+    "municipal": "OSLO"
+   }
+  ],
+  "contactList": [
+   {
+    "name": "Anders Skjetne",
+    "email": "anders@ansettr.no",
+    "phone": "90519426",
+    "role": null,
+    "title": "Rekrutteringsansvarlig"
+   }
+  ],
+  "title": "Lyst til å jobbe med AI i et av Nordens største mediekonsern? Amedia søker AI Engineer (Søk uten CV og søknadsbrev)",
+  "description": "<p><strong>Lyst til å jobbe med AI i et av Nordens største mediekonsern? Amedia befinner seg midt i en spennende fase, der vi skal utforske hvordan AI kan brukes til å gjøre våre produkter og tjenester enda bedre. I den anledning ser vi etter vår neste AI Engineer.</strong></p>\n<p>Amedia er landets største utgiver av redaktørstyrte medier og et av Nordens ledende mediekonsern med 111 aviser og medievirksomheter i Norge og Danmark.</p>\n<p>Som vår neste AI Engineer får du en sentral rolle i å utforske, utvikle og realisere nye muligheter innen AI og ML. Du vil jobbe med hele bredden av AI-teknologi, fra klassisk maskinlæring til generativ AI, store språkmodeller (LLM-er) og agentbaserte systemer.</p>\n<p>Et konkret og sentralt prosjekt du raskt vil ta del i, er knyttet til våre abonnementsløsninger. Her skal du blant annet være med på å utvikle dynamisk tilgangskontroll, der AI hjelper oss med å avgjøre hvem som får tilgang til hvilket innhold.</p>\n<p>Vi jobber primært i Python og på Google Cloud Platform, og har et tydelig prinsipp om å ta i bruk og videreutvikle det beste som allerede finnes, fremfor å bygge alt fra bunnen av.</p>\n<br />\n<p><strong>Arbeidsoppgaver:</strong></p>\n<ul><li>\n<p>Utvikle, sette i produksjon og videreutvikle AI- og ML-løsninger som skaper verdi for Amedias produkter og tjenester.</p>\n</li><li>\n<p>Bygge og integrere løsninger basert på maskinlæring, LLM-er og eksterne AI-tjenester.</p>\n</li><li>\n<p>Dele kunnskap og bidra til at vi holder oss oppdatert på den nyeste utviklingen innen AI.</p>\n</li><li>\n<p>Ha ansvar for drift, overvåking og videreutvikling av modeller og AI-tjenester gjennom gode MLOps-prinsipper.</p>\n</li><li>\n<p>Samarbeide tett med produktteam, utviklere og data scientists for å forstå behov og omsette disse til robuste tekniske løsninger.</p>\n</li><li>\n<p>Bidra til utvikling og forvaltning av felles AI-tjenester og plattformkomponenter som kan brukes på tvers av organisasjonen.</p>\n</li><li>\n<p>Evaluere ny teknologi og bidra til gode teknologivalg innen AI og maskinlæring.</p>\n</li><li>\n<p>Optimaliserer ytelse, kost og sikkerhet på våre løsninger, inkludert kostnads- og latenshensyn ved bruk av store språkmodeller.</p>\n</li></ul>\n<br />\n<p><strong>Vi tilbyr:</strong></p>\n<ul><li>\n<p>En virkelig spennende stilling der du får være med å forme hvordan et av Nordens største mediekonsern jobber med AI.</p>\n</li><li>\n<p>En arbeidsplass med engasjement, tillit og korte beslutningsveier.</p>\n</li><li>\n<p>En flat struktur og et sterkt fagmiljø.</p>\n</li><li>\n<p>Fantastiske kontorer i nye lokaler med kort vei til kollektivtransport.</p>\n</li><li>\n<p>Sosiale aktiviteter som sommerfest, kick-off, julebord og firmatur.</p>\n</li><li>\n<p>Deilig varm lunsj i personalrestauranten.</p>\n</li><li>\n<p>Gode utviklingsmuligheter, inkludert konferanser og andre relevante eventer.</p>\n</li><li>\n<p>Konkurransedyktige betingelser, helseforsikring og høy pensjon.</p>\n</li></ul>\n<br />\n<p><strong>Vi ser etter deg som har:</strong></p>\n<ul><li>\n<p>Erfaring med utvikling av software for dataprodukter og maskinlæring i Python.</p>\n</li><li>\n<p>Software-engineer-kvalifikasjoner, med &#43;3 års erfaring fra utvikling/drift, DevOps/MLOps, CI/CD.</p>\n</li><li>\n<p>Erfaring med teknologi for dataprosessering.</p>\n</li><li>\n<p>God oversikt over et AI-landskap i stadig endring, inkludert utviklingen innen LLM-er og agentbaserte systemer.</p>\n</li><li>\n<p>Erfaring med å bygge løsninger med LLM-er: prompt-design/evaluering, RAG (retrieval-augmented generation), vektordatabaser, agentrammeverk (f.eks. LangChain, LlamaIndex eller tilsvarende) og finjustering/tilpasning av modeller.</p>\n</li><li>\n<p>Erfaring med Kubeflow og PyTorch.</p>\n</li><li>\n<p>Erfaring med Google Cloud-produkter som BigQuery, Cloud Run, Vertex AI (eller tilsvarende fra andre leverandører), samt LLM-plattformer som Anthropic/OpenAI-APIer.</p>\n</li><li>\n<p>Andre verktøy/dataspråk som kan være relevante, men ikke nødvendige: Go, Node.js, SQL.</p>\n</li></ul>\n<p>Søk uten CV og søknadsbrev ved å trykke på &#34;Søk her&#34;-knappen.</p>\n",
+  "sourceurl": "",
+  "source": "Stillingsregistrering",
+  "applicationUrl": "https://amediano.ansettr.no/ledige-stillinger/oslo-sentrum/ai-engineer/?utm_source=arbeidsplassen&utm_medium=arbeidsplassen&utm_campaign=arbeidsplassen#sok-jobb",
+  "applicationDue": "Snarest",
+  "occupationCategories": [
+   {
+    "level1": "IT",
+    "level2": "Utvikling"
+   }
+  ],
+  "categoryList": [
+   {
+    "categoryType": "ESCO",
+    "code": "http://data.europa.eu/esco/occupation/f2b15a0e-e65a-438a-affb-29b9d50b77d1",
+    "name": "Programvareutvikler",
+    "description": "",
+    "score": 1.0
+   },
+   {
+    "categoryType": "JANZZ",
+    "code": "66623",
+    "name": "Programvareutvikler",
+    "description": "",
+    "score": 1.0
+   },
+   {
+    "categoryType": "STYRK08",
+    "code": "2512",
+    "name": "Programvareutviklere",
+    "description": "",
+    "score": 1.0
+   }
+  ],
+  "jobtitle": "Programvareutvikler",
+  "link": "https://arbeidsplassen.nav.no/stillinger/stilling/09652092-0b2c-4d9e-ae84-8e3475497b1a",
+  "employer": {
+   "name": "Ansettr AS",
+   "orgnr": "930229261",
+   "description": "<p>Ansettr hjelper spennende virksomheter med å finne topp kandidater innen regnskap og økonomi. Vi hjelper bedrifter i hele landet og har en søknadsprosess hvor du enkelt kan melde din interesse for stillingen helt uten CV og søknadsbrev. Vi gleder oss til å bli kjent med deg!</p>\n",
+   "homepage": "https://ansettr.no/"
+  },
+  "engagementtype": "Fast",
+  "extent": "Heltid",
+  "starttime": "Etter avtale",
+  "positioncount": "1",
+  "sector": "Privat"
+ },
+ "sistEndret": "2026-08-25T12:43:18.434+02:00",
+ "status": "ACTIVE"
+}

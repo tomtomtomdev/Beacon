@@ -1,0 +1,117 @@
+{
+ "version": "1.0",
+ "title": "Stillingsfeeden fra arbeidsplassen.no",
+ "home_page_url": "https://arbeidsplassen.nav.no",
+ "feed_url": "/api/v1/feed/9234b498-1e83-466a-91fd-27fceaf9b7f6",
+ "description": "Feed med stillinger fra arbeidsplassen.no - En av Norges største oversikter over utlyste stillinger",
+ "next_url": "/api/v1/feed/78b41172-8236-4e41-a83f-3c36cb59fd0f",
+ "id": "9234b498-1e83-466a-91fd-27fceaf9b7f6",
+ "next_id": "78b41172-8236-4e41-a83f-3c36cb59fd0f",
+ "items": [
+  {
+   "id": "5498f46d-4ae2-47c9-a15e-cbd2b78961b4",
+   "url": "/api/v1/feedentry/5498f46d-4ae2-47c9-a15e-cbd2b78961b4",
+   "title": "Bli med å bygge noen av Norges mest samfunnskritiske digitale løsninger som Fullstack-utvikler i itverket (Søk uten CV og søknadsbrev)",
+   "content_text": "Stillingsannonse",
+   "date_modified": "2026-08-25T12:22:24.49647+02:00",
+   "_feed_entry": {
+    "uuid": "5498f46d-4ae2-47c9-a15e-cbd2b78961b4",
+    "status": "ACTIVE",
+    "title": "Bli med å bygge noen av Norges mest samfunnskritiske digitale løsninger som Fullstack-utvikler i itverket (Søk uten CV og søknadsbrev)",
+    "businessName": "Ansettr AS",
+    "municipal": "OSLO",
+    "sistEndret": "2026-08-25T12:22:24.49647+02:00"
+   }
+  },
+  {
+   "id": "09652092-0b2c-4d9e-ae84-8e3475497b1a",
+   "url": "/api/v1/feedentry/09652092-0b2c-4d9e-ae84-8e3475497b1a",
+   "title": "Lyst til å jobbe med AI i et av Nordens største mediekonsern? Amedia søker AI Engineer (Søk uten CV og søknadsbrev)",
+   "content_text": "Stillingsannonse",
+   "date_modified": "2026-08-25T12:37:09.920246+02:00",
+   "_feed_entry": {
+    "uuid": "09652092-0b2c-4d9e-ae84-8e3475497b1a",
+    "status": "ACTIVE",
+    "title": "Lyst til å jobbe med AI i et av Nordens største mediekonsern? Amedia søker AI Engineer (Søk uten CV og søknadsbrev)",
+    "businessName": "Ansettr AS",
+    "municipal": "OSLO",
+    "sistEndret": "2026-08-25T12:37:09.920246+02:00"
+   }
+  },
+  {
+   "id": "d5a741c1-88c2-48cb-a5be-f6ab16913361",
+   "url": "/api/v1/feedentry/d5a741c1-88c2-48cb-a5be-f6ab16913361",
+   "title": "Senior Fullstack Engineer",
+   "content_text": "Stillingsannonse",
+   "date_modified": "2026-08-12T12:19:50.322517+02:00",
+   "_feed_entry": {
+    "uuid": "d5a741c1-88c2-48cb-a5be-f6ab16913361",
+    "status": "ACTIVE",
+    "title": "Senior Fullstack Engineer",
+    "businessName": "Sperton Global AS ",
+    "municipal": "OSLO",
+    "sistEndret": "2026-08-12T12:19:50.322517+02:00"
+   }
+  },
+  {
+   "id": "38f8ab0c-2cac-4d8c-85e1-fbfdf5bdc3d2",
+   "url": "/api/v1/feedentry/38f8ab0c-2cac-4d8c-85e1-fbfdf5bdc3d2",
+   "title": "Er du vår nye renholder?",
+   "content_text": "Stillingsannonse",
+   "date_modified": "2026-08-23T11:31:36.696072+02:00",
+   "_feed_entry": {
+    "uuid": "38f8ab0c-2cac-4d8c-85e1-fbfdf5bdc3d2",
+    "status": "ACTIVE",
+    "title": "Er du vår nye renholder?",
+    "businessName": "B.a. Gruppen As",
+    "municipal": "LIER",
+    "sistEndret": "2026-08-23T11:31:36.696072+02:00"
+   }
+  },
+  {
+   "id": "3fce17bd-ee26-46fd-8cf9-1c9b97ee7aac",
+   "url": "/api/v1/feedentry/3fce17bd-ee26-46fd-8cf9-1c9b97ee7aac",
+   "title": "Parkeringsvakt i Lillestrøm - 60% fast",
+   "content_text": "Stillingsannonse",
+   "date_modified": "2026-08-23T11:37:04.159057+02:00",
+   "_feed_entry": {
+    "uuid": "3fce17bd-ee26-46fd-8cf9-1c9b97ee7aac",
+    "status": "ACTIVE",
+    "title": "Parkeringsvakt i Lillestrøm - 60% fast",
+    "businessName": "Aimo ",
+    "municipal": "LILLESTRØM",
+    "sistEndret": "2026-08-23T11:37:04.159057+02:00"
+   }
+  },
+  {
+   "id": "19736b45-bf91-4aee-acc2-3416f311b1f6",
+   "url": "/api/v1/feedentry/19736b45-bf91-4aee-acc2-3416f311b1f6",
+   "title": "...",
+   "content_text": "Stillingsannonse",
+   "date_modified": "2026-08-23T13:04:47.141878+02:00",
+   "_feed_entry": {
+    "uuid": "19736b45-bf91-4aee-acc2-3416f311b1f6",
+    "status": "INACTIVE",
+    "title": "...",
+    "businessName": "",
+    "municipal": "ORKLAND",
+    "sistEndret": "2026-08-23T13:04:47.141878+02:00"
+   }
+  },
+  {
+   "id": "532443b3-ff2e-495b-b941-497f87491d72",
+   "url": "/api/v1/feedentry/532443b3-ff2e-495b-b941-497f87491d72",
+   "title": "...",
+   "content_text": "Stillingsannonse",
+   "date_modified": "2026-08-23T13:45:24.448582+02:00",
+   "_feed_entry": {
+    "uuid": "532443b3-ff2e-495b-b941-497f87491d72",
+    "status": "INACTIVE",
+    "title": "...",
+    "businessName": "",
+    "municipal": "OSLO",
+    "sistEndret": "2026-08-23T13:45:24.448582+02:00"
+   }
+  }
+ ]
+}

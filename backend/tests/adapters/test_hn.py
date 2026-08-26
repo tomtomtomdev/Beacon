@@ -1,5 +1,6 @@
 import asyncio
 from collections.abc import Callable, Mapping
+from datetime import datetime
 from typing import Any, cast
 
 import httpx
@@ -109,7 +110,13 @@ class ConcurrencyProbe:
         self.max_in_flight = 0
         self._in_flight = 0
 
-    async def get_json(self, url: str, *, params: Mapping[str, str] | None = None) -> Any:
+    async def get_json(
+        self,
+        url: str,
+        *,
+        params: Mapping[str, str] | None = None,
+        modified_since: datetime | None = None,
+    ) -> Any:
         path = httpx.URL(url).path
         if path.endswith("/user/whoishiring.json"):
             return self._fixture["user"]
@@ -150,7 +157,13 @@ class FlakyFetcher:
         self._fail_id = fail_id
         self.item_requests: list[str] = []
 
-    async def get_json(self, url: str, *, params: Mapping[str, str] | None = None) -> Any:
+    async def get_json(
+        self,
+        url: str,
+        *,
+        params: Mapping[str, str] | None = None,
+        modified_since: datetime | None = None,
+    ) -> Any:
         path = httpx.URL(url).path
         if path.endswith("/user/whoishiring.json"):
             return self._fixture["user"]

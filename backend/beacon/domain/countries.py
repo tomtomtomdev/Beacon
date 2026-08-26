@@ -35,6 +35,10 @@ COUNTRY_NAME_TO_CODE: dict[str, str] = {
     "the netherlands": "NL",
     "new zealand": "NZ",
     "norway": "NO",
+    # NAV's register writes the country in Norwegian ("NORGE"); a foreign ad written in
+    # Norwegian stays country-less until its name is observed and added here (SPEC: never
+    # fabricate a country).
+    "norge": "NO",
     "philippines": "PH",
     "poland": "PL",
     "portugal": "PT",

@@ -24,9 +24,20 @@ type RawPosting = Mapping[str, Any]
 
 class Fetcher(Protocol):
     """The single HTTP door every adapter fetches through. The implementation owns
-    politeness (1 rps/host, conditional GET, backoff); adapters just ask for JSON."""
+    politeness (1 rps/host, conditional GET, backoff) and any per-host credentials, so an
+    adapter never holds a token; adapters just ask for JSON."""
 
-    async def get_json(self, url: str, *, params: Mapping[str, str] | None = None) -> Any: ...
+    async def get_json(
+        self,
+        url: str,
+        *,
+        params: Mapping[str, str] | None = None,
+        modified_since: datetime | None = None,
+    ) -> Any:
+        """modified_since pins the window a feed should start at (NAV Norway documents
+        If-Modified-Since as exactly that filter). Pinned requests bypass the conditional-GET
+        cache: two windows are two different questions sharing one url."""
+        ...
 
     async def get_text(self, url: str, *, params: Mapping[str, str] | None = None) -> str: ...
 

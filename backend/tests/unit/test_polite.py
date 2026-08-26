@@ -3,10 +3,12 @@ exponential backoff. Time is injected (fake clock/sleep) so the suite never real
 """
 
 import json
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
 import pytest
+from pydantic import SecretStr
 
 from beacon.adapters.http.polite import PoliteClient
 from beacon.application.errors import SourceUnavailable
@@ -199,3 +201,109 @@ async def test_post_json_maps_http_failure_to_source_unavailable() -> None:
         await client.post_json("https://host.example/search", json={})
 
     assert excinfo.value.kind is FailureKind.GONE
+
+
+# ── Auth (slice 14e) ──────────────────────────────────────────────────────────────
+# Credentials are configured on the door, not handed to adapters: an adapter that never
+# holds a token cannot leak one, and the per-host map means a token can only ever travel to
+# the host it belongs to. NAV Norway is the first source that needs it.
+async def test_get_json_sends_the_configured_bearer_token_for_that_host() -> None:
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return httpx.Response(200, json={"items": []})
+
+    clock = FakeClock()
+    client = _client(
+        httpx.MockTransport(handler),
+        clock,
+        bearer_tokens={"pam-stilling-feed.nav.no": SecretStr("nav-secret")},
+    )
+
+    await client.get_json("https://pam-stilling-feed.nav.no/api/v1/feed")
+
+    assert seen[0].headers["authorization"] == "Bearer nav-secret"
+
+
+async def test_a_credential_is_never_sent_to_another_host() -> None:
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return httpx.Response(200, json={})
+
+    clock = FakeClock()
+    client = _client(
+        httpx.MockTransport(handler),
+        clock,
+        bearer_tokens={"pam-stilling-feed.nav.no": SecretStr("nav-secret")},
+    )
+
+    await client.get_json("https://api.example.com/v1/jobs")
+
+    assert "authorization" not in seen[0].headers
+
+
+async def test_auth_credentials_never_appear_in_logs_or_reprs(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(401, json={"title": "Unauthorized"})
+
+    clock = FakeClock()
+    client = _client(
+        httpx.MockTransport(handler),
+        clock,
+        bearer_tokens={"pam-stilling-feed.nav.no": SecretStr("nav-secret")},
+    )
+
+    with caplog.at_level("DEBUG"), pytest.raises(SourceUnavailable) as raised:
+        await client.get_json("https://pam-stilling-feed.nav.no/api/v1/feed")
+
+    assert "nav-secret" not in caplog.text
+    assert "nav-secret" not in repr(client)
+    assert "nav-secret" not in str(raised.value)  # the 401's message must not echo it back
+
+
+# ── Pinned windows (slice 14e) ───────────────────────────────────────────────────
+async def test_get_json_pins_the_window_with_an_rfc_1123_if_modified_since() -> None:
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return httpx.Response(200, json={"items": []})
+
+    clock = FakeClock()
+    await _client(httpx.MockTransport(handler), clock).get_json(
+        "https://pam-stilling-feed.nav.no/api/v1/feed",
+        modified_since=datetime(2026, 8, 23, 8, 31, 14, tzinfo=UTC),
+    )
+
+    # NAV documents If-Modified-Since as a *filter* (RFC-1123), not only a cache validator.
+    assert seen[0].headers["if-modified-since"] == "Sun, 23 Aug 2026 08:31:14 GMT"
+
+
+async def test_a_pinned_window_never_reuses_the_conditional_get_cache() -> None:
+    calls: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request)
+        return httpx.Response(
+            200, json={"items": [1]}, headers={"ETag": "abc", "Last-Modified": "x"}
+        )
+
+    clock = FakeClock()
+    client = _client(httpx.MockTransport(handler), clock, min_interval=0.0)
+    url = "https://pam-stilling-feed.nav.no/api/v1/feed"
+
+    await client.get_json(url, modified_since=datetime(2026, 8, 1, tzinfo=UTC))
+    await client.get_json(url, modified_since=datetime(2026, 8, 20, tzinfo=UTC))
+
+    # Two different windows are two different questions; caching the first answer under the
+    # url alone would serve August 1st's page as if it were the 20th's.
+    assert [r.headers.get("if-none-match") for r in calls] == [None, None]
+    assert [r.headers["if-modified-since"] for r in calls] == [
+        "Sat, 01 Aug 2026 00:00:00 GMT",
+        "Thu, 20 Aug 2026 00:00:00 GMT",
+    ]

@@ -9,6 +9,7 @@ import logging
 from datetime import UTC, datetime
 
 import httpx
+from pydantic import SecretStr
 
 from beacon.adapters.classify.factory import make_classifier
 from beacon.adapters.http.polite import PoliteClient
@@ -23,6 +24,7 @@ from beacon.adapters.persistence.searches import SqliteSearchRepo
 from beacon.adapters.persistence.settings import SqliteSettingsRepo
 from beacon.adapters.seeds import parse_seed_csv
 from beacon.adapters.sources.factory import make_companyless_sources, make_source_factory
+from beacon.adapters.sources.nav import NAV_HOST
 from beacon.application.countries import seed_countries
 from beacon.application.dedup import dedupe_jobs
 from beacon.application.health_report import build_health_alerts
@@ -32,6 +34,12 @@ from beacon.application.probe import probe_quarantined
 from beacon.application.settings import effective_telegram_config
 from beacon.config import Settings
 from beacon.domain.company import SHADOW_ATS_TYPE
+
+
+def _bearer_tokens(settings: Settings) -> dict[str, SecretStr]:
+    """Per-host credentials for the HTTP door. Only the hosts we actually have a token for,
+    so a missing credential means a source is not wired rather than a 401 every poll."""
+    return {NAV_HOST: settings.nav_api_token} if settings.nav_api_token else {}
 
 
 async def run_ingest(
@@ -67,7 +75,7 @@ async def run_ingest(
         )
 
         async with httpx.AsyncClient(timeout=15.0) as client:
-            fetcher = PoliteClient(client)
+            fetcher = PoliteClient(client, bearer_tokens=_bearer_tokens(settings))
 
             # ATS boards: one seed company each. Shadow rows (ats_type='none', left by a
             # prior company-less poll) are excluded — no adapter polls them.
@@ -90,7 +98,9 @@ async def run_ingest(
             # Company-less sources (HN, JobTech, Himalayas, MyCareersFuture, …): one source,
             # many employers per posting.
             if only_company is None and poll_boards:
-                sources = make_companyless_sources(fetcher)
+                sources = make_companyless_sources(
+                    fetcher, nav_authenticated=settings.nav_api_token is not None
+                )
                 if only_source is not None:
                     sources = [s for s in sources if s.source_id == only_source]
                     if not sources:
@@ -162,7 +172,11 @@ async def run_probe(settings: Settings) -> int:
         )
         async with httpx.AsyncClient(timeout=15.0) as client:
             result = await probe_quarantined(
-                company_repo, jobs, make_source_factory(PoliteClient(client)), classifier, now=now
+                company_repo,
+                jobs,
+                make_source_factory(PoliteClient(client, bearer_tokens=_bearer_tokens(settings))),
+                classifier,
+                now=now,
             )
     print(f"probe probed={result.probed} restored={result.restored}")
     return 0
@@ -175,7 +189,10 @@ def main(argv: list[str] | None = None) -> int:
     target.add_argument(
         "--source",
         metavar="ID",
-        help="only this company-less source (hn/jobtech/remoteok/weworkremotely/himalayas/mycareersfuture)",
+        help=(
+            "only this company-less source (hn/jobtech/remoteok/weworkremotely/himalayas/"
+            "mycareersfuture/themuse/nav)"
+        ),
     )
     args = parser.parse_args(argv)
 

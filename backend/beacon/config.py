@@ -37,6 +37,10 @@ class Settings:
     # LLM fallback classifier (slice 9). Absent key → heuristic-only (no LLM wired).
     # llm_monthly_budget is the hard cap on calls per local month (cost control, SPEC §9).
     anthropic_api_key: SecretStr | None = None
+    # NAV Norway's feed bearer token (slice 14e). Absent → the NAV source is not wired at
+    # all, like the Telegram/LLM precedent; it is never a hard dependency. NAV publishes a
+    # rotating public experimentation token; a private one is issued to registered consumers.
+    nav_api_token: SecretStr | None = None
     llm_model: str = "claude-haiku-4-5-20251001"
     llm_monthly_budget: int = 500
 
@@ -45,6 +49,7 @@ class Settings:
         source = os.environ if env is None else env
         token = source.get("BEACON_TELEGRAM_BOT_TOKEN")
         api_key = source.get("BEACON_ANTHROPIC_API_KEY")
+        nav_token = source.get("BEACON_NAV_API_TOKEN")
         return cls(
             db_path=Path(source.get("BEACON_DB_PATH", str(_REPO_ROOT / "beacon.db"))),
             seeds_path=Path(
@@ -69,6 +74,7 @@ class Settings:
             telegram_bot_token=SecretStr(token) if token else None,
             telegram_chat_id=source.get("BEACON_TELEGRAM_CHAT_ID"),
             anthropic_api_key=SecretStr(api_key) if api_key else None,
+            nav_api_token=SecretStr(nav_token) if nav_token else None,
             llm_model=source.get("BEACON_LLM_MODEL", "claude-haiku-4-5-20251001"),
             llm_monthly_budget=int(source.get("BEACON_LLM_MONTHLY_BUDGET", "500")),
         )
