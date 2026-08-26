@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from beacon.adapters.registries._csvfile import iter_rows_below_banner
+from beacon.adapters.registries._evidence import counted
 from beacon.domain.registry import Registry, RegistryCompany
 
 _NAME_COLUMN = "Employer"
@@ -58,6 +59,5 @@ class CALMIARegistry:
 
     @staticmethod
     def _evidence(employer: _Employer) -> str:
-        lmias = "" if employer.lmias == 1 else "s"
-        positions = "" if employer.positions == 1 else "s"
-        return f"{employer.lmias} positive LMIA{lmias} ({employer.positions} position{positions})"
+        lmias = counted(employer.lmias, "positive LMIA")
+        return f"{lmias} ({counted(employer.positions, 'position')})"

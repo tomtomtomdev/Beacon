@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from beacon.adapters.registries._csvfile import iter_rows
+from beacon.adapters.registries._evidence import counted
 from beacon.domain.matching import split_trading_as
 from beacon.domain.registry import Registry, RegistryCompany
 
@@ -52,9 +53,8 @@ class H1BLCARegistry:
     def _to_company(raw_name: str, employer: _Employer) -> RegistryCompany:
         legal, embedded = split_trading_as(raw_name)
         aliases = tuple(sorted({*embedded, *employer.dba_aliases}))
-        plural = "" if employer.certified == 1 else "s"
         return RegistryCompany(
             name=legal,
             aliases=aliases,
-            evidence=f"{employer.certified} certified LCA filing{plural}",
+            evidence=counted(employer.certified, "certified LCA filing"),
         )

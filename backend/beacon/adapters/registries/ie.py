@@ -13,6 +13,7 @@ an Excel export leaves behind.
 from pathlib import Path
 
 from beacon.adapters.registries._csvfile import iter_rows
+from beacon.adapters.registries._evidence import counted
 from beacon.domain.matching import split_trading_as
 from beacon.domain.registry import Registry, RegistryCompany
 
@@ -34,12 +35,11 @@ class IEPermitsRegistry:
                 continue  # export padding
             legal, aliases = split_trading_as(raw)
             permits = int((row.get(_TOTAL_COLUMN) or "0").strip() or 0)
-            plural = "" if permits == 1 else "s"
             companies.append(
                 RegistryCompany(
                     name=legal,
                     aliases=aliases,
-                    evidence=f"{permits} employment permit{plural} issued",
+                    evidence=f"{counted(permits, 'employment permit')} issued",
                 )
             )
         return companies
