@@ -14,7 +14,7 @@ from beacon.domain.classification import Category, Level
 from beacon.domain.job import NormalizedJob
 
 
-def _job(title: str, description: str = "", source_level: Level | None = None) -> NormalizedJob:
+def _job(title: str, description: str = "") -> NormalizedJob:
     return NormalizedJob(
         source_id="greenhouse:test",
         external_id="1",
@@ -26,7 +26,6 @@ def _job(title: str, description: str = "", source_level: Level | None = None) -
         city=None,
         posted_at=datetime(2026, 7, 1, tzinfo=UTC),
         content_hash="hash",
-        source_level=source_level,
     )
 
 
@@ -136,19 +135,3 @@ def test_level_classification(title: str, description: str, expected: Level) -> 
     result = HeuristicClassifier().classify(_job(title, description))
 
     assert result.level == expected
-
-
-def test_a_board_published_level_beats_the_title_regex() -> None:
-    """The Muse ships levels[]; "Senior/Lead" would read LEAD off the title, but the
-    board's own metadata is the employer's answer and wins (slice 14c)."""
-    result = HeuristicClassifier().classify(
-        _job("Senior/Lead Software Engineer", source_level=Level.SENIOR)
-    )
-
-    assert result.level == Level.SENIOR
-
-
-def test_no_board_level_leaves_the_title_regex_in_charge() -> None:
-    result = HeuristicClassifier().classify(_job("Senior/Lead Software Engineer"))
-
-    assert result.level == Level.LEAD  # most-senior title token wins

@@ -18,11 +18,6 @@ class HeuristicClassifier:
         # the body cross-contaminates unrelated roles (proven in the slice-3 spot-check).
         # The title names the role; ambiguous/empty residue is the LLM fallback's job (slice 9).
         # Level reads the explicit token from the title, but years-of-experience (role-specific,
-        # not boilerplate) may come from the body. A board that publishes its own seniority
-        # (The Muse) beats both: its metadata is the employer's own answer, not our regex.
-        level = (
-            job.source_level
-            if job.source_level is not None
-            else resolve_level(level_text=job.title, years_text=f"{job.title}\n{job.description}")
-        )
+        # not boilerplate) may come from the body.
+        level = resolve_level(level_text=job.title, years_text=f"{job.title}\n{job.description}")
         return Classification(categories=extract_categories(job.title), level=level)

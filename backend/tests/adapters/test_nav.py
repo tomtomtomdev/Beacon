@@ -143,3 +143,17 @@ async def test_nav_fetch_stops_when_the_feed_says_it_has_ended(
 
     # next_url/next_id null means "you are at the head of the feed" — not an error.
     assert [str(c.url) for c in calls if "feedentry" not in c.url.path] == [_FEED]
+
+
+async def test_nav_fetches_a_repeated_uuid_only_once(
+    feed_page: dict[str, Any], entries: dict[str, dict[str, Any]]
+) -> None:
+    """An ad edited twice inside the window appears on more than one page. Seen live on
+    2026-08-26: the same feedentry was fetched twice in one poll."""
+    calls: list[httpx.Request] = []
+    handler = feed_handler(feed_page, entries, calls, pages=3)
+
+    await make_adapter(handler=handler, max_pages=3).fetch()
+
+    detail_paths = [c.url.path for c in calls if "feedentry" in c.url.path]
+    assert len(detail_paths) == len(set(detail_paths))  # three identical pages, one call each

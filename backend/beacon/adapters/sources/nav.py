@@ -70,15 +70,17 @@ class NAVAdapter:
         return entries
 
     async def _candidate_uuids(self) -> list[str]:
-        """The ACTIVE ads in the window whose title names a role family, newest walk first."""
+        """The ACTIVE ads in the window whose title names a role family, deduped: an ad
+        edited twice inside the window is listed on more than one page, and each duplicate
+        would otherwise cost a detail call and an identical upsert."""
         url: str | None = _FEED
-        uuids: list[str] = []
+        uuids: dict[str, None] = {}
         pinned = self._now() - self._window
         for page in range(self._max_pages):
             if url is None:
-                return uuids
+                return list(uuids)
             data = await self._fetcher.get_json(url, modified_since=pinned if page == 0 else None)
-            uuids.extend(_wanted_uuids(data.get("items") or []))
+            uuids.update(dict.fromkeys(_wanted_uuids(data.get("items") or [])))
             next_url = data.get("next_url")
             url = f"{_BASE}{next_url}" if next_url else None
         if url is not None:
@@ -88,7 +90,7 @@ class NAVAdapter:
                 pinned.date(),
                 len(uuids),
             )
-        return uuids
+        return list(uuids)
 
     async def _entry(self, uuid: str) -> RawPosting | None:
         entry = await self._fetcher.get_json(f"{_BASE}/api/v1/feedentry/{uuid}")

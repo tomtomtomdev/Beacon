@@ -191,7 +191,7 @@ def main(argv: list[str] | None = None) -> int:
         metavar="ID",
         help=(
             "only this company-less source (hn/jobtech/remoteok/weworkremotely/himalayas/"
-            "mycareersfuture/themuse/nav)"
+            "mycareersfuture/nav)"
         ),
     )
     args = parser.parse_args(argv)
