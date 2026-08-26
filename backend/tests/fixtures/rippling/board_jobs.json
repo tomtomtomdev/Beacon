@@ -1,0 +1,67 @@
+[
+ {
+  "uuid": "ba72246f-b46e-45da-9aec-3db244c2a35a",
+  "name": "Senior Software Engineer, Backend",
+  "department": {
+   "id": "Engineering",
+   "label": "Engineering"
+  },
+  "url": "https://ats.rippling.com/rippling/jobs/ba72246f-b46e-45da-9aec-3db244c2a35a",
+  "workLocation": {
+   "label": "London, United Kingdom",
+   "id": "London, United Kingdom"
+  }
+ },
+ {
+  "uuid": "1f81bd71-a3b5-4b91-aa6c-9999417a4c47",
+  "name": "Senior Software Engineer, Backend - Financial Product",
+  "department": {
+   "id": "Engineering",
+   "label": "Engineering"
+  },
+  "url": "https://ats.rippling.com/rippling/jobs/1f81bd71-a3b5-4b91-aa6c-9999417a4c47",
+  "workLocation": {
+   "label": "Seattle, WA",
+   "id": "Seattle, WA"
+  }
+ },
+ {
+  "uuid": "1f81bd71-a3b5-4b91-aa6c-9999417a4c47",
+  "name": "Senior Software Engineer, Backend - Financial Product",
+  "department": {
+   "id": "Engineering",
+   "label": "Engineering"
+  },
+  "url": "https://ats.rippling.com/rippling/jobs/1f81bd71-a3b5-4b91-aa6c-9999417a4c47",
+  "workLocation": {
+   "label": "San Francisco, CA",
+   "id": "San Francisco, CA"
+  }
+ },
+ {
+  "uuid": "1f81bd71-a3b5-4b91-aa6c-9999417a4c47",
+  "name": "Senior Software Engineer, Backend - Financial Product",
+  "department": {
+   "id": "Engineering",
+   "label": "Engineering"
+  },
+  "url": "https://ats.rippling.com/rippling/jobs/1f81bd71-a3b5-4b91-aa6c-9999417a4c47",
+  "workLocation": {
+   "label": "Toronto, Canada",
+   "id": "Toronto, Canada"
+  }
+ },
+ {
+  "uuid": "6d1e2ece-795f-4564-8a5f-931f0aea5c1f",
+  "name": "Account Executive - Global Payroll - Central and Eastern Europe",
+  "department": {
+   "id": "Sales",
+   "label": "Sales"
+  },
+  "url": "https://ats.rippling.com/rippling/jobs/6d1e2ece-795f-4564-8a5f-931f0aea5c1f",
+  "workLocation": {
+   "label": "Dublin, Ireland",
+   "id": "Dublin, Ireland"
+  }
+ }
+]

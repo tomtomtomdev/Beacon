@@ -13,7 +13,9 @@ from beacon.adapters.sources.hn import HNAdapter
 from beacon.adapters.sources.jobtech import JobTechAdapter
 from beacon.adapters.sources.lever import LeverAdapter
 from beacon.adapters.sources.mycareersfuture import MyCareersFutureAdapter
+from beacon.adapters.sources.recruitee import RecruiteeAdapter
 from beacon.adapters.sources.remoteok import RemoteOKAdapter
+from beacon.adapters.sources.rippling import RipplingAdapter
 from beacon.adapters.sources.smartrecruiters import SmartRecruitersAdapter
 from beacon.adapters.sources.teamtailor import TeamtailorAdapter
 from beacon.adapters.sources.themuse import TheMuseAdapter
@@ -34,6 +36,8 @@ _ADAPTERS: dict[str, _BuildAdapter] = {
     "workable": WorkableAdapter,
     "workday": WorkdayAdapter,
     "teamtailor": TeamtailorAdapter,
+    "recruitee": RecruiteeAdapter,
+    "rippling": RipplingAdapter,
 }
 
 SUPPORTED_ATS = frozenset(_ADAPTERS)

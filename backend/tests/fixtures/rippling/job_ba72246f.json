@@ -1,0 +1,139 @@
+{
+ "uuid": "ba72246f-b46e-45da-9aec-3db244c2a35a",
+ "name": "Senior Software Engineer, Backend",
+ "description": {
+  "company": "<meta><h2 style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;line-height:1.6;font-size:15pt;font-weight:600;letter-spacing:0.5px;margin-top:18px;margin-bottom:4px;padding-left:0px;\"><b><strong style=\"white-space:pre-wrap;\">About Rippling</strong></b></h2><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"font-size:11pt;white-space:pre-wrap;\">Rippling gives businesses one place to run HR, IT, and Finance. It brings together all of the workforce systems that are normally scattered across a company, like payroll, expenses, benefits, and computers. For the first time ever, you can manage and automate every part of the employee lifecycle in a single system.</span></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"font-size:11pt;white-space:pre-wrap;\">Take onboarding, for example. With Rippling, you can hire a new employee anywhere in the world and set up their payroll, corporate card, computer, benefits, and even third-party apps like Slack and Microsoft 365—all within 90 seconds.</span></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"font-size:11pt;white-space:pre-wrap;\">Based in San Francisco, CA, </span><a href=\"https://www.rippling.com/careers#:~:text=GLOBAL%20EMPLOYEES-,%241.4B%2B,-RAISED%20TO%20DATE\" target=\"_blank\" class=\"css-173makr-linkStyle\" style=\"color:rgb(30,74,169);cursor:pointer;\"><span style=\"white-space:pre-wrap;\">Rippling has raised $1.4B+</span></a><span style=\"font-size:11pt;white-space:pre-wrap;\"> from the world’s top investors—including Kleiner Perkins, Founders Fund, Sequoia, Greenoaks, and Bedrock—and was named one of America's best startup employers by Forbes.</span></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"font-size:11pt;white-space:pre-wrap;\">We prioritize candidate safety. Please be aware that all official communication will only be sent from @</span><a href=\"http://www.Rippling.com\" target=\"_blank\" class=\"css-173makr-linkStyle\" style=\"color:rgb(30,74,169);cursor:pointer;\"><span style=\"font-size:11pt;white-space:pre-wrap;\">Rippling.com</span></a><span style=\"font-size:11pt;white-space:pre-wrap;\"> addresses.</span></p>",
+  "role": "<meta><h2 style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;line-height:1.6;font-size:15pt;font-weight:600;letter-spacing:0.5px;margin-top:18px;margin-bottom:4px;padding-left:0px;\"><b><strong style=\"white-space:pre-wrap;\">About the role</strong></b></h2><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"font-size:11pt;white-space:pre-wrap;\">As a Senior Software Engineer on the Global Payroll team, you will play a critical role in advancing our full-service payroll platform that handles payroll configuration and calculations for hundreds of thousands of employees. This is a great opportunity to shape the technology powering one of Rippling’s core product offerings. You will own and drive initiatives by creating new product functionality from the ground up as well as rearchitecting key components of our platform to help us scale. If you are an experienced engineer looking for high impact and autonomy, come build the future of payroll with us!</span></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p><h2 style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;line-height:1.6;font-size:15pt;font-weight:600;letter-spacing:0.5px;margin-top:18px;margin-bottom:4px;padding-left:0px;\"><b><strong style=\"white-space:pre-wrap;\">What you will do</strong></b></h2><ul data-pattern=\"discCircleSquare\" data-depth=\"1\" style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;margin:8px 0px;line-height:1.6;padding:0px 0px 0px 32px;list-style-type:disc;\"><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Partner with design and product management leaders to shape and drive the vision, strategy, and roadmap for the team, while maintaining a balanced approach that considers both platform and product perspectives</span></li><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Implement maintainable solutions with high quality and reliability that can scale as our business continues to grow and expand</span></li><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Provide mentorship to other engineers, fostering their professional growth and success</span></li><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Enforce high-quality deliverables and raise the bar for engineering excellence by building and operationalizing tools, monitors, and processes across the organization</span></li><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Participate in an on-call rotation to handle customer and production support</span></li></ul><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p><h2 style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;line-height:1.6;font-size:15pt;font-weight:600;letter-spacing:0.5px;margin-top:18px;margin-bottom:4px;padding-left:0px;\"><b><strong style=\"white-space:pre-wrap;\">What you will need</strong></b></h2><ul data-pattern=\"discCircleSquare\" data-depth=\"1\" style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;margin:8px 0px;line-height:1.6;padding:0px 0px 0px 32px;list-style-type:disc;\"><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">6+ years of professional experience as a software engineer</span></li><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Ability to own and deliver projects, transforming product specifications into successful releases</span></li><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Strong grasp of computer science fundamentals, modern design patterns, providing you with a solid foundation to tackle complex technical problems and drive innovation.</span></li><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Proficiency in managing the complete project lifecycle, transforming intricate ideas into successful launches.</span></li><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Demonstrate a keen product sense that advocates for delivering exceptional customer experiences.</span></li><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Outstanding capacity to convey intricate technical concepts clearly and precisely, both in written and verbal communication, while collaborating effectively across diverse functional teams.</span></li><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Experience with Python, Django and React are a plus</span></li></ul><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p><h2 style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;line-height:1.6;font-size:15pt;font-weight:600;letter-spacing:0.5px;margin-top:18px;margin-bottom:4px;padding-left:0px;\"><b><strong style=\"white-space:pre-wrap;\">Additional Information</strong></b></h2><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"white-space:pre-wrap;\">Rippling is an equal opportunity employer. We are committed to building a diverse and inclusive workforce and do not discriminate based on race, religion, color, national origin, ancestry, physical disability, mental disability, medical condition, genetic information, marital status, sex, gender, gender identity, gender expression, age, sexual orientation, veteran or military status, or any other legally protected characteristics, Rippling is committed to providing reasonable accommodations for candidates with disabilities who need assistance during the hiring process. To request a reasonable accommodation, please email </span><a href=\"mailto:accommodations@rippling.com\" target=\"_blank\" class=\"css-173makr-linkStyle\" style=\"color:rgb(30,74,169);cursor:pointer;\"><span style=\"white-space:pre-wrap;\">accommodations@rippling.com</span></a></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"white-space:pre-wrap;\">Rippling highly values having employees working in-office to foster a collaborative work environment and company culture.  For office-based employees (employees who live within a defined radius of a Rippling office), Rippling considers working in the office, at least three days a week under current policy, to be an essential function of the employee's role.</span></p>"
+ },
+ "workLocations": [
+  "London, United Kingdom"
+ ],
+ "department": {
+  "name": "Engineering",
+  "base_department": "Engineering",
+  "department_tree": [
+   "Engineering"
+  ]
+ },
+ "employmentType": {
+  "label": "SALARIED_FT",
+  "id": "Salaried, full-time"
+ },
+ "createdOn": "2026-05-13T07:49:52.605000-07:00",
+ "activeJobApplication": {
+  "additionalQuestions": null,
+  "basicQuestions": [
+   {
+    "oid": "first_name",
+    "fieldType": "SHORT_ANSWER",
+    "title": "First name",
+    "required": true
+   },
+   {
+    "oid": "last_name",
+    "fieldType": "SHORT_ANSWER",
+    "title": "Last name",
+    "required": true
+   },
+   {
+    "oid": "email",
+    "fieldType": "SHORT_ANSWER",
+    "title": "Email",
+    "required": true
+   },
+   {
+    "oid": "pronouns",
+    "fieldType": "PRONOUN",
+    "title": "Pronouns",
+    "required": false
+   },
+   {
+    "oid": "current_company",
+    "fieldType": "SHORT_ANSWER",
+    "title": "Current company",
+    "required": false
+   },
+   {
+    "oid": "phone_number",
+    "fieldType": "PHONE_NUMBER",
+    "title": "Phone number",
+    "required": true
+   },
+   {
+    "oid": "location",
+    "fieldType": "SHORT_ANSWER",
+    "title": "Location (city only)",
+    "required": true
+   },
+   {
+    "oid": "resume",
+    "fieldType": "FILE",
+    "title": "Resume",
+    "required": true
+   },
+   {
+    "oid": "cover_letter",
+    "fieldType": "FILE",
+    "title": "Cover letter",
+    "required": false
+   }
+  ]
+ },
+ "eeocQuestionnaireEnabled": true,
+ "eeocQuestionnaireEnabledForJobPost": true,
+ "url": "https://ats.rippling.com/rippling/jobs/ba72246f-b46e-45da-9aec-3db244c2a35a",
+ "board": {
+  "boardType": "CUSTOM",
+  "slug": "rippling",
+  "logo": null,
+  "banner": null,
+  "title": "Current Openings",
+  "subtitle": null,
+  "boardURL": "http://www.rippling.com/careers/open-roles",
+  "fontType": null,
+  "linkColor": null,
+  "buttonColor": null,
+  "buttonTextColor": null,
+  "legalNotice": "<meta name=\"rteConfig\" content=\"{&quot;version&quot;:&quot;0.410.0&quot;,&quot;producedBy&quot;:&quot;block&quot;,&quot;themeName&quot;:&quot;berry&quot;}\"><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;text-align:left;\"><a href=\"https://www.rippling.com/immigration-policy\" target=\"_blank\" class=\"css-173makr-linkStyle\" style=\"color:rgb(30,74,169);cursor:pointer;\"><span style=\"white-space:pre-wrap;\">Rippling's Immigration Policy</span></a></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;text-align:left;\"><br></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;text-align:left;\"><span style=\"white-space:pre-wrap;\">This posting is to fill a vacancy on our team, unless otherwise noted.</span><br><br></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;text-align:left;\"><span style=\"font-size:11.25pt;white-space:pre-wrap;\">By clicking \"Apply\" you agree to&nbsp;</span><a href=\"https://app.rippling.com/legal/employee-privacy\" target=\"_blank\" class=\"css-173makr-linkStyle\" style=\"color:rgb(30,74,169);cursor:pointer;\"><span style=\"white-space:pre-wrap;\">Rippling's Employees, Candidates, and Workers Privacy Notice</span></a><span style=\"font-size:11.25pt;white-space:pre-wrap;\">.&nbsp;</span></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p>",
+  "noOpeningsMessage": null,
+  "groupJobsByLocation": false,
+  "showBoardLogoOnJobPost": false,
+  "showCompanyInfoUnderJobPost": false,
+  "companyName": "Rippling"
+ },
+ "payRangeDetails": [],
+ "applicationConfirmationTemplate": "6348729c5a9a6e6df0bb6f64",
+ "hasAIEvaluationsEnabled": true,
+ "companyName": "Rippling",
+ "unlistedFromSearch": false,
+ "jsonLd": {
+  "@context": "https://schema.org",
+  "@type": "JobPosting",
+  "title": "Senior Software Engineer, Backend",
+  "description": "<meta><h2 style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;line-height:1.6;font-size:15pt;font-weight:600;letter-spacing:0.5px;margin-top:18px;margin-bottom:4px;padding-left:0px;\"><b><strong style=\"white-space:pre-wrap;\">About the role</strong></b></h2><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"font-size:11pt;white-space:pre-wrap;\">As a Senior Software Engineer on the Global Payroll team, you will play a critical role in advancing our full-service payroll platform that handles payroll configuration and calculations for hundreds of thousands of employees. This is a great opportunity to shape the technology powering one of Rippling’s core product offerings. You will own and drive initiatives by creating new product functionality from the ground up as well as rearchitecting key components of our platform to help us scale. If you are an experienced engineer looking for high impact and autonomy, come build the future of payroll with us!</span></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p><h2 style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;line-height:1.6;font-size:15pt;font-weight:600;letter-spacing:0.5px;margin-top:18px;margin-bottom:4px;padding-left:0px;\"><b><strong style=\"white-space:pre-wrap;\">What you will do</strong></b></h2><ul data-pattern=\"discCircleSquare\" data-depth=\"1\" style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;margin:8px 0px;line-height:1.6;padding:0px 0px 0px 32px;list-style-type:disc;\"><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Partner with design and product management leaders to shape and drive the vision, strategy, and roadmap for the team, while maintaining a balanced approach that considers both platform and product perspectives</span></li><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Implement maintainable solutions with high quality and reliability that can scale as our business continues to grow and expand</span></li><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Provide mentorship to other engineers, fostering their professional growth and success</span></li><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Enforce high-quality deliverables and raise the bar for engineering excellence by building and operationalizing tools, monitors, and processes across the organization</span></li><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Participate in an on-call rotation to handle customer and production support</span></li></ul><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p><h2 style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;line-height:1.6;font-size:15pt;font-weight:600;letter-spacing:0.5px;margin-top:18px;margin-bottom:4px;padding-left:0px;\"><b><strong style=\"white-space:pre-wrap;\">What you will need</strong></b></h2><ul data-pattern=\"discCircleSquare\" data-depth=\"1\" style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;margin:8px 0px;line-height:1.6;padding:0px 0px 0px 32px;list-style-type:disc;\"><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">6+ years of professional experience as a software engineer</span></li><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Ability to own and deliver projects, transforming product specifications into successful releases</span></li><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Strong grasp of computer science fundamentals, modern design patterns, providing you with a solid foundation to tackle complex technical problems and drive innovation.</span></li><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Proficiency in managing the complete project lifecycle, transforming intricate ideas into successful launches.</span></li><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Demonstrate a keen product sense that advocates for delivering exceptional customer experiences.</span></li><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Outstanding capacity to convey intricate technical concepts clearly and precisely, both in written and verbal communication, while collaborating effectively across diverse functional teams.</span></li><li style=\"font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"white-space:pre-wrap;\">Experience with Python, Django and React are a plus</span></li></ul><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p><h2 style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;line-height:1.6;font-size:15pt;font-weight:600;letter-spacing:0.5px;margin-top:18px;margin-bottom:4px;padding-left:0px;\"><b><strong style=\"white-space:pre-wrap;\">Additional Information</strong></b></h2><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"white-space:pre-wrap;\">Rippling is an equal opportunity employer. We are committed to building a diverse and inclusive workforce and do not discriminate based on race, religion, color, national origin, ancestry, physical disability, mental disability, medical condition, genetic information, marital status, sex, gender, gender identity, gender expression, age, sexual orientation, veteran or military status, or any other legally protected characteristics, Rippling is committed to providing reasonable accommodations for candidates with disabilities who need assistance during the hiring process. To request a reasonable accommodation, please email </span><a href=\"mailto:accommodations@rippling.com\" target=\"_blank\" class=\"css-173makr-linkStyle\" style=\"color:rgb(30,74,169);cursor:pointer;\"><span style=\"white-space:pre-wrap;\">accommodations@rippling.com</span></a></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"white-space:pre-wrap;\">Rippling highly values having employees working in-office to foster a collaborative work environment and company culture.  For office-based employees (employees who live within a defined radius of a Rippling office), Rippling considers working in the office, at least three days a week under current policy, to be an essential function of the employee's role.</span></p>",
+  "datePosted": "2026-05-13T14:49:52.605000+00:00",
+  "hiringOrganization": {
+   "@type": "Organization",
+   "name": "Rippling",
+   "sameAs": "http://www.rippling.com/careers/open-roles"
+  },
+  "jobLocation": [
+   {
+    "@type": "Place",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "London",
+     "addressRegion": "ENG",
+     "addressCountry": "GB"
+    }
+   }
+  ],
+  "url": "https://ats.rippling.com/rippling/jobs/ba72246f-b46e-45da-9aec-3db244c2a35a",
+  "directApply": true,
+  "identifier": {
+   "@type": "PropertyValue",
+   "name": "Rippling Recruiting",
+   "value": "ba72246f-b46e-45da-9aec-3db244c2a35a"
+  }
+ }
+}

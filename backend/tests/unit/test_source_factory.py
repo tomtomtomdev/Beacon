@@ -34,6 +34,8 @@ def test_supported_ats_covers_every_seeded_ats_with_an_adapter() -> None:
         "workable",
         "workday",
         "teamtailor",
+        "recruitee",
+        "rippling",
     }
 
 

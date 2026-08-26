@@ -1,0 +1,198 @@
+{
+ "uuid": "1f81bd71-a3b5-4b91-aa6c-9999417a4c47",
+ "name": "Senior Software Engineer, Backend - Financial Product",
+ "description": {
+  "company": "<meta><h2 style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;line-height:1.6;font-size:15pt;font-weight:600;letter-spacing:0.5px;margin-top:18px;margin-bottom:4px;padding-left:0px;\"><b><strong style=\"white-space:pre-wrap;\">About Rippling</strong></b></h2><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"font-size:11pt;white-space:pre-wrap;\">Rippling gives businesses one place to run HR, IT, and Finance. It brings together all of the workforce systems that are normally scattered across a company, like payroll, expenses, benefits, and computers. For the first time ever, you can manage and automate every part of the employee lifecycle in a single system.</span></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"font-size:11pt;white-space:pre-wrap;\">Take onboarding, for example. With Rippling, you can hire a new employee anywhere in the world and set up their payroll, corporate card, computer, benefits, and even third-party apps like Slack and Microsoft 365—all within 90 seconds.</span></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"font-size:11pt;white-space:pre-wrap;\">Based in San Francisco, CA, </span><a href=\"https://www.rippling.com/careers#:~:text=GLOBAL%20EMPLOYEES-,%241.4B%2B,-RAISED%20TO%20DATE\" target=\"_blank\" class=\"css-173makr-linkStyle\" style=\"color:rgb(30,74,169);cursor:pointer;\"><span style=\"font-size:11pt;white-space:pre-wrap;\">Rippling has raised $1.4B+</span></a><span style=\"font-size:11pt;white-space:pre-wrap;\"> from the world’s top investors—including Kleiner Perkins, Founders Fund, Sequoia, Greenoaks, and Bedrock—and was named one of America's best startup employers by Forbes.</span></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"font-size:11pt;white-space:pre-wrap;\">We prioritize candidate safety. Please be aware that all official communication will only be sent from @</span><a href=\"http://www.Rippling.com\" target=\"_blank\" class=\"css-173makr-linkStyle\" style=\"color:rgb(30,74,169);cursor:pointer;\"><span style=\"font-size:11pt;white-space:pre-wrap;\">Rippling.com</span></a><span style=\"font-size:11pt;white-space:pre-wrap;\"> addresses.</span></p>",
+  "role": "<meta><h2 style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;line-height:1.6;font-size:15pt;font-weight:600;letter-spacing:0.5px;margin-top:18px;margin-bottom:4px;padding-left:0px;\"><b><strong style=\"white-space:pre-wrap;\">About the Financial Product Team</strong></b></h2><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11.25pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">The Financial Product Engineering team is at the forefront of Rippling's expansion into FinTech. Our mission is to build a unified, global financial system for businesses—one that is fundamentally integrated with the company's employee, HR, and IT data. We simplify complex, cross-functional processes like global payroll, corporate spending, and expense management, ensuring businesses have precise control and real-time visibility over all money movement.</span></p><h3 style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;line-height:1.6;font-size:14pt;font-weight:600;letter-spacing:0.25px;margin-top:14px;margin-bottom:4px;padding-left:0px;\"><b><strong style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">What We Build</strong></b></h3><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Our team builds and maintains the core financial products that enable businesses to operate seamlessly, covering areas such as:</span></p><ul data-pattern=\"discCircleSquare\" data-depth=\"1\" style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;margin:8px 0px;line-height:1.6;padding:0px 0px 0px 32px;list-style-type:disc;\"><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><b><strong style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Global Payroll:</strong></b><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\"> Developing the systems for calculating, filing, and processing payroll across multiple countries, including tax logic, compliance, and direct money movement infrastructure.</span></li><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><b><strong style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Spend Management:</strong></b><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\"> We’re building the system that gives companies total visibility and control over every dollar they spend. Our platform unifies corporate cards, reimbursements, procurement, bill pay, and travel into one integrated workflow that connects directly to accounting and payroll. Unlike point solutions, Rippling Spend ties policy enforcement, approvals, and accounting in real time, so finance teams can manage spend proactively instead of reconciling it after the facts</span></li><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><b><strong style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Banking &amp; Fintech Infrastructure:</strong></b><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\"> We’re building the simplest, invisible, intelligent financial backbone for global money movement. This platform delivers secure, fault-tolerant, scalable primitives for money movement, billing, reconciliation, compliance, and financial intelligence, enabling rapid launch of financial products with minimal effort, and zero disbursement failures or manual intervention.</span></li><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><b><strong style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Tax &amp; Compliance Platforms:</strong></b><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\"> Designing robust, scalable systems to handle complex, rapidly changing tax and regulatory requirements across all jurisdictions. We operate in a zero tolerance domain for accuracy, timelines and compliance. Our platform manages calculation, setup, filings and payments of taxes for US and ever expanding international markets. </span></li></ul><h2 style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;line-height:1.6;font-size:15pt;font-weight:600;letter-spacing:0.5px;margin-top:18px;margin-bottom:4px;padding-left:0px;\"><b><strong style=\"white-space:pre-wrap;\">What you will do</strong></b></h2><ul data-pattern=\"discCircleSquare\" data-depth=\"1\" style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;margin:8px 0px;line-height:1.6;padding:0px 0px 0px 32px;list-style-type:disc;\"><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Own the design and implementation of core backend services and APIs that power critical product capabilities and complex business logic.</span></li><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Ensure all systems are built for high-volume scale, reliability, and security, making strategic decisions about infrastructure and data integrity.</span></li><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Work seamlessly with product, frontend, and platform teams to translate feature goals into robust, high-performance technical solutions.</span></li><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Elevate the team's technical standards, lead code and design reviews, and mentor engineers on backend best practices.</span></li></ul><h2 style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;line-height:1.6;font-size:15pt;font-weight:600;letter-spacing:0.5px;margin-top:18px;margin-bottom:4px;padding-left:0px;\"><b><strong style=\"white-space:pre-wrap;\">What you will need</strong></b></h2><ul data-pattern=\"discCircleSquare\" data-depth=\"1\" style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;margin:8px 0px;line-height:1.6;padding:0px 0px 0px 32px;list-style-type:disc;\"><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">5+ years of experience in a production environment using Python, Go, or a similar high-scale backend language.</span></li><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Deep expertise in distributed systems architecture, data modeling, and performance optimization of relational databases.</span></li><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">You have seen and contributed to systems operating at a significant technical and organizational scale.</span></li><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Strong understanding of CS/algorithms fundamentals and experience with complex project delivery.</span></li><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Exceptional communication skills with technical and cross-functional stakeholders.</span></li></ul><h2 style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;line-height:1.6;font-size:15pt;font-weight:600;letter-spacing:0.5px;margin-top:18px;margin-bottom:4px;padding-left:0px;\"><b><strong style=\"white-space:pre-wrap;\">Additional Information</strong></b></h2><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"white-space:pre-wrap;\">Rippling is an equal opportunity employer. We are committed to building a diverse and inclusive workforce and do not discriminate based on race, religion, color, national origin, ancestry, physical disability, mental disability, medical condition, genetic information, marital status, sex, gender, gender identity, gender expression, age, sexual orientation, veteran or military status, or any other legally protected characteristics, Rippling is committed to providing reasonable accommodations for candidates with disabilities who need assistance during the hiring process. To request a reasonable accommodation, please email accomodations@rippling.com</span></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"white-space:pre-wrap;\">Rippling highly values having employees working in-office to foster a collaborative work environment and company culture.  For office-based employees (employees who live within a defined radius of a Rippling office), Rippling considers working in the office, at least three days a week under current policy, to be an essential function of the employee's role.</span></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"white-space:pre-wrap;\">This role will receive a competitive salary + benefits + equity. The salary for US-based employees will be aligned with one of the ranges below based on location; see which tier applies to your location </span><a href=\"https://www.rippling.com/pay-transparency\" target=\"_blank\" class=\"css-173makr-linkStyle\" style=\"color:rgb(30,74,169);cursor:pointer;\"><span style=\"white-space:pre-wrap;\">here</span></a><span style=\"white-space:pre-wrap;\">.</span></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"white-space:pre-wrap;\">A variety of factors are considered when determining someone’s compensation–including a candidate’s professional background, experience, and location. Final offer amounts may vary from the amounts listed below.</span></p>"
+ },
+ "workLocations": [
+  "San Francisco, CA",
+  "Toronto, Canada",
+  "Seattle, WA"
+ ],
+ "department": {
+  "name": "Engineering",
+  "base_department": "Engineering",
+  "department_tree": [
+   "Engineering"
+  ]
+ },
+ "employmentType": {
+  "label": "SALARIED_FT",
+  "id": "Salaried, full-time"
+ },
+ "createdOn": "2025-11-13T07:43:16.375000-08:00",
+ "activeJobApplication": {
+  "additionalQuestions": null,
+  "basicQuestions": [
+   {
+    "oid": "first_name",
+    "fieldType": "SHORT_ANSWER",
+    "title": "First name",
+    "required": true
+   },
+   {
+    "oid": "last_name",
+    "fieldType": "SHORT_ANSWER",
+    "title": "Last name",
+    "required": true
+   },
+   {
+    "oid": "email",
+    "fieldType": "SHORT_ANSWER",
+    "title": "Email",
+    "required": true
+   },
+   {
+    "oid": "pronouns",
+    "fieldType": "PRONOUN",
+    "title": "Pronouns",
+    "required": false
+   },
+   {
+    "oid": "current_company",
+    "fieldType": "SHORT_ANSWER",
+    "title": "Current company",
+    "required": false
+   },
+   {
+    "oid": "phone_number",
+    "fieldType": "PHONE_NUMBER",
+    "title": "Phone number",
+    "required": true
+   },
+   {
+    "oid": "location",
+    "fieldType": "SHORT_ANSWER",
+    "title": "Location (city only)",
+    "required": true
+   },
+   {
+    "oid": "linkedin_link",
+    "fieldType": "SHORT_ANSWER",
+    "title": "LinkedIn link",
+    "required": false
+   },
+   {
+    "oid": "website_link",
+    "fieldType": "SHORT_ANSWER",
+    "title": "Website link",
+    "required": false
+   },
+   {
+    "oid": "resume",
+    "fieldType": "FILE",
+    "title": "Resume",
+    "required": true
+   },
+   {
+    "oid": "cover_letter",
+    "fieldType": "FILE",
+    "title": "Cover letter",
+    "required": false
+   }
+  ]
+ },
+ "eeocQuestionnaireEnabled": true,
+ "eeocQuestionnaireEnabledForJobPost": true,
+ "url": "https://ats.rippling.com/rippling/jobs/1f81bd71-a3b5-4b91-aa6c-9999417a4c47",
+ "board": {
+  "boardType": "CUSTOM",
+  "slug": "rippling",
+  "logo": null,
+  "banner": null,
+  "title": "Current Openings",
+  "subtitle": null,
+  "boardURL": "http://www.rippling.com/careers/open-roles",
+  "fontType": null,
+  "linkColor": null,
+  "buttonColor": null,
+  "buttonTextColor": null,
+  "legalNotice": "<meta name=\"rteConfig\" content=\"{&quot;version&quot;:&quot;0.410.0&quot;,&quot;producedBy&quot;:&quot;block&quot;,&quot;themeName&quot;:&quot;berry&quot;}\"><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;text-align:left;\"><a href=\"https://www.rippling.com/immigration-policy\" target=\"_blank\" class=\"css-173makr-linkStyle\" style=\"color:rgb(30,74,169);cursor:pointer;\"><span style=\"white-space:pre-wrap;\">Rippling's Immigration Policy</span></a></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;text-align:left;\"><br></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;text-align:left;\"><span style=\"white-space:pre-wrap;\">This posting is to fill a vacancy on our team, unless otherwise noted.</span><br><br></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;text-align:left;\"><span style=\"font-size:11.25pt;white-space:pre-wrap;\">By clicking \"Apply\" you agree to&nbsp;</span><a href=\"https://app.rippling.com/legal/employee-privacy\" target=\"_blank\" class=\"css-173makr-linkStyle\" style=\"color:rgb(30,74,169);cursor:pointer;\"><span style=\"white-space:pre-wrap;\">Rippling's Employees, Candidates, and Workers Privacy Notice</span></a><span style=\"font-size:11.25pt;white-space:pre-wrap;\">.&nbsp;</span></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p>",
+  "noOpeningsMessage": null,
+  "groupJobsByLocation": false,
+  "showBoardLogoOnJobPost": false,
+  "showCompanyInfoUnderJobPost": false,
+  "companyName": "Rippling"
+ },
+ "payRangeDetails": [
+  {
+   "location": "US Tier 1",
+   "currency": "USD",
+   "frequency": "YEAR",
+   "rangeStart": 159000.0,
+   "rangeEnd": 278250.0,
+   "isRemote": false
+  },
+  {
+   "location": "CA",
+   "currency": "CAD",
+   "frequency": "YEAR",
+   "rangeStart": 141000.0,
+   "rangeEnd": 246750.0,
+   "isRemote": false
+  }
+ ],
+ "applicationConfirmationTemplate": "6348729c5a9a6e6df0bb6f64",
+ "hasAIEvaluationsEnabled": true,
+ "companyName": "Rippling",
+ "unlistedFromSearch": false,
+ "jsonLd": {
+  "@context": "https://schema.org",
+  "@type": "JobPosting",
+  "title": "Senior Software Engineer, Backend - Financial Product",
+  "description": "<meta><h2 style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;line-height:1.6;font-size:15pt;font-weight:600;letter-spacing:0.5px;margin-top:18px;margin-bottom:4px;padding-left:0px;\"><b><strong style=\"white-space:pre-wrap;\">About the Financial Product Team</strong></b></h2><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11.25pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">The Financial Product Engineering team is at the forefront of Rippling's expansion into FinTech. Our mission is to build a unified, global financial system for businesses—one that is fundamentally integrated with the company's employee, HR, and IT data. We simplify complex, cross-functional processes like global payroll, corporate spending, and expense management, ensuring businesses have precise control and real-time visibility over all money movement.</span></p><h3 style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;line-height:1.6;font-size:14pt;font-weight:600;letter-spacing:0.25px;margin-top:14px;margin-bottom:4px;padding-left:0px;\"><b><strong style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">What We Build</strong></b></h3><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Our team builds and maintains the core financial products that enable businesses to operate seamlessly, covering areas such as:</span></p><ul data-pattern=\"discCircleSquare\" data-depth=\"1\" style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;margin:8px 0px;line-height:1.6;padding:0px 0px 0px 32px;list-style-type:disc;\"><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><b><strong style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Global Payroll:</strong></b><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\"> Developing the systems for calculating, filing, and processing payroll across multiple countries, including tax logic, compliance, and direct money movement infrastructure.</span></li><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><b><strong style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Spend Management:</strong></b><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\"> We’re building the system that gives companies total visibility and control over every dollar they spend. Our platform unifies corporate cards, reimbursements, procurement, bill pay, and travel into one integrated workflow that connects directly to accounting and payroll. Unlike point solutions, Rippling Spend ties policy enforcement, approvals, and accounting in real time, so finance teams can manage spend proactively instead of reconciling it after the facts</span></li><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><b><strong style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Banking &amp; Fintech Infrastructure:</strong></b><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\"> We’re building the simplest, invisible, intelligent financial backbone for global money movement. This platform delivers secure, fault-tolerant, scalable primitives for money movement, billing, reconciliation, compliance, and financial intelligence, enabling rapid launch of financial products with minimal effort, and zero disbursement failures or manual intervention.</span></li><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><b><strong style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Tax &amp; Compliance Platforms:</strong></b><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\"> Designing robust, scalable systems to handle complex, rapidly changing tax and regulatory requirements across all jurisdictions. We operate in a zero tolerance domain for accuracy, timelines and compliance. Our platform manages calculation, setup, filings and payments of taxes for US and ever expanding international markets. </span></li></ul><h2 style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;line-height:1.6;font-size:15pt;font-weight:600;letter-spacing:0.5px;margin-top:18px;margin-bottom:4px;padding-left:0px;\"><b><strong style=\"white-space:pre-wrap;\">What you will do</strong></b></h2><ul data-pattern=\"discCircleSquare\" data-depth=\"1\" style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;margin:8px 0px;line-height:1.6;padding:0px 0px 0px 32px;list-style-type:disc;\"><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Own the design and implementation of core backend services and APIs that power critical product capabilities and complex business logic.</span></li><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Ensure all systems are built for high-volume scale, reliability, and security, making strategic decisions about infrastructure and data integrity.</span></li><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Work seamlessly with product, frontend, and platform teams to translate feature goals into robust, high-performance technical solutions.</span></li><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Elevate the team's technical standards, lead code and design reviews, and mentor engineers on backend best practices.</span></li></ul><h2 style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;line-height:1.6;font-size:15pt;font-weight:600;letter-spacing:0.5px;margin-top:18px;margin-bottom:4px;padding-left:0px;\"><b><strong style=\"white-space:pre-wrap;\">What you will need</strong></b></h2><ul data-pattern=\"discCircleSquare\" data-depth=\"1\" style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;margin:8px 0px;line-height:1.6;padding:0px 0px 0px 32px;list-style-type:disc;\"><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">5+ years of experience in a production environment using Python, Go, or a similar high-scale backend language.</span></li><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Deep expertise in distributed systems architecture, data modeling, and performance optimization of relational databases.</span></li><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">You have seen and contributed to systems operating at a significant technical and organizational scale.</span></li><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Strong understanding of CS/algorithms fundamentals and experience with complex project delivery.</span></li><li style=\"color:rgb(0,0,0);font-size:11pt;margin:3px 0px;letter-spacing:0.25px;line-height:1.6;\"><span style=\"color:rgb(0,0,0);font-size:11pt;white-space:pre-wrap;\">Exceptional communication skills with technical and cross-functional stakeholders.</span></li></ul><h2 style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;line-height:1.6;font-size:15pt;font-weight:600;letter-spacing:0.5px;margin-top:18px;margin-bottom:4px;padding-left:0px;\"><b><strong style=\"white-space:pre-wrap;\">Additional Information</strong></b></h2><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"white-space:pre-wrap;\">Rippling is an equal opportunity employer. We are committed to building a diverse and inclusive workforce and do not discriminate based on race, religion, color, national origin, ancestry, physical disability, mental disability, medical condition, genetic information, marital status, sex, gender, gender identity, gender expression, age, sexual orientation, veteran or military status, or any other legally protected characteristics, Rippling is committed to providing reasonable accommodations for candidates with disabilities who need assistance during the hiring process. To request a reasonable accommodation, please email accomodations@rippling.com</span></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"white-space:pre-wrap;\">Rippling highly values having employees working in-office to foster a collaborative work environment and company culture.  For office-based employees (employees who live within a defined radius of a Rippling office), Rippling considers working in the office, at least three days a week under current policy, to be an essential function of the employee's role.</span></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"white-space:pre-wrap;\">This role will receive a competitive salary + benefits + equity. The salary for US-based employees will be aligned with one of the ranges below based on location; see which tier applies to your location </span><a href=\"https://www.rippling.com/pay-transparency\" target=\"_blank\" class=\"css-173makr-linkStyle\" style=\"color:rgb(30,74,169);cursor:pointer;\"><span style=\"white-space:pre-wrap;\">here</span></a><span style=\"white-space:pre-wrap;\">.</span></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><br></p><p style=\"font-family:&quot;Basel Grotesk&quot;,Arial,sans-serif;font-size:11pt;font-weight:400;line-height:1.6;letter-spacing:0.25px;margin:4px 0px;padding:0px;\"><span style=\"white-space:pre-wrap;\">A variety of factors are considered when determining someone’s compensation–including a candidate’s professional background, experience, and location. Final offer amounts may vary from the amounts listed below.</span></p>",
+  "datePosted": "2025-11-13T15:43:16.375000+00:00",
+  "hiringOrganization": {
+   "@type": "Organization",
+   "name": "Rippling",
+   "sameAs": "http://www.rippling.com/careers/open-roles"
+  },
+  "jobLocation": [
+   {
+    "@type": "Place",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "San Francisco",
+     "addressRegion": "CA",
+     "addressCountry": "US"
+    }
+   },
+   {
+    "@type": "Place",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Toronto",
+     "addressRegion": "ON",
+     "addressCountry": "CA"
+    }
+   },
+   {
+    "@type": "Place",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Seattle",
+     "addressRegion": "WA",
+     "addressCountry": "US"
+    }
+   }
+  ],
+  "url": "https://ats.rippling.com/rippling/jobs/1f81bd71-a3b5-4b91-aa6c-9999417a4c47",
+  "baseSalary": {
+   "@type": "MonetaryAmount",
+   "value": {
+    "@type": "QuantitativeValue",
+    "minValue": 159000.0,
+    "maxValue": 278250.0,
+    "unitText": "YEAR"
+   },
+   "currency": "USD"
+  },
+  "directApply": true,
+  "identifier": {
+   "@type": "PropertyValue",
+   "name": "Rippling Recruiting",
+   "value": "1f81bd71-a3b5-4b91-aa6c-9999417a4c47"
+  }
+ }
+}
