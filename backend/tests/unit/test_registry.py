@@ -42,9 +42,19 @@ def test_stale_registries_returns_only_the_stale_ones() -> None:
     assert [m.registry for m in stale] == ["NL", "US"]
 
 
-def test_bitmask_members_are_uk_nl_us_manual_only() -> None:
-    # SPEC §5.3: no SE bit exists — the Swedish scheme was discontinued.
-    assert {r.name for r in Registry} == {"UK", "NL", "US", "MANUAL"}
+def test_registry_flags_bitmask() -> None:
+    # SPEC §5.3: IE + CA joined the mask in slice 14. No SE bit exists — the Swedish
+    # employer-certification scheme was discontinued Dec 2023. Members are additive and
+    # their values are FROZEN: registry_flags is a stored integer, so renumbering an
+    # existing bit would silently re-label every matched company already in the DB.
+    assert {r.name for r in Registry} == {"UK", "NL", "US", "MANUAL", "IE", "CA"}
+    assert (int(Registry.UK), int(Registry.NL), int(Registry.US), int(Registry.MANUAL)) == (
+        1,
+        2,
+        4,
+        8,
+    )
+    assert (int(Registry.IE), int(Registry.CA)) == (16, 32)
 
 
 def test_flags_compose_and_test_by_bit() -> None:
@@ -67,8 +77,19 @@ def test_flags_compose_and_test_by_bit() -> None:
             int(Registry.UK | Registry.NL | Registry.US | Registry.MANUAL),
             ("UK", "NL", "US", "MANUAL"),
         ),
+        (
+            int(
+                Registry.UK
+                | Registry.NL
+                | Registry.US
+                | Registry.MANUAL
+                | Registry.IE
+                | Registry.CA
+            ),
+            ("UK", "NL", "US", "MANUAL", "IE", "CA"),
+        ),
     ],
-    ids=["none", "uk", "manual", "uk-nl", "all"],
+    ids=["none", "uk", "manual", "uk-nl", "uk-nl-us-manual", "all"],
 )
 def test_registry_names_decodes_the_bitmask_in_definition_order(
     flags: int, expected: tuple[str, ...]

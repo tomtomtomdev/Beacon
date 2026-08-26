@@ -28,6 +28,8 @@ class Settings:
     uk_registry_path: Path = _REGISTRIES / "uk_sponsors.csv"
     ind_registry_path: Path = _REGISTRIES / "ind_sponsors.csv"
     h1b_registry_path: Path = _REGISTRIES / "h1b_lca.csv"
+    ie_registry_path: Path = _REGISTRIES / "ie_permits.csv"
+    ca_registry_path: Path = _REGISTRIES / "ca_lmia.csv"
     # Telegram Bot API credentials for the digest (slice 8). Absent → StdoutNotifier.
     # SecretStr keeps the token out of reprs/logs.
     telegram_bot_token: SecretStr | None = None
@@ -57,6 +59,12 @@ class Settings:
             ),
             h1b_registry_path=Path(
                 source.get("BEACON_H1B_REGISTRY_PATH", str(_REGISTRIES / "h1b_lca.csv"))
+            ),
+            ie_registry_path=Path(
+                source.get("BEACON_IE_REGISTRY_PATH", str(_REGISTRIES / "ie_permits.csv"))
+            ),
+            ca_registry_path=Path(
+                source.get("BEACON_CA_REGISTRY_PATH", str(_REGISTRIES / "ca_lmia.csv"))
             ),
             telegram_bot_token=SecretStr(token) if token else None,
             telegram_chat_id=source.get("BEACON_TELEGRAM_CHAT_ID"),

@@ -40,6 +40,16 @@ SUFFIX_TOKENS: frozenset[str] = frozenset(
         "pte",
         "pbc",
         "branch",
+        # Irish legal forms (slice 14, with the IE permits register): "Unlimited Company"
+        # (UC) and "Designated Activity Company" (DAC) are designators, not brand words.
+        # "public" is deliberately NOT here — "Public Limited Company" is 7 rows of 6,360
+        # and "public" appears mid-name in real trading names.
+        "unlimited",
+        "company",
+        "designated",
+        "activity",
+        "uc",
+        "dac",
     }
 )
 

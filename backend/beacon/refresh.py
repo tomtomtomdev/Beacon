@@ -17,7 +17,9 @@ from beacon.adapters.persistence.companies import SqliteCompanyRepo
 from beacon.adapters.persistence.db import MIGRATIONS_DIR, connect, run_migrations
 from beacon.adapters.persistence.jobs import SqliteJobRepo
 from beacon.adapters.persistence.registries_meta import SqliteRegistriesMetaRepo
+from beacon.adapters.registries.ca import CALMIARegistry
 from beacon.adapters.registries.h1b import H1BLCARegistry
+from beacon.adapters.registries.ie import IEPermitsRegistry
 from beacon.adapters.registries.ind import INDRegistry
 from beacon.adapters.registries.uk import UKSponsorRegistry
 from beacon.adapters.seeds import parse_seed_csv
@@ -36,6 +38,8 @@ def _available_ingesters(settings: Settings) -> list[RegistryIngester]:
         (settings.uk_registry_path, UKSponsorRegistry),
         (settings.ind_registry_path, INDRegistry),
         (settings.h1b_registry_path, H1BLCARegistry),
+        (settings.ie_registry_path, IEPermitsRegistry),
+        (settings.ca_registry_path, CALMIARegistry),
     ):
         if path.exists():
             ingesters.append(build(path))

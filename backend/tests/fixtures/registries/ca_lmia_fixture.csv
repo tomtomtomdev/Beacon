@@ -1,0 +1,23 @@
+"Employers Who Were Issued a Positive Labour Market Impact Assessment (LMIA) by Program Stream, National Occupational Classification (NOC) 2021 and Business Location, January to March 2026"
+Province/Territory,Program Stream,Employer,Address,Occupation,Incorporate Status,Approved LMIAs,Approved Positions
+Ontario                                                                    ,High Wage          ,Cohere Inc.,"Toronto, ON M5T  1X",21220-Cybersecurity specialists,Corporation,1,1
+Ontario                                                                    ,High Wage          ,Shopify Inc.,"Ottawa, ON K2P 2L8",20012-Computer and information systems managers,Unknown,1,1
+Ontario                                                                    ,High Wage          ,Shopify Inc.,"Ottawa, ON K2P 2L8",21231-Software engineers and designers,Unknown,1,1
+Ontario                                                                    ,High Wage          ,Shopify Inc.,"Ottawa, ON K2P 2L8",22220-Computer network and web technicians,Unknown,1,1
+Ontario                                                                    ,High Wage          ,AgileBits Inc.,"Toronto, ON M2N 6K8",20012-Computer and information systems managers,Unknown,1,1
+British Columbia                                                           ,Global Talent Stream  ,Amazon Development Centre Canada ULC,"Vancouver, BC V6B 0M3",20012-Computer and information systems managers,Unknown,1,1
+British Columbia                                                           ,Global Talent Stream  ,Amazon Development Centre Canada ULC,"Vancouver, BC V6B 0M3",21231-Software engineers and designers,Unknown,6,6
+British Columbia                                                           ,High Wage          ,Amazon Development Centre Canada ULC,"Vancouver, BC V6B 0M3",21211-Data scientists,Unknown,2,2
+British Columbia                                                           ,High Wage          ,Amazon Development Centre Canada ULC,"Vancouver, BC V6B 0M3",21231-Software engineers and designers,Unknown,1,1
+Quebec                                                                     ,Global Talent Stream  ,agileDSS,"Montréal, QC H2Y 2G3",21223-Database analysts and data administrators,Corporation,3,3
+British Columbia                                                           ,Global Talent Stream  ,TELUS,"Vancouver, BC V6B 0M3",21223-Database analysts and data administrators,Unknown,1,1
+British Columbia                                                           ,High Wage          ,TELUS,"Vancouver, BC V6B 0M3",20012-Computer and information systems managers,Unknown,1,1
+Newfoundland and Labrador                                                  ,High Wage          ,#1Nails,"St. John’s, NL A1B 1W3",62029-Other services supervisors,Unknown,1,1
+British Columbia                                                           ,Primary Agriculture  ,Jealous Fruits Ltd.,"Kelowna, BC V4V 1T3",82030-Agricultural service contractors and farm supervisors,Unknown,2,4
+British Columbia                                                           ,Primary Agriculture  ,Jealous Fruits Ltd.,"Kelowna, BC V4V 1T3",84120-Specialized livestock workers and farm machinery operators,Unknown,4,5
+British Columbia                                                           ,Primary Agriculture  ,Jealous Fruits Ltd.,"Kelowna, BC V4V 1T3",85101-Harvesting labourers,Unknown,13,751
+Newfoundland and Labrador                                                  ,Low Wage            ,Barry Group Inc,"Corner Brook, NL A2H 3E9",94142-Fish and seafood plant workers,Unknown,1,45
+Newfoundland and Labrador                                                  ,Low Wage            ,Barry Group Inc,"Corner Brook, NL A2H 3E9",95107-Labourers in fish and seafood processing,Unknown,2,65
+Notes:
+1. The source for all information in this report is Employment and Social Development Canada's (ESDC) LMIA System.
+"2. This list excludes all personal names, such as employers of caregivers or business names that use or include personal names. For this reason, the list is not complete and does not reflect all employers who requested or received an LMIA. Should an employer wish to contact ESDC concerning the accuracy of their information, please contact NA-TFWP-PTET@hrsdc-rhdcc.gc.ca."

@@ -32,6 +32,15 @@ from beacon.domain.registry import RegistryCompany
         ("Databricks", {"databricks"}),  # bare, no suffix at all
         ("180 Amsterdam BV", {"180"}),  # BV without dots + city token
         ("Wetransfer B.V.", {"wetransfer"}),  # casefold, not lower
+        # Irish legal forms, appended with the IE register (slice 14). Ireland writes
+        # "Unlimited Company"/"Designated Activity Company" in full and abbreviates them
+        # UC/DAC, so without these an Irish subsidiary keeps its legal form as a
+        # distinctive token and never matches its own brand.
+        ("Analog Devices International Unlimited Company", {"analog", "devices"}),
+        ("Stripe Technology Company Limited", {"stripe"}),
+        ("Gilead Sciences Ireland UC", {"gilead", "sciences"}),
+        ("Azimut Life dac", {"azimut", "life"}),
+        ("Compass Residential Designated Activity Company", {"compass", "residential"}),
     ],
     ids=lambda v: repr(v) if isinstance(v, str) else "",
 )

@@ -12,7 +12,9 @@ newly matches a trap or drops a real subsidiary is visible at a glance.
 
 from pathlib import Path
 
+from beacon.adapters.registries.ca import CALMIARegistry
 from beacon.adapters.registries.h1b import H1BLCARegistry
+from beacon.adapters.registries.ie import IEPermitsRegistry
 from beacon.adapters.registries.ind import INDRegistry
 from beacon.adapters.registries.uk import UKSponsorRegistry
 from beacon.adapters.seeds import parse_seed_csv
@@ -30,6 +32,8 @@ def main() -> int:
         Registry.UK: UKSponsorRegistry(_FIXTURES / "uk_sponsors_fixture.csv").fetch(),
         Registry.NL: INDRegistry(_FIXTURES / "ind_sponsors_fixture.csv").fetch(),
         Registry.US: H1BLCARegistry(_FIXTURES / "h1b_lca_fixture.csv").fetch(),
+        Registry.IE: IEPermitsRegistry(_FIXTURES / "ie_permits_fixture.csv").fetch(),
+        Registry.CA: CALMIARegistry(_FIXTURES / "ca_lmia_fixture.csv").fetch(),
     }
 
     print(f"{'Company':22} {'Flags':13} {'Conf':>4}  Evidence")
