@@ -16,6 +16,7 @@ from beacon.adapters.sources.mycareersfuture import MyCareersFutureAdapter
 from beacon.adapters.sources.remoteok import RemoteOKAdapter
 from beacon.adapters.sources.smartrecruiters import SmartRecruitersAdapter
 from beacon.adapters.sources.teamtailor import TeamtailorAdapter
+from beacon.adapters.sources.themuse import TheMuseAdapter
 from beacon.adapters.sources.workable import WorkableAdapter
 from beacon.adapters.sources.workday import WorkdayAdapter
 from beacon.adapters.sources.wwr import WWRAdapter
@@ -56,4 +57,5 @@ def make_companyless_sources(fetcher: Fetcher) -> list[JobSource]:
         WWRAdapter(fetcher),
         HimalayasAdapter(fetcher),
         MyCareersFutureAdapter(fetcher),
+        TheMuseAdapter(fetcher),
     ]
