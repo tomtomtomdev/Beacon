@@ -13,9 +13,14 @@ __pycache__/
 node_modules/
 dist/
 
-# Local data
+# Local data (beacon.db is the job cache; -wal/-shm are its WAL side-files)
 *.sqlite3
 beacon.db
+beacon.db-wal
+beacon.db-shm
+
+# Background refresh log written by run.sh
+.ingest.log
 
 # Real registry snapshots (manually refreshed); only trimmed fixtures are committed
 data/registries/

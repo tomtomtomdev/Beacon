@@ -15,9 +15,17 @@ def connect(db_path: Path | str) -> sqlite3.Connection:
     single-threaded in effect: the API opens one per request and the event loop serialises
     that request's dependency, endpoint and teardown; the CLI entrypoints and scripts open
     their own. Never share one connection between threads that run concurrently.
+
+    WAL is what lets the API serve the cached rows while an ingest poll writes to the same
+    file (`run.sh` runs the two concurrently). Under the default rollback journal a writer's
+    lock shuts readers out for the length of the poll; in WAL a reader sees the last
+    committed snapshot throughout. `busy_timeout` covers the writer-vs-writer case — an API
+    write landing mid-poll waits its turn instead of raising "database is locked".
     """
     conn = sqlite3.connect(db_path, check_same_thread=False)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode = WAL")  # persists in the file; re-set is a no-op
+    conn.execute("PRAGMA busy_timeout = 5000")
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
