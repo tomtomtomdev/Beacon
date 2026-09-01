@@ -20,14 +20,18 @@
 ## Overview
 Beacon is a single-user, self-hosted web app that polls ATS/job-board APIs, classifies postings
 (category, level, sponsorship tier), and surfaces them filtered by **visa-sponsorship signal** and
-**target relocation country**. The **home page is a Countries & visa reference** dominated by an
-interactive **3D holographic dot-globe**. The Countries home is a **two-pane row**: the globe stays
+**target relocation country — plus the home market, Indonesia**. The **home page is a Countries &
+visa reference** dominated by an interactive **3D holographic dot-globe**. The Countries home is a
+**two-pane row**: the globe stays
 fixed on the left, and a scrolling **side panel** on the right holds the content. Selecting a country
 (tap a globe beacon pin or a country card) does not navigate away — it rotates the globe to frame a
 **beacon arc from Jakarta to the country**, and swaps the side panel from the all-markets card stack
-to that country's **relocation reference + a Jobs list**, all beside the globe. Clearing the
-selection returns the panel to the card stack. A **Saved searches** page and a slide-in **Job-detail
-drawer** round out the app. There is **no standalone Jobs route and no Companies tab** — source
+to that country's **relocation reference + a Jobs list**, all beside the globe. **Jakarta is itself
+selectable** — the amber origin marker is a pin like any other, and picking it shows Indonesia's jobs
+with **no arc drawn** (origin and destination coincide) and a home-market block in place of the visa
+reference. Clearing the selection returns the panel to the card stack. A **Saved searches** page and
+a slide-in **Job-detail drawer** round out the app. There is **no standalone Jobs route and no
+Companies tab** — source
 health folds into a widget on the globe; Jobs is a pane inside Countries.
 
 ## Fidelity
@@ -78,8 +82,10 @@ list is **not its own view** — it is a pane inside Countries, gated by a selec
   - Full-bleed `<canvas>` renders the holographic 3D dot-globe (see **Globe rendering**).
   - **Top overlay** (pointer-events:none): left = teal globe icon + "Target geography"
     (14.5px/700, `#e3fdf6`) + hint "drag to rotate · tap a beacon" (12px mono, `#5f9a95`); right =
-    legend "Primary target" (dot `#5eead4`, teal glow) / "Nice-to-have" (dot `#93a7ad`), 12px `#9fc7c2`.
-  - **Bottom-left caption:** "live beacon field · 11 markets" (11px, uppercase, 0.06em mono, `#3f7a76`).
+    legend "Primary target" (dot `#5eead4`, teal glow) / "Nice-to-have" (dot `#93a7ad`) / **"Home"
+    (dot `#fcd34d`, amber glow)**, 12px `#9fc7c2`.
+  - **Bottom-left caption:** "live beacon field · 11 markets + home" (11px, uppercase, 0.06em mono,
+    `#3f7a76`).
   - **Bottom-right Source-health widget** (glass: bg `rgba(4,17,26,0.72)`, `backdrop-filter:blur(6px)`,
     border `#10424a`, radius 12px, min-width 186px): "SOURCE HEALTH" label + "poll 07:04" (mono),
     then three dot rows — "44 OK" (`#34d399`), "1 degraded" (`#fbbf24`), "2 quarantined" (`#f87171`),
@@ -91,14 +97,21 @@ list is **not its own view** — it is a pane inside Countries, gated by a selec
 - **All-markets card stack** (no selection; pad `16×20×20`): a small uppercase caption "N markets ·
   tap a beacon or a card" (`#5f8f8a`) then a **vertical stack** of country cards (`flex-direction:
   column; gap:10px` — not a grid; the panel is narrow). Card: bg `#0a2028`, border `#123842`, radius
-  12px, pad `14×16`, cursor pointer, hover bg `#0d2a33` / border `#1a4650`. Name (15px/700, `#e3fdf6`)
-  + tier badge ("Primary" teal `rgba(94,234,212,0.15)`/`#5eead4`, "Nice-to-have" grey
-  `rgba(148,180,186,0.12)`/`#9fc7c2`). **Two** labelled blocks — Work visa / PR path (label 10.5px
-  uppercase `#5f8f8a`, value 12px `#c4ebe4`); **Citizenship is omitted here** — it appears in the
-  reference legend once a market is selected (§2). Footer (top border `#123842`): registry note
-  (`#7fa8a3`) + "✓ {verified}" (mono, `#4f7873`). Clicking a card selects that country (globe focus +
-  arc + jobs pane replaces the stack). **Sweden has no sponsor registry** (scheme discontinued Dec
-  2023) — surface exactly as written, do not invent one.
+  12px, pad `14×16`, cursor pointer, hover bg `#0d2a33` / border `#1a4650`. Name (15px/700,
+  `#e3fdf6`) + tier badge ("Primary" teal `rgba(94,234,212,0.15)`/`#5eead4`, "Nice-to-have" grey
+  `rgba(148,180,186,0.12)`/`#9fc7c2`, **"Home" amber `rgba(252,211,77,0.15)`/`#fcd34d`**). **Two**
+  labelled blocks — Work visa / PR path (label 10.5px uppercase `#5f8f8a`, value 12px `#c4ebe4`);
+  **Citizenship is omitted here** — it appears in the reference legend once a market is selected
+  (§2). Footer (top border `#123842`): registry note (`#7fa8a3`) + "✓ {verified}" (mono, `#4f7873`).
+  Clicking a card selects that country (globe focus + arc + jobs pane replaces the stack). **Sweden
+  has no sponsor registry** (scheme discontinued Dec 2023) — surface exactly as written, do not
+  invent one.
+- **Indonesia home card** — pinned **first** in the stack, above the relocation markets, with an amber
+  accent border `#5c4a1f` in place of `#123842`. Name "Indonesia" + the "Home" badge. Its two labelled
+  blocks are **Right to work / Market**, reading "Already held — no visa" and "Jakarta · iOS, Backend,
+  AI/ML" (`#c4ebe4`). Footer reads "no registry — not applicable" (`#7fa8a3`) and carries **no
+  "✓ verified" date**: there is nothing to re-verify, and a date here would read as reference data going
+  stale. Clicking it focuses Jakarta with **no arc** (see §Globe rendering).
 
 ### 2. Jobs pane (in the side panel, beside the globe; `?focus=CODE`)
 Rendered inside the §1 side panel, so its sections carry their own 20px horizontal inset; only the
@@ -113,6 +126,13 @@ header is sticky.
   reference" (14px/700) + tier badge; then **Work visa / PR path / Citizenship** blocks (labels teal
   `#5eb5ab` 10px uppercase, values `#d6f5ee` 12.5px); footer "verified {date}" (mono `#5eb5ab`). This
   is where Citizenship lives (it's off the compact card).
+- **Home-market block** — the Indonesia substitute for the legend above. Same box metrics, amber
+  palette: bg `rgba(252,211,77,0.06)`, border `#5c4a1f`, labels `#c9a94e`, values `#f3e5bd`. Title
+  "Indonesia — home market" + "Home" badge; one line of body copy, "You already have the right to work
+  here. These roles need no visa, no sponsor and no registry check."; then a single **Focus** block
+  reading "iOS · Backend (Java, Python) · AI/ML". **No visa / PR / citizenship blocks and no verified
+  date** — every field the relocation legend carries is inapplicable here, and rendering them empty or
+  as "n/a" would read as missing data rather than as an absent question.
 - **Filter bar** (pad `14×20×4`; **not** sticky — it scrolls with the panel; controls wrap within the
   ~372–512px width):
   - **Status segmented control** (New / Starred / All / Hidden). Track bg `#0c2831`, border `#123842`,
@@ -172,15 +192,20 @@ Telegram bot-token / chat_id form + "Send test" (slice 8). Reachable via the rai
   filter/view/drawer state lives in URL search params (shareable, bookmarkable, Back-button undo).
 - **Globe:** drag rotates (yaw += dx·0.45, pitch clamped ±82°; a >3px drag is a rotate, not a click).
   Pointer-up without a drag: on a pin (≤15px) selects that country; on empty ocean clears the selection.
-  With a selection, the globe eases to the Jakarta↔country great-circle midpoint; idle it slow-spins.
+  The **Jakarta origin marker is hit-tested as a pin** on the same 15px radius and selects `focus=ID`.
+  With a selection, the globe eases to the Jakarta↔country great-circle midpoint; **when `ID` is the
+  selection that midpoint degenerates to Jakarta itself, so the globe simply eases to Jakarta and no arc
+  is drawn**; idle it slow-spins.
 - **Filtering (jobs pane):** keyword (title/company/description/categories), country[], category[],
   level[], sponsor-tier[] (opt-in). AND across dimensions, OR within one. Re-fetches live.
-- **Sorting:** Sponsor tier → `sort_rank DESC, posted_at DESC` (yes=3, registry=2, unknown=1, no=0);
-  Date → newest first. **`explicit_no` shows last, never hidden by default.**
+- **Sorting:** Sponsor tier → `sort_rank DESC, posted_at DESC` (yes=4, **not_required=3**, registry=2,
+  unknown=1, no=0); Date → newest first. **`explicit_no` shows last, never hidden by default.** A
+  confirmed sponsor abroad outranks a home role; a home role outranks anything speculative.
 - **Job triage:** row click opens the drawer (a `new` job becomes `seen`); Star toggles starred/seen;
   Hide → hidden (excluded from all views but Hidden); Restore → seen.
 - **Sponsorship is a soft signal:** tier drives sort_rank + default order; the tier filter is opt-in,
-  never pre-selected.
+  never pre-selected. The Sponsor-tier menu now lists **five** rows — "No visa needed" (`not_required`)
+  sits second, between "Sponsors" and "Registry" — and, like every other tier, ships unselected.
 
 ## Globe rendering
 Procedural holographic 3D dot-globe on a `<canvas>` 2D context, recomputed every frame
@@ -190,10 +215,14 @@ from it. Each frame draws (back→front): teal atmosphere glow; shaded globe fac
 brighter on the front hemisphere); the land dot cloud (1.35px, `rgba(94,234,212, 0.28→0.92)` by
 depth, back hemisphere culled); a bright rim; the **beacon arc** (Jakarta → selected country: 90-seg
 great circle bowed out `1+0.22·sin(πf)`, bright on the front / faint on the back, a `#eafffb`
-travelling pulse, amber `#fcd34d` Jakarta origin marker + label); then **pins** (front: glowing dot
-`#5eead4` primary / `#9fb6bb` nice-to-have + pulse ring + label chip; back: faint ghost). Screen
-positions of front pins are cached for 15px hit-testing. See `frontend/src/countries/globeGeo.ts`
-(data + math, ported verbatim) and `Globe.tsx` (canvas rAF engine, jsdom-guarded; sr-only pin
+travelling pulse, amber `#fcd34d` Jakarta origin marker + label) — **skipped entirely when the selection
+is `ID`**, since a great circle from Jakarta to Jakarta has no length and a bowed placeholder would be a
+lie about distance; then **pins** (front: glowing dot `#5eead4` primary / `#9fb6bb` nice-to-have + pulse
+ring + label chip; back: faint ghost). The **Jakarta origin marker is always drawn**, arc or not, and is
+itself a selectable pin: amber `#fcd34d`, gaining the same pulse ring the target pins use when `ID` is
+the current selection. Screen positions of front pins **including Jakarta** are cached for 15px
+hit-testing. See `frontend/src/countries/globeGeo.ts` (data + math, ported verbatim) and `Globe.tsx`
+(canvas rAF engine, jsdom-guarded; sr-only pin
 buttons provide keyboard/test selection).
 
 ---
@@ -212,9 +241,12 @@ buttons provide keyboard/test selection).
 - **Globe scene:** radial `#0c3138 → #06181f → #04111a`, border `#10424a`; atmosphere/land/graticule/
   rim/arc on `rgba(94,234,212, α)`; face `rgba(15,70,76,0.62) → rgba(4,20,27,0.5)`; overlay `#e3fdf6`/
   `#9fc7c2`/`#5f9a95`/`#3f7a76`; primary pin `#5eead4`, nice-to-have `#93a7ad`/ghost `#9fb6bb`;
-  Jakarta origin `#fcd34d`; arc pulse `#eafffb`.
-- **Sponsorship tiers (bg / fg / dot):** yes `rgba(52,211,153,0.14)`/`#5fe3a3`/`#34d399`; registry
-  `rgba(96,165,250,0.14)`/`#7cc0fb`/`#60a5fa`; unknown `rgba(148,180,186,0.12)`/`#9fc7c2`/`#8296a0`;
+  Jakarta origin / home pin `#fcd34d` (the same amber as the `not_required` badge); arc pulse `#eafffb`.
+- **Sponsorship tiers (bg / fg / dot):** yes `rgba(52,211,153,0.14)`/`#5fe3a3`/`#34d399`;
+  **`not_required` (label "No visa needed") `rgba(252,211,77,0.14)`/`#f8dd8a`/`#fcd34d`** — deliberately
+  the Jakarta-origin amber, so the badge, the home card's accent and the globe's home marker read as
+  one thing; registry `rgba(96,165,250,0.14)`/`#7cc0fb`/`#60a5fa`;
+  unknown `rgba(148,180,186,0.12)`/`#9fc7c2`/`#8296a0`;
   no `rgba(248,113,113,0.14)`/`#f7a6a2`/`#f87171`.
 - **Status pills (bg / fg):** new `rgba(94,234,212,0.16)`/`#5eead4` · seen `rgba(148,180,186,0.12)`/
   `#9fc7c2` · starred `rgba(94,234,212,0.16)`/`#5eead4` · hidden `rgba(248,113,113,0.14)`/`#f7a6a2`.

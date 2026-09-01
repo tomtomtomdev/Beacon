@@ -12,6 +12,8 @@
 
 Finding roles that match *both* a technical profile (iOS / backend / AI-ML, senior level) *and* a relocation strategy (specific countries, employers likely to sponsor a work visa) requires manually checking dozens of company boards and cross-referencing sponsorship likelihood by hand. No existing board exposes sponsorship as structured, filterable data.
 
+The same sweep must also cover the **home market (Indonesia)**. A Jakarta role needs no visa at all, so it is the one option whose feasibility is certain — and a scanner that omits it hides the baseline every relocation is being weighed against.
+
 **Beacon** polls ATS APIs and API/RSS-friendly job sources on a schedule, normalizes postings into a single local database, classifies them (category, level, sponsorship signal), and surfaces them through a filterable web UI with new-match alerting.
 
 This is a personal tool. Correctness of the *sponsorship signal* and *dedup* matter more than breadth of sources or UI polish.
@@ -28,7 +30,8 @@ This is a personal tool. Correctness of the *sponsorship signal* and *dedup* mat
 - Poll API/RSS-friendly boards (HN Who's Hiring, RemoteOK, We Work Remotely, Arbetsförmedlingen JobTech)
 - Normalize into one `jobs` table with dedup across sources
 - Classify: category (ios / android / flutter / backend / fullstack / frontend / ai-ml), level, remote-vs-onsite
-- Sponsorship signal, three tiers: `explicit_yes` / `explicit_no` / `registry_inferred` / `unknown` — surfaced as **badge + default sort key**, never a default exclusion
+- Sponsorship signal, five tiers: `explicit_yes` / `not_required` / `registry_inferred` / `unknown` / `explicit_no` — surfaced as **badge + default sort key**, never a default exclusion
+- Cover the **home market (Indonesia)** alongside the relocation targets: iOS / backend (Java + Python) / AI-ML roles located in ID are ingested, classified and badged `not_required` — no visa needed — and rank below confirmed sponsors but above every speculative tier
 - Cross-reference official sponsor registries (UK, NL, SE) at the company level
 - Filter UI: keyword, country, category, level, posted-since; sponsorship tier as opt-in filter + primary sort control
 - Saved searches + digest of new matches (Telegram or WhatsApp via Courier)
@@ -51,14 +54,16 @@ This is a personal tool. Correctness of the *sponsorship signal* and *dedup* mat
 | Level | Senior / Staff / Lead (filter out junior-only postings) |
 | Primary countries | Singapore, Australia, Japan, Netherlands, US (SF Bay), Canada, Ireland |
 | Nice-to-have countries | Sweden, Norway, Denmark, Switzerland |
-| Sponsorship | **Soft signal, not a filter-out.** All jobs are shown; sponsorship tier renders as a badge and drives the default sort order (explicit_yes → registry_inferred → unknown → explicit_no). Tier filtering remains available but is opt-in, never default. |
+| Home market | **Indonesia (Jakarta).** Not a relocation target — the baseline. iOS / backend (Java + Python) / AI-ML roles located in ID are in scope and carry `not_required`: no visa, no registry, no sponsorship question. Origin and destination coincide, which is why the globe draws no arc for it (DESIGN §Globe rendering). |
+| Sponsorship | **Soft signal, not a filter-out.** All jobs are shown; sponsorship tier renders as a badge and drives the default sort order (explicit_yes → not_required → registry_inferred → unknown → explicit_no). Tier filtering remains available but is opt-in, never default. |
 
 ## 4. Country & Visa Reference Data
 
-Stored as seed data in `countries` table; shown in UI as context panel per job. **All figures are as-known Jan 2026 — thresholds and timelines change; each row carries a `verified_at` date and a `source_url` for manual re-verification.** Key constraint: Indonesia does not permit dual citizenship for adults, so "endpoint" below distinguishes PR from citizenship.
+Stored as seed data in `countries` table; shown in UI as context panel per job. **All figures are as-known Jan 2026 — thresholds and timelines change; each row carries a `verified_at` date and a `source_url` for manual re-verification.** Key constraint: Indonesia does not permit dual citizenship for adults, so "endpoint" below distinguishes PR from citizenship. Indonesia itself appears as the **home row**: it carries no visa data by design and is listed only so the UI can render a market card and a jobs list for it like any other.
 
 | Country | Work visa (entry) | PR path | Citizenship | Registry data source | Notes |
 |---|---|---|---|---|---|
+| **Indonesia (home)** | **None — right to work already held** | n/a — citizen | Held | n/a — `not_required` comes from the job's location, never from a registry or ad text | The baseline every relocation is measured against. In scope for iOS / backend (Java + Python) / AI-ML; sorts below `explicit_yes`, above `registry_inferred` |
 | Singapore | Employment Pass, ~S$5.6k/mo + COMPASS points | Discretionary; 5–10yr common, non-guaranteed | ~2yr after PR; renounce required | None public — company-level heuristics only | Springboard market; APAC HQs enable later intra-company transfers |
 | Japan | HSP points visa | **70pts→3yr, 80pts→1yr** — fastest PR anywhere | 5yr; renounce; language | None public | Likely 80pts at senior level; PR-as-endpoint strategy |
 | Australia | Skills in Demand (~AU$76k floor; AU$141k specialist tier) | 2–3yr via employer 186 or points 189 | 4yr residence | None public (sponsor status inferable from posting text) | |
@@ -91,6 +96,8 @@ This section is the decision record: which sources, why, and what was rejected. 
 | Rippling ATS | `api.rippling.com/platform/api/ats/v1/board/{slug}/jobs` (+ `/{uuid}` per posting) | Public, no auth; the list carries no ad text → one detail GET per posting, and it repeats a posting once per work location (744 rows → 376 uuids), so dedup precedes the detail calls |
 
 Company slugs live in a `companies` seed table loaded from `seeds/companies.csv` with pinned schema: `name,ats_type,ats_slug,country_hq,priority` (priority 1–3; `active` and `registry_flags` are DB columns defaulted at load, not CSV columns). Seed: **53 verified companies delivered 2026-07-04**, grown to **58 (2026-08-23, slice 13)** and **61 (2026-08-26, slice 14)** across SG/JP/AU/NL/IE/CA/US/SE/NO. Adapters cover greenhouse (24), ashby (11), lever (10), workday (4), teamtailor (3), smartrecruiters (3), recruitee (2), workable (1), rippling (1) — **59 of 61 rows pollable**. Two ats_types stay dormant by decision, not omission: **gem** (job board is captcha-gated: `CAPTCHA_REQUIRED` on the board page, no JSON endpoint) and **bendingspoons** (no public feed). A row whose ats_type has no adapter loads normally and is skipped by `ingest_all` (which filters to supported types) and shown as `pending` in the health view. Adding a company = one CSV row, no code.
+
+**Home-market seeds.** Indonesian companies running a supported ATS (Greenhouse / Lever / Ashby / SmartRecruiters) are seeded with `country_hq=ID` exactly like any other row — no adapter, use-case or schema work, because `not_required` is derived from the **job's** country at classification time, not from the company's HQ. That derivation also captures the ID roles already arriving incidentally from Singapore-HQ seeds (Grab, Carousell, Ninja Van and Agoda all post Jakarta reqs on the same boards); that spillover is in scope, not noise. Indonesian job boards (Kalibrr, Glints, Dealls) are deliberately **not** sources — a local board is a new adapter plus a fixture suite, and the seed route already reaches the employers worth watching.
 
 ### 5.2 Board adapters (API/RSS)
 | Source | Access | Notes |
@@ -171,10 +178,13 @@ Runs post-ingest, cached by `content_hash` (never reclassify unchanged postings)
 1. **Category** — keyword heuristics first (Swift/SwiftUI/UIKit→ios; Kotlin/Compose→android; Dart/Flutter→flutter; PyTorch/LLM/CUDA/ML→ai-ml; etc.), LLM fallback for ambiguous residue via Anthropic API. Multi-label allowed (e.g., ios+ai-ml).
 2. **Level** — title tokens (senior/staff/lead/principal/junior/intern) + years-of-experience regex; `unspecified` is an honest value.
 3. **Sponsorship tier** —
+   - `not_required`: the **job's** country is `ID`. No visa question exists, so none is asked. Derived from location only — never from ad text, never from the company's HQ — so a Jakarta req posted by a Singapore-HQ company (Grab, Agoda) resolves here correctly.
    - `explicit_yes`: posting text matches sponsor-positive patterns ("visa sponsorship available", "relocation support", "work permit assistance")
    - `explicit_no`: "must have right to work in…", "no sponsorship", "citizens/PR only"
    - `registry_inferred`: text silent, but company has registry_flags set
    - `unknown`: everything else
+
+   Precedence among the **text/registry** tiers is unchanged and stays one pure function: `explicit_no > explicit_yes > registry_inferred > unknown`. `not_required` deliberately sits **outside** that chain as a location predicate evaluated first; when it fires, the text tiers are not consulted. Folding it into the chain would be wrong — "no sponsorship needed" is not a stronger or weaker claim about sponsorship, it is the absence of the question. This also settles the one genuinely ambiguous case correctly: a Jakarta posting reading "must have the right to work in Indonesia" is `not_required`, not `explicit_no`, because the reader already holds that right.
 4. **Location/remote** — country extraction from location strings; `remote_scope` (global / region-locked / onsite).
 
 ## 7. Architecture
@@ -230,8 +240,14 @@ jobs(id, canonical_id, company_id, source_id, external_id, title, description,
      url, country, city, remote_scope, categories, level, sponsor_tier,
      sponsor_evidence, content_hash, posted_at, first_seen_at, last_seen_at, closed_at,
      user_status)   -- user_status: 'new' | 'seen' | 'hidden' | 'starred' (default 'new')
+                    -- sponsor_tier: 'explicit_yes' | 'not_required' | 'registry_inferred' | 'unknown' | 'explicit_no'
+                    --   'not_required' = home market (job country = ID), set from location, not ad text
 countries(code, name, visa_summary, pr_summary, citizenship_summary,
           registry_name, priority_tier, verified_at, source_url)
+          -- priority_tier: 'primary' | 'nice_to_have' | 'home'  ('home' = the single ID row)
+          -- the ID row leaves visa/pr/citizenship/registry_name/verified_at/source_url NULL by
+          -- design: there is no visa question to summarise and nothing to re-verify. UI must
+          -- render the home card from the NULLs, never as blank or "n/a" reference fields.
 saved_searches(id, name, filters_json, notify_channel, last_run_at)
 seen_matches(search_id, job_canonical_id, notified_at, match_reason)  -- match_reason: which filters fired (tier/country/category), for digest lines
 resumes(id, label, source_text, profile_json, resume_hash, active, created_at)  -- §11; single user, small history, one active
@@ -254,7 +270,7 @@ Companies change ATS providers, rename board slugs, get acquired, and take board
 - Health surfaces in the daily Telegram digest ("⚠ 2 sources quarantined: crypto (gone), smartnews (schema_drift)") and a `/companies/health` view — silent decay is the failure mode this whole section exists to prevent.
 - Registry staleness: `registries_meta.fetched_at` older than 45 days → warning in digest; registries never quarantine (manual refresh cadence), they just nag.
 
-Sort semantics: `sponsor_tier` maps to a numeric `sort_rank` (explicit_yes=3, registry_inferred=2, unknown=1, explicit_no=0) used by `/jobs` default ordering `ORDER BY sort_rank DESC, posted_at DESC`. `explicit_no` jobs are shown last, never hidden by default.
+Sort semantics: `sponsor_tier` maps to a numeric `sort_rank` (explicit_yes=4, **not_required=3**, registry_inferred=2, unknown=1, explicit_no=0) used by `/jobs` default ordering `ORDER BY sort_rank DESC, posted_at DESC`. `explicit_no` jobs are shown last, never hidden by default. A confirmed sponsor abroad still outranks a home-market role — the tool exists to find a way out — but a certain Jakarta role outranks any speculative (`registry_inferred` / `unknown`) one. Introducing the tier is a forward-only migration: the permitted `sponsor_tier` values widen by one, and every rank above `registry_inferred` shifts up by one.
 
 ## 8. Vertical Slices (MVP order)
 
@@ -289,7 +305,8 @@ Each slice: red test → green → refactor → `make verify` → commit.
 
 ## 10. Success Criteria
 
-- One glance each morning answers: "any new senior iOS/backend/AI roles in my target countries since yesterday — and which of them likely sponsor?" (likely sponsors float to the top; nothing is hidden)
+- One glance each morning answers: "any new senior iOS/backend/AI roles in my target countries **or at home** since yesterday — and which of them likely sponsor?" (likely sponsors float to the top, certain home-market roles next; nothing is hidden)
+- `not_required` fires on every ID-located job and on no other. It is a location predicate, so a spot-check miss here is a location-extraction bug, never a classifier one
 - Sponsorship tier is correct on spot-check ≥90% for `explicit_*`, and `registry_inferred` never fires on a company absent from all registries
 - Adding a new company: ≤1 minute (one seed row)
 - Zero manual scraping maintenance (no HTML parsing of hostile sites in MVP)
