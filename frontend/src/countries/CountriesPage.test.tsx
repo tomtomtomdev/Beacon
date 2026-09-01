@@ -1,10 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, within } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Country } from '../api/types'
 import { CountriesPage } from './CountriesPage'
+import { TOUR_DWELL_MS, TOUR_IDLE_MS } from './useIdleTour'
 
 const countries: Country[] = [
   {
@@ -57,6 +58,9 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  // Only unfake what was faked: an unconditional useRealTimers() leaves residue on the timer
+  // globals that testing-library then mistakes for a live fake clock in the next test.
+  if (vi.isFakeTimers()) vi.useRealTimers()
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
   vi.clearAllMocks()
@@ -107,5 +111,35 @@ describe('CountriesPage', () => {
 
     await user.click(pin)
     expect(await screen.findByRole('heading', { name: 'Jobs · Sweden' })).toBeInTheDocument()
+  })
+
+  it('tours the markets once the page has gone idle, and yields the moment the user moves', async () => {
+    // The idle timer is armed on mount, so the clock has to be fake before the page renders.
+    vi.useFakeTimers()
+    renderPage()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1)
+    })
+    expect(screen.getByRole('button', { name: 'Sweden details' })).toBeInTheDocument()
+
+    // Untouched for the idle delay: the globe starts walking the markets on its own.
+    await act(async () => {
+      vi.advanceTimersByTime(TOUR_IDLE_MS)
+    })
+    expect(screen.getByRole('heading', { name: 'Jobs · Netherlands' })).toBeInTheDocument()
+
+    await act(async () => {
+      vi.advanceTimersByTime(TOUR_DWELL_MS)
+    })
+    expect(screen.getByRole('heading', { name: 'Jobs · Sweden' })).toBeInTheDocument()
+
+    // A real pointer move hands control back, leaving that market selected.
+    await act(async () => {
+      window.dispatchEvent(new MouseEvent('pointermove', { clientX: 400, clientY: 300 }))
+    })
+    await act(async () => {
+      vi.advanceTimersByTime(TOUR_DWELL_MS * 4)
+    })
+    expect(screen.getByRole('heading', { name: 'Jobs · Sweden' })).toBeInTheDocument()
   })
 })

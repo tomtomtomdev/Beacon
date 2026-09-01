@@ -142,6 +142,22 @@
   font-family: var(--font-mono);
 }
 
+.touring {
+  margin-left: 8px;
+  color: var(--accent);
+  animation: touringPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes touringPulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 .legend {
   display: flex;
   align-items: center;

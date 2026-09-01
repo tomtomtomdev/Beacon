@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import { Globe as GlobeIcon } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { fetchCountries } from '../api/countries'
@@ -6,6 +7,7 @@ import type { Country } from '../api/types'
 import { JobsPane } from '../jobs/JobsPane'
 import styles from './CountriesPage.module.css'
 import { Globe } from './Globe'
+import { useIdleTour } from './useIdleTour'
 
 const TIER_LABEL: Record<Country['priority_tier'], string> = {
   primary: 'Primary',
@@ -42,6 +44,11 @@ export function CountriesPage() {
       { replace: true },
     )
 
+  // Left alone, the page walks the markets by itself — a lit beacon field rather than a dead
+  // screen. Any pointer, key or scroll hands control straight back (see useIdleTour).
+  const codes = useMemo(() => countries?.map((c) => c.code) ?? [], [countries])
+  const touring = useIdleTour({ codes, current: focus, onAdvance: setFocus })
+
   return (
     <main className={styles.main}>
       <header className={styles.header}>
@@ -74,7 +81,10 @@ export function CountriesPage() {
                 </span>
               </div>
             </div>
-            <div className={styles.geoCaption}>live beacon field · {countries.length} markets</div>
+            <div className={styles.geoCaption}>
+              live beacon field · {countries.length} markets
+              {touring && <span className={styles.touring}>· auto-touring — move to take over</span>}
+            </div>
             <SourceHealth />
           </section>
 
