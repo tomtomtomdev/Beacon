@@ -84,6 +84,19 @@ def test_tier_sort_rank_matches_domain_table() -> None:
             "This role is based in Milan, and is not eligible for visa or relocation support.",
             SponsorTier.EXPLICIT_NO,
         ),
+        # Real spot-check misses (2026-09-02, live corpus): a residency *precondition* is a
+        # refusal on its own — it rules out the relocating candidate Beacon exists for, and
+        # names no sponsorship word at all, so nothing in the NO table saw it. Verbatim Bjak
+        # "AI Neobank App" text, which sat at fit 72 across seven target countries as
+        # `unknown` (i.e. sorted as neutral) while being unreachable.
+        (
+            "We are hiring specifically for this market, "
+            "so applicants should already be based in Germany.",
+            SponsorTier.EXPLICIT_NO,
+        ),
+        ("Applicants must already be based in Ireland.", SponsorTier.EXPLICIT_NO),
+        ("You must already reside in the Netherlands.", SponsorTier.EXPLICIT_NO),
+        ("Candidates should already be living in Sweden.", SponsorTier.EXPLICIT_NO),
     ],
     ids=[
         "yes-visa-sponsorship-available",
@@ -106,6 +119,10 @@ def test_tier_sort_rank_matches_domain_table() -> None:
         "no-visa-support-now-or-future",
         "no-not-eligible-for-relocation-support",
         "no-not-eligible-for-visa-or-relocation",
+        "no-should-already-be-based-in-country",
+        "no-must-already-be-based-in-country",
+        "no-must-already-reside-in-country",
+        "no-should-already-be-living-in-country",
     ],
 )
 def test_detect_sponsorship_tier(text: str, expected: SponsorTier) -> None:
@@ -189,4 +206,33 @@ def test_detect_sponsorship_no_beats_yes_when_both_appear() -> None:
     ],
 )
 def test_detect_sponsorship_returns_none_when_no_signal(text: str) -> None:
+    assert detect_sponsorship(text) is None
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "This role is based in Stockholm.",
+        "Our engineering team is based in Amsterdam and London.",
+        "You will be based in our Dublin office alongside the platform team.",
+        # Verbatim, 2026-09-02 spot check over 8,918 live postings — the exact phrasings the
+        # bare modal form got wrong. Discord x21 offers relocation in the same breath, and
+        # Anthropic's line sits in a posting that also reads "We do sponsor visas!".
+        "Candidates must reside in or be willing to relocate to the San Francisco Bay Area.",
+        "Must be located in San Francisco",
+        "This role is remote, but candidates must be based in Germany.",
+    ],
+    ids=[
+        "states-location",
+        "team-location",
+        "office-location",
+        "residency-or-willing-to-relocate",
+        "work-location-of-a-sponsoring-employer",
+        "bare-must-be-based-is-ambiguous",
+    ],
+)
+def test_a_location_requirement_without_already_is_not_a_refusal(text: str) -> None:
+    """Only "already" makes a location line a refusal. A bare "must be based in X" is how a
+    sponsoring employer states where the desk is, so matching it would invert a whole class of
+    reachable jobs — NO beats YES, so the damage would be silent."""
     assert detect_sponsorship(text) is None

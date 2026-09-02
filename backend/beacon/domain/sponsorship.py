@@ -60,11 +60,34 @@ _WORK_AUTHORIZATION_PATTERNS: tuple[str, ...] = (
     r"\bgreen card holders?\b",  # "US citizens or green card holders only"
 )
 
-_EXPLICIT_NO_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
-    re.compile(rf"\b{negator}\b[^.!?]{{0,{_NEGATION_GAP}}}\b{obj}", re.IGNORECASE)
-    for negator in _NEGATORS
-    for obj in _NEGATED_OBJECTS
-) + tuple(re.compile(pattern, re.IGNORECASE) for pattern in _WORK_AUTHORIZATION_PATTERNS)
+# A residency precondition is a refusal on its own and names no sponsorship word, which is why
+# nothing above caught it. The discriminating word is "already": it separates "you must ALREADY
+# live here" (a refusal — a relocating candidate is out) from a plain statement of where the
+# desk is, which sponsoring employers make constantly.
+#
+# The bare modal forms ("must be based in X", "must reside in X") were tried on 2026-09-02 and
+# REJECTED by the spot check over 8,918 live postings: they flipped 23 jobs wrongly, including
+# Discord's "Candidates must reside in OR BE WILLING TO RELOCATE TO the San Francisco Bay Area"
+# (x21 — an explicit relocation offer) and Anthropic's "Must be located in San Francisco" on a
+# posting that also says "We do sponsor visas!". Since NO beats YES by precedence, matching the
+# bare form would have inverted a sponsoring employer's work-location line into a refusal.
+# Requiring "already" keeps the Bjak class (which says both) and drops every false positive.
+_RESIDENCY_VERBS: tuple[str, ...] = ("be based", "be located", "reside", "residing", "be living")
+# Spans "already be based", "already, be located", "already need to reside".
+_RESIDENCY_GAP = 15
+
+_EXPLICIT_NO_PATTERNS: tuple[re.Pattern[str], ...] = (
+    tuple(
+        re.compile(rf"\b{negator}\b[^.!?]{{0,{_NEGATION_GAP}}}\b{obj}", re.IGNORECASE)
+        for negator in _NEGATORS
+        for obj in _NEGATED_OBJECTS
+    )
+    + tuple(
+        re.compile(rf"\balready\b[^.!?]{{0,{_RESIDENCY_GAP}}}\b{verb}\b", re.IGNORECASE)
+        for verb in _RESIDENCY_VERBS
+    )
+    + tuple(re.compile(pattern, re.IGNORECASE) for pattern in _WORK_AUTHORIZATION_PATTERNS)
+)
 # YES is also regex: postings phrase offers loosely ("relocation and family support are
 # offered", "with relocation and work visa provided"), so [^.!?]* bridges the gap between
 # the perk and the offering verb. relocation is treated as a positive signal here per the
