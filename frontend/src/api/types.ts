@@ -98,6 +98,10 @@ export interface JobDetail extends Job {
   // The sentence that decided an explicit_yes/explicit_no tier; null for
   // registry_inferred/unknown. The drawer highlights it (slice 10, per DESIGN.md).
   sponsor_evidence: string | null
+  // An address in the posting that could plausibly reach a human about the job. Null for
+  // most postings: ATS boards route through the apply form, and the addresses that do
+  // appear are overwhelmingly accessibility/privacy boilerplate, which the API filters out.
+  contact_email: string | null
   // Behind a registry_inferred tier: which registers the company matched (e.g. ['UK','NL'])
   // and the fuzzy-match confidence. Empty / null when no register matched.
   registries: string[]

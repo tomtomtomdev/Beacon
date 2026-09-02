@@ -507,6 +507,43 @@ async def test_job_detail_sponsor_evidence_null_when_absent(
     assert response.json()["sponsor_evidence"] is None
 
 
+async def test_job_detail_exposes_a_contact_email_from_the_posting(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    job_id = _ids_by_external(seeded)["1"]
+    seeded.execute(
+        "UPDATE jobs SET description = ? WHERE id = ?",
+        ("Great role. Questions? Write to careers@example.com before applying.", job_id),
+    )
+    seeded.commit()
+
+    response = await client.get(f"/jobs/{job_id}")
+
+    assert response.status_code == 200, response.text
+    assert response.json()["contact_email"] == "careers@example.com"
+
+
+async def test_job_detail_contact_email_is_null_for_accessibility_boilerplate(
+    client: httpx.AsyncClient, seeded: sqlite3.Connection
+) -> None:
+    """The common case by far: ~80% of addresses in the live corpus are accommodation
+    contacts, and offering one as a way to reach a hiring team would be worse than silence."""
+    job_id = _ids_by_external(seeded)["1"]
+    seeded.execute(
+        "UPDATE jobs SET description = ? WHERE id = ?",
+        (
+            "If you require an accommodation, please email accommodations@example.com.",
+            job_id,
+        ),
+    )
+    seeded.commit()
+
+    response = await client.get(f"/jobs/{job_id}")
+
+    assert response.status_code == 200, response.text
+    assert response.json()["contact_email"] is None
+
+
 async def test_job_detail_lists_matched_registries_and_confidence(
     client: httpx.AsyncClient, seeded: sqlite3.Connection
 ) -> None:

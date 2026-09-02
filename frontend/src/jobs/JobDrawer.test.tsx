@@ -20,6 +20,7 @@ const seJob: JobDetail = {
   user_status: 'new',
   description: 'Build the iOS app.\n\nWork with a strong team.',
   sponsor_evidence: null,
+  contact_email: null,
   registries: ['UK', 'NL'],
   match_confidence: 0.94,
   duplicate_sources: [
@@ -36,6 +37,12 @@ const yesJob: JobDetail = {
   registries: [],
   match_confidence: null,
   user_status: 'seen',
+}
+
+const contactJob: JobDetail = {
+  ...seJob,
+  id: 3,
+  contact_email: 'careers@spotify.com',
 }
 
 const sweden: Country = {
@@ -61,6 +68,7 @@ beforeEach(() => {
     const u = String(url)
     if (u === '/countries') return ok([sweden])
     if (u === '/jobs/2') return ok(yesJob)
+    if (u === '/jobs/3') return ok(contactJob)
     return ok(seJob)
   })
   vi.stubGlobal('fetch', fetchMock)
@@ -236,5 +244,19 @@ describe('JobDrawer', () => {
     expect(screen.getByText(/Registry-inferred sponsor/)).toBeInTheDocument()
     // The POST hit the right endpoint with the active resume id.
     expect(fetchMock).toHaveBeenCalledWith('/jobs/1/match?resume=5', expect.anything())
+  })
+
+  it('offers a mailto link when the posting carries a contact address', async () => {
+    renderDrawer(3)
+
+    const link = await screen.findByRole('link', { name: /careers@spotify\.com/ })
+    expect(link).toHaveAttribute('href', 'mailto:careers@spotify.com')
+  })
+
+  it('shows no contact row when the posting has no usable address', async () => {
+    renderDrawer()
+
+    await screen.findByRole('heading', { name: 'Senior iOS Engineer' })
+    expect(screen.queryByTestId('contact-email')).not.toBeInTheDocument()
   })
 })

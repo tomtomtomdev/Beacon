@@ -11,6 +11,7 @@ from beacon.application.ports import (
     JobScoringInput,
 )
 from beacon.domain.classification import Classification, format_categories
+from beacon.domain.contact import extract_contact_email
 from beacon.domain.resume import SCORING_VERSION
 from beacon.domain.dedup import DedupRow
 from beacon.domain.job import NormalizedJob
@@ -250,6 +251,9 @@ class SqliteJobRepo:
             posted_at=datetime.fromisoformat(posted_at) if posted_at else None,
             sponsor_tier=job["sponsor_tier"],
             sponsor_evidence=job["sponsor_evidence"],
+            # Derived here for the same reason registry_names is: a presentation value read
+            # straight off stored text by a pure domain function, with nothing to persist.
+            contact_email=extract_contact_email(job["description"]),
             registries=registry_names(job["registry_flags"]),
             match_confidence=job["match_confidence"],
             user_status=job["user_status"],

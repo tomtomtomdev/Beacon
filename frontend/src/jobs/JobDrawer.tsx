@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { ExternalLink, Eye, EyeOff, Globe, ListChecks, Star, X } from 'lucide-react'
+import { ExternalLink, Eye, EyeOff, Globe, ListChecks, Mail, Star, X } from 'lucide-react'
 import { useEffect } from 'react'
 import { fetchCountries } from '../api/countries'
 import { assessFit, fetchJobDetail } from '../api/jobs'
@@ -195,6 +195,16 @@ export function JobDrawer({ jobId, matchScore, resumeId, onClose, onSetStatus }:
                   {source.source} · {source.company}
                 </div>
               ))}
+              {job.contact_email && (
+                <a
+                  className={styles.contactRow}
+                  data-testid="contact-email"
+                  href={`mailto:${job.contact_email}`}
+                >
+                  <Mail size={14} aria-hidden />
+                  {job.contact_email}
+                </a>
+              )}
               <a
                 className={styles.cta}
                 href={job.url}

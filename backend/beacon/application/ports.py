@@ -192,6 +192,9 @@ class JobDetail:
     posted_at: datetime | None
     sponsor_tier: str
     sponsor_evidence: str | None
+    # An address in the posting that could plausibly reach a human about the job, or None —
+    # which is the answer for the large majority of postings (see domain/contact.py).
+    contact_email: str | None
     # Company-level registry signal behind a registry_inferred tier: which registers the
     # company matched (e.g. ("UK", "NL")) and the fuzzy-match confidence. The drawer lists
     # them; empty/None when the company matched no register.
