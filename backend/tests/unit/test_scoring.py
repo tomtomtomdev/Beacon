@@ -14,7 +14,13 @@ import pytest
 from beacon.application.ports import CachedScore, JobListing
 from beacon.application.scoring import ScorableJob, job_facts_from_listing, score_jobs_for_resume
 from beacon.domain.classification import Category, Level
-from beacon.domain.resume import JobFacts, MatchScore, Resume, ResumeProfile
+from beacon.domain.resume import (
+    SCORING_VERSION,
+    JobFacts,
+    MatchScore,
+    Resume,
+    ResumeProfile,
+)
 from beacon.domain.sponsorship import SponsorTier
 
 NOW = datetime(2026, 7, 15, tzinfo=UTC)
@@ -68,10 +74,13 @@ class FakeMatchScoreRepo:
         resume_hash: str,
         job_id: int,
         content_hash: str,
+        scoring_version: int,
         score: MatchScore,
         computed_at: datetime,
     ) -> None:
-        self._rows[(resume_hash, job_id)] = CachedScore(score=score, content_hash=content_hash)
+        self._rows[(resume_hash, job_id)] = CachedScore(
+            score=score, content_hash=content_hash, scoring_version=scoring_version
+        )
         self.upserts += 1
 
 
@@ -123,6 +132,38 @@ def test_changed_content_hash_recomputes_only_that_job(monkeypatch: pytest.Monke
     score_jobs_for_resume(repo, resume, edited, now=NOW)
 
     assert len(calls) == 3  # only job 1 (new content_hash) recomputed; job 2 stayed cached
+
+
+def test_stale_scoring_version_recomputes_even_when_content_is_unchanged(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The 2026-08-26 bug: the SWIFT homograph guard shipped hours after the cache was warmed,
+    and every row survived it because only content_hash gated reuse. A posting that has not
+    changed must still be rescored when the scoring code that produced the row has."""
+    repo = FakeMatchScoreRepo()
+    resume = make_resume()
+    jobs = [ScorableJob(id=1, content_hash="h1", facts=make_facts(frozenset({"swift"})))]
+    repo.upsert(
+        resume.resume_hash,
+        1,
+        "h1",
+        SCORING_VERSION - 1,
+        MatchScore(
+            overall=99,
+            skills_score=99,
+            level_score=99,
+            sponsor_score=99,
+            matched_skills=frozenset({"swift"}),
+            missing_skills=frozenset(),
+        ),
+        NOW,
+    )
+    calls = _spy_score_match(monkeypatch)
+
+    scores = score_jobs_for_resume(repo, resume, jobs, now=NOW)
+
+    assert len(calls) == 1  # the stale-version row was not reused
+    assert scores[1].overall != 99
 
 
 def test_job_facts_from_listing_assembles_from_read_model_row() -> None:

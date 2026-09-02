@@ -21,7 +21,7 @@ from beacon.application.ports import (
     MatchScoreRepo,
 )
 from beacon.domain.classification import Category, Level
-from beacon.domain.resume import JobFacts, MatchScore, Resume, score_match
+from beacon.domain.resume import SCORING_VERSION, JobFacts, MatchScore, Resume, score_match
 from beacon.domain.sponsorship import SponsorTier
 from beacon.domain.vocabulary import extract_skills
 
@@ -74,18 +74,23 @@ def score_jobs_for_resume(
     *,
     now: datetime,
 ) -> dict[int, MatchScore]:
-    """Fit scores for the page's jobs, cache-gated by (resume_hash, content_hash). A cached
-    score whose content_hash still matches is reused (score_match not called); a miss or a
-    changed posting recomputes just that job and refreshes the cache."""
+    """Fit scores for the page's jobs, cache-gated by (resume_hash, content_hash,
+    scoring_version). A cached score is reused only when both the posting and the scoring code
+    behind it are unchanged (score_match not called); a miss, a changed posting or a bumped
+    SCORING_VERSION recomputes just that job and refreshes the cache."""
     cached = match_repo.get_cached(resume.resume_hash, [job.id for job in jobs])
     scores: dict[int, MatchScore] = {}
     for job in jobs:
         hit = cached.get(job.id)
-        if hit is not None and hit.content_hash == job.content_hash:
+        if (
+            hit is not None
+            and hit.content_hash == job.content_hash
+            and hit.scoring_version == SCORING_VERSION
+        ):
             scores[job.id] = hit.score
             continue
         score = score_match(resume.profile, job.facts)
-        match_repo.upsert(resume.resume_hash, job.id, job.content_hash, score, now)
+        match_repo.upsert(resume.resume_hash, job.id, job.content_hash, SCORING_VERSION, score, now)
         scores[job.id] = score
     return scores
 

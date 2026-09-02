@@ -159,6 +159,17 @@ OFF_STRATEGY_FACTOR = 0.5
 # Truecaller's iOS role at 3 of 4). Weights are unchanged; only the denominator is.
 SKILL_COVERAGE_FLOOR = 3
 
+# Version of the scoring behavior below. Persisted on every cached score so a stored row
+# computed by older code is never reused: content_hash catches a changed *posting*, this
+# catches changed *scoring*. Bump it in the same commit as any change to score_match, to the
+# weights/floors above, or to the vocabulary score_match reads (skills, guards, levels) —
+# test_scoring_version_pins_behavior fails until you do. Rows written before this existed
+# store 0, so the pre-versioning cache invalidates itself.
+#
+# 1: 2026-09-02. First versioned scoring — the SWIFT homograph guard and the coverage floor
+#    (both 2026-08-26) had never reached a cached row.
+SCORING_VERSION = 1
+
 
 def build_profile(text: str, *, target_countries: frozenset[str] = frozenset()) -> ResumeProfile:
     """Extract a structured profile from resume text using the shared job vocabulary."""

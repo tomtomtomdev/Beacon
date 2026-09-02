@@ -2,7 +2,8 @@
 
 Dumb repo: the cache policy (what to reuse, what to recompute) lives in the scoring use case.
 This just reads/writes rows in job_match_scores keyed (resume_hash, job_canonical_id), storing
-the content_hash each score was computed against so the use case can spot a stale posting.
+the content_hash and scoring_version each score was computed against so the use case can spot a
+stale posting or a score left behind by older scoring code.
 matched/missing skills are stored as JSON arrays (sorted, so the row diffs cleanly).
 """
 
@@ -26,7 +27,7 @@ class SqliteMatchScoreRepo:
         rows = self._conn.execute(
             f"""
             SELECT job_canonical_id, overall, skills_score, level_score, sponsor_score,
-                   matched_skills, missing_skills, content_hash
+                   matched_skills, missing_skills, content_hash, scoring_version
             FROM job_match_scores
             WHERE resume_hash = ? AND job_canonical_id IN ({placeholders})
             """,  # noqa: S608 — placeholders only, values bound
@@ -39,6 +40,7 @@ class SqliteMatchScoreRepo:
         resume_hash: str,
         job_id: int,
         content_hash: str,
+        scoring_version: int,
         score: MatchScore,
         computed_at: datetime,
     ) -> None:
@@ -46,8 +48,9 @@ class SqliteMatchScoreRepo:
             """
             INSERT INTO job_match_scores (
                 resume_hash, job_canonical_id, overall, skills_score, level_score,
-                sponsor_score, matched_skills, missing_skills, content_hash, computed_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                sponsor_score, matched_skills, missing_skills, content_hash, computed_at,
+                scoring_version
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT (resume_hash, job_canonical_id) DO UPDATE SET
                 overall = excluded.overall,
                 skills_score = excluded.skills_score,
@@ -56,7 +59,8 @@ class SqliteMatchScoreRepo:
                 matched_skills = excluded.matched_skills,
                 missing_skills = excluded.missing_skills,
                 content_hash = excluded.content_hash,
-                computed_at = excluded.computed_at
+                computed_at = excluded.computed_at,
+                scoring_version = excluded.scoring_version
             """,
             (
                 resume_hash,
@@ -69,6 +73,7 @@ class SqliteMatchScoreRepo:
                 json.dumps(sorted(score.missing_skills)),
                 content_hash,
                 computed_at.isoformat(),
+                scoring_version,
             ),
         )
         self._conn.commit()
@@ -85,4 +90,5 @@ def _row_to_cached(row: sqlite3.Row) -> CachedScore:
             missing_skills=frozenset(json.loads(row["missing_skills"])),
         ),
         content_hash=row["content_hash"],
+        scoring_version=row["scoring_version"],
     )

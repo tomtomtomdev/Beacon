@@ -125,6 +125,7 @@ def test_job_match_scores_table_has_full_spec_schema(db: sqlite3.Connection) -> 
         "missing_skills",
         "content_hash",
         "computed_at",
+        "scoring_version",
     }
 
 

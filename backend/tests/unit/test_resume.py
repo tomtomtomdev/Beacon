@@ -8,6 +8,7 @@ exact matched/missing skill sets and determinism.
 
 from beacon.domain.classification import Category, Level
 from beacon.domain.resume import (
+    SCORING_VERSION,
     JobFacts,
     MatchScore,
     ResumeProfile,
@@ -215,3 +216,76 @@ def test_a_one_skill_job_does_not_score_full_coverage() -> None:
     assert thin_score.skills_score < 100  # one lucky hit is a thin signal, not full coverage
     assert ios_score.skills_score > thin_score.skills_score
     assert ios_score.overall > thin_score.overall
+
+
+# --- the version gate on the score cache ------------------------------------------------
+
+# One case per scoring dimension, so a change to any weight, floor, guard or formula moves at
+# least one number here. Names describe the case, not the number — the number is the pin.
+GOLDEN_CASES: dict[str, tuple[ResumeProfile, JobFacts]] = {
+    "aligned_senior_ios_on_strategy": (
+        _profile(
+            skills={"swift", "swiftui", "uikit"},
+            categories={Category.IOS},
+            level=Level.SENIOR,
+            target_countries={"NL"},
+        ),
+        _job(
+            skills={"swift", "swiftui", "uikit"},
+            categories={Category.IOS},
+            level=Level.SENIOR,
+            tier=SponsorTier.EXPLICIT_YES,
+        ),
+    ),
+    "thin_extraction_single_skill": (
+        _profile(skills={"swift"}, categories={Category.IOS}, level=Level.SENIOR),
+        _job(skills={"swift"}, categories={Category.IOS}, level=Level.SENIOR),
+    ),
+    "disjoint_backend_role": (
+        _profile(skills={"swift"}, categories={Category.IOS}, level=Level.SENIOR),
+        _job(skills={"kotlin", "django"}, categories={Category.BACKEND}, level=Level.SENIOR),
+    ),
+    "overqualified_junior_posting": (
+        _profile(skills={"swift"}, categories={Category.IOS}, level=Level.SENIOR),
+        _job(skills={"swift"}, categories={Category.IOS}, level=Level.JUNIOR),
+    ),
+    "off_strategy_explicit_no": (
+        _profile(
+            skills={"swift"},
+            categories={Category.IOS},
+            level=Level.SENIOR,
+            target_countries={"NL"},
+        ),
+        _job(
+            skills={"swift"},
+            categories={Category.IOS},
+            level=Level.SENIOR,
+            country="US",
+            tier=SponsorTier.EXPLICIT_NO,
+        ),
+    ),
+}
+
+
+def test_scoring_version_pins_behavior() -> None:
+    """The cache in job_match_scores is keyed on SCORING_VERSION, so scoring may not change
+    without it changing too — that desync is exactly how the SWIFT homograph guard shipped on
+    2026-08-26 and never reached a stored score.
+
+    If this fails, scoring behavior moved: bump SCORING_VERSION in domain/resume.py and update
+    the expected table below, in the same commit.
+    """
+    scored = {name: score_match(*case).overall for name, case in GOLDEN_CASES.items()}
+
+    assert (SCORING_VERSION, scored) == (
+        1,
+        {
+            # 3/3 skills, category hit, exact level, sponsored in a target country
+            "aligned_senior_ios_on_strategy": 100,
+            # 1 skill over the coverage floor of 3, not 1/1 — the floor is why this is not 100
+            "thin_extraction_single_skill": 64,
+            "disjoint_backend_role": 26,
+            "overqualified_junior_posting": 58,
+            "off_strategy_explicit_no": 58,
+        },
+    )

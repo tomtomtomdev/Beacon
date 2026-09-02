@@ -11,6 +11,7 @@ from beacon.application.ports import (
     JobScoringInput,
 )
 from beacon.domain.classification import Classification, format_categories
+from beacon.domain.resume import SCORING_VERSION
 from beacon.domain.dedup import DedupRow
 from beacon.domain.job import NormalizedJob
 from beacon.domain.registry import registry_names
@@ -71,14 +72,18 @@ class SqliteJobRepo:
         # sort=match orders by the cached fit score (a LEFT JOIN so uncached jobs still appear,
         # sorted last); the application re-sorts the returned window by the fresh score, so this
         # join only biases which rows land in the window as the cache warms across page visits.
+        # The scoring_version predicate keeps a score left behind by older scoring code out of
+        # that bias — an unjoined row sorts last and gets rescored, rather than taking a slot on
+        # a number no longer trusted.
         join = ""
-        join_params: list[str] = []
+        join_params: list[str | int] = []
         if filters.sort == "match" and filters.resume_hash is not None:
             join = (
                 "LEFT JOIN job_match_scores ms"
                 " ON ms.job_canonical_id = jobs.id AND ms.resume_hash = ?"
+                " AND ms.scoring_version = ?"
             )
-            join_params.append(filters.resume_hash)
+            join_params += [filters.resume_hash, SCORING_VERSION]
             order_by = (
                 f"ms.overall IS NULL, ms.overall DESC, {_SORT_RANK_CASE} DESC, jobs.posted_at DESC"
             )

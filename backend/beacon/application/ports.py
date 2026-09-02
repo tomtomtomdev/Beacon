@@ -156,11 +156,13 @@ class JobScoringInput:
 
 @dataclass(frozen=True, slots=True)
 class CachedScore:
-    """A stored Tier-1 score plus the content_hash it was computed against, so the use case can
-    tell a fresh cache hit from a stale one (a re-polled posting whose content changed)."""
+    """A stored Tier-1 score plus what it was computed against, so the use case can tell a fresh
+    cache hit from a stale one: content_hash catches a re-polled posting whose text changed,
+    scoring_version catches a row whose *scoring code* has since changed."""
 
     score: MatchScore
     content_hash: str
+    scoring_version: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -437,8 +439,9 @@ class ResumeRepo(Protocol):
 
 class MatchScoreRepo(Protocol):
     """Caches Tier-1 heuristic scores keyed (resume_hash, job_canonical_id), gated by
-    content_hash. A re-poll of an unchanged posting reuses its score; a changed posting
-    (new content_hash) recomputes only itself. Persisting is free — Tier 1 costs nothing —
+    content_hash and scoring_version. A re-poll of an unchanged posting reuses its score; a
+    changed posting (new content_hash) or a change to the scoring code itself (new
+    scoring_version) recomputes only what it affects. Persisting is free — Tier 1 costs nothing —
     so the cache exists to make sort=match and page scoring instant, not to save money."""
 
     def get_cached(self, resume_hash: str, job_ids: Sequence[int]) -> dict[int, CachedScore]:
@@ -450,6 +453,7 @@ class MatchScoreRepo(Protocol):
         resume_hash: str,
         job_id: int,
         content_hash: str,
+        scoring_version: int,
         score: MatchScore,
         computed_at: datetime,
     ) -> None:
