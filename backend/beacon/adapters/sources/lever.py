@@ -26,7 +26,7 @@ class LeverAdapter:
     def normalize(self, raw: RawPosting) -> NormalizedJob:
         location_raw = str((raw.get("categories") or {}).get("location") or "")
         parsed_country, city = parse_location(location_raw)
-        description = normalize_description(str(raw.get("description") or ""))
+        description = normalize_description(_posting_html(raw))
         created_at = raw.get("createdAt")  # epoch milliseconds, may be absent
         posted_at = (
             datetime.fromtimestamp(created_at / 1000, tz=UTC) if created_at is not None else None
@@ -43,6 +43,23 @@ class LeverAdapter:
             posted_at=posted_at,
             content_hash=content_hash(description),
         )
+
+
+def _posting_html(raw: RawPosting) -> str:
+    """Lever splits one posting across three fields and only the first is the ad's opening:
+    `description` is the team blurb, `lists` holds the requirement sections (each a heading
+    plus an HTML <ul>), and `additional` the closing notes. Reading `description` alone kept
+    ~1k of a ~4.5k posting and dropped every requirement — where the skills are — so a
+    matcher saw an iOS role with no iOS in it. Section headings are kept: they are context a
+    classifier reads ("Who You Are"), and normalize_description strips the markup around them.
+
+    Every field is optional on a real board; an absent one contributes nothing."""
+    sections = [str(raw.get("description") or "")]
+    for entry in raw.get("lists") or []:
+        sections.append(str(entry.get("text") or ""))
+        sections.append(str(entry.get("content") or ""))
+    sections.append(str(raw.get("additional") or ""))
+    return " ".join(section for section in sections if section)
 
 
 def _iso2(value: object) -> str | None:

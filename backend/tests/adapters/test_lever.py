@@ -8,13 +8,23 @@ import pytest
 from beacon.adapters.http.polite import PoliteClient
 from beacon.adapters.sources.lever import LeverAdapter
 from beacon.domain.descriptions import content_hash, normalize_description
+from beacon.domain.vocabulary import extract_skills
 
 GROWTH_LEAD = "8fcf6f7a-8cd4-45f8-a799-f731ca476b3a"
+SUBSCRIPTIONS_IOS = "5089cbe3-5e62-4c24-89a2-9a1487eb5034"
 
 
 @pytest.fixture
 def immutable_jobs(load_fixture: Callable[[str], Any]) -> list[dict[str, Any]]:
     return cast(list[dict[str, Any]], load_fixture("lever/immutable_jobs.json"))
+
+
+@pytest.fixture
+def spotify_jobs(load_fixture: Callable[[str], Any]) -> list[dict[str, Any]]:
+    """A full, untrimmed recording (2026-09-02): Lever splits a posting across `description`
+    (the team blurb), `lists` (the requirement sections) and `additional`. immutable_jobs.json
+    was recorded with those last two stripped, which is why no fixture test ever saw them."""
+    return cast(list[dict[str, Any]], load_fixture("lever/spotify_jobs.json"))
 
 
 def make_adapter(
@@ -75,3 +85,44 @@ async def test_lever_fetch_uses_slug(immutable_jobs: list[dict[str, Any]]) -> No
     assert seen_urls == ["https://api.lever.co/v0/postings/immutable?mode=json"]
     assert len(raw_postings) == 4
     assert all("id" in raw and "text" in raw for raw in raw_postings)
+
+
+def test_normalize_keeps_the_requirement_sections_lever_splits_out(
+    spotify_jobs: list[dict[str, Any]],
+) -> None:
+    """The whole posting, not just its opening blurb. `description` is only Spotify's team
+    intro; every skill a matcher reads ("Swift", "iOS") lives in `lists`, and dropping it left
+    all 486 stored Lever jobs averaging 998 chars against 5,887 for Greenhouse."""
+    raw = next(j for j in spotify_jobs if j["id"] == SUBSCRIPTIONS_IOS)
+
+    job = make_adapter(slug="spotify").normalize(raw)
+
+    assert "Swift" in job.description  # from lists[], absent from `description`
+    assert "Who You Are" in job.description  # the section heading is kept as context
+    assert len(job.description) > 3 * len(normalize_description(raw["description"]))
+    assert "<" not in job.description and "&lt;" not in job.description
+
+
+def test_normalize_extracts_skills_that_only_appear_in_the_requirement_sections(
+    spotify_jobs: list[dict[str, Any]],
+) -> None:
+    """The user-visible bug: this posting scored 45 with zero matched skills, so a senior iOS
+    resume read it as a non-match."""
+    raw = next(j for j in spotify_jobs if j["id"] == SUBSCRIPTIONS_IOS)
+
+    job = make_adapter(slug="spotify").normalize(raw)
+
+    assert {"ios", "swift"} <= extract_skills(job.description)
+    assert extract_skills(normalize_description(raw["description"])) == frozenset()
+
+
+def test_normalize_handles_a_posting_recorded_without_lists(
+    immutable_jobs: list[dict[str, Any]],
+) -> None:
+    """Lever omits `lists` on some postings ("Expression of Interest" carries none), so the
+    composition must degrade to the blurb rather than raise."""
+    adapter = make_adapter()
+
+    jobs = [adapter.normalize(raw) for raw in immutable_jobs]
+
+    assert all(job.description for job in jobs)
