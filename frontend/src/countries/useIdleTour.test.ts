@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { useIdleTour } from './useIdleTour'
+import { TOUR_IDLE_MS, useIdleTour } from './useIdleTour'
 
 const CODES = ['NL', 'SE', 'DE'] as const
 const IDLE_MS = 1_000
@@ -127,6 +127,21 @@ describe('useIdleTour', () => {
     })
     elapse(IDLE_MS)
     expect(onAdvance).toHaveBeenCalledTimes(2)
+  })
+
+  // Every other test injects its own idleDelayMs, so the shipped default went unexercised —
+  // and CountriesPage passes no override, so this constant is what a real visitor waits through.
+  it('ships a 15s idle delay, and the hook actually defaults to it', () => {
+    expect(TOUR_IDLE_MS).toBe(15_000)
+
+    const { result, onAdvance } = renderTour({ idleDelayMs: undefined })
+
+    elapse(TOUR_IDLE_MS - 1)
+    expect(onAdvance).not.toHaveBeenCalled()
+
+    elapse(1)
+    expect(result.current).toBe(true)
+    expect(onAdvance).toHaveBeenCalledExactlyOnceWith('NL')
   })
 
   it('never runs when disabled, when there is nowhere to rotate, or under reduced motion', () => {

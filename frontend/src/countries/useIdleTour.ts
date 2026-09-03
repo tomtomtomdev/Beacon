@@ -8,8 +8,13 @@ const MOVE_SLOP = 2
 
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)'
 
-/** Long enough that reading a card never triggers it; short enough to feel alive on a wall screen. */
-export const TOUR_IDLE_MS = 45_000
+/**
+ * Short enough that the tour is actually seen on a wall screen — at 45s it read as unimplemented.
+ * The trade is deliberate: 15s is *not* long enough to finish reading a market's visa blocks, so
+ * the tour can take the selection back mid-read. Any pointer move >2px hands control straight
+ * back (see subscribeActivity), which is what makes the short delay tolerable.
+ */
+export const TOUR_IDLE_MS = 15_000
 /** One market per dwell — enough to read the visa blocks and let its jobs land. */
 export const TOUR_DWELL_MS = 9_000
 

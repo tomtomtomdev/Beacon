@@ -133,12 +133,14 @@ describe('CountriesPage', () => {
     })
     expect(screen.getByRole('heading', { name: 'Jobs · Sweden' })).toBeInTheDocument()
 
-    // A real pointer move hands control back, leaving that market selected.
+    // A real pointer move hands control back, leaving that market selected. Asserted over the
+    // restarted countdown rather than a dwell multiple: the tour is *meant* to resume once the
+    // page goes quiet again, so a window longer than TOUR_IDLE_MS would be testing the opposite.
     await act(async () => {
       window.dispatchEvent(new MouseEvent('pointermove', { clientX: 400, clientY: 300 }))
     })
     await act(async () => {
-      vi.advanceTimersByTime(TOUR_DWELL_MS * 4)
+      vi.advanceTimersByTime(TOUR_IDLE_MS - 1)
     })
     expect(screen.getByRole('heading', { name: 'Jobs · Sweden' })).toBeInTheDocument()
   })
