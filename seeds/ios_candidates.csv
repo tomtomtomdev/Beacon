@@ -1,0 +1,25 @@
+name,ats_type,ats_slug,country_hq,priority,note
+Mercari,greenhouse,mercari,JP,1,mobile-first marketplace; JP has 3 seeds and the fastest PR path in SPEC §4 — slug unverified
+Paidy,greenhouse,paidy,JP,2,mobile-first BNPL (Tokyo); JP is seed-thin — slug unverified
+LY Corporation,greenhouse,lycorp,JP,3,LINE + Yahoo Japan; mobile-first messaging at scale — ats_type and slug both unverified
+Cognite,greenhouse,cognite,NO,1,named in SPEC §4 as an Oslo employer; NO has one seed (Tibber) — slug unverified
+Vipps MobilePay,greenhouse,vipps,NO,1,named in SPEC §4; a mobile payments app is iOS supply by definition — slug unverified
+Schibsted,greenhouse,schibsted,NO,2,named in SPEC §4; Nordic media apps — slug unverified
+Pleo,greenhouse,pleo,DK,1,mobile expense app; DK has zero seeds — slug unverified
+Lunar,greenhouse,lunar,DK,2,mobile-only bank; DK has zero seeds — slug unverified
+Trustpilot,greenhouse,trustpilot,DK,3,DK has zero seeds; mobile is secondary here — slug unverified
+Proton,greenhouse,proton,CH,1,ships Mail/VPN/Drive iOS apps; CH has zero seeds and SPEC §4 calls it Google-Zurich-only — slug unverified
+Scandit,greenhouse,scandit,CH,2,barcode-scanning SDKs — iOS is the product surface; CH has zero seeds — slug unverified
+Nexthink,greenhouse,nexthink,CH,3,CH has zero seeds; mobile is secondary here — slug unverified
+Klarna,greenhouse,klarna,SE,2,mobile-first checkout app; SE seeds skew backend/AI — slug unverified
+Tink,greenhouse,tink,SE,3,open-banking SDKs incl. iOS — slug unverified
+Shopify,greenhouse,shopify,CA,1,ships Shop + Point of Sale iOS apps; CA has 4 seeds — slug unverified
+Hootsuite,greenhouse,hootsuite,CA,3,mobile social apps; CA is seed-thin — slug unverified
+StashAway,greenhouse,stashaway,SG,2,mobile-first wealth app; SG seeds are marketplace/fintech backends — slug unverified
+Employment Hero,greenhouse,employmenthero,AU,3,mobile HR app; AU already has 6 seeds — slug unverified
+Strava,greenhouse,strava,US,2,mobile-first by construction; US seeds are AI/infra-heavy — slug unverified
+Life360,greenhouse,life360,US,2,mobile-only product; US seeds are AI/infra-heavy — slug unverified
+Bumble,greenhouse,bumble,US,3,mobile-only product — slug unverified
+GoTo Group,greenhouse,gotogroup,ID,1,Gojek + Tokopedia; one of the largest iOS orgs in the region and ID needs no sponsorship (2026-09-01 amendment) — ats_type and slug both unverified
+Traveloka,greenhouse,traveloka,ID,2,mobile-first travel app; ID has zero seeds — slug unverified
+Xendit,lever,xendit,ID,3,ID has zero seeds; mobile is secondary here — slug unverified

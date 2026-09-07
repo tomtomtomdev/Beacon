@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from beacon.adapters.seeds import parse_seed_csv
+from beacon.adapters.sources.factory import SUPPORTED_ATS
 
 SAMPLE = """name,ats_type,ats_slug,country_hq,priority
 Tines,greenhouse,tines,IE,2
@@ -8,6 +9,7 @@ Grab,smartrecruiters,Grab,SG,1
 """
 
 REAL_SEED_FILE = Path(__file__).parents[3] / "seeds" / "companies.csv"
+CANDIDATE_FILE = Path(__file__).parents[3] / "seeds" / "ios_candidates.csv"
 
 
 def test_parse_seed_csv_maps_pinned_schema_to_companies() -> None:
@@ -38,3 +40,17 @@ def test_delivered_seed_file_parses_completely() -> None:
         "bendingspoons",
     }
     assert all(c.priority in (1, 2, 3) for c in companies)
+
+
+def test_every_ios_candidate_is_probeable_and_not_already_seeded() -> None:
+    candidates = parse_seed_csv(CANDIDATE_FILE.read_text())
+    seeded = {company.name for company in parse_seed_csv(REAL_SEED_FILE.read_text())}
+
+    # A candidate whose ats_type has no adapter probes to DORMANT, and one already in
+    # seeds/companies.csv is a slot spent on a board Beacon already polls — both waste a
+    # probe run. The *slugs* are unverified by construction: probe_ats_board.py is what
+    # verifies them, and nothing may join companies.csv before it does (slice 15b).
+    assert candidates
+    assert {company.ats_type for company in candidates} <= SUPPORTED_ATS
+    assert not {company.name for company in candidates} & seeded
+    assert all(company.priority in (1, 2, 3) for company in candidates)
