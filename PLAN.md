@@ -554,11 +554,11 @@ Slices 13 and 14 probed every candidate live before writing code, by hand — an
 - **Known gap, not this slice's:** `not_required` is still spec-only (`SponsorTier` has four members), so an Indonesian seed's postings will resolve `unknown` until it is built. Seeding ID is still correct — the postings are real — but its tier will understate them until then.
 
 Acceptance:
-- [ ] `ROLE_QUERIES` covers the iOS family under more than one phrasing on both steerable boards, and both shipped tuples are under test for the first time (breadth + per-poll request budget)
-- [ ] `probe_candidate` is green against fakes: a live board, a board whose rows carry no ad text, and a company whose `ats_type` has no adapter (dormant)
-- [ ] `scripts/probe_ats_board.py` runs the use case through the real factory and prints a paste-ready seed row; the suite makes no network call
-- [ ] **Owner-run (network):** probe `seeds/ios_candidates.csv`, seed what passes, then re-run the resume match and record whether iOS supply moved — the same measurement slice 14 recorded when it did not
-- [ ] `make verify` green
+- [x] `ROLE_QUERIES` covers the iOS family under three phrasings on both steerable boards (`ios engineer` / `ios developer` / `swift developer`), and both shipped tuples are under test for the first time — every shipped query is issued, and a worst-case poll (all pages full) stays inside a declared request budget. `"mobile engineer"` was **excluded on reasoning, not omitted**: the category is read from the title alone, so that row would land as residue and, on MyCareersFuture, spend a detail GET to do it
+- [x] `probe_candidate` is green against fakes: a live board (focus density + country spread + titles), a board whose rows carry no ad text (Breezy's failure), a malformed posting that must not kill the probe, a title that classifies as residue, and a company whose `ats_type` has no adapter (dormant → `None`)
+- [x] `scripts/probe_ats_board.py` runs the use case through the real factory; the suite makes no network call. Its **DORMANT** and **UNREACHABLE** branches were exercised for real (a `gem` candidate needs no network; a blocked host mapped to `SourceUnavailable` and the run continued instead of raising). The **PASS** branch — the paste-ready row — is unexercised until a live probe, because the environment this was built in blocks job-board hosts
+- [ ] **Owner-run (network), the one step left:** probe `seeds/ios_candidates.csv`, seed what passes into `seeds/companies.csv`, then re-run the resume match and record whether iOS supply moved — the same measurement slice 14 recorded when it did not. 15a's widening also needs one live poll to show its yield (the phrasings are reasoned, not measured)
+- [x] `make verify` green (backend **764**, frontend 71)
 
 ---
 
