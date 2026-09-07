@@ -21,10 +21,18 @@ _SEARCH_API = "https://api.mycareersfuture.gov.sg/v2/search"
 _JOB_API = "https://api.mycareersfuture.gov.sg/v2/jobs/{uuid}"
 _HOME_COUNTRY = "SG"
 _HOME_CITY = "Singapore"
-# The three role families of SPEC §1, phrased as this board's search reads them. Data:
-# widen coverage by editing the tuple, never the walk below.
+# The role families of SPEC §1, phrased as this board's search reads them. Data: widen
+# coverage by editing the tuple, never the walk below.
+#
+# iOS carries three phrasings because one was the cap on iOS supply, not the board's size
+# (slice 14). Each is a phrasing a *title* can be matched on, which is what the category
+# comes from — a row titled "Mobile Engineer" lands with no category however much iOS its
+# body names, so that query would spend a detail GET per hit on residue. Every added
+# phrasing costs searches *and* one detail call per new unique hit.
 ROLE_QUERIES: tuple[str, ...] = (
     "iOS engineer",
+    "iOS developer",
+    "Swift developer",
     "Java backend engineer",
     "machine learning engineer",
 )

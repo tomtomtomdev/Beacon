@@ -11,7 +11,7 @@ import httpx
 import pytest
 
 from beacon.adapters.http.polite import PoliteClient
-from beacon.adapters.sources.himalayas import HimalayasAdapter
+from beacon.adapters.sources.himalayas import ROLE_QUERIES, HimalayasAdapter
 
 
 @pytest.fixture
@@ -111,3 +111,34 @@ async def test_himalayas_fetch_pages_up_to_the_configured_maximum() -> None:
     raw_postings = await make_adapter(handler=handler, max_pages=2).fetch()
 
     assert len(raw_postings) == 40  # two full pages, then the cap stops the walk
+
+
+# The polite door allows one request per second per host, so queries x pages IS the
+# wall-clock cost of one poll of this board. The ceiling below is what Himalayas is
+# allowed per cycle; a widening that breaks it should be a deliberate decision, not a
+# silent regression. The shipped ROLE_QUERIES had no test at all before slice 15.
+_MAX_REQUESTS_PER_POLL = 24
+
+
+@pytest.mark.parametrize("phrasing", ["ios engineer", "ios developer", "swift developer"])
+def test_every_ios_phrasing_employers_title_with_is_searched(phrasing: str) -> None:
+    # One phrase was the binding constraint on iOS supply, not the page cap: the board
+    # carries 565 live iOS postings and a poll read 60 rows of "ios engineer", of which
+    # 17 classified iOS (measured 2026-08-23, diagnosed in slice 14).
+    assert phrasing in ROLE_QUERIES
+
+
+async def test_a_full_poll_issues_every_shipped_query_within_its_request_budget() -> None:
+    requested: list[tuple[str, str]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requested.append((request.url.params["q"], request.url.params["page"]))
+        # Every page full, so only the page cap stops the walk — the worst case.
+        jobs = [{"guid": f"{len(requested)}-{i}", "title": "iOS Engineer"} for i in range(20)]
+        return httpx.Response(200, json={"totalCount": 999, "jobs": jobs})
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    await HimalayasAdapter(PoliteClient(client, min_interval=0.0)).fetch()
+
+    assert {query for query, _ in requested} == set(ROLE_QUERIES)
+    assert len(requested) <= _MAX_REQUESTS_PER_POLL

@@ -1,9 +1,10 @@
 """Himalayas search API as a company-less JobSource (SPEC §5.2).
 
 Remote-only board, ~100k live postings, so it is polled through its *search* endpoint rather
-than the firehose feed: one query per role family Beacon hunts, deduped by guid. The queries
-are data — edit the tuple to widen coverage, never the walk below. Attribution: postings keep
-their himalayas.app URL, which is the source link the board's terms ask for.
+than the firehose feed: one search per phrasing of the role families Beacon hunts, deduped by
+guid. The queries are data — edit the tuple to widen coverage, never the walk below.
+Attribution: postings keep their himalayas.app URL, which is the source link the board's
+terms ask for.
 """
 
 import logging
@@ -18,9 +19,19 @@ from beacon.domain.location import parse_location
 logger = logging.getLogger(__name__)
 
 _SEARCH_API = "https://himalayas.app/jobs/api/search"
-# The three role families of SPEC §1, as the board's own search reads them.
+# The role families of SPEC §1, as the board's own search reads them — grouped by family,
+# flat by design (the walk below takes one query at a time and dedupes by guid).
+#
+# iOS carries three phrasings because one was the cap: the board holds 565 live iOS postings
+# and a single "ios engineer" poll reads 60 rows, 17 of which classify iOS (slice 14). The
+# phrasings are the ones employers title with, and each is one a *title* can be matched on —
+# "mobile engineer" is deliberately absent, because HeuristicClassifier reads the category
+# from the title alone, so a row titled "Mobile Engineer" lands with no category however
+# much iOS its body names, and the query would spend the polite budget on residue.
 ROLE_QUERIES: tuple[str, ...] = (
     "ios engineer",
+    "ios developer",
+    "swift developer",
     "java backend engineer",
     "machine learning engineer",
 )

@@ -13,7 +13,10 @@ import httpx
 import pytest
 
 from beacon.adapters.http.polite import PoliteClient
-from beacon.adapters.sources.mycareersfuture import MyCareersFutureAdapter
+from beacon.adapters.sources.mycareersfuture import (
+    ROLE_QUERIES,
+    MyCareersFutureAdapter,
+)
 
 
 @pytest.fixture
@@ -128,3 +131,38 @@ async def test_mycareersfuture_fetch_stops_at_a_short_page(search_ios: dict[str,
     await make_adapter(handler=handler, max_pages=4).fetch()
 
     assert pages == ["0"]  # three results on a 20-row page → no page 1
+
+
+# Searches are the part of the poll this tuple controls directly (queries x pages, at the
+# door's 1 rps). The detail spend rides on top of it — one GET per unique hit, pinned by
+# test_mycareersfuture_fetch_searches_each_query_then_gets_details — so widening the tuple
+# costs details as well as searches. The shipped tuple had no test at all before slice 15.
+_MAX_SEARCHES_PER_POLL = 24
+
+
+@pytest.mark.parametrize("phrasing", ["iOS engineer", "iOS developer", "Swift developer"])
+def test_every_ios_phrasing_employers_title_with_is_searched(phrasing: str) -> None:
+    # Singapore is the springboard market and this is its official board; one phrase read
+    # 12 iOS postings at the 2026-08-23 acceptance (slice 14 diagnosed the phrase, not the
+    # board, as the constraint on iOS supply).
+    assert phrasing in ROLE_QUERIES
+
+
+async def test_a_full_poll_issues_every_shipped_query_within_its_search_budget() -> None:
+    searched: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "POST":
+            searched.append(str(json.loads(request.content)["search"]))
+            # Every page full, so only the page cap stops the walk — the worst case.
+            page = request.url.params["page"]
+            results = [{"uuid": f"{len(searched)}-{page}-{i}"} for i in range(20)]
+            return httpx.Response(200, json={"total": 999, "results": results})
+        uuid = request.url.path.rsplit("/", 1)[-1]
+        return httpx.Response(200, json={"uuid": uuid, "title": "iOS Engineer", "description": "d"})
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    await MyCareersFutureAdapter(PoliteClient(client, min_interval=0.0)).fetch()
+
+    assert set(searched) == set(ROLE_QUERIES)
+    assert len(searched) <= _MAX_SEARCHES_PER_POLL
