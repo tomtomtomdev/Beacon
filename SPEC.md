@@ -291,6 +291,7 @@ Sort semantics: `sponsor_tier` maps to a numeric `sort_rank` (explicit_yes=4, **
 | 12 | Resume upload + heuristic fit scoring (all jobs) + deterministic deep-match rationale (per job) | Personalized ranking at zero cost |
 | 13 | Six more sources: SmartRecruiters, Workable, Workday CxS, Teamtailor (per-company) + Himalayas, MyCareersFuture (company-less) | The port survives POST-only search and two-step (list→detail) boards; iOS/Java/AI coverage in the target countries |
 | 14 | IE + CA registries, The Muse board, Recruitee/Rippling ATS, auth-capable `Fetcher` → NAV Norway | Sponsorship signal reaches IE/CA (the first non-zero `registry_flags` in the DB); supply widens past the seed list. Breezy dropped — its public board carries no ad text |
+| 15 | iOS supply: widen the iOS phrasings on the two steerable boards + `probe_candidate` (a seed row needs a live probe) + iOS-first seed companies | Supply is an employer-selection problem, not a source-coverage one — slice 14 added 402 postings and zero iOS |
 
 Each slice: red test → green → refactor → `make verify` → commit.
 

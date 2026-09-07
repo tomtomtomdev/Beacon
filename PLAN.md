@@ -522,6 +522,46 @@ Acceptance:
 
 ---
 
+## Slice 15 — iOS supply: employer selection, not source coverage
+
+**Goal:** move the one number slice 14 could not — **24 iOS-classified postings out of 7,507 canonical jobs**. Slice 14 added 402 postings and **zero iOS**, which settled the diagnosis: iOS supply is limited by *which employers hire iOS*, not by how many boards Beacon reads. So this slice buys no new adapters. Two levers only: steer the two boards that already produce iOS, and seed employers who actually staff iOS teams.
+
+**Build order: steer what already works (15a) → build the evidence tool (15b) → seed on its output (15c).** 15c is last and deliberately gated: slice 14 twice refused a seed row that had no live probe behind it (Breezy's 36 slug probes found only the vendor's own demo board), and that rule is not suspended because a candidate looks obvious.
+
+### 15a — The iOS family is one phrase wide; widen it (data, no walk changes)
+
+Himalayas and MyCareersFuture are the **only** two sources that produce iOS postings (17 and 12 at the 2026-08-26 acceptance) and the only two that can be *steered* by keyword. Both carry `ROLE_QUERIES` as a flat tuple with exactly one phrase per SPEC §1 family — so "iOS" reaches the boards as the single phrase `ios engineer`, and every title an employer phrases differently ("Senior Swift Developer", "iOS Developer", "Mobile Engineer, iOS") is unreachable at any page cap.
+
+- Himalayas carries **565 live iOS postings** (measured 2026-08-23); one poll reads at most 60 rows for the one phrase, of which 17 classified iOS. The phrase, not the volume, is the binding constraint.
+- Extend the iOS family to the phrasings employers actually title with. The queries stay **data** (a module tuple, injected in tests); the walk below them is untouched, exactly as both adapters' docstrings promise.
+- **RED first on the cost, not the count.** Queries × pages is the poll's request budget at 1 rps, and MyCareersFuture additionally spends one detail GET per unique hit (N+1). The shipped tuples have **never been under test at all**, so a careless future widening is currently free to triple a poll in silence. Pin both: the iOS family's breadth, and the measured request count of a full fetch of the real `ROLE_QUERIES`.
+- **Not touched: `_MAX_PAGES`.** Raising the cap buys the same phrase deeper; widening the phrases buys titles the cap can never reach. One lever per slice, and this is the cheaper one.
+
+### 15b — `probe_candidate`: the evidence a seed row needs, as a use case
+
+Slices 13 and 14 probed every candidate live before writing code, by hand — and those probes are what killed The Muse and Breezy. There is no reusable tool for it, so the discipline costs an afternoon each time and its output is not comparable across candidates. Make it a use case.
+
+- **`probe_candidate(company, source_for, classifier) -> CandidateProbe`** in `application/probe.py`, beside `probe_quarantined`. Ports only — no repo, no DB, no clock. It fetches through the injected `JobSource`, normalizes, classifies and reports, so it measures **what Beacon would actually ingest** (real adapter, real factory, real classifier). That is the thing a curl of the board cannot tell you.
+- Reports: postings fetched, how many normalize, per-category counts (iOS first — that is the question being asked), the country spread, and the normalize failures. A board that answers `200` with 300 rows and no ad text is Breezy again; the report must make that visible instead of counting rows as reach.
+- **`scripts/probe_ats_board.py`** is wiring only, like `spot_check_demand.py`: resolve `ats_type` + slug through `make_source_factory`, run the use case, print the report and a **paste-ready seed CSV row** for a candidate that passed. Network only when run by hand, never in the suite.
+- `seeds/ios_candidates.csv` carries the candidate list in `seeds/companies.csv`'s own schema, so a pass is a copy-paste. **Its slugs are unverified by construction** — that is what the probe is for, and the file header says so.
+
+### 15c — Seed the winners (gated on 15b's output, owner-run)
+
+- A candidate joins `seeds/companies.csv` only after `probe_ats_board.py` shows it fetching real postings **with real ad text**. No probe, no row.
+- Priority by **iOS density, not posting count**: slice 13's Workday lesson (nvidia's 2,000 postings = 33 min/poll at 1 rps) applies to every two-step board, and slice 14's Rippling (376 postings, zero mobile roles) is why volume is not the metric.
+- Markets with no seed at all are where the candidates are, and SPEC §4 already names some: **Norway** ("Oslo: Cognite, Vipps, Schibsted") has one seed (Tibber); **Denmark** and **Switzerland** have none; **Japan** has three; and **Indonesia** — in scope since the 2026-09-01 amendment — has none, while being the one market needing no sponsorship at all.
+- **Known gap, not this slice's:** `not_required` is still spec-only (`SponsorTier` has four members), so an Indonesian seed's postings will resolve `unknown` until it is built. Seeding ID is still correct — the postings are real — but its tier will understate them until then.
+
+Acceptance:
+- [ ] `ROLE_QUERIES` covers the iOS family under more than one phrasing on both steerable boards, and both shipped tuples are under test for the first time (breadth + per-poll request budget)
+- [ ] `probe_candidate` is green against fakes: a live board, a board whose rows carry no ad text, and a company whose `ats_type` has no adapter (dormant)
+- [ ] `scripts/probe_ats_board.py` runs the use case through the real factory and prints a paste-ready seed row; the suite makes no network call
+- [ ] **Owner-run (network):** probe `seeds/ios_candidates.csv`, seed what passes, then re-run the resume match and record whether iOS supply moved — the same measurement slice 14 recorded when it did not
+- [ ] `make verify` green
+
+---
+
 ## Cross-cutting rules
 
 - Every network adapter is tested against recorded fixtures only; live calls happen solely in manual acceptance checks
