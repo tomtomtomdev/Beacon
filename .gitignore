@@ -22,6 +22,9 @@ beacon.db-shm
 # Background refresh log written by run.sh
 .ingest.log
 
+# Launcher log, when run.sh output is redirected (./run.sh > .run.log)
+.run.log
+
 # Real registry snapshots (manually refreshed); only trimmed fixtures are committed
 data/registries/
 
