@@ -567,7 +567,8 @@
 /* Contact address pulled out of the posting text — rare, so it reads as a quiet affordance
    next to the primary CTA rather than competing with it. */
 .contactRow {
-  display: inline-flex;
+  display: flex;
+  width: fit-content;
   align-items: center;
   gap: 7px;
   margin-top: 10px;

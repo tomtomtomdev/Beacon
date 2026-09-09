@@ -20,7 +20,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND="$ROOT/backend"
 FRONTEND="$ROOT/frontend"
-API_PORT=8000   # hardcoded: frontend/vite.config proxies the API routes (/jobs, /countries, /companies, /searches, /settings, /healthz) to localhost:8000
+API_PORT=8000   # hardcoded: frontend/vite.config proxies the API routes (/jobs, /countries, /companies, /resumes, /searches, /settings, /healthz) to localhost:8000
 
 DB="${BEACON_DB_PATH:-$ROOT/beacon.db}"   # the cache itself; matches Settings.from_env()
 INGEST_LOG="$ROOT/.ingest.log"
