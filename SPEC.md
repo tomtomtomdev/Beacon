@@ -298,7 +298,7 @@ Each slice: red test → green → refactor → `make verify` → commit.
 
 - **Time: all storage/comparison in UTC (aware datetimes); "day boundaries" for `posted_since` filters and the daily digest computed in Asia/Jakarta (UTC+7)** — one `LOCAL_TZ` constant, used only at display/day-boundary edges, never in storage.
 - **Access model: localhost / private network (Tailscale) only. No auth in MVP by design; any public exposure requires an auth slice first (cf. Sentinel S9a precedent).**
-- Poll intervals: ATS 4h, boards 6h, HN thread daily during first week of month, registries monthly
+- Poll cadence: **eight fires a day — :30 past every hour from 09:30 to 16:30 Asia/Jakarta** (launchd `com.beacon.digest`, one-shot per fire: poll ATS + boards → dedup → Telegram digest), so a digest lands inside working hours instead of overnight; HN's daily-first-week cadence is folded into the boards poll; registries monthly. Superseded the always-on 4h/6h intervals on 2026-09-10 — see PROGRESS Decisions (digest-window)
 - Politeness: per-host rate limit (1 req/s), ETag/If-Modified-Since where supported, exponential backoff
 - Runs on the home Mac (same box as Anvil) via launchd, or the ROCm Linux box; SQLite file backed up nightly
 - LLM cost control: heuristics first, LLM only on residue, hash cache — expected <$2/mo at ~150 companies

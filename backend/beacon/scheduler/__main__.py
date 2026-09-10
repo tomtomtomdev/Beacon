@@ -1,7 +1,9 @@
 """Run the scheduler unattended: python -m beacon.scheduler.
 
 Started by launchd on the home Mac (deploy/com.beacon.scheduler.plist). RunAtLoad +
-KeepAlive means a reboot relaunches it and the next interval poll runs hands-off (SPEC §9).
+KeepAlive means a reboot relaunches it and the maintenance crons — registry refresh, nightly
+backup, weekly restore probe — keep running hands-off (SPEC §9). The polls are not here: they
+fire hourly from deploy/com.beacon.digest.plist.
 """
 
 import asyncio

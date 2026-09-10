@@ -112,6 +112,23 @@ All env reads live in one place (`beacon/config.py`). Defaults work out of the b
 | `BEACON_DB_PATH` | `./beacon.db` | SQLite database file |
 | `BEACON_SEEDS_PATH` | `./seeds/companies.csv` | Curated company seed list |
 
+### Scheduling
+
+Two launchd agents, both installed from `deploy/`:
+
+| Agent | When | What |
+|---|---|---|
+| `com.beacon.digest` | :30 past every hour, 09:30–16:30 local | One fire of `deploy/hourly-digest.sh`: poll → dedup → Telegram digest, then exit. Lock-guarded (a fire that finds the previous one still polling skips) and capped at 50 min, after which the digest still goes out via `python -m beacon.notify`. |
+| `com.beacon.scheduler` | always on | The unattended maintenance crons only: monthly registry refresh, nightly backup, weekly quarantine restore probe. |
+
+```bash
+cp deploy/com.beacon.digest.plist ~/Library/LaunchAgents/
+launchctl load ~/Library/LaunchAgents/com.beacon.digest.plist
+```
+
+Logs: `/tmp/beacon.digest.{out,err}.log` and `/tmp/beacon.scheduler.{out,err}.log`. A digest is
+sent only when a saved search has new matches, so quiet hours are genuinely quiet.
+
 ## Development
 
 Every slice is built **TDD, strictly**: RED (one failing test) → GREEN (smallest change) → **REFACTOR** (mandatory smell-check after each green). One slice at a time; don't start slice N+1 while N has unchecked acceptance boxes.
@@ -137,7 +154,7 @@ backend/
 frontend/
   src/                jobs/ (JobsPage, FilterBar, JobTable), api/ (client + types), tokens.css
 seeds/companies.csv   53 verified companies (name,ats_type,ats_slug,country_hq,priority)
-deploy/               launchd plist stub for the scheduler
+deploy/               launchd agents: the hourly digest window + the maintenance scheduler
 ```
 
 ## Documentation map

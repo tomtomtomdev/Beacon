@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Beacon hourly digest window. Install + load with:
+       cp deploy/com.beacon.digest.plist ~/Library/LaunchAgents/
+       launchctl load ~/Library/LaunchAgents/com.beacon.digest.plist
+
+     Eight fires a day — 09:30, 10:30 … 16:30 local time (Asia/Jakarta on this box; launchd
+     reads the system zone, which is also config.LOCAL_TZ). Each fire polls the sources and
+     pushes the Telegram digest, then exits: no RunAtLoad, no KeepAlive, nothing to kill.
+     deploy/hourly-digest.sh holds the lock and watchdog that keep a long poll from colliding
+     with the next fire.
+
+     A sleeping Mac is not woken for a fire; launchd runs a missed one once on wake (they
+     coalesce, so an overnight sleep costs one run, not eight). `sudo pmset repeat wakeorpoweron
+     MTWRFSU 09:29:00` if the fires must be guaranteed.
+
+     Paths are absolute because launchd has no working shell. Telegram creds are read from
+     app_settings in beacon.db (Settings UI) and every path in Settings resolves from the repo
+     root, so no BEACON_* env is needed here. Moving the checkout means editing this file.
+     Tail logs at /tmp/beacon.digest.{out,err}.log. -->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.beacon.digest</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/tomtomtomtom/Documents/beacon/deploy/hourly-digest.sh</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/tomtomtomtom/Documents/beacon</string>
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Hour</key><integer>10</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Hour</key><integer>11</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Hour</key><integer>12</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Hour</key><integer>13</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Hour</key><integer>14</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Hour</key><integer>15</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Hour</key><integer>16</integer><key>Minute</key><integer>30</integer></dict>
+    </array>
+    <key>StandardOutPath</key>
+    <string>/tmp/beacon.digest.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/beacon.digest.err.log</string>
+</dict>
+</plist>
