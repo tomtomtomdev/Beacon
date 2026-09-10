@@ -206,7 +206,7 @@ async def test_empty_digest_is_not_sent_but_last_run_is_touched() -> None:
     assert searches.touched == [(1, NOW)]  # the search still ran
 
 
-async def test_health_alerts_send_a_digest_even_with_no_new_matches() -> None:
+async def test_health_alerts_alone_do_not_send_a_digest() -> None:
     searches = FakeSearchRepo([IOS_SE])
     jobs = FakeJobRepo({"ios": []})  # nothing matched
     notifier = FakeNotifier()
@@ -215,8 +215,20 @@ async def test_health_alerts_send_a_digest_even_with_no_new_matches() -> None:
     result = await match_saved_searches(searches, jobs, notifier, now=NOW, health_alerts=(alert,))
 
     assert result.new_matches == 0
-    assert notifier.sent[0].health_alerts == (alert,)  # the quarantine still notified
-    assert searches.recorded == []  # no job matches recorded
+    assert notifier.sent == []  # no jobs, no message — health rides a digest, never triggers one
+    assert searches.recorded == []
+
+
+async def test_health_alerts_ride_a_digest_that_has_matches() -> None:
+    searches = FakeSearchRepo([IOS_SE])
+    jobs = FakeJobRepo({"ios": [listing(10)]})
+    notifier = FakeNotifier()
+    alert = HealthAlert(company="crypto", reason="gone", since="never")
+
+    result = await match_saved_searches(searches, jobs, notifier, now=NOW, health_alerts=(alert,))
+
+    assert result.new_matches == 1
+    assert notifier.sent[0].health_alerts == (alert,)
 
 
 async def test_send_failure_prevents_recording_so_matches_are_retried() -> None:

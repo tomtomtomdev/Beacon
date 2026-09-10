@@ -63,7 +63,7 @@ def test_digest_splits_when_over_max_without_breaking_a_line() -> None:
 
 def test_empty_digest_produces_no_messages() -> None:
     assert build_messages(Digest(groups=()), max_chars=4096) == []
-    assert Digest(groups=(DigestGroup("Empty", ()),)).is_empty()
+    assert not Digest(groups=(DigestGroup("Empty", ()),)).has_matches()
 
 
 def test_health_alerts_lead_the_digest_with_company_reason_and_since() -> None:
@@ -85,19 +85,18 @@ def test_health_alerts_lead_the_digest_with_company_reason_and_since() -> None:
     assert "UK" in text and "2026-05-01" in text
 
 
-def test_health_only_digest_is_not_empty_and_sends() -> None:
-    # A quarantine with no new job matches must still notify — silent decay is the failure mode.
+def test_health_only_digest_has_no_matches_so_it_is_not_sent() -> None:
+    # Source health rides a digest; on its own it is not worth a message (2026-09-10).
     digest = Digest(
         groups=(), health_alerts=(HealthAlert(company="crypto", reason="gone", since="never"),)
     )
 
-    assert digest.is_empty() is False
-    assert len(build_messages(digest, max_chars=4096)) == 1
+    assert digest.has_matches() is False
 
 
-def test_stale_registry_alone_is_not_empty() -> None:
+def test_stale_registry_alone_has_no_matches_so_it_is_not_sent() -> None:
     digest = Digest(
         groups=(), stale_registries=(RegistryStale(registry="UK", fetched_at="2026-01-01"),)
     )
 
-    assert digest.is_empty() is False
+    assert digest.has_matches() is False

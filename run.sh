@@ -13,10 +13,12 @@
 # First run only (no beacon.db yet) the refresh is blocking — there is nothing to serve.
 #
 # Telegram digests are sent at three points in a run:
-#   launch    what is already pending — source health + any un-notified matches
+#   launch    any matches the last poll left un-notified
 #   refresh   the poll's own digest, when it finishes (inside `python -m beacon.ingest`)
-#   close     whatever this session turned up, even if Ctrl-C cut the poll short; sent
-#             --matches-only, so a session that found nothing new sends nothing
+#   close     whatever this session turned up, even if Ctrl-C cut the poll short
+# No new job matches means no message at all, at every one of the three: source health
+# (quarantines, stale registries) rides a digest that is sending anyway, but never
+# triggers one on its own — so an idle run stays quiet instead of repeating alerts.
 # No Telegram creds set (Settings UI or BEACON_TELEGRAM_*) → the same digests print to
 # .digest.log instead. The launch/close sends cost one API call each, never a poll.
 #
@@ -100,8 +102,8 @@ if [[ $INGEST -eq 1 && $WAIT_INGEST -eq 1 ]]; then
 fi
 
 # --- launch digest ----------------------------------------------------------
-# What is already pending, on the phone now: source health plus any matches the last poll
-# left un-notified. Runs before the API so the report does not wait on the ~30-45 min poll.
+# Anything the last poll left un-notified, on the phone now — before the API, so the report
+# does not wait on the ~30-45 min poll. Silent when nothing new matched.
 log "Sending the launch digest (→ Telegram, or ${DIGEST_LOG#"$ROOT/"} with no creds)"
 (cd "$BACKEND" && uv run python -m beacon.notify) 2>&1 | tee "$DIGEST_LOG" | grep -E 'searches=|Error|error' || true
 
@@ -116,11 +118,10 @@ cleanup() {
   [[ -n "$INGEST_PID" ]] && kill "$INGEST_PID" 2>/dev/null || true
   [[ -n "$API_PID" ]] && kill "$API_PID" 2>/dev/null || true
   # Closing digest: whatever this session turned up, including a poll Ctrl-C cut short before
-  # it could send its own. --matches-only drops the source-health section, so a session that
-  # found nothing new sends nothing rather than repeating the launch digest. Never fatal —
-  # a failed send must not hold up shutdown.
-  printf '\n\033[36m▶ Closing digest (new matches only)\033[0m\n'
-  (cd "$BACKEND" && uv run python -m beacon.notify --matches-only) >>"$DIGEST_LOG" 2>&1 || true
+  # it could send its own. Sends nothing when nothing new matched. Never fatal — a failed
+  # send must not hold up shutdown.
+  printf '\n\033[36m▶ Closing digest\033[0m\n'
+  (cd "$BACKEND" && uv run python -m beacon.notify) >>"$DIGEST_LOG" 2>&1 || true
   grep -E 'searches=' "$DIGEST_LOG" | tail -1 || true
 }
 trap cleanup EXIT INT TERM

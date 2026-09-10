@@ -48,14 +48,19 @@ class RegistryStale:
 class Digest:
     groups: tuple[DigestGroup, ...]
     # Source-health section (SPEC §7): quarantined sources and stale registry snapshots. These
-    # make an otherwise-empty digest send — silent decay is the failure mode this exists to catch.
+    # ride a digest that is being sent anyway; they never trigger one on their own.
     health_alerts: tuple[HealthAlert, ...] = ()
     stale_registries: tuple[RegistryStale, ...] = ()
 
-    def is_empty(self) -> bool:
-        return not (
-            any(group.lines for group in self.groups) or self.health_alerts or self.stale_registries
-        )
+    def has_matches(self) -> bool:
+        """Whether any saved search actually matched — the one send gate.
+
+        A digest with no matched jobs is not sent, even when the health section has something
+        to say. This narrows SPEC §7's "health surfaces in the digest": quarantines and stale
+        snapshots still ride any digest that sends, but a run that found no jobs stays silent
+        rather than repeating standing alerts (decision 2026-09-10, digest-quiet-when-empty).
+        """
+        return any(group.lines for group in self.groups)
 
 
 def _render_line(line: DigestLine) -> str:

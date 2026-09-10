@@ -1,7 +1,7 @@
 """`python -m beacon.notify` sends the pending digest without polling — the launch and
 close dispatches in run.sh. Wiring only: the matching rules live in application/notify,
-so what is asserted here is that the composition root reaches them and, on the close
-dispatch, that suppressing the health section leaves an otherwise-empty digest unsent."""
+so what is asserted here is that the composition root reaches them, and that a run with
+no new matches sends nothing even when the source-health section has something to say."""
 
 import sqlite3
 from datetime import UTC, datetime
@@ -89,7 +89,7 @@ async def test_dispatch_sends_pending_matches_once_and_records_them(
     assert (first.new_matches, second.new_matches) == (1, 0)
 
 
-async def test_health_alerts_ride_the_digest_by_default(
+async def test_a_quarantine_with_no_new_matches_sends_nothing(
     db: sqlite3.Connection, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     quarantine_a_source(db)
@@ -97,14 +97,16 @@ async def test_health_alerts_ride_the_digest_by_default(
     result = await dispatch_digest(settings_for(tmp_path), now=NOW)
 
     assert result.new_matches == 0
-    assert "Source health" in capsys.readouterr().out
+    assert capsys.readouterr().out == ""
 
 
-async def test_matches_only_drops_the_health_section_so_nothing_is_sent(
+async def test_health_alerts_ride_a_digest_that_has_matches(
     db: sqlite3.Connection, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     quarantine_a_source(db)
+    seed_matching_job_and_search(db)
 
-    await dispatch_digest(settings_for(tmp_path), now=NOW, include_health=False)
+    await dispatch_digest(settings_for(tmp_path), now=NOW)
 
-    assert capsys.readouterr().out == ""
+    sent = capsys.readouterr().out
+    assert "Source health" in sent and "Senior iOS Engineer" in sent

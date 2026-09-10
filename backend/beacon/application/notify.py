@@ -50,8 +50,8 @@ async def match_saved_searches(
 
     Sends a single grouped digest, then records the notified matches — send *before*
     record, so a notifier failure leaves the matches un-recorded and they retry next run.
-    Source-health alerts (quarantines, stale registries) ride the same digest and make it
-    send even with no new matches — silent decay is the failure mode this guards against."""
+    No new matches means no message at all: source-health alerts (quarantines, stale
+    registries) ride a digest that is sending anyway, but never trigger one on their own."""
     all_searches = searches.list_all()
     groups: list[DigestGroup] = []
     pending: list[tuple[int, list[tuple[int, str]]]] = []
@@ -75,7 +75,7 @@ async def match_saved_searches(
     )
     new_matches = sum(len(group.lines) for group in groups)
 
-    if not digest.is_empty():
+    if digest.has_matches():
         await notifier.send(digest)
         for search_id, matches in pending:
             searches.record_matches(search_id, matches, notified_at=now)

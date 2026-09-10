@@ -67,4 +67,4 @@ async def test_send_test_message_delivers_a_nonempty_digest() -> None:
     await send_test_message(notifier)
 
     assert len(notifier.sent) == 1
-    assert not notifier.sent[0].is_empty()
+    assert notifier.sent[0].has_matches()
