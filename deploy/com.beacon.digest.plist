@@ -14,6 +14,10 @@
      coalesce, so an overnight sleep costs one run, not eight). `sudo pmset repeat wakeorpoweron
      MTWRFSU 09:29:00` if the fires must be guaranteed.
 
+     TCC: keep the checkout OUT of ~/Documents, ~/Desktop and ~/Downloads. A launchd-started
+     job has no access there and dies before it starts — `Operation not permitted`, exit 126
+     (proved 2026-09-10; hand-runs still work, because the terminal holds the grant).
+
      Paths are absolute because launchd has no working shell. Telegram creds are read from
      app_settings in beacon.db (Settings UI) and every path in Settings resolves from the repo
      root, so no BEACON_* env is needed here. Moving the checkout means editing this file.
@@ -25,10 +29,10 @@
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>/Users/tomtomtomtom/Documents/beacon/deploy/hourly-digest.sh</string>
+        <string>/Users/tomtomtomtom/Projects/beacon/deploy/hourly-digest.sh</string>
     </array>
     <key>WorkingDirectory</key>
-    <string>/Users/tomtomtomtom/Documents/beacon</string>
+    <string>/Users/tomtomtomtom/Projects/beacon</string>
     <key>StartCalendarInterval</key>
     <array>
         <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>30</integer></dict>

@@ -126,6 +126,10 @@ cp deploy/com.beacon.digest.plist ~/Library/LaunchAgents/
 launchctl load ~/Library/LaunchAgents/com.beacon.digest.plist
 ```
 
+The checkout must stay out of `~/Documents`, `~/Desktop` and `~/Downloads`: a launchd-started
+job is TCC-denied there and exits 126 (`Operation not permitted`) before it runs a line, even
+though the same command works by hand. This box keeps it at `~/Projects/beacon`.
+
 Logs: `/tmp/beacon.digest.{out,err}.log` and `/tmp/beacon.scheduler.{out,err}.log`. A digest is
 sent only when a saved search has new matches, so quiet hours are genuinely quiet.
 

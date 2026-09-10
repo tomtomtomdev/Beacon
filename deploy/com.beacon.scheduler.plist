@@ -6,6 +6,10 @@
      RunAtLoad + KeepAlive → a reboot relaunches it and the next interval poll runs unattended.
      Tail logs at /tmp/beacon.scheduler.{out,err}.log.
 
+     TCC: keep the checkout OUT of ~/Documents, ~/Desktop and ~/Downloads. A launchd-started
+     job has no access there and dies before it starts — `Operation not permitted`, exit 126
+     (proved 2026-09-10; hand-runs still work, because the terminal holds the grant).
+
      Paths are absolute because launchd has no working shell: uv from Homebrew, project at
      this machine's checkout. Telegram creds are read from app_settings in beacon.db (Settings
      UI), so no BEACON_TELEGRAM_* env is needed here; db_path defaults to the repo-root
@@ -19,13 +23,13 @@
         <string>/opt/homebrew/bin/uv</string>
         <string>run</string>
         <string>--project</string>
-        <string>/Users/tomtomtomtom/Documents/beacon/backend</string>
+        <string>/Users/tomtomtomtom/Projects/beacon/backend</string>
         <string>python</string>
         <string>-m</string>
         <string>beacon.scheduler</string>
     </array>
     <key>WorkingDirectory</key>
-    <string>/Users/tomtomtomtom/Documents/beacon/backend</string>
+    <string>/Users/tomtomtomtom/Projects/beacon/backend</string>
     <key>RunAtLoad</key>
     <true/>
     <key>KeepAlive</key>
