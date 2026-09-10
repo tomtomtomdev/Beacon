@@ -8,6 +8,7 @@ import asyncio
 import logging
 
 from beacon.config import Settings
+from beacon.logging_setup import configure_cli_logging
 from beacon.scheduler.schedule import build_scheduler
 
 logger = logging.getLogger(__name__)
@@ -21,7 +22,7 @@ async def _run_forever() -> None:
 
 
 def main() -> int:
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
+    configure_cli_logging()
     try:
         asyncio.run(_run_forever())
     except (KeyboardInterrupt, SystemExit):

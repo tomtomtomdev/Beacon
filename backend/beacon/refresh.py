@@ -27,6 +27,7 @@ from beacon.application.flag_sponsor import flag_manual_sponsor
 from beacon.application.ports import RegistryIngester
 from beacon.application.refresh_registries import refresh_registries
 from beacon.config import Settings
+from beacon.logging_setup import configure_cli_logging
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +95,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--evidence", help="evidence note (required with --flag)")
     args = parser.parse_args(argv)
 
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
+    configure_cli_logging()
     settings = Settings.from_env()
     if args.flag is not None:
         if not args.evidence:

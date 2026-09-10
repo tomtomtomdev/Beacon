@@ -22,6 +22,9 @@ beacon.db-shm
 # Background refresh log written by run.sh
 .ingest.log
 
+# Launch/close digest log written by run.sh (holds the digest text when no Telegram creds)
+.digest.log
+
 # Launcher log, when run.sh output is redirected (./run.sh > .run.log)
 .run.log
 

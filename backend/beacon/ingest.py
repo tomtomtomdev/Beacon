@@ -13,27 +13,22 @@ from pydantic import SecretStr
 
 from beacon.adapters.classify.factory import make_classifier
 from beacon.adapters.http.polite import PoliteClient
-from beacon.adapters.notify.factory import make_notifier
 from beacon.adapters.persistence.companies import SqliteCompanyRepo
 from beacon.adapters.persistence.countries import SqliteCountryRepo
 from beacon.adapters.persistence.db import MIGRATIONS_DIR, connect, run_migrations
 from beacon.adapters.persistence.jobs import SqliteJobRepo
 from beacon.adapters.persistence.llm_budget import SqliteLLMBudget
-from beacon.adapters.persistence.registries_meta import SqliteRegistriesMetaRepo
-from beacon.adapters.persistence.searches import SqliteSearchRepo
-from beacon.adapters.persistence.settings import SqliteSettingsRepo
 from beacon.adapters.seeds import parse_seed_csv
 from beacon.adapters.sources.factory import make_companyless_sources, make_source_factory
 from beacon.adapters.sources.nav import NAV_HOST
 from beacon.application.countries import seed_countries
 from beacon.application.dedup import dedupe_jobs
-from beacon.application.health_report import build_health_alerts
 from beacon.application.ingest import ingest_all, ingest_companyless_source
-from beacon.application.notify import match_saved_searches
 from beacon.application.probe import probe_quarantined
-from beacon.application.settings import effective_telegram_config
 from beacon.config import Settings
 from beacon.domain.company import SHADOW_ATS_TYPE
+from beacon.notify import send_digest
+from beacon.logging_setup import configure_cli_logging
 
 
 def _bearer_tokens(settings: Settings) -> dict[str, SecretStr]:
@@ -128,23 +123,9 @@ async def run_ingest(
             print(f"dedup groups={dedup.groups} duplicates={dedup.duplicates}")
 
             # Notify: match saved searches against the deduped canonical rows, alert once.
-            # Creds set via the Settings UI (DB) win, falling back to BEACON_TELEGRAM_* env.
-            telegram = effective_telegram_config(
-                SqliteSettingsRepo(conn), settings.telegram_config()
-            )
-            # Source-health section: quarantined companies + stale registry snapshots ride the
-            # same digest (SPEC §7) so silent decay surfaces even with no new matches.
-            health_alerts, stale = build_health_alerts(
-                company_repo, SqliteRegistriesMetaRepo(conn), now=now
-            )
-            match = await match_saved_searches(
-                SqliteSearchRepo(conn),
-                jobs,
-                make_notifier(telegram, client),
-                now=now,
-                health_alerts=health_alerts,
-                stale_registries=stale,
-            )
+            # Same tail as the standalone dispatches (beacon.notify), so the poll's digest and
+            # run.sh's launch/close digests resolve creds and assemble the digest identically.
+            match = await send_digest(conn, settings, client, now=now)
             print(f"searches={match.searches_run} new_matches={match.new_matches}")
 
     if api_key:
@@ -196,7 +177,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
+    configure_cli_logging()
     return asyncio.run(
         run_ingest(Settings.from_env(), only_company=args.company, only_source=args.source)
     )

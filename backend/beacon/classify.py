@@ -9,7 +9,6 @@ classifier — so a plain backfill works fully offline, and the LLM upgrade need
 """
 
 import argparse
-import logging
 
 import httpx
 
@@ -22,6 +21,7 @@ from beacon.application.backfill import (
     upgrade_ambiguous_classifications,
 )
 from beacon.config import Settings
+from beacon.logging_setup import configure_cli_logging
 
 
 def _run(settings: Settings, *, upgrade_residue: bool) -> int:
@@ -56,7 +56,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
+    configure_cli_logging()
     return _run(Settings.from_env(), upgrade_residue=args.upgrade_residue)
 
 

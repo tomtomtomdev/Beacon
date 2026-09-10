@@ -12,6 +12,14 @@
 # Refresh output goes to .ingest.log, with a one-line verdict when it finishes.
 # First run only (no beacon.db yet) the refresh is blocking — there is nothing to serve.
 #
+# Telegram digests are sent at three points in a run:
+#   launch    what is already pending — source health + any un-notified matches
+#   refresh   the poll's own digest, when it finishes (inside `python -m beacon.ingest`)
+#   close     whatever this session turned up, even if Ctrl-C cut the poll short; sent
+#             --matches-only, so a session that found nothing new sends nothing
+# No Telegram creds set (Settings UI or BEACON_TELEGRAM_*) → the same digests print to
+# .digest.log instead. The launch/close sends cost one API call each, never a poll.
+#
 # API listens on :8000 (the port the Vite dev-server proxy expects); the frontend
 # runs in the foreground. Ctrl-C stops everything.
 
@@ -24,6 +32,7 @@ API_PORT=8000   # hardcoded: frontend/vite.config proxies the API routes (/jobs,
 
 DB="${BEACON_DB_PATH:-$ROOT/beacon.db}"   # the cache itself; matches Settings.from_env()
 INGEST_LOG="$ROOT/.ingest.log"
+DIGEST_LOG="$ROOT/.digest.log"   # launch/close digest output (and where the digest itself lands with no Telegram creds)
 
 INGEST=1
 WAIT_INGEST=0
@@ -33,7 +42,9 @@ for arg in "$@"; do
     --no-ingest)   INGEST=0 ;;
     --wait-ingest) WAIT_INGEST=1 ;;
     --setup)       SETUP=1 ;;
-    -h|--help)     sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    # The header block is the help text; read it to the first non-comment line so it cannot
+    # rot against a hardcoded line range.
+    -h|--help)     awk 'NR>1 && /^#/ {sub(/^# ?/, ""); print; next} NR>1 {exit}' "$0"; exit 0 ;;
     *) echo "unknown option: $arg (try --help)" >&2; exit 2 ;;
   esac
 done
@@ -88,12 +99,29 @@ if [[ $INGEST -eq 1 && $WAIT_INGEST -eq 1 ]]; then
   INGEST=0
 fi
 
+# --- launch digest ----------------------------------------------------------
+# What is already pending, on the phone now: source health plus any matches the last poll
+# left un-notified. Runs before the API so the report does not wait on the ~30-45 min poll.
+log "Sending the launch digest (→ Telegram, or ${DIGEST_LOG#"$ROOT/"} with no creds)"
+(cd "$BACKEND" && uv run python -m beacon.notify) 2>&1 | tee "$DIGEST_LOG" | grep -E 'searches=|Error|error' || true
+
 # --- serve ------------------------------------------------------------------
 API_PID=""
 INGEST_PID=""
+CLEANED=0
 cleanup() {
+  # Ctrl-C fires INT and then EXIT; without this guard the closing digest would send twice.
+  if [[ $CLEANED -eq 1 ]]; then return 0; fi
+  CLEANED=1
   [[ -n "$INGEST_PID" ]] && kill "$INGEST_PID" 2>/dev/null || true
   [[ -n "$API_PID" ]] && kill "$API_PID" 2>/dev/null || true
+  # Closing digest: whatever this session turned up, including a poll Ctrl-C cut short before
+  # it could send its own. --matches-only drops the source-health section, so a session that
+  # found nothing new sends nothing rather than repeating the launch digest. Never fatal —
+  # a failed send must not hold up shutdown.
+  printf '\n\033[36m▶ Closing digest (new matches only)\033[0m\n'
+  (cd "$BACKEND" && uv run python -m beacon.notify --matches-only) >>"$DIGEST_LOG" 2>&1 || true
+  grep -E 'searches=' "$DIGEST_LOG" | tail -1 || true
 }
 trap cleanup EXIT INT TERM
 
