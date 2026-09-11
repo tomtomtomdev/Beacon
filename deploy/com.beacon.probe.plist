@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Beacon maintenance: retry quarantined sources so a temporary outage self-heals (Mondays, 05:00). Install + load with:
+       cp deploy/com.beacon.probe.plist ~/Library/LaunchAgents/
+       launchctl bootout  gui/$UID/com.beacon.probe 2>/dev/null
+       launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.beacon.probe.plist
+
+     One launchd job per maintenance fire, replacing the APScheduler crons that lived in the
+     always-on com.beacon.scheduler daemon until 2026-09-11. The daemon could not fire these
+     on this box at all: a LaunchAgent lives in the user's GUI domain, so it exists only while
+     logged in, and at 03:00-05:00 the Mac is asleep or logged out. Nine days of it running
+     produced zero backups. launchd coalesces a fire missed during sleep into a single run at
+     login/wake — the catch-up APScheduler's in-memory job store could not give — so a late
+     backup still happens instead of silently not happening.
+
+     Times are local (Asia/Jakarta on this box; launchd reads the system zone, which is also
+     config.LOCAL_TZ). One-shot: no RunAtLoad, no KeepAlive. Each job is safe to run late or
+     twice, which is what makes the coalesced catch-up sound.
+
+     TCC: keep the checkout OUT of ~/Documents, ~/Desktop and ~/Downloads. A launchd-started
+     job has no access there and dies before it starts — `Operation not permitted`, exit 126
+     (proved 2026-09-10; hand-runs still work, because the terminal holds the grant).
+
+     Paths are absolute because launchd has no working shell. Moving the checkout means
+     editing this file. Tail logs at /tmp/com.beacon.probe.{out,err}.log. -->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.beacon.probe</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/uv</string>
+        <string>run</string>
+        <string>--project</string>
+        <string>/Users/tomtomtomtom/Projects/beacon/backend</string>
+        <string>python</string>
+        <string>-m</string>
+        <string>beacon.maintenance</string>
+        <string>probe</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/tomtomtomtom/Projects/beacon/backend</string>
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>5</integer><key>Minute</key><integer>0</integer></dict>
+    </array>
+    <key>StandardOutPath</key>
+    <string>/tmp/com.beacon.probe.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/com.beacon.probe.err.log</string>
+</dict>
+</plist>

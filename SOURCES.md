@@ -441,17 +441,18 @@ The adapter is deliberately dumb — it fetches, parses, and raises on any reply
 
 ## 7. Scheduling (`scheduler/schedule.py`)
 
-*Canonical: `scheduler/schedule.py` — the constants below are read from it, not decided here. Cadence rationale is SPEC §9.*
+*Canonical: `deploy/com.beacon.*.plist` — the calendar entries below are read from them, not decided here. Cadence rationale is SPEC §9.*
 
-APScheduler, cron boundaries keyed in `LOCAL_TZ` = **Asia/Jakarta** so "monthly"/"nightly" fall on the local calendar.
+Every scheduled job is a **launchd one-shot**, keyed to the system zone = **Asia/Jakarta** (the same `LOCAL_TZ` the code uses for day boundaries). There is no always-on scheduler process: the APScheduler daemon that once held these was deleted on 2026-09-11, because a LaunchAgent exists only while the user is logged in and so its 03:00–05:00 crons never fired once (PROGRESS Decisions, maintenance-to-launchd).
 
-| Job | Trigger | Notes |
+| Agent | Fires | Notes |
 |---|---|---|
-| `poll_ats` | Interval, **4 hours** | The 7 per-company ATS adapters |
-| `poll_boards` | Interval, **6 hours** | The 6 company-less board adapters. HN's daily-first-week cadence is folded in here — its per-thread unseen-kids cache makes frequent re-polls cheap |
-| `refresh_registries` | Cron, **day 1 @ 03:00** | Match seeds against available snapshots; write `registries_meta` |
-| `nightly_backup` | Cron, **04:00** | Timestamped SQLite copy to `backups/` |
-| `probe_quarantined` | Cron, **Mon @ 05:00** | One retry per quarantined source; success restores, failure does **not** inflate counters |
+| `com.beacon.digest` | **08:00, 12:00, 16:30** | Poll every source → dedup → Telegram digest, then exit. A full poll runs 30–45 min under a 50 min watchdog, which is why the gaps are hours. HN's daily-first-week cadence is folded in here — its per-thread unseen-kids cache makes frequent re-polls cheap |
+| `com.beacon.refresh` | **day 1 @ 03:00** | Match seeds against available snapshots; write `registries_meta` |
+| `com.beacon.backup` | **04:00 daily** | Timestamped SQLite copy to `backups/`, pruned to the newest 14 |
+| `com.beacon.probe` | **Mon @ 05:00** | One retry per quarantined source; success restores, failure does **not** inflate counters |
+
+A fire missed while the Mac slept is coalesced by launchd into a single run at login/wake — the catch-up an in-process cron daemon could not provide.
 
 ---
 

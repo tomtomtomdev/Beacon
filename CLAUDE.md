@@ -35,7 +35,7 @@ domain/        ← pure. No imports from application/adapters/api. No IO, no htt
 application/   ← use cases. Imports domain + protocols only. No concrete adapters.
 adapters/      ← implements protocols. The ONLY layer that touches network, disk, LLM.
 api/           ← FastAPI routers. Thin: parse → use case → serialize. No business logic.
-scheduler/     ← wiring only.
+maintenance.py ← wiring only (launchd-fired one-shots; no always-on scheduler process).
 ```
 
 Dependency direction is inward. If an import violates this, the fix is moving code, not adding an exception.

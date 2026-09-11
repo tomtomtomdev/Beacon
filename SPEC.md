@@ -207,7 +207,7 @@ beacon/
 │   │   ├── notify/      # TelegramNotifier (Bot API, direct), StdoutNotifier; CourierNotifier deferred
 │   │   └── persistence/ # SQLite repos (sqlite3/SQLModel)
 │   ├── api/             # FastAPI routers: /jobs, /companies, /countries, /searches, /resumes, /stats
-│   └── scheduler/       # APScheduler: source polls (2–6h), registry refresh (monthly)
+│   └── maintenance.py   # launchd-fired one-shots: registry refresh, backup, quarantine probe
 ├── frontend/            # React + TS + Vite
 │   ├── JobTable         # virtualized; default sort = sponsor_tier desc, then posted_at desc
 │   ├── FilterBar        # keyword, country[], category[], level[], posted_since;
@@ -298,9 +298,9 @@ Each slice: red test → green → refactor → `make verify` → commit.
 
 - **Time: all storage/comparison in UTC (aware datetimes); "day boundaries" for `posted_since` filters and the daily digest computed in Asia/Jakarta (UTC+7)** — one `LOCAL_TZ` constant, used only at display/day-boundary edges, never in storage.
 - **Access model: localhost / private network (Tailscale) only. No auth in MVP by design; any public exposure requires an auth slice first (cf. Sentinel S9a precedent).**
-- Poll cadence: **eight fires a day — :30 past every hour from 09:30 to 16:30 Asia/Jakarta** (launchd `com.beacon.digest`, one-shot per fire: poll ATS + boards → dedup → Telegram digest), so a digest lands inside working hours instead of overnight; HN's daily-first-week cadence is folded into the boards poll; registries monthly. Superseded the always-on 4h/6h intervals on 2026-09-10 — see PROGRESS Decisions (digest-window)
+- Poll cadence: **three fires a day — 08:00, 12:00 and 16:30 Asia/Jakarta** (launchd `com.beacon.digest`, one-shot per fire: poll ATS + boards → dedup → Telegram digest), so a digest lands inside working hours instead of overnight; HN's daily-first-week cadence is folded into the boards poll; registries monthly. Superseded the always-on 4h/6h intervals on 2026-09-10, and narrowed from eight fires to three on 2026-09-11 once a real fire proved a full poll runs 30–45 min — see PROGRESS Decisions (digest-window, digest-three-fires)
 - Politeness: per-host rate limit (1 req/s), ETag/If-Modified-Since where supported, exponential backoff
-- Runs on the home Mac (same box as Anvil) via launchd, or the ROCm Linux box; SQLite file backed up nightly
+- Runs on the home Mac (same box as Anvil) via launchd, or the ROCm Linux box; SQLite file backed up nightly (`com.beacon.backup`, 04:00). **Every scheduled job is a launchd one-shot — there is no always-on scheduler process.** An in-process cron daemon cannot work here: a LaunchAgent exists only while logged in, so overnight crons never fired (PROGRESS Decisions 2026-09-11 maintenance-to-launchd)
 - LLM cost control: heuristics first, LLM only on residue, hash cache — expected <$2/mo at ~150 companies
 
 ## 10. Success Criteria

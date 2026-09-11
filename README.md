@@ -118,20 +118,32 @@ Two launchd agents, both installed from `deploy/`:
 
 | Agent | When | What |
 |---|---|---|
-| `com.beacon.digest` | :30 past every hour, 09:30–16:30 local | One fire of `deploy/hourly-digest.sh`: poll → dedup → Telegram digest, then exit. Lock-guarded (a fire that finds the previous one still polling skips) and capped at 50 min, after which the digest still goes out via `python -m beacon.notify`. |
-| `com.beacon.scheduler` | always on | The unattended maintenance crons only: monthly registry refresh, nightly backup, weekly quarantine restore probe. |
+| `com.beacon.digest` | 08:00, 12:00, 16:30 local | One fire of `deploy/hourly-digest.sh`: poll → dedup → Telegram digest, then exit. Lock-guarded (a fire that finds the previous one still polling skips) and capped at 50 min, after which the digest still goes out via `python -m beacon.notify`. A full poll runs 30–45 min, which is why the gaps are hours and not one hour. |
+| `com.beacon.refresh` | 1st of the month, 03:00 | `python -m beacon.maintenance refresh-registries` — rematch the seeds against the registry snapshots. |
+| `com.beacon.backup` | daily, 04:00 | `python -m beacon.maintenance backup` — timestamped SQLite copy, pruned to the newest 14. |
+| `com.beacon.probe` | Mondays, 05:00 | `python -m beacon.maintenance probe` — retry quarantined sources so a temporary outage self-heals. |
+
+Every agent is a **one-shot**: no `RunAtLoad`, no `KeepAlive`, nothing running between fires.
+The maintenance three ran as APScheduler crons inside an always-on `com.beacon.scheduler`
+daemon until 2026-09-11, which could never fire them here — a LaunchAgent lives in the user's
+GUI domain, so it exists only while logged in, and at 03:00–05:00 this Mac is asleep or logged
+out. Nine days of it running produced zero backups. launchd coalesces a fire missed during
+sleep into a single run at login/wake, so a late backup still happens.
 
 ```bash
-cp deploy/com.beacon.digest.plist ~/Library/LaunchAgents/
-launchctl load ~/Library/LaunchAgents/com.beacon.digest.plist
+for agent in digest refresh backup probe; do
+  cp deploy/com.beacon.$agent.plist ~/Library/LaunchAgents/
+  launchctl bootout  gui/$UID/com.beacon.$agent 2>/dev/null
+  launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.beacon.$agent.plist
+done
 ```
 
 The checkout must stay out of `~/Documents`, `~/Desktop` and `~/Downloads`: a launchd-started
 job is TCC-denied there and exits 126 (`Operation not permitted`) before it runs a line, even
 though the same command works by hand. This box keeps it at `~/Projects/beacon`.
 
-Logs: `/tmp/beacon.digest.{out,err}.log` and `/tmp/beacon.scheduler.{out,err}.log`. A digest is
-sent only when a saved search has new matches, so quiet hours are genuinely quiet.
+Logs: `/tmp/beacon.digest.{out,err}.log` and `/tmp/com.beacon.{refresh,backup,probe}.{out,err}.log`.
+A digest is sent only when a saved search has new matches, so quiet hours are genuinely quiet.
 
 ## Development
 
