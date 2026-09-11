@@ -1,22 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- Beacon hourly digest window. Install + load with:
+<!-- Beacon digest fires. Install + load with:
        cp deploy/com.beacon.digest.plist ~/Library/LaunchAgents/
-       launchctl load ~/Library/LaunchAgents/com.beacon.digest.plist
+       launchctl bootout  gui/$UID/com.beacon.digest 2>/dev/null
+       launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.beacon.digest.plist
 
-     Eight fires a day — 09:30, 10:30 … 16:30 local time (Asia/Jakarta on this box; launchd
+     Three fires a day — 08:00, 12:00 and 16:30 local time (Asia/Jakarta on this box; launchd
      reads the system zone, which is also config.LOCAL_TZ). Each fire polls the sources and
      pushes the Telegram digest, then exits: no RunAtLoad, no KeepAlive, nothing to kill.
-     deploy/hourly-digest.sh holds the lock and watchdog that keep a long poll from colliding
-     with the next fire.
+     deploy/hourly-digest.sh holds the lock and watchdog that cap a run.
 
-     A sleeping Mac is not woken for a fire; launchd runs a missed one once on wake (they
-     coalesce, so an overnight sleep costs one run, not eight). `sudo pmset repeat wakeorpoweron
-     MTWRFSU 09:29:00` if the fires must be guaranteed.
+     Why three and not eight: a full poll of ~59 pollable seeds at 1 rps runs 30-45 min, so the
+     old :30-past-every-hour window spent most of the day polling and the lock did real work
+     skipping collisions (changed 2026-09-11). The gaps here are 4h/4.5h against a 50 min
+     watchdog, so a fire can never meet the next one. Nothing is lost to a skipped or killed
+     run either way: application/notify.py writes seen_matches only AFTER the notifier
+     succeeds, so unnotified matches roll into the next digest.
+
+     08:00 is the fire most likely to land late. A LaunchAgent lives in the user's GUI domain,
+     so it only fires while logged in, and a sleeping Mac is not woken. launchd runs a missed
+     fire once on login/wake (they coalesce), so logging in at 08:20 gets the 08:00 fire at
+     08:20. `sudo pmset repeat wakeorpoweron MTWRFSU 07:59:00` if it must be guaranteed.
 
      TCC: keep the checkout OUT of ~/Documents, ~/Desktop and ~/Downloads. A launchd-started
      job has no access there and dies before it starts — `Operation not permitted`, exit 126
-     (proved 2026-09-10; hand-runs still work, because the terminal holds the grant).
+     (proved 2026-09-10; hand-runs still work, because the terminal holds the grant). The move
+     to ~/Projects/beacon is confirmed good: the 2026-09-11 09:30 fire ran the script.
 
      Paths are absolute because launchd has no working shell. Telegram creds are read from
      app_settings in beacon.db (Settings UI) and every path in Settings resolves from the repo
@@ -35,13 +44,8 @@
     <string>/Users/tomtomtomtom/Projects/beacon</string>
     <key>StartCalendarInterval</key>
     <array>
-        <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>30</integer></dict>
-        <dict><key>Hour</key><integer>10</integer><key>Minute</key><integer>30</integer></dict>
-        <dict><key>Hour</key><integer>11</integer><key>Minute</key><integer>30</integer></dict>
-        <dict><key>Hour</key><integer>12</integer><key>Minute</key><integer>30</integer></dict>
-        <dict><key>Hour</key><integer>13</integer><key>Minute</key><integer>30</integer></dict>
-        <dict><key>Hour</key><integer>14</integer><key>Minute</key><integer>30</integer></dict>
-        <dict><key>Hour</key><integer>15</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+        <dict><key>Hour</key><integer>12</integer><key>Minute</key><integer>0</integer></dict>
         <dict><key>Hour</key><integer>16</integer><key>Minute</key><integer>30</integer></dict>
     </array>
     <key>StandardOutPath</key>
