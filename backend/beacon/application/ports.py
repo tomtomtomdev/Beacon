@@ -15,7 +15,7 @@ from beacon.domain.notification import TelegramConfig
 from beacon.domain.registry import Registry, RegistryCompany, RegistryMeta
 from beacon.domain.resume import MatchScore, Resume
 from beacon.domain.saved_search import SavedSearch
-from beacon.domain.sponsorship import SponsorSignal
+from beacon.domain.sponsorship import SponsorSignal, SponsorTier
 from beacon.domain.visa import CountryReference
 
 # A source-shaped payload exactly as the ATS returned it (one job posting).
@@ -236,6 +236,14 @@ class JobRepo(Protocol):
         ...
 
     def set_classification(self, job_id: int, classification: Classification) -> None: ...
+
+    def set_tier_for_country(self, country: str, tier: SponsorTier) -> int:
+        """Write `tier` (and clear the evidence sentence, which did not decide it) onto every
+        stored job located in `country` that does not already carry it; return how many rows
+        moved. Touches nothing else on the row — not content_hash, not the seen timestamps,
+        not user_status. Deliberately dumb: which country gets which tier is the domain's
+        question, answered by resolve_tier."""
+        ...
 
     def list_dedup_rows(self) -> list[DedupRow]:
         """Every persisted job reduced to the fields the canonicalizer compares."""

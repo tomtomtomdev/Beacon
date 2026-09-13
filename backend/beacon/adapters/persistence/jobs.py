@@ -26,9 +26,18 @@ _SORT_RANK_CASE = (
     + " ELSE 0 END"
 )
 
-# Explicit-text tiers win over the registry signal, so registry re-resolution skips them.
-_EXPLICIT_TIERS = (SponsorTier.EXPLICIT_YES, SponsorTier.EXPLICIT_NO)
-_EXPLICIT_TIER_LITERALS = ", ".join(f"'{tier.value}'" for tier in _EXPLICIT_TIERS)
+# Tiers the registry signal cannot overturn, so registry re-resolution skips their rows.
+# The two explicit-text tiers outrank it by precedence (text beats registry), and
+# not_required outranks it by being a different kind of statement altogether: the reader's
+# right to work at home is not a claim about sponsorship that a register could revise.
+# Without it here, one registry refresh silently demotes every Jakarta job of a matched
+# employer — and Grab, Agoda and Adyen all post them.
+_REGISTRY_IMMUNE_TIERS = (
+    SponsorTier.EXPLICIT_YES,
+    SponsorTier.EXPLICIT_NO,
+    SponsorTier.NOT_REQUIRED,
+)
+_REGISTRY_IMMUNE_LITERALS = ", ".join(f"'{tier.value}'" for tier in _REGISTRY_IMMUNE_TIERS)
 
 
 class SqliteJobRepo:
@@ -132,10 +141,19 @@ class SqliteJobRepo:
     def resolve_registry_tier(self, company_id: int, tier: str) -> None:
         self._conn.execute(
             f"UPDATE jobs SET sponsor_tier = ?"  # noqa: S608 — literals are enum values
-            f" WHERE company_id = ? AND sponsor_tier NOT IN ({_EXPLICIT_TIER_LITERALS})",
+            f" WHERE company_id = ? AND sponsor_tier NOT IN ({_REGISTRY_IMMUNE_LITERALS})",
             (tier, company_id),
         )
         self._conn.commit()
+
+    def set_tier_for_country(self, country: str, tier: SponsorTier) -> int:
+        cursor = self._conn.execute(
+            "UPDATE jobs SET sponsor_tier = ?, sponsor_evidence = NULL"
+            " WHERE country = ? AND sponsor_tier != ?",
+            (tier.value, country, tier.value),
+        )
+        self._conn.commit()
+        return cursor.rowcount
 
     def content_hash_for(self, source_id: str, external_id: str) -> str | None:
         row = self._conn.execute(

@@ -1,7 +1,9 @@
-"""Backfill classification for jobs already in the DB (e.g. ingested before the classifier
-existed). Same caching contract as the pipeline: only never-classified rows are touched."""
+"""Backfills over jobs already in the DB: classification for rows ingested before the
+classifier existed, and the sponsorship tier for rows ingested before the home market did.
+Same caching contract as the pipeline — only rows that actually need it are touched."""
 
 from beacon.application.ports import Classifier, JobRepo
+from beacon.domain.sponsorship import HOME_COUNTRY, resolve_tier
 
 
 def backfill_classifications(jobs: JobRepo, classifier: Classifier) -> int:
@@ -29,3 +31,20 @@ def upgrade_ambiguous_classifications(jobs: JobRepo, classifier: Classifier) -> 
             jobs.set_classification(job_id, result)
             improved += 1
     return improved
+
+
+def backfill_home_market(jobs: JobRepo) -> int:
+    """Retier every stored home-market posting; return how many rows moved.
+
+    The tier is asked of resolve_tier rather than named here, so the rule that the home
+    market outranks the text/registry chain has exactly one statement in the codebase. Its
+    first two arguments are immaterial by construction — that is the property
+    test_not_required_sits_outside_the_text_chain pins over every combination of them.
+
+    No re-classification: this is a location predicate over the country column, so nothing
+    it touches can change a content_hash or spend an LLM call. Idempotent, so re-running it
+    is free.
+    """
+    return jobs.set_tier_for_country(
+        HOME_COUNTRY, resolve_tier(text_tier=None, registry_flags=0, country=HOME_COUNTRY)
+    )

@@ -32,7 +32,10 @@ LATER = datetime(2026, 7, 5, 12, 0, tzinfo=UTC)
 
 
 def make_job(
-    external_id: str, content_hash: str = "a" * 64, description: str = "Build things."
+    external_id: str,
+    content_hash: str = "a" * 64,
+    description: str = "Build things.",
+    country: str = "IE",
 ) -> NormalizedJob:
     return NormalizedJob(
         source_id="greenhouse",
@@ -41,7 +44,7 @@ def make_job(
         url=f"https://example.test/{external_id}",
         description=description,
         location_raw="Dublin, Ireland",
-        country="IE",
+        country=country,
         city="Dublin",
         posted_at=None,
         content_hash=content_hash,
@@ -140,6 +143,9 @@ class FakeJobRepo:
     def resolve_registry_tier(self, company_id: int, tier: str) -> None:
         raise NotImplementedError("ingest never re-resolves tiers")
 
+    def set_tier_for_country(self, country: str, tier: SponsorTier) -> int:
+        raise NotImplementedError("ingest never backfills tiers")
+
 
 COMPANY = Company(
     name="Tines", ats_type="greenhouse", ats_slug="tines", country_hq="IE", priority=2, id=7
@@ -209,14 +215,17 @@ async def test_changed_content_hash_reclassifies() -> None:
 
 
 class DescribedSource(FakeSource):
-    """Fetches one posting whose description carries the given sponsorship text."""
+    """Fetches one posting whose description carries the given sponsorship text, located in
+    the given country (the home market is a location predicate, so country is a test input
+    like the text is)."""
 
-    def __init__(self, description: str) -> None:
+    def __init__(self, description: str, country: str = "IE") -> None:
         super().__init__([{"id": 1}])
         self._description = description
+        self._country = country
 
     def normalize(self, raw: RawPosting) -> NormalizedJob:
-        return make_job(str(raw["id"]), description=self._description)
+        return make_job(str(raw["id"]), description=self._description, country=self._country)
 
 
 async def test_explicit_text_tier_wins_over_registry_on_ingest() -> None:
@@ -230,6 +239,23 @@ async def test_explicit_text_tier_wins_over_registry_on_ingest() -> None:
     assert repo.sponsorships[0] == SponsorSignal(
         SponsorTier.EXPLICIT_NO, "No visa sponsorship is available for this role."
     )
+
+
+async def test_home_market_job_is_not_required_and_carries_no_evidence() -> None:
+    """A Jakarta posting's tier is decided by where it is, so the sentence that would have
+    decided a text tier did not decide this one — storing it anyway would quote an
+    explicit_no line underneath a "No visa needed" badge. SPEC §6/§7: sponsor_evidence is
+    null for every tier the posting text did not decide.
+
+    The company is registry-flagged and the ad carries a refusal, so both halves of the text
+    chain are live here and both are correctly ignored."""
+    flagged = replace(COMPANY, registry_flags=int(Registry.UK))
+    repo = FakeJobRepo()
+    source = DescribedSource("You must have the right to work in Indonesia.", country="ID")
+
+    await ingest_source(source, flagged, repo, CountingClassifier(), now=NOW)
+
+    assert repo.sponsorships[0] == SponsorSignal(SponsorTier.NOT_REQUIRED, None)
 
 
 async def test_silent_text_falls_back_to_registry_tier_on_ingest() -> None:

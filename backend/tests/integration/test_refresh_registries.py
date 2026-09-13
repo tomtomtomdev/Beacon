@@ -4,6 +4,7 @@ flags, controls get none, and job tiers follow.
 """
 
 import sqlite3
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from pathlib import Path
 
@@ -21,7 +22,7 @@ from beacon.application.ports import RegistryIngester
 from beacon.application.refresh_registries import refresh_registries
 from beacon.domain.job import NormalizedJob
 from beacon.domain.registry import Registry
-from beacon.domain.sponsorship import SponsorTier
+from beacon.domain.sponsorship import HOME_COUNTRY, SponsorSignal, SponsorTier
 
 REGISTRIES = Path(__file__).parents[1] / "fixtures" / "registries"
 SEED_FILE = Path(__file__).parents[3] / "seeds" / "companies.csv"
@@ -121,6 +122,28 @@ def test_refresh_reresolves_job_tiers(seeded: sqlite3.Connection) -> None:
     }
     assert tiers["a1"] == SponsorTier.REGISTRY_INFERRED.value
     assert tiers["w1"] == SponsorTier.UNKNOWN.value
+
+
+def test_refresh_never_demotes_a_home_market_job(seeded: sqlite3.Connection) -> None:
+    """The registry pass rewrites every job of a matched company except the tiers that
+    outrank it. not_required is one of them: it is a fact about the reader's right to work,
+    not a claim a sponsor register can overturn.
+
+    Adyen is the live case, not a contrived one — it matches three registers, and a
+    Singapore- or Netherlands-HQ employer posting a Jakarta req is exactly the spillover
+    SPEC §5.1 puts in scope. Without the guard the refresh silently demotes that job to
+    registry_inferred, costing it a sort rank and its "No visa needed" badge."""
+    repo = SqliteCompanyRepo(seeded)
+    jobs = SqliteJobRepo(seeded)
+    adyen = repo.get_by_name("Adyen")
+    assert adyen is not None and adyen.id is not None
+    jakarta = replace(make_job("id1"), country=HOME_COUNTRY)
+    jobs.upsert(adyen.id, jakarta, seen_at=NOW, sponsorship=SponsorSignal(SponsorTier.NOT_REQUIRED))
+
+    refresh_registries(repo.list_active(), ingesters(), repo, jobs)
+
+    row = seeded.execute("SELECT sponsor_tier FROM jobs WHERE external_id = 'id1'").fetchone()
+    assert row["sponsor_tier"] == SponsorTier.NOT_REQUIRED.value
 
 
 def test_manual_flag_yields_registry_inferred(seeded: sqlite3.Connection) -> None:

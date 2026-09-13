@@ -14,6 +14,7 @@ from beacon.application.ports import (
 from beacon.domain.classification import Classification
 from beacon.domain.dedup import DedupRow
 from beacon.domain.digest import Digest, HealthAlert
+from beacon.domain.sponsorship import SponsorTier
 from beacon.domain.job import NormalizedJob
 from beacon.domain.saved_search import SavedSearch, SearchFilters
 
@@ -97,6 +98,9 @@ class FakeJobRepo:
         raise NotImplementedError
 
     def resolve_registry_tier(self, company_id: int, tier: str) -> None:
+        raise NotImplementedError
+
+    def set_tier_for_country(self, country: str, tier: SponsorTier) -> int:
         raise NotImplementedError
 
 
