@@ -21,17 +21,19 @@ async def client(tmp_path: Path) -> AsyncIterator[httpx.AsyncClient]:
             yield http
 
 
-async def test_lists_all_eleven_countries(client: httpx.AsyncClient) -> None:
+async def test_lists_every_market_including_the_home_row(client: httpx.AsyncClient) -> None:
     resp = await client.get("/countries")
 
     assert resp.status_code == 200
-    assert len(resp.json()) == 11
+    assert len(resp.json()) == 12  # 11 relocation targets + the home market (SPEC §4)
 
 
-async def test_primary_tier_countries_come_first(client: httpx.AsyncClient) -> None:
-    tiers = [c["priority_tier"] for c in (await client.get("/countries")).json()]
+async def test_home_row_leads_then_primary_tier_countries(client: httpx.AsyncClient) -> None:
+    countries = (await client.get("/countries")).json()
+    tiers = [c["priority_tier"] for c in countries]
 
-    assert tiers[0] == "primary"
+    assert (countries[0]["code"], tiers[0]) == ("ID", "home")
+    assert tiers[1] == "primary"
     assert tiers[-1] == "nice_to_have"
 
 

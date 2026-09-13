@@ -13,8 +13,32 @@ PRIMARY_CODES = {"SG", "AU", "JP", "NL", "US", "CA", "IE"}
 NICE_TO_HAVE_CODES = {"SE", "NO", "DK", "CH"}
 
 
-def test_all_eleven_spec_countries_present() -> None:
-    assert set(BY_CODE) == PRIMARY_CODES | NICE_TO_HAVE_CODES
+HOME_CODE = "ID"
+
+
+def test_all_spec_countries_present_including_the_home_row() -> None:
+    assert set(BY_CODE) == PRIMARY_CODES | NICE_TO_HAVE_CODES | {HOME_CODE}
+
+
+def test_indonesia_is_the_one_home_row() -> None:
+    """SPEC §4: Indonesia is listed so the UI can render a market card and a jobs list for it
+    like any other — it is the baseline every relocation is measured against, not a target.
+    A second home row would be a contradiction, not a new market."""
+    assert {c.code for c in COUNTRY_REFERENCE if c.priority_tier is PriorityTier.HOME} == {
+        HOME_CODE
+    }
+
+
+def test_home_row_states_the_absent_question_rather_than_empty_fields() -> None:
+    """SPEC §4 / DESIGN §1: every relocation field is inapplicable here, and rendering them
+    blank or as "n/a" would read as missing data rather than as an absent question. The row
+    is also the one whose registry column must never invite a registry lookup — not_required
+    comes from the job's location, never from a register."""
+    home = BY_CODE[HOME_CODE]
+
+    assert "right to work" in home.visa_summary.lower()
+    assert "citizen" in home.pr_summary.lower()
+    assert "registry" not in home.registry_name.lower() or "n/a" in home.registry_name.lower()
 
 
 def test_codes_are_unique() -> None:

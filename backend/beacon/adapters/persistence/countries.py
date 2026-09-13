@@ -17,10 +17,12 @@ class SqliteCountryRepo:
         self._conn = conn
 
     def get_all(self) -> list[CountryReference]:
-        # Primary target countries first (SPEC §3), then alphabetical within tier.
+        # The home row first (DESIGN §1 pins it above the relocation markets), then primary
+        # target countries (SPEC §3), then alphabetical within tier.
         rows = self._conn.execute(
             f"SELECT {_COLUMNS} FROM countries"
-            " ORDER BY CASE priority_tier WHEN 'primary' THEN 0 ELSE 1 END, name"
+            " ORDER BY CASE priority_tier WHEN 'home' THEN 0 WHEN 'primary' THEN 1"
+            " ELSE 2 END, name"
         )
         return [self._to_reference(row) for row in rows]
 

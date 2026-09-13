@@ -15,8 +15,13 @@ _AS_KNOWN = date(2026, 1, 15)
 
 
 class PriorityTier(StrEnum):
-    """Target-geography weighting from SPEC §3 — drives the Countries-view legend/pins."""
+    """Target-geography weighting from SPEC §3 — drives the Countries-view legend/pins.
 
+    HOME is not a stronger PRIMARY: it is the one row that is not a relocation target at
+    all, which is why it reads first and why its card renders a home-market block instead of
+    the visa legend (DESIGN §1)."""
+
+    HOME = "home"
     PRIMARY = "primary"
     NICE_TO_HAVE = "nice_to_have"
 
@@ -41,6 +46,23 @@ class CountryReference:
 # Summaries are lifted verbatim from SPEC §4; registry_name mirrors its "Registry data
 # source" column (a note, not always a real register — Sweden's says why none exists).
 COUNTRY_REFERENCE: tuple[CountryReference, ...] = (
+    # The home market (SPEC §4 "Indonesia (home)"). Every column of a relocation reference
+    # is inapplicable here, so each states the absent question rather than sitting empty —
+    # a blank or an "n/a" would read as missing data (DESIGN §1). verified_at is the date
+    # the amendment made Indonesia an in-scope market and source_url points at the spec
+    # that decided it: the row records a fact about citizenship, not a policy that a
+    # government page could revise out from under it.
+    CountryReference(
+        code="ID",
+        name="Indonesia",
+        visa_summary="None — right to work already held",
+        pr_summary="n/a — citizen",
+        citizenship_summary="Held",
+        registry_name="n/a — not_required comes from the job's location, never a register",
+        priority_tier=PriorityTier.HOME,
+        verified_at=date(2026, 9, 1),
+        source_url="https://github.com/tommy/beacon/blob/main/SPEC.md#4-country--visa-reference-data",
+    ),
     CountryReference(
         code="SG",
         name="Singapore",

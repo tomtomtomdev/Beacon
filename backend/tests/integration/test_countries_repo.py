@@ -32,6 +32,15 @@ def test_get_all_orders_primary_tier_before_nice_to_have(db: sqlite3.Connection)
     assert PriorityTier.PRIMARY not in tiers[first_nice:]
 
 
+def test_get_all_pins_the_home_row_first(db: sqlite3.Connection) -> None:
+    """DESIGN §1: the Indonesia card is pinned first in the stack, above the relocation
+    markets — it is the baseline the others are read against, so it is read first."""
+    repo = SqliteCountryRepo(db)
+    seed_countries(repo)
+
+    assert repo.get_all()[0].priority_tier is PriorityTier.HOME
+
+
 def test_seed_is_idempotent(db: sqlite3.Connection) -> None:
     repo = SqliteCountryRepo(db)
 

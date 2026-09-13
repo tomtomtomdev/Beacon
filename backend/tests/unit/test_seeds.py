@@ -20,10 +20,23 @@ def test_parse_seed_csv_maps_pinned_schema_to_companies() -> None:
     assert all(c.id is None for c in companies)
 
 
+def test_home_market_is_seeded_like_any_other_row() -> None:
+    """SPEC §5.1: an Indonesian employer is a seed row with country_hq=ID and nothing else
+    special — not_required is derived from the JOB's country at classification time, so the
+    home market needs no adapter, use-case or schema work to reach the DB.
+
+    One row, and that is a finding rather than a starting point: 60+ slug probes across
+    greenhouse/lever/ashby/smartrecruiters/workable/recruitee on 2026-09-13 found exactly
+    one genuine Indonesian board. See PROGRESS Decisions 2026-09-13 (id-seeds)."""
+    home = [c for c in parse_seed_csv(REAL_SEED_FILE.read_text()) if c.country_hq == "ID"]
+
+    assert [(c.name, c.ats_type, c.ats_slug) for c in home] == [("Xendit", "greenhouse", "xendit")]
+
+
 def test_delivered_seed_file_parses_completely() -> None:
     companies = parse_seed_csv(REAL_SEED_FILE.read_text())
 
-    assert len(companies) == 61
+    assert len(companies) == 62
     assert {c.ats_type for c in companies} <= {
         "greenhouse",
         "lever",
