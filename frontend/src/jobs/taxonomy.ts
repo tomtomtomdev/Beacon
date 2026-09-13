@@ -1,4 +1,4 @@
-import type { SponsorTier } from '../api/types'
+import type { PriorityTier, SponsorTier } from '../api/types'
 
 // Category/level display taxonomy — shared by the FilterBar pills and the saved-search
 // summary so a code always renders the same label. Values are the API codes; labels are §2.
@@ -6,9 +6,18 @@ import type { SponsorTier } from '../api/types'
 // Sponsor-tier chip labels — shared by the JobList card chip and the drawer chip row.
 export const TIER_LABEL: Record<SponsorTier, string> = {
   explicit_yes: 'Sponsors',
+  not_required: 'No visa needed',
   registry_inferred: 'Registry',
   unknown: 'Unknown',
   explicit_no: 'No sponsor',
+}
+
+// Country priority tiers (SPEC §3/§4) — the Countries card pill and the Jobs reference
+// legend both label them, and they must not drift: one table, imported by both.
+export const PRIORITY_TIER_LABEL: Record<PriorityTier, string> = {
+  home: 'Home',
+  primary: 'Primary',
+  nice_to_have: 'Nice-to-have',
 }
 
 export const CATEGORY_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
@@ -33,13 +42,17 @@ const CATEGORY_LABELS = new Map(CATEGORY_OPTIONS.map(({ value, label }) => [valu
 // Unknown codes (e.g. a new backend category not yet in the table) fall back to the raw code.
 export const categoryLabel = (value: string): string => CATEGORY_LABELS.get(value) ?? value
 
-// The 11 target markets (SPEC §3) — shared by the FilterBar country dropdown and the
-// "Jobs · {Country}" heading. Codes are the /jobs `country[]` param; tier drives the P/☆ badge.
+// The 11 relocation markets plus the home market (SPEC §3/§4) — shared by the FilterBar
+// country dropdown and the "Jobs · {Country}" heading. Codes are the /jobs `country[]` param;
+// tier drives the badge. Indonesia leads for the same reason it leads the Countries stack: it
+// is the baseline the rest are read against. Its tier is PriorityTier, not a local literal —
+// one tier vocabulary, so a value added to the backend cannot be legal here and illegal there.
 export const COUNTRY_OPTIONS: ReadonlyArray<{
   code: string
   name: string
-  tier: 'primary' | 'nice_to_have'
+  tier: PriorityTier
 }> = [
+  { code: 'ID', name: 'Indonesia', tier: 'home' },
   { code: 'SG', name: 'Singapore', tier: 'primary' },
   { code: 'AU', name: 'Australia', tier: 'primary' },
   { code: 'JP', name: 'Japan', tier: 'primary' },

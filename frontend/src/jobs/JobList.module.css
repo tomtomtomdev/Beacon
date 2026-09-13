@@ -161,6 +161,15 @@
   background: var(--tier-yes-dot);
 }
 
+.not_required {
+  background: var(--tier-home-bg);
+  color: var(--tier-home-fg);
+}
+
+.not_required .tierDot {
+  background: var(--tier-home-dot);
+}
+
 .registry_inferred {
   background: var(--tier-registry-bg);
   color: var(--tier-registry-fg);

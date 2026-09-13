@@ -11,6 +11,7 @@ import { postedAgo } from './postedAgo'
 // Sponsorship-evidence card heading per tier (DESIGN.md §2).
 const EVIDENCE_HEADER: Record<SponsorTier, string> = {
   explicit_yes: 'Sponsorship offered',
+  not_required: 'No visa needed',
   explicit_no: 'No sponsorship',
   registry_inferred: 'Registry-inferred signal',
   unknown: 'No signal detected',

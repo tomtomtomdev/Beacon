@@ -315,6 +315,14 @@
   font-weight: 600;
 }
 
+/* The home market: amber, matching the Jakarta origin pin and the not_required job badge
+   (DESIGN §1/§Tokens) — one colour for "you are already here" everywhere it appears. */
+.tierHome {
+  background: var(--tier-home-bg);
+  color: var(--tier-home-fg);
+  border-color: #5c4a1f;
+}
+
 .tierPrimary {
   background: rgba(94, 234, 212, 0.15);
   color: var(--accent);

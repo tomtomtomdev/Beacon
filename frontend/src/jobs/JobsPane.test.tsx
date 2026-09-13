@@ -258,6 +258,34 @@ describe('JobsPane', () => {
     expect(list.getByText('SENIOR')).toBeInTheDocument() // level uppercased
   })
 
+  it('badges a home-market job as needing no visa', async () => {
+    // SPEC §3/§6: an ID job carries not_required, the fifth tier — the one that says the
+    // sponsorship question does not arise, rather than answering it.
+    jobsPayload = {
+      total: 1,
+      jobs: [{ ...payload.jobs[0], id: 3, country: 'ID', sponsor_tier: 'not_required' }],
+    }
+
+    renderPage()
+
+    const list = within(await screen.findByTestId('job-list'))
+    expect(list.getByText('No visa needed')).toBeInTheDocument()
+  })
+
+  it('offers all five sponsor tiers in the filter, none pre-selected', async () => {
+    // CLAUDE.md: tier filtering stays opt-in — no UI state ships with chips pre-selected.
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByText('Swift Engineer')
+
+    await user.click(screen.getByRole('button', { name: /filter by sponsor tier/i }))
+
+    const boxes = screen.getAllByRole('checkbox')
+    expect(boxes).toHaveLength(5)
+    expect(boxes.every((box) => !(box as HTMLInputElement).checked)).toBe(true)
+    expect(screen.getByRole('checkbox', { name: /no visa needed/i })).toBeInTheDocument()
+  })
+
   it('reads initial sort and tier filter from the URL', async () => {
     renderPage('/?sort=date&sponsor_tier=registry_inferred')
 

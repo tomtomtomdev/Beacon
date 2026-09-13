@@ -9,14 +9,9 @@ import { JobDrawer } from './JobDrawer'
 import { JobList } from './JobList'
 import styles from './JobsPage.module.css'
 import { StatusTabs } from './StatusTabs'
-import { countryName } from './taxonomy'
+import { PRIORITY_TIER_LABEL, countryName } from './taxonomy'
 
 const STATUS_VIEWS: readonly StatusView[] = ['new', 'starred', 'all', 'hidden']
-
-const TIER_LABEL: Record<Country['priority_tier'], string> = {
-  primary: 'Primary',
-  nice_to_have: 'Nice-to-have',
-}
 
 // Per-view empty states (Beacon-2 §2 jobs pane).
 const EMPTY_TEXT: Record<StatusView, { title: string; subtitle: string }> = {
@@ -170,7 +165,9 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
         <p className={styles.subtitle}>{resultLabel}</p>
       </header>
 
-      {country && (
+      {country?.priority_tier === 'home' && <HomeMarketBlock name={country.name} />}
+
+      {country && country.priority_tier !== 'home' && (
         <div className={styles.reference}>
           <div className={styles.refHead}>
             <span className={styles.refTitle}>{country.name} — relocation reference</span>
@@ -179,7 +176,7 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
                 country.priority_tier === 'primary' ? styles.tierPrimary : styles.tierNice
               }`}
             >
-              {TIER_LABEL[country.priority_tier]}
+              {PRIORITY_TIER_LABEL[country.priority_tier]}
             </span>
           </div>
           <div className={styles.refBlocks}>
@@ -252,5 +249,28 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
         />
       )}
     </section>
+  )
+}
+
+// DESIGN §1: the home-market substitute for the relocation legend. Every field the legend
+// carries — work visa, PR path, citizenship, verified date — is inapplicable here, and
+// rendering them empty or as "n/a" would read as missing data rather than as an absent
+// question. What replaces them is the one line that matters and the role focus (SPEC §4).
+function HomeMarketBlock({ name }: { name: string }) {
+  return (
+    <div className={styles.homeMarket}>
+      <div className={styles.refHead}>
+        <span className={styles.refTitle}>{name} — home market</span>
+        <span className={`${styles.tierPill} ${styles.tierHome}`}>Home</span>
+      </div>
+      <p className={styles.homeCopy}>
+        You already have the right to work here. These roles need no visa, no sponsor and no
+        registry check.
+      </p>
+      <div>
+        <div className={styles.refLabel}>Focus</div>
+        <div className={styles.refValue}>iOS · Backend (Java, Python) · AI/ML</div>
+      </div>
+    </div>
   )
 }

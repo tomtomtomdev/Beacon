@@ -17,7 +17,16 @@ import {
   type Vec,
 } from './globeGeo'
 
-type Pin = { code: string; name: string; lat: number; lon: number; primary: boolean }
+type Pin = {
+  code: string
+  name: string
+  lat: number
+  lon: number
+  primary: boolean
+  // The origin. Selecting it draws no arc: origin and destination coincide, and an arc from
+  // Jakarta to Jakarta is a dot pretending to be a journey (DESIGN §Globe).
+  origin: boolean
+}
 type PinScreen = { code: string; name: string; x: number; y: number }
 type GlState = {
   yaw: number
@@ -192,8 +201,9 @@ function renderGlobe(
   ctx.arc(cx, cy, R, 0, 6.2832)
   ctx.stroke()
 
-  // beacon arc: Jakarta -> selected country
-  if (selPin) {
+  // beacon arc: Jakarta -> selected country. The home market is the one selection that draws
+  // none — it is already the origin, so there is no journey to trace (DESIGN §Globe).
+  if (selPin && !selPin.origin) {
     const va = llToVec(JAKARTA.lon, JAKARTA.lat)
     const vb = llToVec(selPin.lon, selPin.lat)
     const N = 90
@@ -276,7 +286,9 @@ function renderGlobe(
     if (front) g.pinScreens.push({ code: pin.code, name: pin.name, x: sx, y: sy })
     const primary = pin.primary
     const on = selectedCode === pin.code || g.hover === pin.code
-    const col = primary ? '#5eead4' : '#9fb6bb'
+    // Amber for the origin (DESIGN §Globe/§Tokens) — the same #fcd34d as the not_required
+    // job badge and the home card accent, so "you are already here" reads as one colour.
+    const col = pin.origin ? '#fcd34d' : primary ? '#5eead4' : '#9fb6bb'
     if (!front) {
       ctx.globalAlpha = 0.26
       ctx.beginPath()
@@ -305,7 +317,7 @@ function renderGlobe(
     ctx.lineWidth = 1.3
     ctx.strokeStyle = 'rgba(255,255,255,0.85)'
     ctx.stroke()
-    if (primary || on) {
+    if (primary || on || pin.origin) {
       const tw = ctx.measureText(pin.name).width
       const left = p.X > 0.12
       const tx = left ? sx - 14 - tw : sx + 14
@@ -335,7 +347,14 @@ export function Globe({
         .map((c) => {
           const geo = PIN_GEO[c.code]
           return geo
-            ? { code: c.code, name: c.name, lat: geo.lat, lon: geo.lon, primary: c.priority_tier === 'primary' }
+            ? {
+                code: c.code,
+                name: c.name,
+                lat: geo.lat,
+                lon: geo.lon,
+                primary: c.priority_tier === 'primary',
+                origin: c.priority_tier === 'home',
+              }
             : null
         })
         .filter((p): p is Pin => p !== null),
@@ -463,6 +482,7 @@ export function Globe({
             type="button"
             aria-label={`${pin.name} on globe`}
             aria-pressed={selectedCode === pin.code}
+            data-origin={pin.origin}
             onClick={() => onSelect(selectedCode === pin.code ? null : pin.code)}
           >
             {pin.name}

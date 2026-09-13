@@ -187,6 +187,10 @@
   border-radius: 5px;
 }
 
+.tierBadgeHome {
+  color: var(--tier-home-dot);
+}
+
 .tierBadgePrimary {
   color: var(--accent);
   background: rgba(94, 234, 212, 0.15);
@@ -219,6 +223,10 @@
 
 .dotYes {
   background: var(--tier-yes-dot);
+}
+
+.dotHome {
+  background: var(--tier-home-dot);
 }
 
 .dotRegistry {

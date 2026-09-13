@@ -1,6 +1,13 @@
 // Hand-mirrored from backend/beacon/api DTOs — the single place API shapes live.
 
-export type SponsorTier = 'explicit_yes' | 'registry_inferred' | 'unknown' | 'explicit_no'
+// not_required is the home market (SPEC §3/§6): a location predicate, not an answer to the
+// sponsorship question — the job is in Indonesia, so the question does not arise.
+export type SponsorTier =
+  | 'explicit_yes'
+  | 'not_required'
+  | 'registry_inferred'
+  | 'unknown'
+  | 'explicit_no'
 
 // The per-job daily-scan lifecycle: new → seen → starred/hidden (see PATCH /jobs/{id}/status).
 export type UserStatus = 'new' | 'seen' | 'hidden' | 'starred'
@@ -180,7 +187,9 @@ export interface CompanyHealth {
 }
 
 // Target-geography weighting (SPEC §3) — drives the Countries-view legend and map pins.
-export type PriorityTier = 'primary' | 'nice_to_have'
+// 'home' is not a stronger 'primary': it is the one market that is not a relocation target
+// at all, which is why it leads the stack and renders a home-market block (DESIGN §1).
+export type PriorityTier = 'home' | 'primary' | 'nice_to_have'
 
 // GET /countries: one country's relocation reference card (SPEC §4). Figures are as-known;
 // verified_at + source_url let the UI show a "verified as of" date and a re-verify link.

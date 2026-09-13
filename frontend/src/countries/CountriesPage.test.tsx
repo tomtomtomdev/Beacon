@@ -8,6 +8,19 @@ import { CountriesPage } from './CountriesPage'
 import { TOUR_DWELL_MS, TOUR_IDLE_MS } from './useIdleTour'
 
 const countries: Country[] = [
+  // The API returns the home row first (SqliteCountryRepo orders home > primary > rest), and
+  // the stack renders in that order — DESIGN §1 pins Indonesia above the relocation markets.
+  {
+    code: 'ID',
+    name: 'Indonesia',
+    visa_summary: 'None — right to work already held',
+    pr_summary: 'n/a — citizen',
+    citizenship_summary: 'Held',
+    registry_name: "n/a — not_required comes from the job's location, never a register",
+    priority_tier: 'home',
+    verified_at: '2026-09-01',
+    source_url: 'https://example.test/spec',
+  },
   {
     code: 'NL',
     name: 'Netherlands',
@@ -74,6 +87,32 @@ describe('CountriesPage', () => {
     expect(screen.getByRole('button', { name: 'Sweden details' })).toBeInTheDocument()
   })
 
+  it('pins the home market first and badges it Home, not as a relocation tier', async () => {
+    // SPEC §4 / DESIGN §1: Indonesia is the baseline every relocation is measured against,
+    // so it leads the stack — and it is not a "primary" target, it is not a target at all.
+    renderPage()
+
+    const cards = await screen.findAllByRole('button', { name: /details$/ })
+    expect(cards[0]).toHaveAccessibleName('Indonesia details')
+    expect(within(cards[0]).getByText('Home')).toBeInTheDocument()
+  })
+
+  it('replaces the visa legend with the home-market block when Indonesia is selected', async () => {
+    // DESIGN §1: every relocation field is inapplicable at home, and rendering them empty or
+    // as "n/a" would read as missing data rather than as an absent question. No verified date
+    // either — the row states a fact about citizenship, not a policy that expires.
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(await screen.findByRole('button', { name: 'Indonesia details' }))
+
+    expect(screen.getByText(/already have the right to work here/i)).toBeInTheDocument()
+    expect(screen.getByText(/iOS · Backend \(Java, Python\) · AI\/ML/)).toBeInTheDocument()
+    expect(screen.queryByText('Work visa')).not.toBeInTheDocument()
+    expect(screen.queryByText('Citizenship')).not.toBeInTheDocument()
+    expect(screen.queryByText(/^verified /)).not.toBeInTheDocument()
+  })
+
   it('surfaces Sweden’s no-registry note and verified date verbatim on the card', async () => {
     renderPage()
 
@@ -101,6 +140,20 @@ describe('CountriesPage', () => {
     expect(await screen.findByRole('button', { name: 'Sweden details' })).toBeInTheDocument()
   })
 
+  it('gives the home market a pin like any other, and draws it no arc', async () => {
+    // DESIGN §Globe: the amber origin marker is a pin like any other; picking it shows
+    // Indonesia's jobs with no arc drawn, because origin and destination coincide.
+    const user = userEvent.setup()
+    renderPage()
+
+    const pin = await screen.findByRole('button', { name: 'Indonesia on globe' })
+    await user.click(pin)
+
+    expect(await screen.findByRole('heading', { name: 'Jobs · Indonesia' })).toBeInTheDocument()
+    expect(pin).toHaveAttribute('aria-pressed', 'true')
+    expect(pin).toHaveAttribute('data-origin', 'true')
+  })
+
   it('a globe pin control opens the selection', async () => {
     const user = userEvent.setup()
     renderPage()
@@ -122,16 +175,17 @@ describe('CountriesPage', () => {
     })
     expect(screen.getByRole('button', { name: 'Sweden details' })).toBeInTheDocument()
 
-    // Untouched for the idle delay: the globe starts walking the markets on its own.
+    // Untouched for the idle delay: the globe starts walking the markets on its own, in the
+    // order the stack shows them — so the home market leads (DESIGN §1).
     await act(async () => {
       vi.advanceTimersByTime(TOUR_IDLE_MS)
     })
-    expect(screen.getByRole('heading', { name: 'Jobs · Netherlands' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Jobs · Indonesia' })).toBeInTheDocument()
 
     await act(async () => {
       vi.advanceTimersByTime(TOUR_DWELL_MS)
     })
-    expect(screen.getByRole('heading', { name: 'Jobs · Sweden' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Jobs · Netherlands' })).toBeInTheDocument()
 
     // A real pointer move hands control back, leaving that market selected. Asserted over the
     // restarted countdown rather than a dwell multiple: the tour is *meant* to resume once the
@@ -142,6 +196,6 @@ describe('CountriesPage', () => {
     await act(async () => {
       vi.advanceTimersByTime(TOUR_IDLE_MS - 1)
     })
-    expect(screen.getByRole('heading', { name: 'Jobs · Sweden' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Jobs · Netherlands' })).toBeInTheDocument()
   })
 })

@@ -1,17 +1,27 @@
 import { ChevronDown, Search } from 'lucide-react'
 import { useState } from 'react'
 import type { SortBy } from '../api/jobs'
-import type { SponsorTier } from '../api/types'
+import type { PriorityTier, SponsorTier } from '../api/types'
 import styles from './FilterBar.module.css'
 import { CATEGORY_OPTIONS, COUNTRY_OPTIONS, LEVEL_OPTIONS } from './taxonomy'
 
 // DESIGN.md §1 sponsor-tier dropdown; dot colors reuse the tier tokens.
 const TIER_OPTIONS: ReadonlyArray<{ value: SponsorTier; label: string; dot: string }> = [
   { value: 'explicit_yes', label: 'Sponsors', dot: styles.dotYes },
+  { value: 'not_required', label: 'No visa needed', dot: styles.dotHome },
   { value: 'registry_inferred', label: 'Registry', dot: styles.dotRegistry },
   { value: 'unknown', label: 'Unknown', dot: styles.dotUnknown },
   { value: 'explicit_no', label: 'No sponsor', dot: styles.dotNo },
 ]
+
+// Keyed off the tier so a third value cannot fall through to the nice-to-have branch, the way
+// a ternary on 'primary' silently would. ⌂ is the home market: not a ranking, a different kind
+// of row (DESIGN §1).
+const COUNTRY_BADGE: Record<PriorityTier, { className: string; glyph: string }> = {
+  home: { className: styles.tierBadgeHome, glyph: '⌂' },
+  primary: { className: styles.tierBadgePrimary, glyph: 'P' },
+  nice_to_have: { className: styles.tierBadgeNice, glyph: '☆' },
+}
 
 type OpenMenu = 'country' | 'tier' | null
 
@@ -119,11 +129,8 @@ export function FilterBar({
                     onChange={() => onToggleCountry(code)}
                   />
                   <span className={styles.menuRowLabel}>{name}</span>
-                  <span
-                    className={tier === 'primary' ? styles.tierBadgePrimary : styles.tierBadgeNice}
-                    aria-hidden
-                  >
-                    {tier === 'primary' ? 'P' : '☆'}
+                  <span className={COUNTRY_BADGE[tier].className} aria-hidden>
+                    {COUNTRY_BADGE[tier].glyph}
                   </span>
                 </label>
               ))}

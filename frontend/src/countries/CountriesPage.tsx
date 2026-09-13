@@ -5,14 +5,10 @@ import { useSearchParams } from 'react-router-dom'
 import { fetchCountries } from '../api/countries'
 import type { Country } from '../api/types'
 import { JobsPane } from '../jobs/JobsPane'
+import { PRIORITY_TIER_LABEL } from '../jobs/taxonomy'
 import styles from './CountriesPage.module.css'
 import { Globe } from './Globe'
 import { useIdleTour } from './useIdleTour'
-
-const TIER_LABEL: Record<Country['priority_tier'], string> = {
-  primary: 'Primary',
-  nice_to_have: 'Nice-to-have',
-}
 
 export function CountriesPage() {
   const { data: countries, isPending, isError } = useQuery({
@@ -141,6 +137,14 @@ function SourceHealth() {
   )
 }
 
+// Keyed off the tier rather than a ternary, so a third value cannot silently fall through to
+// the "nice-to-have" branch the way 'home' did before it had a class of its own.
+const TIER_PILL_CLASS: Record<Country['priority_tier'], string> = {
+  home: styles.tierHome,
+  primary: styles.tierPrimary,
+  nice_to_have: styles.tierNice,
+}
+
 // Compact country card in the narrow side panel (Beacon-2 §1): name + tier, Work visa + PR path
 // blocks (Citizenship moves to the reference legend on selection), registry note + verified date.
 function CountryCard({ country, onSelect }: { country: Country; onSelect: () => void }) {
@@ -153,12 +157,8 @@ function CountryCard({ country, onSelect }: { country: Country; onSelect: () => 
     >
       <div className={styles.cardHeader}>
         <span className={styles.cardName}>{country.name}</span>
-        <span
-          className={`${styles.tierPill} ${
-            country.priority_tier === 'primary' ? styles.tierPrimary : styles.tierNice
-          }`}
-        >
-          {TIER_LABEL[country.priority_tier]}
+        <span className={`${styles.tierPill} ${TIER_PILL_CLASS[country.priority_tier]}`}>
+          {PRIORITY_TIER_LABEL[country.priority_tier]}
         </span>
       </div>
       <div className={styles.blocks}>

@@ -69,6 +69,9 @@ export const SEA: LonLat[][] = [
 // Pin coordinates + primary flag, keyed by ISO code (the backend's Country.code).
 // lat/lon are the prototype's exact PINS values so the globe matches the handoff.
 export const PIN_GEO: Record<string, { lat: number; lon: number }> = {
+  // The home market's pin is the origin marker itself — one dot, not two on the same spot
+  // (DESIGN §Globe: "the amber origin marker is a pin like any other").
+  ID: { lat: JAKARTA.lat, lon: JAKARTA.lon },
   US: { lat: 38, lon: -120 },
   CA: { lat: 53, lon: -101 },
   IE: { lat: 53.3, lon: -8 },

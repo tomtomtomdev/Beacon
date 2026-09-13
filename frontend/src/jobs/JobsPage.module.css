@@ -55,6 +55,28 @@
   border-radius: 13px;
 }
 
+/* The home-market substitute for the relocation legend (DESIGN §1): same box metrics, amber
+   palette — the colour that means "you are already here" everywhere else in the app. */
+.homeMarket {
+  margin: 15px 20px 0;
+  padding: 15px 17px;
+  background: rgba(252, 211, 77, 0.06);
+  border: 1px solid #5c4a1f;
+  border-radius: 13px;
+}
+
+.homeCopy {
+  margin: 0 0 10px;
+  color: #f3e5bd;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.tierHome {
+  background: var(--tier-home-bg);
+  color: var(--tier-home-fg);
+}
+
 .refHead {
   display: flex;
   align-items: center;
