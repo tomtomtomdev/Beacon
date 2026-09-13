@@ -117,6 +117,10 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  /* Wrap the row rather than let either side compress: this overlay floats over the canvas,
+     so a squeezed child wraps its own text into the globe instead of yielding space. Below
+     the legend's comfortable width the whole legend drops to its own line. */
+  flex-wrap: wrap;
   gap: 14px;
   pointer-events: none;
   z-index: 3;
@@ -126,6 +130,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 0 0 auto;
   color: var(--geo-pin-primary);
 }
 
@@ -140,6 +145,14 @@
   font-size: 12px;
   color: var(--geo-overlay-mono);
   font-family: var(--font-mono);
+}
+
+/* The hint is the one thing here a viewer can discover by dragging the globe, so it is what
+   gives way first when the header runs out of room. */
+@media (max-width: 1320px) {
+  .geoHint {
+    display: none;
+  }
 }
 
 .touring {
@@ -161,6 +174,7 @@
 .legend {
   display: flex;
   align-items: center;
+  flex: 0 0 auto;
   gap: 16px;
   font-size: 12px;
   color: var(--geo-overlay);
@@ -176,6 +190,13 @@
   width: 9px;
   height: 9px;
   border-radius: var(--radius-pill);
+}
+
+/* The origin marker's own #fcd34d, glowing like the primary dot so it reads as a live pin
+   rather than a disabled one. */
+.dotHome {
+  background: var(--tier-home-dot);
+  box-shadow: 0 0 9px rgba(252, 211, 77, 0.9);
 }
 
 .dotPrimary {

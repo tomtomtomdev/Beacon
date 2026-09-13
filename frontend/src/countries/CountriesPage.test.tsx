@@ -87,6 +87,18 @@ describe('CountriesPage', () => {
     expect(screen.getByRole('button', { name: 'Sweden details' })).toBeInTheDocument()
   })
 
+  it('names the home marker in the globe legend, not just the two relocation tiers', async () => {
+    // The origin pin is amber while every other pin is teal or grey, and until now the legend
+    // explained only the two relocation tiers — so the one colour that means "you already live
+    // here" was the only one a first-time viewer could not look up.
+    renderPage()
+
+    const legend = within(await screen.findByTestId('globe-legend'))
+    expect(legend.getByText('Primary target')).toBeInTheDocument()
+    expect(legend.getByText('Nice-to-have')).toBeInTheDocument()
+    expect(legend.getByText('Home')).toBeInTheDocument()
+  })
+
   it('pins the home market first and badges it Home, not as a relocation tier', async () => {
     // SPEC §4 / DESIGN §1: Indonesia is the baseline every relocation is measured against,
     // so it leads the stack — and it is not a "primary" target, it is not a target at all.

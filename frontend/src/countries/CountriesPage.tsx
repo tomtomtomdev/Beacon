@@ -68,7 +68,13 @@ export function CountriesPage() {
                 <span className={styles.geoTitle}>Target geography</span>
                 <span className={styles.geoHint}>drag to rotate · tap a beacon</span>
               </div>
-              <div className={styles.legend}>
+              {/* The origin pin is amber while every other pin is teal or grey, so the legend
+                  names all three — a colour on the globe that the legend does not explain is a
+                  colour the viewer has to guess at. Home leads, as it does in the card stack. */}
+              <div className={styles.legend} data-testid="globe-legend">
+                <span className={styles.legendItem}>
+                  <span className={`${styles.legendDot} ${styles.dotHome}`} /> Home
+                </span>
                 <span className={styles.legendItem}>
                   <span className={`${styles.legendDot} ${styles.dotPrimary}`} /> Primary target
                 </span>
