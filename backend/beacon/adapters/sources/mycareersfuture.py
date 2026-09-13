@@ -21,10 +21,15 @@ _SEARCH_API = "https://api.mycareersfuture.gov.sg/v2/search"
 _JOB_API = "https://api.mycareersfuture.gov.sg/v2/jobs/{uuid}"
 _HOME_COUNTRY = "SG"
 _HOME_CITY = "Singapore"
-# The three role families of SPEC §1, phrased as this board's search reads them. Data:
-# widen coverage by editing the tuple, never the walk below.
+# The role families of SPEC §1, phrased as this board's search reads them. Data: widen
+# coverage by editing the tuple, never the walk below. This board is small and its search
+# answers differently from Himalayas' — probed 2026-09-13, "iOS developer" returns 18 rows /
+# 17 employers and "mobile engineer" 13 rows of which 8 read as iOS, while "Swift engineer"
+# returns *nothing at all*, so it is deliberately absent rather than carried as a dead call.
 ROLE_QUERIES: tuple[str, ...] = (
     "iOS engineer",
+    "iOS developer",
+    "mobile engineer",
     "Java backend engineer",
     "machine learning engineer",
 )

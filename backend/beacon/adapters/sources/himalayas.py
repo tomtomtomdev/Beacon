@@ -18,9 +18,16 @@ from beacon.domain.location import parse_location
 logger = logging.getLogger(__name__)
 
 _SEARCH_API = "https://himalayas.app/jobs/api/search"
-# The three role families of SPEC §1, as the board's own search reads them.
+# The role families of SPEC §1, as the board's own search reads them. The iOS family gets
+# four phrasings because a probe of each (2026-09-13) showed them to be different result
+# sets, not synonyms: firms returned were "senior ios developer" 51, "ios developer" 42,
+# "swift engineer" 37, "ios engineer" 23. "mobile engineer" was measured and rejected here —
+# 1,121 matches but only 5 of 60 read as iOS, so it spends three pages to buy noise.
 ROLE_QUERIES: tuple[str, ...] = (
     "ios engineer",
+    "ios developer",
+    "senior ios developer",
+    "swift engineer",
     "java backend engineer",
     "machine learning engineer",
 )
