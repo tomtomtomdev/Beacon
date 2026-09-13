@@ -648,7 +648,7 @@ Acceptance:
 
 ---
 
-## Slice 17 — Country attribution: teach `parse_location` what the boards actually write — **17a–17c DONE 2026-09-13; 17d open**
+## Slice 17 — Country attribution: teach `parse_location` what the boards actually write — **DONE 2026-09-13**
 
 **Goal:** stop losing supply Beacon has already fetched. SPEC §4/§5.1, DESIGN §Globe/§Countries. **42.7% of open canonical jobs carry no country** (3,679 of 8,616 at slice 16's baseline; 3,814 of 8,950 when 17a re-measured), so they are invisible to every country filter, absent from the globe, and scored with `country=None`. **The parser half is now done: 17a and 17b together take that to 809 of 8,950 (9.0%) — but only on paper, because neither writes to the DB. Until 17c runs, every one of those 3,005 jobs is still `country=NULL` on disk and still invisible in the UI.** Slice 16 found the cost in one line: **Proton advertises "Senior iOS Software Engineer – Geneva" and Switzerland still measures 0 iOS employers.** That is not an employer-selection problem — the employer is seeded and the req is in the DB.
 
@@ -730,11 +730,19 @@ Tasks: `backfill_locations` beside `backfill_home_market` in `application/backfi
 - **The tie-break reads `country_hq`, never `''`.** Some seed rows carry an empty HQ; an empty string is not a candidate and must not be treated as one. The domain already refuses it — do not re-implement the check in the use case.
 
 
-### 17d — Measure, and eyeball the diff — **NEXT** (the write-up; the raw numbers are already in)
+### 17d — Measure, and eyeball the diff — **DONE 2026-09-13**
 
 - ~~`scripts/spot_check_locations.py`, the twin of `spot_check_registry.py`~~ — **built in 17b**, because the city table could not be judged without it. It prints three sections in the order they deserve attention: DISAGREEMENTS (must stay empty — an adapter that read a structured address outranks a re-parse), the HQ-tie-break rows (the only inference in the table; read every line), and the filled diff grouped by source string. **Read it before keeping the run**, exactly as the registry spot-check is read.
 - Re-run the slice-16 measurements: the per-country iOS table and `spot_check_demand.py --category ios`. **The number that settles this slice is whether CH goes 0 → ≥1** on the strength of Proton's Geneva req, with no new employer seeded. **Already checked directly after the 17c run — CH is 1 (Proton, Geneva) and NL is 1 — but `spot_check_demand.py --category ios` has not been re-run, and slice 16's own warning applies: the `ios engineer` demand ROW is a title, not a market, so read the category-scoped and per-country views.**
 - Report the uncountried share against slice 16's 42.7% baseline, and the residue that is *correctly* uncountried.
+
+**Measured, against the pre-backfill backup rather than against slice 16's write-up** — no poll has run since 06:00 and the backup is 07:47, so both tables cover the **identical 173 iOS rows** and every delta is the backfill's, with no corpus drift in it. **iOS-category rows carrying a country 139 → 165** (uncountried 34 → 8); **§4: 90 posts / 69 firms / 39 ≥70 → 102 / 73 / 41**; **CH 0 → 1** (Proton Geneva, HQ tie-break, no new seed row), US 32 → 33 firms, SG 26 → 27, CA 2 → 3; **NO and DK still zero, which is supply, not parsing**. All five of slice 16's named misses resolve corpus-wide (`SG - Singapore` 157, `Remote - United States` 94, `Toronto` 55, `Copenhagen` 8, `Geneva` 2); the globe went **49 → 66 distinct countries**.
+
+**Two corrections the measurement forced.** (1) 17c's entry credited **NL 0 → 1** to the backfill; NL already held Arise App's `"Netherlands"` req before it — that 0 was 16a's baseline, so the gain is slice 16's. **CH is the only new §4 country this backfill opened.** (2) The residue estimate was wrong by half: ~210 predicted, **463 measured**, because the estimate counted only strings naming *no* country and missed the **166 that name more than one** (`"Remote (United States | Canada)"` 39, `"Dublin, London"` 9, `"US / Canada"` 5) — a refusal that is just as correct, since one column cannot hold two.
+
+**The 346 real gaps, for whoever picks this lever up:** multi-city comma list read as one "city, region" **98** (not on 17b's follow-up list at all, and the largest family); country token glued to a qualifier **84** (`US-Remote`, `US Remote`, `Remote USA`); parenthetical holds the country **84** (incl. `"KOHO (CAN)"` ×9 — needs an alpha-3 table); Canadian province code/name **26**; `"X or Y"` alternatives **25** (`_is_city` rejects any segment containing ` or `); slash-separated **12**; bare US state name alone **9**; 8 other. **A diminishing lever, and worth saying so: slice 17 bought 33.7 points of coverage, closing all six of these would buy 3.9.**
+
+**Reading note:** `spot_check_demand.py` counts canonicals **including closed rows** — which is what `/jobs` itself does — while the per-country table and the uncountried share are open-only (236 vs 173 for the same category). **The demand table is country-blind by construction and correctly did not move**: `ios engineer` FIRMS 27, exactly where slice 16 left it.
 
 Acceptance:
 - [x] `"Austin, Texas"` and `"SG - Singapore"` resolve; `"Anywhere in the World"` and `"Remote"` still do not; every existing `test_location` expectation is byte-identical — 64 rows in `test_location.py`, 851 backend green *(as ticked at 17a. 17b then moved exactly the expectations 17a had written as "waits for 17b" — `"Bangkok"` → TH, `"DE - Berlin"` → DE — which is the change 17b exists to make, not drift. 112 rows, 899 backend green.)*
@@ -743,9 +751,9 @@ Acceptance:
 - [x] Backfill re-parses with no network and no key; no `content_hash` moves, no LLM call is spent, a second run moves zero rows — verified by diffing every column against the pre-run backup, not by inspection
 - [x] A job that gains `country='ID'` is re-tiered `not_required` and its `sort_rank` follows; an explicit text tier is not overturned — 5 rows moved, and `sort_rank` follows for free because it is derived from `sponsor_tier` in the ORDER BY, never stored
 - [x] `spot_check_locations.py` diff eyeballed over the real DB before the run is kept; the DB is backed up first (`backups/beacon-20260913-074737.db`)
-- [ ] Uncountried share reported against the 42.7% baseline, with the correctly-uncountried residue named separately
+- [x] Uncountried share reported against the 42.7% baseline, with the correctly-uncountried residue named separately — **42.7% → 9.0%** (809 of 8,950), and the 809 split **by measurement, not estimate**: **463 (57%) correctly uncountried** — 297 name no country at all, **166 name more than one**, which the earlier ~210 estimate had missed entirely — and **346 (3.9% of the corpus) a real gap** in six named families. The floor is 5.2%, not 0%
 - [x] **CH goes 0 → ≥1 iOS employer with no new seed row** — the slice-16 finding, closed. **CH = 1** (Proton, `Geneva`, via the HQ tie-break) measured directly against the DB after the 17c run; NL also 0 → 1. The §4 iOS table now reads US 33 firms, SG 27, AU 5, CA 3, ID 3, SE 3, CH 1, IE 1, JP 1, NL 1. *(The fact is proven; what 17d still owes is the write-up around it — `spot_check_demand.py --category ios` has not been re-run.)*
-- [ ] `make verify` green on both stacks
+- [x] `make verify` green on both stacks — 906 backend + 78 frontend; 17d wrote no product code
 
 ---
 
