@@ -522,6 +522,67 @@ Acceptance:
 
 ---
 
+## Slice 15 — Home market (Indonesia): the `not_required` tier
+
+**Goal:** make the 2026-09-01 spec amendment real. SPEC §3/§4/§5.1/§6/§7/§10, DESIGN §Overview/§1/§2/§Globe/§Tokens. Today an ID job is indistinguishable from an unknown one: **171 Indonesian postings sit at `unknown`**, sorting below every speculative registry guess — the one market whose feasibility is *certain* ranks near-worst. The docs were amended; none of it was built, and it never entered this file at all. That omission is what this slice closes.
+
+**Build order: 15a domain (pure) → 15b write paths + backfill → 15c seeds → 15d UI.** 15a first, because every other half reads the tier table it defines.
+
+**Two corrections to the 2026-09-01 PROGRESS backlog — neither migration it names exists to be written:**
+- *"Migration: widen `sponsor_tier` to admit `not_required`"* — unnecessary. The column is `TEXT NOT NULL DEFAULT 'unknown'` and **no migration declares a CHECK constraint** on it, so a fifth value is already admissible.
+- *"renumber `sort_rank`"* — not a column, so not a migration. `sort_rank` is `_SORT_RANK_CASE` (`adapters/persistence/jobs.py:23`), built at import from the domain `SORT_RANK` table. Renumbering is an edit to one dict in `domain/sponsorship.py`; the SQL follows for free.
+
+The only migration this slice needs is `011_country_id.sql` for the `countries` home row (15c).
+
+### 15a — The fifth tier as a location predicate (domain, pure)
+
+- `test_jakarta_right_to_work_is_not_required_not_explicit_no` — RED first, the case the amendment exists to settle: a job with `country='ID'` whose ad reads *"must have the right to work in Indonesia"* resolves `not_required`. Today `_WORK_AUTHORIZATION_PATTERNS` matches `\bright to work\b` and it lands `explicit_no` — rank 0 for the one certain option.
+- `test_not_required_sits_outside_the_text_chain` — parametrized over all four text tiers × both registry states: when `country == 'ID'` the answer is `not_required` regardless; when it is not ID, `explicit_no > explicit_yes > registry_inferred > unknown` stays byte-for-byte what it is today. CLAUDE.md pins that chain as single-source — the predicate is evaluated **before** it, never folded into it.
+- `test_sort_rank_renumbered` — yes=4, **not_required=3**, registry_inferred=2, unknown=1, no=0 (extends `test_tier_sort_rank_matches_domain_table`).
+- `test_every_tier_has_a_sponsor_fit_and_a_rationale` — an exhaustiveness guard parametrized over `SponsorTier`: every member must be a key of `_SPONSOR_FIT` (`domain/resume.py:147`) and of the rationale sentence table (`domain/rationale.py:25`). Both are plain dicts, so a fifth member without a row is a `KeyError` on the first Jakarta job scored against an active resume — and this test is what stops the *next* tier from doing it again.
+
+Tasks:
+1. `SponsorTier.NOT_REQUIRED = "not_required"`; `SORT_RANK` renumbered; `HOME_COUNTRY = "ID"` as a named domain constant (magic-literal trigger — it recurs in the resolver, the backfill and the UI).
+2. `resolve_tier(text_tier, registry_flags, country)` — location predicate first, the existing chain untouched beneath it. The signature change is deliberate: country is the input the amendment turns on, and a caller that cannot supply one is a caller that cannot answer the question.
+3. `_SPONSOR_FIT[NOT_REQUIRED] = 1.0` — a home role carries no sponsorship risk whatsoever; it is country fit, not sponsor fit, that keeps it below a confirmed sponsor abroad. Rationale sentence per SPEC §6: no visa, no sponsor, the right already held.
+
+### 15b — Write paths + backfill
+
+- `test_ingest_sets_not_required_from_job_country` — `_resolve_sponsorship` (`application/ingest.py:28`) passes `job.country`. `NormalizedJob.country` already carries it, so this needs **no adapter change and no port change** — the derivation is from the job's country, never the company's HQ (SPEC §5.1), which is what makes a Jakarta req from SG-HQ Grab resolve correctly.
+- `test_registry_refresh_never_demotes_a_home_job` — **the hazard worth its own test.** `resolve_registry_tier` (`adapters/persistence/jobs.py:132`) bulk-rewrites every job of a matched company whose tier is not in `_EXPLICIT_TIER_LITERALS`. Grab's Jakarta reqs are `not_required`; a Grab registry match would silently demote them to `registry_inferred` on the next refresh. `not_required` joins the protected set — it is a fact about the reader, not a claim a registry can overturn.
+- `test_backfill_is_a_location_predicate_only` — the existing ID rows move to `not_required` **without re-classification**: no content_hash change, no LLM spend, no `first_seen_at` churn. ID rows already at `explicit_yes`/`explicit_no` move too (the predicate outranks the chain) — the one place this differs from the registry refresh's protected set.
+
+Tasks: thread `country` through the two `resolve_tier` call sites (`ingest.py:36`, and the registry paths which pass the job's stored country); add the tier to the protected set; a `--backfill-home` one-shot in the existing backfill module, run once against `beacon.db`.
+
+### 15c — Seed data: the home row and the home employers
+
+- `011_country_id.sql` — the `countries` home row, forward-only. `code='ID'`, `priority_tier='home'` (a third value beside `primary`/`nice_to_have`). **Third correction to the backlog:** it says the visa/PR/citizenship/`verified_at`/`source_url` columns are "left NULL", but all five are `NOT NULL` in `006_countries.sql`. The honest fill is the copy SPEC §4 already writes ("None — right to work already held" / "n/a — citizen" / "Held"), not a NULL-widening migration. `registry_name` is nullable and stays NULL. `verified_at`/`source_url` carry the amendment date and the SPEC anchor — the row states a fact about citizenship, not a policy with a government URL to cite.
+- Seed rows: Indonesian companies on greenhouse / lever / ashby / smartrecruiters with `country_hq=ID`, **each slug hit in a browser before it is added** (slice-1 task 0 rule: a 404 is a wrong slug, never an adapter bug). Kalibrr / Glints / Dealls stay out by decision (SPEC §5.1) — a local board is a new adapter plus a fixture suite, and the seed route already reaches the employers worth watching.
+- `test_countries_endpoint_lists_the_home_row` — `/countries` returns 12 rows and the ID row carries `priority_tier='home'`.
+
+### 15d — UI (DESIGN §1/§2/§Globe/§Tokens)
+
+- Token trio `rgba(252,211,77,0.14)` / `#f8dd8a` / `#fcd34d`, label **"No visa needed"** — into `tokens.css`, `TIER_LABEL` (`frontend/src/jobs/taxonomy.ts:7`) and the `SponsorTier` union (`frontend/src/api/types.ts:3`). The union is exhaustive, so `tsc` points at every surface that must change.
+- Indonesia home card pinned **first** in the stack with the amber `#5c4a1f` accent border and a "Home" badge; the home-market block replaces the visa legend when ID is selected; the sponsor-tier menu grows to five rows (still never pre-selected — CLAUDE.md); Jakarta becomes a selectable pin whose arc is suppressed, origin and destination being the same place.
+- `test_home_card_is_pinned_first`, `test_no_visa_needed_chip_renders`, `test_selecting_jakarta_draws_no_arc`.
+
+Acceptance:
+- [ ] A Jakarta ad reading "must have the right to work in Indonesia" resolves `not_required`; the text chain's behavior outside ID is unchanged (its parametrized expectations are byte-identical to today's)
+- [ ] The exhaustiveness guard fails if a sixth tier is ever added without a `_SPONSOR_FIT` and a rationale row
+- [ ] Backfill moves every ID row (171 at time of writing) off `unknown`, above all `registry_inferred` and below all `explicit_yes`; no content_hash changes
+- [ ] A registry refresh run immediately after the backfill demotes none of them
+- [ ] `/countries` lists the ID home row; the Countries view pins it first and draws no arc for it
+- [ ] Every added ID seed slug polls green on a temp DB, zero errors
+- [ ] `make verify` green on both stacks
+
+---
+
+## Slice 16 — iOS supply: employer selection, not source coverage
+
+**Goal:** the conclusion slice 14 arrived at empirically — 402 new postings from three new adapters produced **zero** iOS. iOS supply is limited by *which employers hire iOS*, not by how many boards Beacon reads, so the lever is **iOS-first seed companies in the §4 target countries** (mobile-first employers and the ATS types they actually use), plus optionally widening `ROLE_QUERIES` on the two keyword-steerable boards that do produce iOS postings (Himalayas 17, MyCareersFuture 12). Carried from slice 14's last acceptance line; sequenced after slice 15 so new ID employers land against a tier resolver that already ranks them correctly.
+
+---
+
 ## Cross-cutting rules
 
 - Every network adapter is tested against recorded fixtures only; live calls happen solely in manual acceptance checks
