@@ -522,7 +522,7 @@ Acceptance:
 
 ---
 
-## Slice 15 — Home market (Indonesia): the `not_required` tier
+## Slice 15 — Home market (Indonesia): the `not_required` tier — **DONE 2026-09-13**
 
 **Goal:** make the 2026-09-01 spec amendment real. SPEC §3/§4/§5.1/§6/§7/§10, DESIGN §Overview/§1/§2/§Globe/§Tokens. Today an ID job is indistinguishable from an unknown one: **171 Indonesian postings sit at `unknown`**, sorting below every speculative registry guess — the one market whose feasibility is *certain* ranks near-worst. The docs were amended; none of it was built, and it never entered this file at all. That omission is what this slice closes.
 
@@ -532,14 +532,14 @@ Acceptance:
 - *"Migration: widen `sponsor_tier` to admit `not_required`"* — unnecessary. The column is `TEXT NOT NULL DEFAULT 'unknown'` and **no migration declares a CHECK constraint** on it, so a fifth value is already admissible.
 - *"renumber `sort_rank`"* — not a column, so not a migration. `sort_rank` is `_SORT_RANK_CASE` (`adapters/persistence/jobs.py:23`), built at import from the domain `SORT_RANK` table. Renumbering is an edit to one dict in `domain/sponsorship.py`; the SQL follows for free.
 
-The only migration this slice needs is `011_country_id.sql` for the `countries` home row (15c).
+In the event the slice needed **no migration at all** — see 15c for why the third expected one was wrong too.
 
 ### 15a — The fifth tier as a location predicate (domain, pure)
 
 - `test_jakarta_right_to_work_is_not_required_not_explicit_no` — RED first, the case the amendment exists to settle: a job with `country='ID'` whose ad reads *"must have the right to work in Indonesia"* resolves `not_required`. Today `_WORK_AUTHORIZATION_PATTERNS` matches `\bright to work\b` and it lands `explicit_no` — rank 0 for the one certain option.
 - `test_not_required_sits_outside_the_text_chain` — parametrized over all four text tiers × both registry states: when `country == 'ID'` the answer is `not_required` regardless; when it is not ID, `explicit_no > explicit_yes > registry_inferred > unknown` stays byte-for-byte what it is today. CLAUDE.md pins that chain as single-source — the predicate is evaluated **before** it, never folded into it.
 - `test_sort_rank_renumbered` — yes=4, **not_required=3**, registry_inferred=2, unknown=1, no=0 (extends `test_tier_sort_rank_matches_domain_table`).
-- `test_every_tier_has_a_sponsor_fit_and_a_rationale` — an exhaustiveness guard parametrized over `SponsorTier`: every member must be a key of `_SPONSOR_FIT` (`domain/resume.py:147`) and of the rationale sentence table (`domain/rationale.py:25`). Both are plain dicts, so a fifth member without a row is a `KeyError` on the first Jakarta job scored against an active resume — and this test is what stops the *next* tier from doing it again.
+- `test_every_tier_has_a_sponsor_fit_and_a_rationale` — an exhaustiveness guard parametrized over `SponsorTier`: every member must be a key of `_SPONSOR_TIER_FIT` (`domain/resume.py:147`) and of the rationale sentence table (`domain/rationale.py:25`). Both are plain dicts, so a fifth member without a row is a `KeyError` on the first Jakarta job scored against an active resume — and this test is what stops the *next* tier from doing it again.
 
 Tasks:
 1. `SponsorTier.NOT_REQUIRED = "not_required"`; `SORT_RANK` renumbered; `HOME_COUNTRY = "ID"` as a named domain constant (magic-literal trigger — it recurs in the resolver, the backfill and the UI).
@@ -556,7 +556,7 @@ Tasks: thread `country` through the two `resolve_tier` call sites (`ingest.py:36
 
 ### 15c — Seed data: the home row and the home employers
 
-- `011_country_id.sql` — the `countries` home row, forward-only. `code='ID'`, `priority_tier='home'` (a third value beside `primary`/`nice_to_have`). **Third correction to the backlog:** it says the visa/PR/citizenship/`verified_at`/`source_url` columns are "left NULL", but all five are `NOT NULL` in `006_countries.sql`. The honest fill is the copy SPEC §4 already writes ("None — right to work already held" / "n/a — citizen" / "Held"), not a NULL-widening migration. `registry_name` is nullable and stays NULL. `verified_at`/`source_url` carry the amendment date and the SPEC anchor — the row states a fact about citizenship, not a policy with a government URL to cite.
+- ~~`011_country_id.sql`~~ — **no migration at all, which is the fourth correction and one this plan got wrong too.** `006_countries.sql` says it: the `countries` table is "seeded from the domain constant `COUNTRY_REFERENCE` (domain/visa.py) at startup — a queryable projection of that source of truth". The home row is therefore a row in that constant, upserted by the seed that already runs. `priority_tier='home'` is a third value beside `primary`/`nice_to_have`. **Third correction to the backlog:** it says the visa/PR/citizenship/`verified_at`/`source_url` columns are "left NULL", but all five are `NOT NULL`. The honest fill is the copy SPEC §4 already writes ("None — right to work already held" / "n/a — citizen" / "Held"). `registry_name` is nullable but says why no register applies rather than sitting empty. `verified_at`/`source_url` carry the amendment date and the SPEC anchor — the row states a fact about citizenship, not a policy with a government URL to cite.
 - Seed rows: Indonesian companies on greenhouse / lever / ashby / smartrecruiters with `country_hq=ID`, **each slug hit in a browser before it is added** (slice-1 task 0 rule: a 404 is a wrong slug, never an adapter bug). Kalibrr / Glints / Dealls stay out by decision (SPEC §5.1) — a local board is a new adapter plus a fixture suite, and the seed route already reaches the employers worth watching.
 - `test_countries_endpoint_lists_the_home_row` — `/countries` returns 12 rows and the ID row carries `priority_tier='home'`.
 
@@ -567,13 +567,13 @@ Tasks: thread `country` through the two `resolve_tier` call sites (`ingest.py:36
 - `test_home_card_is_pinned_first`, `test_no_visa_needed_chip_renders`, `test_selecting_jakarta_draws_no_arc`.
 
 Acceptance:
-- [ ] A Jakarta ad reading "must have the right to work in Indonesia" resolves `not_required`; the text chain's behavior outside ID is unchanged (its parametrized expectations are byte-identical to today's)
-- [ ] The exhaustiveness guard fails if a sixth tier is ever added without a `_SPONSOR_FIT` and a rationale row
-- [ ] Backfill moves every ID row (171 at time of writing) off `unknown`, above all `registry_inferred` and below all `explicit_yes`; no content_hash changes
-- [ ] A registry refresh run immediately after the backfill demotes none of them
-- [ ] `/countries` lists the ID home row; the Countries view pins it first and draws no arc for it
-- [ ] Every added ID seed slug polls green on a temp DB, zero errors
-- [ ] `make verify` green on both stacks
+- [x] A Jakarta ad reading "must have the right to work in Indonesia" resolves `not_required`; the text chain's behavior outside ID is unchanged — `test_resolve_tier`'s expectations are byte-identical, only a country column was added
+- [x] The exhaustiveness guard fails if a sixth tier is ever added without a `_SPONSOR_TIER_FIT` and a rationale row — it fired on the first run, on both tables
+- [x] Backfill moved every ID row off `unknown` — **171 on the real `beacon.db`** (169 `unknown` + 2 `registry_inferred`), 14,485 non-ID rows untouched, 0 rows left carrying evidence, second run retiered 0. No content_hash moved, so nothing re-classified and no LLM call was spent
+- [x] A registry refresh immediately after the backfill demotes none of them — pinned by `test_refresh_never_demotes_a_home_market_job` against real SQLite, which **failed before the fix**: the hazard was live
+- [x] `/countries` lists the ID home row; the Countries view pins it first, badges it Home, swaps the visa legend for the home-market block, and draws it no arc
+- [x] Every added ID seed slug polls green on a temp DB, zero errors — **Xendit 30/30, its 8 Jakarta postings `not_required` straight out of ingest**
+- [x] `make verify` green on both stacks — **800 backend + 77 frontend**, `vite build` clean
 
 ---
 
