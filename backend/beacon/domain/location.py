@@ -16,9 +16,9 @@ which is the same rule that stops `posted_at` being invented from relative prose
 """
 
 import re
-from collections.abc import Callable
 
 from beacon.domain.countries import (
+    CITY_TO_COUNTRY,
     COUNTRY_NAME_TO_CODE,
     NON_CITY_TOKENS,
     US_STATE_CODES,
@@ -37,7 +37,11 @@ _ISO_CODES: frozenset[str] = frozenset(COUNTRY_NAME_TO_CODE.values())
 _UNAMBIGUOUS_ISO_CODES: frozenset[str] = _ISO_CODES - US_STATE_CODES
 
 
-def parse_location(raw: str) -> tuple[str | None, str | None]:
+def parse_location(raw: str, hq: str | None = None) -> tuple[str | None, str | None]:
+    """`hq` is the posting company's home market, and it is read for one purpose only: to
+    choose between the countries a shared city name can mean. It never supplies a country
+    for a place the tables do not know, which would tag every remote req with the
+    employer's address."""
     cleaned = _PARENTHETICAL.sub("", raw).strip()
     if not cleaned:
         return None, None
@@ -47,23 +51,56 @@ def parse_location(raw: str) -> tuple[str | None, str | None]:
         return None, None
     if len(locations) > 1:
         return _parse_many(locations)
-    return _parse_one(locations[0])
+    return _parse_one(locations[0], hq)
 
 
 def _parse_many(locations: list[str]) -> tuple[str | None, str | None]:
     """Several locations in one string: the country only if they agree, and never a city —
-    with more than one on offer, naming one would be a choice the string does not make."""
-    countries = {country for country, _ in map(_parse_one, locations) if country is not None}
+    with more than one on offer, naming one would be a choice the string does not make.
+
+    The parts are read *without* the employer's home market, because it cannot choose
+    between two locations listed side by side. Applying it to "Paris; Geneva" resolves the
+    Swiss half and leaves the French one silent, manufacturing the very agreement this
+    function exists to withhold.
+    """
+    parsed = [_parse_one(text, None) for text in locations]
+    countries = {country for country, _ in parsed if country}
     if len(countries) != 1:
         return None, None
-    return countries.pop(), None
+    agreed = countries.pop()
+
+    # A part that named no country may still name a *place*, and a place the table knows
+    # to be shared is a live candidate for somewhere else: "Paris; Geneva" reaches France
+    # only by ignoring the Swiss half. Such a part blocks the agreement unless the country
+    # the others reached is one of the ones it could mean ("Geneva; Zurich" is Swiss).
+    silent = (_candidates(city) for country, city in parsed if not country and city)
+    if any(len(could_mean) > 1 and agreed not in could_mean for could_mean in silent):
+        return None, None
+    return agreed, None
 
 
-def _parse_one(text: str) -> tuple[str | None, str | None]:
+def _parse_one(text: str, hq: str | None) -> tuple[str | None, str | None]:
+    """One location. The city table is read last, on whatever city survived the parse, so
+    every shape above it — bare token, delimiter part, comma tail — gains it at once."""
     parts = [part for part in (p.strip() for p in _DASH_SEPARATOR.split(text)) if part]
-    if len(parts) > 1:
-        return _parse_delimited(parts)
-    return _parse_comma_separated(text)
+    country, city = _parse_delimited(parts) if len(parts) > 1 else _parse_comma_separated(text)
+    if country is None and city is not None:
+        country = _country_for_city(city, hq)
+    return country, city
+
+
+def _candidates(city: str) -> tuple[str, ...]:
+    """The countries a bare place name could mean — empty when the table has no row."""
+    return CITY_TO_COUNTRY.get(city.casefold(), ())
+
+
+def _country_for_city(city: str, hq: str | None) -> str | None:
+    """The country a bare place name states. One candidate is a statement; several is a
+    name two countries share, and only the employer's home market can settle it."""
+    could_mean = _candidates(city)
+    if len(could_mean) == 1:
+        return could_mean[0]
+    return hq if len(could_mean) > 1 and hq in could_mean else None
 
 
 def _parse_delimited(parts: list[str]) -> tuple[str | None, str | None]:
@@ -93,10 +130,6 @@ def _parse_delimited(parts: list[str]) -> tuple[str | None, str | None]:
     states = [part for part in parts if part.casefold() in US_STATE_NAMES]
     cities = [city for _, city in parsed if city and city.casefold() not in US_STATE_NAMES]
     return ("US" if states else None), _only(cities)
-
-
-def _first(resolve: Callable[[str], str | None], parts: list[str]) -> str | None:
-    return next((code for code in map(resolve, parts) if code is not None), None)
 
 
 def _only(candidates: list[str]) -> str | None:
@@ -137,11 +170,6 @@ def _parse_single_segment(segment: str) -> tuple[str | None, str | None]:
     if not _is_city(segment):
         return None, None
     return None, segment
-
-
-def _explicit_country(part: str) -> str | None:
-    """The country a part names outright — by name, or by a code that cannot be a US state."""
-    return _country_code(part) or _iso_code(part)
 
 
 def _is_us_state(segment: str) -> bool:

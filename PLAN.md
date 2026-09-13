@@ -690,7 +690,7 @@ Tasks: extend `domain/countries.py` with `US_STATE_NAMES` (data, beside the exis
 
 **A constraint this handed to 17c, which the plan had wrong:** the backfill must **fill only where `country IS NULL`, never overwrite**. Several adapters establish a country without `parse_location` — jobtech and teamtailor rows store `SE` for `"Stockholm, Sverige"`, MyCareersFuture stores `SG` from its address block — so a blind re-parse would *delete* 543 correct countries. Re-parsing is a way to fill gaps, not a source of truth that outranks an adapter.
 
-### 17b — The city table (reference data, and the risk in this slice)
+### 17b — The city table (reference data, and the risk in this slice) — **DONE 2026-09-13**
 
 1,880 jobs, and the only part that involves judgment. **Treat a city row as the same risk class as the company-name normalizer** (CLAUDE.md): it is a data table, every row earns a parametrized test, and the diff gets eyeballed over the real DB before it is kept.
 
@@ -700,6 +700,14 @@ Tasks: extend `domain/countries.py` with `US_STATE_NAMES` (data, beside the exis
 - `test_city_table_has_no_row_the_country_table_lacks` — an exhaustiveness guard: every value in the city table must be a known country code, so a typo'd code fails at import rather than at the first Jakarta job.
 
 Tasks: `CITY_TO_COUNTRY: dict[str, tuple[str, ...]]` in `domain/countries.py` (a tuple because ambiguity is the normal case, not the exception); rank the rows by the real DB's own frequency table so effort lands where the jobs are; `parse_location` gains an optional `hq: str | None` for the tie-break, defaulted so every existing caller compiles unchanged. **Record the rejected rows and why** — the ambiguous-city list above is as valuable as the accepted one, and it is what stops the next session re-adding `Geneva`.
+
+**Built. 313 city rows + 26 country names the corpus named; dry run over the real DB: uncountried 3,814/8,950 (42.6%) → 809 (9.0%), 3,005 filled, 0 disagreements with an already-stored country.** `scripts/spot_check_locations.py` was written here rather than in 17d, because it is 17b's own gate — the table cannot be judged without it. **Nothing is written to the DB yet; the backfill is still 17c.**
+
+**The plan's ambiguity list did not survive the corpus, and the measurement is why.** Listing `Toronto`, `London` and `Paris` as shared names handed them to the HQ tie-break, which got **27 of 81 rows wrong** — Cohere is CA-hq so its 15 bare `London` reqs became Ontario's, Stripe is US-hq so its 10 `Toronto` reqs became Ohio's and its 2 `Paris` reqs became Texas's. Every miss was a multinational advertising outside its home country, which an HQ cannot detect. A row now earns a second candidate only when **both** places plausibly host jobs (employment, not cartography): Toronto OH is pop. 5,000 and Paris TX pop. 25,000, so those three resolve outright. The tie-break is left with 14 rows, all correct, and the ambiguous list keeps the names that genuinely contest — `Cambridge`/MA, `Birmingham`/AL, `Manchester`/NH, `Athens`/GA, `San Jose`/CR, `Melbourne`/FL, `Vancouver`/WA, `Geneva`/IL. See Decisions 2026-09-13 (17b).
+
+**A second defect the corpus found, one level up:** an employer's home market could settle *one part* of a multi-location string and manufacture the agreement `_parse_many` exists to withhold — Proton's `"Paris; Geneva"` resolved CH, then FR. The hq is now read for a shared *name* and never for a list, and a part that names a place the table knows to be shared blocks agreement unless the country the other parts reached is one it could mean (`"Geneva; Zurich"` is still Swiss).
+
+**Follow-ups this left, all measured, none in 17b's scope:** a parenthetical that names the country (`"Remote (United States)"`, `"REMOTE (US)"` — 28 jobs); the hyphenless `"US-Remote"`/`"US Remote"` family (~22); Canadian province codes in a comma tail (`"Kitchener-Waterloo, ON; Toronto, ON"` — 14). The city *column* still takes occasional junk from the comma form (`"Remote, US"` → city `Remote`), which predates 17b.
 
 ### 17c — Backfill by re-parse (no network, no key, no spend)
 
@@ -717,8 +725,8 @@ Tasks: `backfill_locations` beside `backfill_home_market` in `application/backfi
 
 Acceptance:
 - [x] `"Austin, Texas"` and `"SG - Singapore"` resolve; `"Anywhere in the World"` and `"Remote"` still do not; every existing `test_location` expectation is byte-identical — 64 rows in `test_location.py`, 851 backend green
-- [ ] No bare ambiguous city resolves on its own — `Geneva`, `Toronto`, `London`, `Cambridge`, `Athens`, `Paris` each pinned by a row, with the rejected list recorded in PROGRESS
-- [ ] Proton's `Geneva` req resolves CH via the employer-HQ tie-break while its `London`/`Barcelona`/`Vilnius` reqs do not become Swiss
+- [x] No bare ambiguous city resolves on its own — `Geneva`, `Cambridge`, `Athens`, `Birmingham`, `Manchester`, `Melbourne`, `Vancouver`, `San Jose` each pinned by a row; `Toronto`, `London` and `Paris` **deliberately no longer on this list** (measured: 27 wrong rows), with the reasoning recorded in PROGRESS
+- [x] Proton's `Geneva` req resolves CH via the employer-HQ tie-break while its `London`/`Barcelona`/`Vilnius` reqs do not become Swiss (they resolve GB/ES/LT)
 - [ ] Backfill re-parses with no network and no key; no `content_hash` moves, no LLM call is spent, a second run moves zero rows
 - [ ] A job that gains `country='ID'` is re-tiered `not_required` and its `sort_rank` follows; an explicit text tier is not overturned
 - [ ] `spot_check_locations.py` diff eyeballed over the real DB before the run is kept; the DB is backed up first
