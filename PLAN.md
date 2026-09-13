@@ -648,26 +648,28 @@ Acceptance:
 
 ---
 
-## Slice 17 — Country attribution: teach `parse_location` what the boards actually write
+## Slice 17 — Country attribution: teach `parse_location` what the boards actually write — **17a + 17b DONE 2026-09-13; 17c–17d open**
 
-**Goal:** stop losing supply Beacon has already fetched. SPEC §4/§5.1, DESIGN §Globe/§Countries. **42.7% of open canonical jobs carry no country** (3,679 of 8,616), so they are invisible to every country filter, absent from the globe, and scored with `country=None`. Slice 16 found the cost in one line: **Proton advertises "Senior iOS Software Engineer – Geneva" and Switzerland still measures 0 iOS employers.** That is not an employer-selection problem — the employer is seeded and the req is in the DB.
+**Goal:** stop losing supply Beacon has already fetched. SPEC §4/§5.1, DESIGN §Globe/§Countries. **42.7% of open canonical jobs carry no country** (3,679 of 8,616 at slice 16's baseline; 3,814 of 8,950 when 17a re-measured), so they are invisible to every country filter, absent from the globe, and scored with `country=None`. **The parser half is now done: 17a and 17b together take that to 809 of 8,950 (9.0%) — but only on paper, because neither writes to the DB. Until 17c runs, every one of those 3,005 jobs is still `country=NULL` on disk and still invisible in the UI.** Slice 16 found the cost in one line: **Proton advertises "Senior iOS Software Engineer – Geneva" and Switzerland still measures 0 iOS employers.** That is not an employer-selection problem — the employer is seeded and the req is in the DB.
 
 **This is not a loosening of the parser.** `location.py` is conservative on purpose ("a country is only reported when the string names one… nothing is ever fabricated") and that stays. Every rule below either reads a country the string *already names*, or looks one up in a table that says so explicitly. Where a string is genuinely ambiguous, the answer stays `None` — the same discipline as `posted_at` (SPEC forbids fabricating a date, and a country is no different).
 
 **The re-parse is free, and was designed for.** `location.py`'s own docstring: *"The raw string is preserved on the job row, so a better parser can re-parse without re-fetching."* So the backfill needs **no network, no classifier, no key** and cannot move a `content_hash` — the same shape as slice 15's `python -m beacon.retier`.
 
-**Sized from the real DB (2026-09-13), uncountried rows with a location string, 3,759 total:**
+**Sized from the real DB (2026-09-13), uncountried rows with a location string, 3,759 total — and what each bucket actually came to:**
 
-| Bucket | Jobs | Share | Fixed by |
-|---|---|---|---|
-| bare single token (`Amsterdam`, `San Francisco`, `Geneva`) | 1,880 | 50.0% | 17b — city table |
-| delimiter form, a part names a country (`SG - Singapore`, `Remote - United States`) | 709 | 18.9% | **17a — no guessing at all** |
-| delimiter form, no country part (`AL; FL; GA; …`) | 508 | 13.5% | partly 17a (US state lists) |
-| comma form, unresolved tail | 268 | 7.1% | partly 17b |
-| `City, <US state NAME>` (`Austin, Texas`, `Bellevue, Washington`) | 262 | 7.0% | **17a — no guessing at all** |
-| genuinely borderless (`Anywhere in the World`, `Remote`, `N/A`) | 132 | 3.5% | nothing — already correct |
+| Bucket | Jobs | Share | Fixed by | Outcome |
+|---|---|---|---|---|
+| bare single token (`Amsterdam`, `San Francisco`, `Geneva`) | 1,880 | 50.0% | 17b — city table | **done** — the 313-row table, plus the HQ tie-break for 14 shared names |
+| delimiter form, a part names a country (`SG - Singapore`, `Remote - United States`) | 709 | 18.9% | **17a — no guessing at all** | **done** |
+| delimiter form, no country part (`AL; FL; GA; …`) | 508 | 13.5% | partly 17a (US state lists) | **done** — and 17b's table then read the *city* in the rest (`DE - Berlin` → DE) |
+| comma form, unresolved tail | 268 | 7.1% | partly 17b | **done** — 26 missing country names (Serbia, Qatar, Costa Rica…) carried most of it |
+| `City, <US state NAME>` (`Austin, Texas`, `Bellevue, Washington`) | 262 | 7.0% | **17a — no guessing at all** | **done** |
+| genuinely borderless (`Anywhere in the World`, `Remote`, `N/A`) | 132 | 3.5% | nothing — already correct | **unchanged, by design** |
 
-**Build order: 17a the unambiguous parses → 17b the city table → 17c backfill → 17d measure.** 17a first because it needs no new reference data and can ship on its own; 17b is the one carrying judgment, so it goes second with the guard rails already in place.
+**Residue after both parser halves: 809 rows**, of which ~210 are the borderless bucket above (correct refusals) and the rest are three named follow-ups — parenthetical countries (28), the hyphenless `US-Remote` family (~22), Canadian province codes in a comma tail (14) — plus junk strings. **None of those three is in slice 17's scope**; they are written down so they are not rediscovered.
+
+**Build order: ~~17a the unambiguous parses~~ → ~~17b the city table~~ → 17c backfill → 17d measure.** 17a first because it needed no new reference data and could ship on its own; 17b second because it carried the judgment, with the guard rails already in place. **Both are built; what remains is writing the result to the DB and measuring it.**
 
 ### 17a — The parses that require no new knowledge (domain, pure) — **DONE 2026-09-13**
 
@@ -709,7 +711,9 @@ Tasks: `CITY_TO_COUNTRY: dict[str, tuple[str, ...]]` in `domain/countries.py` (a
 
 **Follow-ups this left, all measured, none in 17b's scope:** a parenthetical that names the country (`"Remote (United States)"`, `"REMOTE (US)"` — 28 jobs); the hyphenless `"US-Remote"`/`"US Remote"` family (~22); Canadian province codes in a comma tail (`"Kitchener-Waterloo, ON; Toronto, ON"` — 14). The city *column* still takes occasional junk from the comma form (`"Remote, US"` → city `Remote`), which predates 17b.
 
-### 17c — Backfill by re-parse (no network, no key, no spend)
+### 17c — Backfill by re-parse (no network, no key, no spend) — **NEXT**
+
+**Both parser halves are dry runs; this is the one that writes.** The expected magnitude is known in advance, so the run can be checked against it rather than trusted: **3,005 rows gain a country, 809 keep `NULL`, 0 rows disagree with an already-stored country.** A run that moves a materially different number means something changed under it — stop and find out what before keeping it.
 
 - `test_backfill_reparses_without_refetching` — rows keep their `content_hash`, `first_seen_at` and `description`; only `country`/`city` move. Second run moves zero (idempotent, like `retier`).
 - `test_backfill_reresolves_the_tier_when_the_country_changed` — **the coupling that must not be missed.** `not_required` is a *location* predicate (slice 15a): a Jakarta req currently sitting at `country=NULL` becomes `ID`, and its tier must be re-resolved to `not_required` with `sort_rank` following. Conversely a row that gains a country must not have an explicit text tier overturned — the 15a precedence chain still owns that decision.
@@ -717,14 +721,19 @@ Tasks: `CITY_TO_COUNTRY: dict[str, tuple[str, ...]]` in `domain/countries.py` (a
 
 Tasks: `backfill_locations` beside `backfill_home_market` in `application/backfill.py`, **filling only rows where `country IS NULL`** (see 17a — a blind re-parse deletes 543 countries an adapter established); `python -m beacon.relocate` as its one-shot composition root, modelled on `beacon/retier.py`. **Back the DB up before the first real run** (`scripts/backup_db.py` exists).
 
+**Two constraints 17b hands to this one:**
+- **Pass the company's `country_hq` into `parse_location`.** It is the second, defaulted argument, and it is what settles the 14 shared-name rows — Proton's `Geneva` among them. A backfill that re-parses without it leaves those rows `NULL` and **the slice's headline acceptance box (CH 0 → ≥1) cannot close**. The SQL therefore joins `companies`, exactly as `spot_check_locations.py` already does.
+- **The tie-break reads `country_hq`, never `''`.** Some seed rows carry an empty HQ; an empty string is not a candidate and must not be treated as one. The domain already refuses it — do not re-implement the check in the use case.
+
+
 ### 17d — Measure, and eyeball the diff
 
-- `scripts/spot_check_locations.py`, the twin of `spot_check_registry.py`: print every string whose parse *changed*, grouped, with counts — and **read it before keeping the run**, exactly as the registry spot-check is read.
+- ~~`scripts/spot_check_locations.py`, the twin of `spot_check_registry.py`~~ — **built in 17b**, because the city table could not be judged without it. It prints three sections in the order they deserve attention: DISAGREEMENTS (must stay empty — an adapter that read a structured address outranks a re-parse), the HQ-tie-break rows (the only inference in the table; read every line), and the filled diff grouped by source string. **Read it before keeping the run**, exactly as the registry spot-check is read.
 - Re-run the slice-16 measurements: the per-country iOS table and `spot_check_demand.py --category ios`. **The number that settles this slice is whether CH goes 0 → ≥1** on the strength of Proton's Geneva req, with no new employer seeded.
 - Report the uncountried share against slice 16's 42.7% baseline, and the residue that is *correctly* uncountried.
 
 Acceptance:
-- [x] `"Austin, Texas"` and `"SG - Singapore"` resolve; `"Anywhere in the World"` and `"Remote"` still do not; every existing `test_location` expectation is byte-identical — 64 rows in `test_location.py`, 851 backend green
+- [x] `"Austin, Texas"` and `"SG - Singapore"` resolve; `"Anywhere in the World"` and `"Remote"` still do not; every existing `test_location` expectation is byte-identical — 64 rows in `test_location.py`, 851 backend green *(as ticked at 17a. 17b then moved exactly the expectations 17a had written as "waits for 17b" — `"Bangkok"` → TH, `"DE - Berlin"` → DE — which is the change 17b exists to make, not drift. 112 rows, 899 backend green.)*
 - [x] No bare ambiguous city resolves on its own — `Geneva`, `Cambridge`, `Athens`, `Birmingham`, `Manchester`, `Melbourne`, `Vancouver`, `San Jose` each pinned by a row; `Toronto`, `London` and `Paris` **deliberately no longer on this list** (measured: 27 wrong rows), with the reasoning recorded in PROGRESS
 - [x] Proton's `Geneva` req resolves CH via the employer-HQ tie-break while its `London`/`Barcelona`/`Vilnius` reqs do not become Swiss (they resolve GB/ES/LT)
 - [ ] Backfill re-parses with no network and no key; no `content_hash` moves, no LLM call is spent, a second run moves zero rows
