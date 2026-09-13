@@ -669,7 +669,7 @@ Acceptance:
 
 **Build order: 17a the unambiguous parses → 17b the city table → 17c backfill → 17d measure.** 17a first because it needs no new reference data and can ship on its own; 17b is the one carrying judgment, so it goes second with the guard rails already in place.
 
-### 17a — The parses that require no new knowledge (domain, pure)
+### 17a — The parses that require no new knowledge (domain, pure) — **DONE 2026-09-13**
 
 Each of these reads a country the string already spells out; none of them can invent one.
 
@@ -679,6 +679,16 @@ Each of these reads a country the string already spells out; none of them can in
 - `test_still_refuses_to_guess` — the guard that keeps 17a honest, parametrized over `"Anywhere in the World"`, `"Remote"`, `"N/A"`, `"EMEA"`, `"AMER"`, `"Worldwide"` → `(None, …)`. These 132 are **correct today** and must stay correct.
 
 Tasks: extend `domain/countries.py` with `US_STATE_NAMES` (data, beside the existing codes); add the delimiter split ahead of the comma split in `parse_location`; keep every existing return path byte-identical — the existing `test_location` expectations must not move.
+
+**Built (`f712c6d`). Measured dry run over the real DB: uncountried 3,814/8,950 (42.6%) → 2,537 (28.3%), 1,277 jobs filled, and 0 rows where the parser disagrees with an already-stored country.** §4+home: SG 164, AU 29, NL 13, IE 9, CA 8, JP 5, CH 3, DK 3, SE 1, US 897.
+
+**Four things the plan did not foresee, three of them found by re-parsing the corpus rather than by reading the code:**
+- **Position carries meaning, and it is opposite in the two forms.** In `"Chicago, IL"` the two-letter tail is Illinois; in `"IL - Tel Aviv"` the same token is Israel. So a delimiter part reads a bare code as a *country* code, and the five that collide with a state (**CA DE ID IL IN** — Canada, Germany, Indonesia, Israel, India) resolve nothing alone. `"DE - Berlin"` therefore keeps its city and waits for 17b. This replaced the planned flat "part names a country" rule.
+- **A delimiter part is itself a location and must be parsed as one.** Without that recursion `"Hybrid - New York, NY"` (17 jobs) lost the US its comma tail plainly names — a regression introduced and caught by the corpus, not the test table.
+- **A comma list names countries as plainly as a `;` list does.** `"Mexico, Portugal, Spain"`, `"Canada, United States"`, `"Australia, Hong Kong, Taiwan, Thailand, Vietnam"` — the old code took whichever came last, quietly making a five-country ad Vietnamese. The agreement rule planned for the `;` form had to cover the comma form too; that is what took the 13 disagreements to 0.
+- `"Anywhere in the World"` and `"N/A"` were being stored **as cities**. `NON_CITY_TOKENS` now covers compass points, `Hybrid`, and placeholders.
+
+**A constraint this handed to 17c, which the plan had wrong:** the backfill must **fill only where `country IS NULL`, never overwrite**. Several adapters establish a country without `parse_location` — jobtech and teamtailor rows store `SE` for `"Stockholm, Sverige"`, MyCareersFuture stores `SG` from its address block — so a blind re-parse would *delete* 543 correct countries. Re-parsing is a way to fill gaps, not a source of truth that outranks an adapter.
 
 ### 17b — The city table (reference data, and the risk in this slice)
 
@@ -697,7 +707,7 @@ Tasks: `CITY_TO_COUNTRY: dict[str, tuple[str, ...]]` in `domain/countries.py` (a
 - `test_backfill_reresolves_the_tier_when_the_country_changed` — **the coupling that must not be missed.** `not_required` is a *location* predicate (slice 15a): a Jakarta req currently sitting at `country=NULL` becomes `ID`, and its tier must be re-resolved to `not_required` with `sort_rank` following. Conversely a row that gains a country must not have an explicit text tier overturned — the 15a precedence chain still owns that decision.
 - `test_backfill_never_invents_a_country` — a row whose string still does not name one keeps `country=NULL`; the count of those is the honest residue, and it is reported rather than hidden.
 
-Tasks: `backfill_locations` beside `backfill_home_market` in `application/backfill.py`; `python -m beacon.relocate` as its one-shot composition root, modelled on `beacon/retier.py`. **Back the DB up before the first real run** (`scripts/backup_db.py` exists).
+Tasks: `backfill_locations` beside `backfill_home_market` in `application/backfill.py`, **filling only rows where `country IS NULL`** (see 17a — a blind re-parse deletes 543 countries an adapter established); `python -m beacon.relocate` as its one-shot composition root, modelled on `beacon/retier.py`. **Back the DB up before the first real run** (`scripts/backup_db.py` exists).
 
 ### 17d — Measure, and eyeball the diff
 
@@ -706,7 +716,7 @@ Tasks: `backfill_locations` beside `backfill_home_market` in `application/backfi
 - Report the uncountried share against slice 16's 42.7% baseline, and the residue that is *correctly* uncountried.
 
 Acceptance:
-- [ ] `"Austin, Texas"` and `"SG - Singapore"` resolve; `"Anywhere in the World"` and `"Remote"` still do not; every existing `test_location` expectation is byte-identical
+- [x] `"Austin, Texas"` and `"SG - Singapore"` resolve; `"Anywhere in the World"` and `"Remote"` still do not; every existing `test_location` expectation is byte-identical — 64 rows in `test_location.py`, 851 backend green
 - [ ] No bare ambiguous city resolves on its own — `Geneva`, `Toronto`, `London`, `Cambridge`, `Athens`, `Paris` each pinned by a row, with the rejected list recorded in PROGRESS
 - [ ] Proton's `Geneva` req resolves CH via the employer-HQ tie-break while its `London`/`Barcelona`/`Vilnius` reqs do not become Swiss
 - [ ] Backfill re-parses with no network and no key; no `content_hash` moves, no LLM call is spent, a second run moves zero rows
