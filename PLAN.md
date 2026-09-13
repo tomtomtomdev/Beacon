@@ -579,7 +579,59 @@ Acceptance:
 
 ## Slice 16 — iOS supply: employer selection, not source coverage
 
-**Goal:** the conclusion slice 14 arrived at empirically — 402 new postings from three new adapters produced **zero** iOS. iOS supply is limited by *which employers hire iOS*, not by how many boards Beacon reads, so the lever is **iOS-first seed companies in the §4 target countries** (mobile-first employers and the ATS types they actually use), plus optionally widening `ROLE_QUERIES` on the two keyword-steerable boards that do produce iOS postings (Himalayas 17, MyCareersFuture 12). Carried from slice 14's last acceptance line; sequenced after slice 15 so new ID employers land against a tier resolver that already ranks them correctly.
+**Goal:** raise the number of *employers* posting iOS roles in the §4 countries, and measure each lever before pulling the next.
+
+Slice 14 settled the direction empirically: three new adapters, 402 new postings, **zero iOS**. Rippling's 376 carry no mobile roles at all, bunq and Channable are backend/AI shops, NAV's window yielded one fullstack ad. iOS supply is limited by *which employers hire iOS*, not by how many boards Beacon reads. The two sources that do produce iOS postings are the keyword-steerable ones (Himalayas 17, MyCareersFuture 12) — which is the same finding from the other side: steering beats breadth.
+
+**The discipline this slice exists to enforce:** slice 14 spent itself adding reach and then discovered the reach was the wrong axis. So here **every lever is measured before the next one is pulled**, cheapest first, and a lever that moves nothing is written down as a finding rather than quietly topped up with another.
+
+**Build order: 16a restore the measurement → 16b steer the boards already wired → 16c iOS-first seed rows → 16d re-read and record.**
+
+### Before 16a — two chores that distort everything after them
+
+- **Re-poll Lever.** 486 open Lever jobs still store ~1k of truncated text (the adapter read `description` and dropped `lists`/`additional`, where the skills live — fixed 2026-09-02, never re-fetched). Every one is currently scored on a fraction of its ad: Spotify's "iOS Engineer – Subscriptions" (London, a §4 target) scores **45 truncated, 72 whole**. Measuring iOS supply before this lands means measuring it partly blind. `python -m beacon.ingest` rewrites them. **Must run before `BEACON_ANTHROPIC_API_KEY` is set**, or the re-classification spends ~486 of the 500/month budget in one poll. Do not rank "today's" jobs against a DB with a poll in flight — dedup runs at the end of the sweep (2026-09-03).
+- **Make `make verify` mean what it says.** From a non-interactive shell it dies at `verify-frontend` with `npx: command not found` (exit 127), so the frontend half silently does not run while the backend half reports green — against a repo whose third golden rule is that verify gates every commit. `run.sh` already solves it (resolve `npm` from `$NVM_DIR/alias/default`, else the highest installed version); lift that block into the Makefile or a `scripts/node-path.sh` that both source.
+
+### 16a — Restore the measurement, and write down the baseline
+
+No new code. Re-poll Lever, then take the reading **before** changing anything, so every later number has something to be compared against:
+
+- `uv run python scripts/spot_check_demand.py` — the company-normalized view (SCORE = capped demand, FIRMS = distinct employers, TOP = largest single contributor). **FIRMS on the iOS row is this slice's metric**, not posting count: ten reqs from one employer is a fact about that employer, not about the market.
+- The resume-match re-read, per country, as slice 14's last acceptance line did it.
+- Record both in PROGRESS *before* 16b. A baseline taken after the change is not a baseline.
+
+### 16b — Steer the two boards that already produce iOS
+
+The cheapest lever, and pure data: `ROLE_QUERIES` is a tuple in `adapters/sources/himalayas.py:22` and `adapters/sources/mycareersfuture.py:26`, three queries each, `_MAX_PAGES = 3` (60 newest matches per query per poll).
+
+- `test_role_queries_cover_the_ios_vocabulary` — the new queries are read from the tuple, not hardcoded in a test assertion; adding one is a data edit plus a row here (the vocabulary convention, CLAUDE.md).
+- Candidate widenings, each a separate row so its yield is attributable: `swift engineer`, `mobile engineer`, `senior ios developer`, `ios developer`. **Not** bare `mobile` — the slice-14 lesson about unsteerable queries applies to over-broad ones too.
+- Watch the page cap: more queries × 3 pages × 1 rps is poll time. If a query hits `_MAX_PAGES` it logs `himalayas_page_cap`, and a partial sweep must never read as complete.
+- **Measure before 16c.** Re-run `spot_check_demand.py`; if FIRMS on the iOS row moved, this lever was underused and may deserve more queries before any seeding.
+
+### 16c — iOS-first seed rows
+
+The expensive lever, so it goes last and informed. Mobile-first employers in the nine §4 countries, and the ATS types they actually use.
+
+- **Every slug is verified before it is added** (slice-1 task 0), and slice 15 sharpened what verification means: a 200 is not enough. Of four live boards probed on 2026-09-13, **three were name collisions** — `greenhouse/flip` is a New York company, `ashby/flip` is in Stuttgart, `greenhouse/kargo` is in San Francisco. Confirm *which company* the board belongs to by reading its postings' locations, not just its status code.
+- One CSV row per company (`name,ats_type,ats_slug,country_hq,priority`), no code — if adding a source needs a use-case change, the abstraction is wrong (CLAUDE.md).
+- Probe across **all nine supported ats_types**, not the four SPEC §5.1 names: that list predates slices 13/14, which added smartrecruiters, workable, workday, teamtailor, recruitee and rippling. **Fix §5.1 while here** — it is stale, and it is what sent the slice-15 probe at four types first.
+- A seed row with no verified board is untested reach; a company with no iOS postings today is still a valid row if it is a mobile-first employer, but say so in the commit rather than counting it as supply.
+
+### 16d — Re-read, and record what each lever bought
+
+- Re-run `spot_check_demand.py` and the resume match; report the iOS row's **FIRMS** delta against 16a's baseline, per lever.
+- A lever that moved nothing gets written down as a finding in PROGRESS Decisions with its evidence — that record is what stopped slice 15 from re-probing the same dead slugs, and is worth more than the postings it failed to add.
+
+Acceptance:
+- [ ] Lever re-poll done; the 486 truncated rows carry full text, and the Spotify London iOS case scores ≥70 where it scored 45
+- [ ] `make verify` runs both halves from a non-interactive shell, or fails loudly instead of silently skipping the frontend
+- [ ] 16a baseline (demand table + per-country resume match) recorded in PROGRESS **before** any widening
+- [ ] `ROLE_QUERIES` widened as data with a parametrized row each; poll time and any `himalayas_page_cap` line recorded
+- [ ] Every new seed slug verified **and identity-confirmed** against its postings' locations; live-polls green on a temp DB, zero errors
+- [ ] SPEC §5.1's "Greenhouse / Lever / Ashby / SmartRecruiters" list updated to the nine ats_types that actually have adapters
+- [ ] The iOS row's FIRMS count is reported per lever against the 16a baseline — including any lever that moved it by zero
+- [ ] `make verify` green on both stacks
 
 ---
 
