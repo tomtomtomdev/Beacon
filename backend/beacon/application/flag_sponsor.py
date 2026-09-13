@@ -25,4 +25,4 @@ def flag_manual_sponsor(
     flags = Registry(company.registry_flags) | Registry.MANUAL
     note = f"MANUAL: {evidence} (flagged {flagged_on.isoformat()})"
     company_repo.set_registry_match(company.id, int(flags), 1.0, note)
-    jobs.resolve_registry_tier(company.id, resolve_tier(None, int(flags)).value)
+    jobs.resolve_registry_tier(company.id, resolve_tier(None, int(flags), country=None).value)

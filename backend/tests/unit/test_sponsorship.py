@@ -2,6 +2,7 @@ import pytest
 
 from beacon.domain.registry import Registry
 from beacon.domain.sponsorship import (
+    HOME_COUNTRY,
     SponsorSignal,
     SponsorTier,
     detect_sponsorship,
@@ -11,17 +12,21 @@ from beacon.domain.sponsorship import (
 
 
 @pytest.mark.parametrize(
-    ("text_tier", "registry_flags", "expected"),
+    ("text_tier", "registry_flags", "country", "expected"),
     [
         # Slice 2: no text classifier yet, so text_tier is None; registry drives the tier.
-        (None, 0, SponsorTier.UNKNOWN),
-        (None, int(Registry.UK), SponsorTier.REGISTRY_INFERRED),
-        (None, int(Registry.NL | Registry.US), SponsorTier.REGISTRY_INFERRED),
-        (None, int(Registry.MANUAL), SponsorTier.REGISTRY_INFERRED),
+        (None, 0, "SG", SponsorTier.UNKNOWN),
+        (None, int(Registry.UK), "SG", SponsorTier.REGISTRY_INFERRED),
+        (None, int(Registry.NL | Registry.US), "SG", SponsorTier.REGISTRY_INFERRED),
+        (None, int(Registry.MANUAL), "SG", SponsorTier.REGISTRY_INFERRED),
         # Precedence (CLAUDE.md): explicit text beats registry, no beats yes.
-        (SponsorTier.EXPLICIT_YES, 0, SponsorTier.EXPLICIT_YES),
-        (SponsorTier.EXPLICIT_YES, int(Registry.UK), SponsorTier.EXPLICIT_YES),
-        (SponsorTier.EXPLICIT_NO, int(Registry.UK), SponsorTier.EXPLICIT_NO),
+        (SponsorTier.EXPLICIT_YES, 0, "SG", SponsorTier.EXPLICIT_YES),
+        (SponsorTier.EXPLICIT_YES, int(Registry.UK), "SG", SponsorTier.EXPLICIT_YES),
+        (SponsorTier.EXPLICIT_NO, int(Registry.UK), "SG", SponsorTier.EXPLICIT_NO),
+        # A country-less posting (the remote boards omit it) is not the home market; the
+        # chain decides exactly as it does for a located one.
+        (None, 0, None, SponsorTier.UNKNOWN),
+        (SponsorTier.EXPLICIT_NO, int(Registry.UK), None, SponsorTier.EXPLICIT_NO),
     ],
     ids=[
         "no-flags-unknown",
@@ -31,16 +36,55 @@ from beacon.domain.sponsorship import (
         "explicit_yes-no-flags",
         "explicit_yes-beats-registry",
         "explicit_no-beats-registry",
+        "country-less-unknown",
+        "country-less-explicit_no",
     ],
 )
 def test_resolve_tier(
-    text_tier: SponsorTier | None, registry_flags: int, expected: SponsorTier
+    text_tier: SponsorTier | None,
+    registry_flags: int,
+    country: str | None,
+    expected: SponsorTier,
 ) -> None:
-    assert resolve_tier(text_tier, registry_flags) == expected
+    assert resolve_tier(text_tier, registry_flags, country) == expected
+
+
+@pytest.mark.parametrize(
+    "registry_flags",
+    [0, int(Registry.UK), int(Registry.NL | Registry.US)],
+    ids=["no-flags", "uk-flag", "multi-flag"],
+)
+@pytest.mark.parametrize(
+    "text_tier",
+    [None, SponsorTier.EXPLICIT_YES, SponsorTier.EXPLICIT_NO],
+    ids=["silent", "explicit_yes", "explicit_no"],
+)
+def test_not_required_sits_outside_the_text_chain(
+    text_tier: SponsorTier | None, registry_flags: int
+) -> None:
+    """Every combination of text signal and registry flags yields not_required in the home
+    market: the location predicate is read first and the chain beneath it is never consulted
+    (SPEC §6). Outside ID that chain is unchanged — test_resolve_tier pins it."""
+    assert resolve_tier(text_tier, registry_flags, HOME_COUNTRY) is SponsorTier.NOT_REQUIRED
+
+
+def test_jakarta_right_to_work_is_not_required_not_explicit_no() -> None:
+    """SPEC §6, the case the home-market amendment exists to settle. The reader already holds
+    the right to work in Indonesia, so a Jakarta ad demanding it states the absence of the
+    sponsorship question, not a refusal of it — the location predicate is read before the
+    text chain, never folded into it."""
+    detected = detect_sponsorship("You must have the right to work in Indonesia.")
+    assert detected is not None
+    assert detected.tier is SponsorTier.EXPLICIT_NO  # the text signal itself is unchanged
+
+    assert resolve_tier(detected.tier, 0, HOME_COUNTRY) is SponsorTier.NOT_REQUIRED
 
 
 def test_tier_sort_rank_matches_domain_table() -> None:
-    assert tier_sort_rank(SponsorTier.EXPLICIT_YES) == 3
+    """SPEC §4: a confirmed sponsor abroad still outranks staying — the tool exists to find a
+    way out — but a certain home role outranks every speculative tier."""
+    assert tier_sort_rank(SponsorTier.EXPLICIT_YES) == 4
+    assert tier_sort_rank(SponsorTier.NOT_REQUIRED) == 3
     assert tier_sort_rank(SponsorTier.REGISTRY_INFERRED) == 2
     assert tier_sort_rank(SponsorTier.UNKNOWN) == 1
     assert tier_sort_rank(SponsorTier.EXPLICIT_NO) == 0

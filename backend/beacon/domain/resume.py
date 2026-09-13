@@ -146,6 +146,10 @@ LEVEL_UNKNOWN_FIT = 0.70
 # Sponsor tier → base fit (a target-country job with a positive tier is the ideal).
 _SPONSOR_TIER_FIT: dict[SponsorTier, float] = {
     SponsorTier.EXPLICIT_YES: 1.0,
+    # A home-market role carries no sponsorship risk at all — there is no visa to be refused.
+    # It ties explicit_yes here on purpose: what ranks it below a confirmed sponsor abroad is
+    # the relocation strategy (country fit and SORT_RANK), not the sponsorship sub-score.
+    SponsorTier.NOT_REQUIRED: 1.0,
     SponsorTier.REGISTRY_INFERRED: 0.75,
     SponsorTier.UNKNOWN: 0.40,
     SponsorTier.EXPLICIT_NO: 0.0,
@@ -168,7 +172,11 @@ SKILL_COVERAGE_FLOOR = 3
 #
 # 1: 2026-09-02. First versioned scoring — the SWIFT homograph guard and the coverage floor
 #    (both 2026-08-26) had never reached a cached row.
-SCORING_VERSION = 1
+# 2: 2026-09-13. The not_required tier (slice 15): a home-market job scores 1.0 sponsor fit
+#    and is exempt from OFF_STRATEGY_FACTOR. The bump is load-bearing, not bookkeeping — the
+#    backfill moves existing ID rows to the new tier WITHOUT touching content_hash, so the
+#    cache would otherwise keep serving every Jakarta job the 0.40 it scored as `unknown`.
+SCORING_VERSION = 2
 
 
 def build_profile(text: str, *, target_countries: frozenset[str] = frozenset()) -> ResumeProfile:
@@ -211,6 +219,8 @@ def _level_fit(profile: ResumeProfile, job: JobFacts) -> float:
 
 def _sponsor_fit(profile: ResumeProfile, job: JobFacts) -> float:
     fit = _SPONSOR_TIER_FIT[job.sponsor_tier]
+    if job.sponsor_tier is SponsorTier.NOT_REQUIRED:
+        return fit  # the home market is not a relocation, so it cannot be off-strategy
     if profile.target_countries and job.country not in profile.target_countries:
         fit *= OFF_STRATEGY_FACTOR
     return fit

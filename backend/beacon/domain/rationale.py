@@ -24,6 +24,10 @@ _VERDICT_BANDS: tuple[tuple[int, str], ...] = (
 # Base sponsorship note per tier; mirrors the _SPONSOR_TIER_FIT semantics in resume.py.
 _SPONSOR_NOTES: dict[SponsorTier, str] = {
     SponsorTier.EXPLICIT_YES: "The posting explicitly offers visa sponsorship.",
+    SponsorTier.NOT_REQUIRED: (
+        "You already have the right to work here — this role needs no visa, no sponsor "
+        "and no registry check."
+    ),
     SponsorTier.REGISTRY_INFERRED: (
         "No sponsorship language in the posting, but the company appears on a sponsor "
         "registry — a company-level signal, not a per-role guarantee."

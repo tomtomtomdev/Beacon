@@ -8,6 +8,7 @@ from types import MappingProxyType
 
 class SponsorTier(StrEnum):
     EXPLICIT_YES = "explicit_yes"
+    NOT_REQUIRED = "not_required"
     REGISTRY_INFERRED = "registry_inferred"
     UNKNOWN = "unknown"
     EXPLICIT_NO = "explicit_no"
@@ -20,6 +21,12 @@ class SponsorSignal:
 
     tier: SponsorTier
     evidence: str | None = None
+
+
+# The home market (SPEC §3/§4): the one country whose jobs need no visa, because the reader
+# already holds the right to work there. A location predicate, so it is the job's country that
+# decides — see resolve_tier.
+HOME_COUNTRY = "ID"
 
 
 # Explicit-text signal tables (data not logic — extend a row when a spot-check finds a
@@ -161,9 +168,15 @@ def detect_sponsorship(text: str) -> SponsorSignal | None:
 
 # Drives /jobs default ordering (sort_rank DESC, posted_at DESC). A soft signal:
 # explicit_no sorts last but is never hidden, and no tier ever filters by default.
+#
+# not_required sits third by SPEC §4: a confirmed sponsor abroad still outranks staying —
+# the tool exists to find a way out — but a certain home-market role outranks every
+# speculative tier. Not a stored column: adapters/persistence/jobs.py builds its ORDER BY
+# CASE from this table, so renumbering here is the whole change.
 SORT_RANK: MappingProxyType[SponsorTier, int] = MappingProxyType(
     {
-        SponsorTier.EXPLICIT_YES: 3,
+        SponsorTier.EXPLICIT_YES: 4,
+        SponsorTier.NOT_REQUIRED: 3,
         SponsorTier.REGISTRY_INFERRED: 2,
         SponsorTier.UNKNOWN: 1,
         SponsorTier.EXPLICIT_NO: 0,
@@ -171,12 +184,27 @@ SORT_RANK: MappingProxyType[SponsorTier, int] = MappingProxyType(
 )
 
 
-def resolve_tier(text_tier: SponsorTier | None, registry_flags: int) -> SponsorTier:
-    """The one place tier precedence lives: explicit text beats registry beats unknown.
+def resolve_tier(
+    text_tier: SponsorTier | None, registry_flags: int, country: str | None
+) -> SponsorTier:
+    """The one place tier precedence lives: home market first, then explicit text beats
+    registry beats unknown.
 
-    text_tier is the posting-text signal (explicit_yes/explicit_no or None until the
-    slice-6 classifier lands). registry_flags is the company's registry bitmask.
+    `country` is the JOB's country, never the company's HQ — a Jakarta req posted by a
+    Singapore-HQ employer (Grab, Agoda) is still a home-market job. The home predicate is
+    evaluated BEFORE the text chain and sits outside it: "no sponsorship needed" is not a
+    stronger or weaker claim about sponsorship, it is the absence of the question, so
+    folding it into the chain would corrupt a precedence CLAUDE.md pins as single-source.
+    It also settles the one genuinely ambiguous case — a Jakarta ad reading "must have the
+    right to work in Indonesia" is not_required, not explicit_no, because the reader
+    already holds that right.
+
+    text_tier is the posting-text signal (explicit_yes/explicit_no or None when the text is
+    silent). registry_flags is the company's registry bitmask. A caller with no job country
+    in hand (the company-level registry paths) passes None and gets the text/registry chain.
     """
+    if country == HOME_COUNTRY:
+        return SponsorTier.NOT_REQUIRED
     if text_tier in (SponsorTier.EXPLICIT_NO, SponsorTier.EXPLICIT_YES):
         return text_tier
     return SponsorTier.REGISTRY_INFERRED if registry_flags else SponsorTier.UNKNOWN

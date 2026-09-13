@@ -18,7 +18,7 @@ from beacon.domain.resume import (
     resume_hash,
     score_match,
 )
-from beacon.domain.sponsorship import SponsorTier
+from beacon.domain.sponsorship import HOME_COUNTRY, SponsorTier
 
 
 def _profile(
@@ -144,6 +144,26 @@ def test_sponsor_score_rewards_target_country_and_positive_tier() -> None:
     assert on_strategy_registry > off_strategy_yes
 
 
+def test_home_market_is_never_off_strategy() -> None:
+    """A relocation strategy is a list of places to GET to, so the home market is absent from
+    it by construction — and the off-strategy factor would then halve the sponsorship fit of
+    the one country whose feasibility is certain. `not_required` is exempt: there is no
+    relocation to be off-strategy about. What ranks a home role below a confirmed sponsor
+    abroad is SORT_RANK (SPEC §4), not a halved sub-score."""
+    profile = _profile(
+        skills=set(), categories=set(), level=Level.SENIOR, target_countries={"NL", "SE"}
+    )
+
+    def sponsor(country: str | None, tier: SponsorTier) -> int:
+        job = _job(skills=set(), categories=set(), level=Level.SENIOR, country=country, tier=tier)
+        return score_match(profile, job).sponsor_score
+
+    home = sponsor(HOME_COUNTRY, SponsorTier.NOT_REQUIRED)
+
+    assert home == sponsor("NL", SponsorTier.EXPLICIT_YES)
+    assert home > sponsor("US", SponsorTier.EXPLICIT_YES)  # a genuinely off-strategy job
+
+
 # --- explainability + purity ------------------------------------------------------------
 
 
@@ -264,6 +284,22 @@ GOLDEN_CASES: dict[str, tuple[ResumeProfile, JobFacts]] = {
             tier=SponsorTier.EXPLICIT_NO,
         ),
     ),
+    # The home market with a relocation strategy that (as always) does not list it.
+    "home_market_absent_from_the_target_list": (
+        _profile(
+            skills={"swift", "swiftui", "uikit"},
+            categories={Category.IOS},
+            level=Level.SENIOR,
+            target_countries={"NL"},
+        ),
+        _job(
+            skills={"swift", "swiftui", "uikit"},
+            categories={Category.IOS},
+            level=Level.SENIOR,
+            country=HOME_COUNTRY,
+            tier=SponsorTier.NOT_REQUIRED,
+        ),
+    ),
 }
 
 
@@ -278,7 +314,7 @@ def test_scoring_version_pins_behavior() -> None:
     scored = {name: score_match(*case).overall for name, case in GOLDEN_CASES.items()}
 
     assert (SCORING_VERSION, scored) == (
-        1,
+        2,
         {
             # 3/3 skills, category hit, exact level, sponsored in a target country
             "aligned_senior_ios_on_strategy": 100,
@@ -287,5 +323,9 @@ def test_scoring_version_pins_behavior() -> None:
             "disjoint_backend_role": 26,
             "overqualified_junior_posting": 58,
             "off_strategy_explicit_no": 58,
+            # Identical to the aligned case: the off-strategy factor does not apply to the
+            # home market, so an equally-matched Jakarta role scores the same as a sponsored
+            # one in a target country. SORT_RANK, not the score, is what separates them.
+            "home_market_absent_from_the_target_list": 100,
         },
     )

@@ -27,14 +27,18 @@ class IngestResult:
 
 
 def _resolve_sponsorship(job: NormalizedJob, registry_flags: int) -> SponsorSignal:
-    """Combine the posting's explicit-text signal with the company's registry flags via
-    the one precedence function: explicit text > registry > unknown. Explicit tiers keep
-    their evidence sentence; registry/unknown carry none."""
+    """Combine the posting's location, its explicit-text signal and the company's registry
+    flags via the one precedence function: home market > explicit text > registry > unknown.
+    Explicit tiers keep their evidence sentence; home/registry/unknown carry none.
+
+    The country passed is the JOB's (SPEC §5.1), which is what makes a Jakarta req from a
+    Singapore-HQ seed resolve as home market rather than following its employer."""
     detected = detect_sponsorship(job.description)
     text_tier = detected.tier if detected else None
+    tier = resolve_tier(text_tier, registry_flags, job.country)
     return SponsorSignal(
-        tier=resolve_tier(text_tier, registry_flags),
-        evidence=detected.evidence if detected else None,
+        tier=tier,
+        evidence=detected.evidence if detected and tier is text_tier else None,
     )
 
 

@@ -54,7 +54,7 @@ def refresh_registries(
         flags = result.flags | manual_bit
         confidence = 1.0 if manual_bit else result.confidence
         company_repo.set_registry_match(company.id, int(flags), confidence, result.evidence)
-        jobs.resolve_registry_tier(company.id, resolve_tier(None, int(flags)).value)
+        jobs.resolve_registry_tier(company.id, resolve_tier(None, int(flags), country=None).value)
         if flags:
             matched += 1
 
