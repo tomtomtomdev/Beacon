@@ -124,6 +124,66 @@ US_STATE_CODES: frozenset[str] = frozenset(
 )
 
 # Multi-country regions that must never be mistaken for a city.
+US_STATE_NAMES: frozenset[str] = frozenset(
+    {
+        "alabama",
+        "alaska",
+        "arizona",
+        "arkansas",
+        "california",
+        "colorado",
+        "connecticut",
+        "delaware",
+        "district of columbia",
+        "florida",
+        "georgia",
+        "hawaii",
+        "idaho",
+        "illinois",
+        "indiana",
+        "iowa",
+        "kansas",
+        "kentucky",
+        "louisiana",
+        "maine",
+        "maryland",
+        "massachusetts",
+        "michigan",
+        "minnesota",
+        "mississippi",
+        "missouri",
+        "montana",
+        "nebraska",
+        "nevada",
+        "new hampshire",
+        "new jersey",
+        "new mexico",
+        "new york",
+        "north carolina",
+        "north dakota",
+        "ohio",
+        "oklahoma",
+        "oregon",
+        "pennsylvania",
+        "rhode island",
+        "south carolina",
+        "south dakota",
+        "tennessee",
+        "texas",
+        "utah",
+        "vermont",
+        "virginia",
+        "washington",
+        "west virginia",
+        "wisconsin",
+        "wyoming",
+    }
+)
+"""Spelled-out US states. Only ever read in a *qualified* position — a comma tail
+("Austin, Texas") or a delimiter part ("Remote - California") — never as a bare lone token,
+because "Georgia" and "Washington" name more than one thing and a lone one must not pick."""
+
+
 REGION_TOKENS: frozenset[str] = frozenset(
     {
         "africa",
@@ -144,3 +204,33 @@ REGION_TOKENS: frozenset[str] = frozenset(
         "worldwide",
     }
 )
+
+NON_CITY_TOKENS: frozenset[str] = REGION_TOKENS | frozenset(
+    {
+        # Compass and arrangement words a board writes where a city would go.
+        "east",
+        "west",
+        "north",
+        "south",
+        "central",
+        "northeast",
+        "northwest",
+        "southeast",
+        "southwest",
+        "hybrid",
+        "onsite",
+        "on-site",
+        "in-office",
+        "office",
+        # Placeholders. "Anywhere in the World" is not a city, and neither is "N/A".
+        "amer",
+        "anywhere",
+        "anywhere in the world",
+        "n/a",
+        "na",
+        "tbd",
+        "unspecified",
+    }
+)
+"""Everything REGION_TOKENS covers, plus the words that occupy a city slot without naming
+a place. Read wherever a candidate city is accepted, so junk never lands in the column."""
