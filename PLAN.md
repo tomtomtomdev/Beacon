@@ -624,14 +624,27 @@ The expensive lever, so it goes last and informed. Mobile-first employers in the
 - A lever that moved nothing gets written down as a finding in PROGRESS Decisions with its evidence — that record is what stopped slice 15 from re-probing the same dead slugs, and is worth more than the postings it failed to add.
 
 Acceptance:
-- [ ] Lever re-poll done; the 486 truncated rows carry full text, and the Spotify London iOS case scores ≥70 where it scored 45
-- [ ] `make verify` runs both halves from a non-interactive shell, or fails loudly instead of silently skipping the frontend
-- [ ] 16a baseline (demand table + per-country resume match) recorded in PROGRESS **before** any widening
-- [ ] `ROLE_QUERIES` widened as data with a parametrized row each; poll time and any `himalayas_page_cap` line recorded
-- [ ] Every new seed slug verified **and identity-confirmed** against its postings' locations; live-polls green on a temp DB, zero errors
-- [ ] SPEC §5.1's "Greenhouse / Lever / Ashby / SmartRecruiters" list updated to the nine ats_types that actually have adapters
-- [ ] The iOS row's FIRMS count is reported per lever against the 16a baseline — including any lever that moved it by zero
-- [ ] `make verify` green on both stacks
+- [x] Lever re-poll done — **it had already happened**: the scheduled 05:00 poll on 2026-09-13 re-fetched all 482 open Lever rows (avg 4,048 chars, `lists`/`additional` present, only 38 under 1,200 and those are genuinely short Ninja Van logistics ads). Spotify London "iOS Engineer – Subscriptions" scores **77** where it scored 45 truncated — scored from stored full text, the req having closed 2026-09-07. No poll was re-run to re-prove it
+- [x] `make verify` runs both halves from a non-interactive shell — `scripts/node-path.sh`, sourced by run.sh and every node-touching target (`1d56df3`). Proven both ways: 78 vitest tests actually run, and with node absent it exits 127 with a named reason instead of skipping
+- [x] 16a baseline recorded in PROGRESS **before** any widening (`1cc9eb6`)
+- [x] `ROLE_QUERIES` widened as data with a parametrized row each — and **two of the four candidates were rejected on measured evidence**: `swift engineer` returns *zero rows* on MyCareersFuture (ships on Himalayas, 37 firms), `mobile engineer` is 8% iOS on Himalayas (ships on MCF, 62%). Page caps logged on 5 of 6 Himalayas queries; MCF poll 1:41
+- [x] Every new seed slug verified **and identity-confirmed** against its postings' locations — **one name collision caught**: `ashby/lunar` is a US healthcare company, not the Danish neobank. Eight rows added, all live-polled green on a temp DB, **zero errors**, 346 postings
+- [x] SPEC §5.1 (and §2's copy of the same stale list) updated to the nine ats_types that actually have adapters
+- [x] FIRMS reported per lever against the 16a baseline — **16b bought +34 employers, 16c bought +1**, and the third finding is that the metric itself was wrong (below)
+- [x] `make verify` green on both stacks — **805 backend + 78 frontend**
+
+**What each lever bought, measured (the point of the slice):**
+
+| Lever | §4 iOS posts | §4 iOS firms | firms ex-Bjak |
+|---|---|---|---|
+| 16a baseline | 48 | 33 | 32 |
+| 16b query widening | 86 | 67 | 66 |
+| 16c seed rows | 87 | 68 | 67 |
+
+- **16b was the lever.** Steering the two boards already wired more than doubled employer count for the cost of a data edit, and opened AU 0→5 and NL 0→1. The iOS category went 146 → 230 canonical postings.
+- **16c bought exactly one measurable employer** — Mercari (JP 0→1, scoring 73) — from eight seed rows and 346 postings. The other seven are mobile-first employers with no iOS req open today; they are honest reach, not supply, and are labelled as such.
+- **The plan's named metric was wrong.** "FIRMS on the `ios engineer` row" moved 26 → 27 across both levers, because it keys on *one title phrasing*; the widening's employers phrase it "iOS Developer", which appeared as a **new 35-firm row that did not exist in the baseline at all**. Use the category-scoped view or the per-country table, not that row.
+- **The binding constraint is no longer employer selection — it is `parse_location`.** Proton is a genuine Swiss employer with a *"Senior iOS Software Engineer – Geneva"* req, and CH still measures 0, because the board writes bare city names and the parser reports a country only when the string names one (deliberately — SPEC forbids fabricating). **62 of Proton's 67 postings, and 141 of the 342 new ones, carry no country; DB-wide it is 42.7% of open canonical jobs.** Known misses on target-country supply: `SG - Singapore` (5 iOS jobs), `Remote - United States`, and bare `Geneva`/`Zurich`/`Toronto`/`Copenhagen`. This is a `domain/countries.py` + `parse_location` data/parsing slice, and it would move more §4 supply than another round of seeding.
 
 ---
 

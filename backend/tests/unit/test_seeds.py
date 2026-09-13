@@ -34,9 +34,15 @@ def test_home_market_is_seeded_like_any_other_row() -> None:
 
 
 def test_delivered_seed_file_parses_completely() -> None:
-    companies = parse_seed_csv(REAL_SEED_FILE.read_text())
+    text = REAL_SEED_FILE.read_text()
+    data_lines = [line for line in text.splitlines()[1:] if line.strip()]
 
-    assert len(companies) == 62
+    companies = parse_seed_csv(text)
+
+    # Every data row becomes a Company — which is what "completely" means here. Pinning the
+    # count to a literal instead would make every legitimate seed addition look like a
+    # regression, and would still not prove the file parsed whole.
+    assert len(companies) == len(data_lines)
     assert {c.ats_type for c in companies} <= {
         "greenhouse",
         "lever",

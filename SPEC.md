@@ -26,7 +26,7 @@ This is a personal tool. Correctness of the *sponsorship signal* and *dedup* mat
 ## 2. Goals / Non-Goals
 
 ### Goals (MVP)
-- Poll public ATS APIs (Greenhouse, Lever, Ashby) for a curated company list
+- Poll public ATS APIs (nine as of slice 14: Greenhouse, Lever, Ashby, SmartRecruiters, Workable, Workday, Teamtailor, Recruitee, Rippling) for a curated company list
 - Poll API/RSS-friendly boards (HN Who's Hiring, RemoteOK, We Work Remotely, Arbetsförmedlingen JobTech)
 - Normalize into one `jobs` table with dedup across sources
 - Classify: category (ios / android / flutter / backend / fullstack / frontend / ai-ml), level, remote-vs-onsite
@@ -97,7 +97,7 @@ This section is the decision record: which sources, why, and what was rejected. 
 
 Company slugs live in a `companies` seed table loaded from `seeds/companies.csv` with pinned schema: `name,ats_type,ats_slug,country_hq,priority` (priority 1–3; `active` and `registry_flags` are DB columns defaulted at load, not CSV columns). Seed: **53 verified companies delivered 2026-07-04**, grown to **58 (2026-08-23, slice 13)** and **61 (2026-08-26, slice 14)** across SG/JP/AU/NL/IE/CA/US/SE/NO. Adapters cover greenhouse (24), ashby (11), lever (10), workday (4), teamtailor (3), smartrecruiters (3), recruitee (2), workable (1), rippling (1) — **59 of 61 rows pollable**. Two ats_types stay dormant by decision, not omission: **gem** (job board is captcha-gated: `CAPTCHA_REQUIRED` on the board page, no JSON endpoint) and **bendingspoons** (no public feed). A row whose ats_type has no adapter loads normally and is skipped by `ingest_all` (which filters to supported types) and shown as `pending` in the health view. Adding a company = one CSV row, no code.
 
-**Home-market seeds.** Indonesian companies running a supported ATS (Greenhouse / Lever / Ashby / SmartRecruiters) are seeded with `country_hq=ID` exactly like any other row — no adapter, use-case or schema work, because `not_required` is derived from the **job's** country at classification time, not from the company's HQ. That derivation also captures the ID roles already arriving incidentally from Singapore-HQ seeds (Grab, Carousell, Ninja Van and Agoda all post Jakarta reqs on the same boards); that spillover is in scope, not noise. Indonesian job boards (Kalibrr, Glints, Dealls) are deliberately **not** sources — a local board is a new adapter plus a fixture suite, and the seed route already reaches the employers worth watching.
+**Home-market seeds.** Indonesian companies running a supported ATS (the nine with adapters: Greenhouse, Lever, Ashby, SmartRecruiters, Workable, Workday, Teamtailor, Recruitee, Rippling — `SUPPORTED_ATS` is derived from the factory table, which is the list to trust) are seeded with `country_hq=ID` exactly like any other row — no adapter, use-case or schema work, because `not_required` is derived from the **job's** country at classification time, not from the company's HQ. That derivation also captures the ID roles already arriving incidentally from Singapore-HQ seeds (Grab, Carousell, Ninja Van and Agoda all post Jakarta reqs on the same boards); that spillover is in scope, not noise. Indonesian job boards (Kalibrr, Glints, Dealls) are deliberately **not** sources — a local board is a new adapter plus a fixture suite, and the seed route already reaches the employers worth watching.
 
 ### 5.2 Board adapters (API/RSS)
 | Source | Access | Notes |
