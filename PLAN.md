@@ -744,7 +744,7 @@ Acceptance:
 - [x] A job that gains `country='ID'` is re-tiered `not_required` and its `sort_rank` follows; an explicit text tier is not overturned — 5 rows moved, and `sort_rank` follows for free because it is derived from `sponsor_tier` in the ORDER BY, never stored
 - [x] `spot_check_locations.py` diff eyeballed over the real DB before the run is kept; the DB is backed up first (`backups/beacon-20260913-074737.db`)
 - [ ] Uncountried share reported against the 42.7% baseline, with the correctly-uncountried residue named separately
-- [ ] **CH goes 0 → ≥1 iOS employer with no new seed row** — the slice-16 finding, closed
+- [x] **CH goes 0 → ≥1 iOS employer with no new seed row** — the slice-16 finding, closed. **CH = 1** (Proton, `Geneva`, via the HQ tie-break) measured directly against the DB after the 17c run; NL also 0 → 1. The §4 iOS table now reads US 33 firms, SG 27, AU 5, CA 3, ID 3, SE 3, CH 1, IE 1, JP 1, NL 1. *(The fact is proven; what 17d still owes is the write-up around it — `spot_check_demand.py --category ios` has not been re-run.)*
 - [ ] `make verify` green on both stacks
 
 ---

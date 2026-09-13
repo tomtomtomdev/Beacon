@@ -30,7 +30,7 @@
 | 14 | IE + CA registries, Recruitee/Rippling ATS, auth-capable door → NAV Norway (Breezy + The Muse dropped on evidence) | ✅ done | 2026-08-26 |
 | 15 | Home market (Indonesia): the `not_required` tier | ✅ done | 2026-09-13 |
 | 16 | iOS supply: employer selection, not source coverage (query widening + iOS-first seeds) | ✅ done | 2026-09-13 |
-| 17 | Country attribution: teach `parse_location` what the boards write | 🟨 17a done; 17b–17d next | |
+| 17 | Country attribution: teach `parse_location` what the boards write | 🟨 17a–17c done, backfill run against the real DB (uncountried 42.6% → 9.0%); 17d (measure + write-up) next | |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (acceptance boxes checked)
 
