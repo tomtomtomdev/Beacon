@@ -11,6 +11,7 @@ from beacon.domain.dedup import DedupRow
 from beacon.domain.digest import Digest
 from beacon.domain.health import SourceHealth
 from beacon.domain.job import NormalizedJob
+from beacon.domain.location import UncountriedJob
 from beacon.domain.notification import TelegramConfig
 from beacon.domain.registry import Registry, RegistryCompany, RegistryMeta
 from beacon.domain.resume import MatchScore, Resume
@@ -236,6 +237,17 @@ class JobRepo(Protocol):
         ...
 
     def set_classification(self, job_id: int, classification: Classification) -> None: ...
+
+    def list_uncountried(self) -> list[UncountriedJob]:
+        """Every stored job with no country, carrying its raw location string and the
+        posting company's home market. The join is here rather than in the use case because
+        which table holds `country_hq` is persistence's business, not the backfill's."""
+        ...
+
+    def set_location(self, job_id: int, country: str, city: str | None) -> None:
+        """Write country/city onto one row. Touches nothing else — not content_hash, not
+        the seen timestamps, not user_status — so a re-parse can never look like a re-poll."""
+        ...
 
     def set_tier_for_country(self, country: str, tier: SponsorTier) -> int:
         """Write `tier` (and clear the evidence sentence, which did not decide it) onto every

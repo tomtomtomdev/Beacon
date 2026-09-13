@@ -16,6 +16,7 @@ from beacon.domain.dedup import DedupRow
 from beacon.domain.digest import Digest, HealthAlert
 from beacon.domain.sponsorship import SponsorTier
 from beacon.domain.job import NormalizedJob
+from beacon.domain.location import UncountriedJob
 from beacon.domain.saved_search import SavedSearch, SearchFilters
 
 NOW = datetime(2026, 7, 8, 6, 0, tzinfo=UTC)
@@ -98,6 +99,12 @@ class FakeJobRepo:
         raise NotImplementedError
 
     def resolve_registry_tier(self, company_id: int, tier: str) -> None:
+        raise NotImplementedError
+
+    def list_uncountried(self) -> list[UncountriedJob]:
+        raise NotImplementedError
+
+    def set_location(self, job_id: int, country: str, city: str | None) -> None:
         raise NotImplementedError
 
     def set_tier_for_country(self, country: str, tier: SponsorTier) -> int:

@@ -2,7 +2,10 @@
 classifier existed, and the sponsorship tier for rows ingested before the home market did.
 Same caching contract as the pipeline — only rows that actually need it are touched."""
 
+from dataclasses import dataclass
+
 from beacon.application.ports import Classifier, JobRepo
+from beacon.domain.location import parse_location
 from beacon.domain.sponsorship import HOME_COUNTRY, resolve_tier
 
 
@@ -47,4 +50,46 @@ def backfill_home_market(jobs: JobRepo) -> int:
     """
     return jobs.set_tier_for_country(
         HOME_COUNTRY, resolve_tier(text_tier=None, registry_flags=0, country=HOME_COUNTRY)
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class LocationBackfill:
+    """What one re-parse pass moved. `residue` is the honest remainder — rows whose string
+    still names no country — and is reported rather than hidden, because a parser that
+    silently filled everything would be guessing."""
+
+    filled: int
+    residue: int
+    retiered: int
+
+
+def backfill_locations(jobs: JobRepo) -> LocationBackfill:
+    """Re-read the location string of every job that has no country; return what moved.
+
+    Needs no network, no classifier and no key: the raw string was kept on the row for
+    exactly this ("a better parser can re-parse without re-fetching"), so nothing here can
+    move a content_hash or spend an LLM call. Idempotent — a filled row is no longer
+    uncountried, so a second run moves zero.
+
+    **Fills only where country IS NULL.** Several adapters establish a country without
+    parse_location — jobtech and teamtailor read Swedish country names, MyCareersFuture
+    reads a structured address block — so a blind re-parse would delete 543 correct
+    countries in the real DB. Re-parsing fills gaps; it does not outrank an adapter.
+
+    The company's home market is passed through because a shared city name (Geneva,
+    Cambridge, San Jose) resolves no country without it. Retiering is not optional and is
+    therefore not left to the caller: `not_required` is a location predicate, so a row that
+    gains the home country must move onto that tier in the same pass.
+    """
+    filled = 0
+    pending = jobs.list_uncountried()
+    for job in pending:
+        country, city = parse_location(job.location_raw, job.country_hq)
+        if country is None:
+            continue
+        jobs.set_location(job.id, country, city)
+        filled += 1
+    return LocationBackfill(
+        filled=filled, residue=len(pending) - filled, retiered=backfill_home_market(jobs)
     )

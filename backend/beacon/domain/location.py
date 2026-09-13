@@ -16,6 +16,7 @@ which is the same rule that stops `posted_at` being invented from relative prose
 """
 
 import re
+from dataclasses import dataclass
 
 from beacon.domain.countries import (
     CITY_TO_COUNTRY,
@@ -24,6 +25,18 @@ from beacon.domain.countries import (
     US_STATE_CODES,
     US_STATE_NAMES,
 )
+
+
+@dataclass(frozen=True, slots=True)
+class UncountriedJob:
+    """A stored posting whose country column is empty, with everything needed to read its
+    location string again: the string itself, kept on the row for exactly this, and the
+    employer's home market for the shared-name tie-break."""
+
+    id: int
+    location_raw: str
+    country_hq: str | None
+
 
 _PARENTHETICAL = re.compile(r"\s*\([^)]*\)")
 _MULTI_SEPARATOR = re.compile(r"\s*[•;|]\s*")

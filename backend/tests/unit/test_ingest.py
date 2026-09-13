@@ -24,6 +24,7 @@ from beacon.domain.company import SHADOW_ATS_TYPE, Company
 from beacon.domain.dedup import DedupRow
 from beacon.domain.health import FailureKind, Health, SourceHealth
 from beacon.domain.job import CLOSE_AFTER_MISSES, NormalizedJob
+from beacon.domain.location import UncountriedJob
 from beacon.domain.registry import Registry
 from beacon.domain.sponsorship import SponsorSignal, SponsorTier
 
@@ -142,6 +143,12 @@ class FakeJobRepo:
 
     def resolve_registry_tier(self, company_id: int, tier: str) -> None:
         raise NotImplementedError("ingest never re-resolves tiers")
+
+    def list_uncountried(self) -> list[UncountriedJob]:
+        raise NotImplementedError("ingest never backfills locations")
+
+    def set_location(self, job_id: int, country: str, city: str | None) -> None:
+        raise NotImplementedError("ingest never backfills locations")
 
     def set_tier_for_country(self, country: str, tier: SponsorTier) -> int:
         raise NotImplementedError("ingest never backfills tiers")

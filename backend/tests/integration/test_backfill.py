@@ -16,6 +16,7 @@ from beacon.adapters.persistence.jobs import SqliteJobRepo
 from beacon.application.backfill import (
     backfill_classifications,
     backfill_home_market,
+    backfill_locations,
     upgrade_ambiguous_classifications,
 )
 from beacon.domain.classification import Category, Classification, Level
@@ -219,3 +220,108 @@ def test_backfill_home_market_is_idempotent(db: sqlite3.Connection, company_id: 
 
     assert backfill_home_market(jobs) == 1
     assert backfill_home_market(jobs) == 0
+
+
+def _located(external_id: str, location_raw: str) -> NormalizedJob:
+    """A stored posting that arrived with no country — the shape 17c exists to repair."""
+    return replace(_job(external_id, "iOS Engineer", "Swift"), location_raw=location_raw)
+
+
+@pytest.fixture
+def swiss_company_id(db: sqlite3.Connection) -> int:
+    company = SqliteCompanyRepo(db).upsert(
+        Company(
+            name="Proton", ats_type="greenhouse", ats_slug="proton", country_hq="CH", priority=2
+        )
+    )
+    assert company.id is not None
+    return company.id
+
+
+def test_backfill_reparses_without_refetching(db: sqlite3.Connection, company_id: int) -> None:
+    """Only country/city move. The raw string was kept on the row for exactly this, so no
+    posting is re-fetched, no content_hash moves and no LLM call is spent."""
+    repo = SqliteJobRepo(db)
+    repo.upsert(company_id, _located("A", "Amsterdam"), seen_at=POLL)
+    before = db.execute(
+        "SELECT content_hash, first_seen_at, last_seen_at, description, user_status FROM jobs"
+    ).fetchone()
+
+    result = backfill_locations(repo)
+
+    assert result.filled == 1
+    row = db.execute("SELECT * FROM jobs").fetchone()
+    assert (row["country"], row["city"]) == ("NL", "Amsterdam")
+    assert all(row[column] == before[column] for column in before.keys())
+
+
+def test_backfill_locations_is_idempotent(db: sqlite3.Connection, company_id: int) -> None:
+    """A filled row is no longer uncountried, so the second pass has nothing to select."""
+    repo = SqliteJobRepo(db)
+    repo.upsert(company_id, _located("A", "Amsterdam"), seen_at=POLL)
+    backfill_locations(repo)
+
+    assert backfill_locations(repo).filled == 0
+
+
+def test_backfill_never_invents_a_country(db: sqlite3.Connection, company_id: int) -> None:
+    """A string that names no country keeps country NULL, and the count of those is
+    reported as the residue rather than hidden."""
+    repo = SqliteJobRepo(db)
+    repo.upsert(company_id, _located("A", "Anywhere in the World"), seen_at=POLL)
+    repo.upsert(company_id, _located("B", "Amsterdam"), seen_at=POLL)
+
+    result = backfill_locations(repo)
+
+    assert (result.filled, result.residue) == (1, 1)
+    assert db.execute("SELECT country FROM jobs WHERE external_id = 'A'").fetchone()[0] is None
+
+
+def test_backfill_never_overwrites_a_country_an_adapter_established(
+    db: sqlite3.Connection, company_id: int
+) -> None:
+    """MyCareersFuture reads a structured address block and jobtech reads Swedish country
+    names, so a stored country outranks a re-parse of free text. 543 rows in the real DB
+    depend on this."""
+    repo = SqliteJobRepo(db)
+    stored = replace(_located("A", "Anywhere in the World"), country="SG", city="Singapore")
+    repo.upsert(company_id, stored, seen_at=POLL)
+
+    assert backfill_locations(repo).filled == 0
+    assert db.execute("SELECT country FROM jobs").fetchone()[0] == "SG"
+
+
+def test_backfill_reads_the_employer_hq_for_a_shared_city_name(
+    db: sqlite3.Connection, company_id: int, swiss_company_id: int
+) -> None:
+    """The slice-16 finding, closed: Proton is Swiss, so its bare "Geneva" req is the Swiss
+    Geneva — while the same string from an Irish employer stays unresolved."""
+    repo = SqliteJobRepo(db)
+    repo.upsert(swiss_company_id, _located("A", "Geneva"), seen_at=POLL)
+    repo.upsert(company_id, _located("B", "Geneva"), seen_at=POLL)
+
+    backfill_locations(repo)
+
+    countries = dict(db.execute("SELECT external_id, country FROM jobs").fetchall())
+    assert countries == {"A": "CH", "B": None}
+
+
+def test_backfill_reresolves_the_tier_when_the_country_changed(
+    db: sqlite3.Connection, company_id: int
+) -> None:
+    """`not_required` is a location predicate (15a), so a Jakarta req that gains ID must
+    move onto it — while a row that gains a country abroad keeps the tier its text decided."""
+    repo = SqliteJobRepo(db)
+    repo.upsert(company_id, _located("A", "Jakarta"), seen_at=POLL)
+    repo.upsert(
+        company_id,
+        _located("B", "Amsterdam"),
+        seen_at=POLL,
+        sponsorship=SponsorSignal(SponsorTier.EXPLICIT_YES, evidence="We do sponsor visas."),
+    )
+
+    result = backfill_locations(repo)
+
+    assert result.retiered == 1
+    tiers = dict(db.execute("SELECT external_id, sponsor_tier FROM jobs").fetchall())
+    assert tiers == {"A": SponsorTier.NOT_REQUIRED, "B": SponsorTier.EXPLICIT_YES}

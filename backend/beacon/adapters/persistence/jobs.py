@@ -15,6 +15,7 @@ from beacon.domain.contact import extract_contact_email
 from beacon.domain.resume import SCORING_VERSION
 from beacon.domain.dedup import DedupRow
 from beacon.domain.job import NormalizedJob
+from beacon.domain.location import UncountriedJob
 from beacon.domain.registry import registry_names
 from beacon.domain.sponsorship import SORT_RANK, SponsorSignal, SponsorTier
 from beacon.domain.status import UserStatus
@@ -143,6 +144,27 @@ class SqliteJobRepo:
             f"UPDATE jobs SET sponsor_tier = ?"  # noqa: S608 — literals are enum values
             f" WHERE company_id = ? AND sponsor_tier NOT IN ({_REGISTRY_IMMUNE_LITERALS})",
             (tier, company_id),
+        )
+        self._conn.commit()
+
+    def list_uncountried(self) -> list[UncountriedJob]:
+        rows = self._conn.execute(
+            """
+            SELECT jobs.id AS id, jobs.location_raw AS location_raw,
+                   companies.country_hq AS country_hq
+            FROM jobs
+            JOIN companies ON companies.id = jobs.company_id
+            WHERE jobs.country IS NULL
+            """
+        ).fetchall()
+        return [
+            UncountriedJob(row["id"], row["location_raw"], row["country_hq"] or None)
+            for row in rows
+        ]
+
+    def set_location(self, job_id: int, country: str, city: str | None) -> None:
+        self._conn.execute(
+            "UPDATE jobs SET country = ?, city = ? WHERE id = ?", (country, city, job_id)
         )
         self._conn.commit()
 
