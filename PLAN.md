@@ -855,6 +855,87 @@ Acceptance:
 
 ---
 
+## Slice 19 candidates — measured 2026-09-15, none chosen yet
+
+Three levers, each measured against the real `beacon.db` rather than argued from the spec.
+Recorded together so the trade is visible; picking one is a decision, not a default.
+
+### A — Make coverage visible (the class of defect slice 18 found)
+
+Slice 18's lesson was not "add countries". It was that **Beacon asserts things it never
+measured**, found in three separate places in one session:
+
+| assertion | reality on 2026-09-15 |
+|---|---|
+| SPEC §4: the UK sponsor register "is ingested" | **zero** companies carry the UK bit — no snapshot since slice 2 |
+| Globe source-health widget: "44 OK / 1 degraded / 2 quarantined" | live **65 / 0 / 3**, plus **2 pending** it has no row for |
+| DESIGN §1: "11 markets + home" | the code already derived the count; the copy drifted to 16 |
+
+The third is fixed. The first is corrected in SPEC and waiting on a hand download. **The second
+is still rendering false numbers on screen right now.**
+
+The cost of the first one is the argument for this slice: `_available_ingesters`
+(`refresh.py:36`) prints a skip line for a missing snapshot and nothing else, so **the single
+biggest tier lever in the repo stayed invisible for sixteen slices**. A UI that showed registry
+coverage would have caught it the week it happened.
+
+Shape:
+- Wire `SourceHealth` (`CountriesPage.tsx:121`) to `GET /companies/health`, which **already
+  exists, is tested, and returns exactly this rollup** — `api/companies.ts` was written for it
+  and has never been imported. Add the `pending` row the widget currently has no concept of.
+- **One real gap to close first:** the widget renders "poll 07:04" and `HealthSummary` carries
+  **no last-poll field at all**. The honest fix is a `last_poll_at` on the rollup in
+  `application/company_health.py` (max `last_success_at`), not a client-side `Math.max` — it is
+  a rollup, and the rollup is the application layer's job.
+- Surface **registry coverage** beside it: which registries have a snapshot, its `fetched_at`,
+  and how many companies matched. `registries_meta` already stores the first two and already
+  nags after 45 days; today only IE (6,360 rows) and CA (7,884) appear, and **UK/NL/US are
+  absent with nothing saying so**.
+- Deferred UI polish that belongs with it, carried since slice 10: per-job "source stale since"
+  banner, sidebar source-health footer, nav count badges.
+
+**Honest caveat: this surfaces no new jobs.** It is maintenance, not capability — it makes the
+tool stop lying about what it has. The counter-argument is that it is small and the defect is
+real and on screen.
+
+### B — The GB problem generalised: 1,808 unreachable jobs
+
+GB was not a special case, it was the visible instance. Open canonical jobs whose country has
+no §4 row, and therefore no filter checkbox, no globe pin and no card:
+
+**1,808 jobs · 45 countries · 106 firms** — nearly four times the GB number that motivated 18a.
+
+| | IN | MY | TH | DE | FR | CN | VN | MX |
+|---|---|---|---|---|---|---|---|---|
+| open | 346 | 235 | 217 | 194 | 105 | 80 | 73 | 71 |
+| target-profile | 48 | 22 | 20 | 9 | — | — | — | — |
+
+Two shapes, and they are not the same slice:
+1. **A generic "other markets" affordance** — the countries that have jobs but are not
+   relocation targets, from a distinct-country rollup, filterable without claiming any of them
+   as a target. One feature, covers all 45, and is the option 18a explicitly deferred.
+2. **Widen §4 again.** Expensive per row: each needs the hand-verified visa research 18b did,
+   and 18b is the reason slice 18 took as long as it did. **The sharpest single instance is
+   Germany — 194 open, a major EU tech market with an EU Blue Card route, absent from §4
+   entirely.** The rest of the tail (IN/MY/TH/VN/MX) is reachable-but-probably-not-wanted,
+   which is precisely the argument for (1) over fifteen more verified rows.
+
+**The open question is not a measurement**, so it is not answerable here: whether those markets
+are wanted at all. (1) is the answer that does not require deciding.
+
+### C — The 346 remaining parser gaps (carried from 17d)
+
+Unchanged and still specified, family by family, in 17d: multi-city comma list **98**, country
+token glued to a qualifier **84**, parenthetical holds the country **84** (incl. `"KOHO (CAN)"`
+needing an alpha-3 table), Canadian province code/name **26**, `"X or Y"` alternatives **25**,
+slash-separated **12**, bare US state name **9**, 8 other.
+
+17d costed it honestly and the cost has not changed: **slice 17 bought 33.7 points of country
+coverage; closing all six families buys 3.9.** A day of table-and-regex work against machinery
+that already exists — real, bounded, and explicitly diminishing.
+
+---
+
 ## Cross-cutting rules
 
 - Every network adapter is tested against recorded fixtures only; live calls happen solely in manual acceptance checks
