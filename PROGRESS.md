@@ -203,6 +203,31 @@ Legend: ⬜ not started · 🟨 in progress · ✅ done (acceptance boxes checke
 
 ## Open items / TODO (not slice work)
 
+### Registry snapshots — the three that were never downloaded (verified 2026-09-15)
+
+`_available_ingesters` (`refresh.py:36`) skips a missing snapshot by design, so UK/NL/US have
+failed silently since slice 2. **Headers must match byte-for-byte** — `iter_rows` uses
+`csv.DictReader` with no case normalization, and a wrong *name* column yields zero companies
+silently (empty name → `continue`), not an error. Drop each file in `data/registries/`, then
+`uv run python -m beacon.maintenance refresh-registries`.
+
+**1. UK — ready to drop, header verified live against the adapter. Highest value: GB is 480 open jobs at 66% `unknown`.**
+- Page (direct link changes daily): https://www.gov.uk/government/publications/register-of-licensed-sponsors-workers
+- Save as `data/registries/uk_sponsors.csv`. Updated **daily**; no conversion needed.
+- Live header 2026-09-14 is **identical to the fixture**: `Organisation Name,Town/City,County,Type & Rating,Route`. Adapter reads `Organisation Name` + `Route`; the real file's leading-whitespace names (`" AaruvikA Limited"`) are the hazard `uk.py` already documents handling.
+
+**2. US H-1B — works, but needs an XLSX→CSV conversion step.**
+- Page: https://www.dol.gov/agencies/eta/foreign-labor/performance
+- Pattern `LCA_Disclosure_Data_FY<YYYY>_Q<N>.xlsx` under `/sites/dolgov/files/ETA/oflc/pdfs/`. **Confirmed 200: FY2026_Q1, FY2025_Q3, FY2025_Q4. FY2026_Q2/Q3 404 at that path** — take the current link off the page rather than guessing.
+- Save as `data/registries/h1b_lca.csv`. The adapter reads CSV, so the XLSX must be exported first; it only needs `CASE_STATUS`, `EMPLOYER_NAME`, `TRADE_NAME_DBA`, so exporting those three columns keeps a very large file manageable.
+
+**3. NL IND — blocked, and it is the NZ situation again.**
+- Page: https://ind.nl/en/public-register-recognised-sponsors → Work → regular labour and highly skilled migrants
+- **No downloadable file found**: an online table, updated monthly. Columns shown are Organisation + KVK number.
+- Two honest options: hand-build the CSV (it is only two columns), or leave NL unpopulated. **If hand-building, the header must read exactly `Organisation,KvK number`** — the adapter looks up `KvK number` and the site renders `KVK number`, so a copy-paste header loses the KvK evidence silently.
+
+
+
 - [x] ~~Build initial `seeds/companies.csv`~~ — delivered 2026-07-04, 53 verified rows. Place at `seeds/companies.csv` in repo.
 - [x] ~~Download registry snapshots for fixtures~~ — **ALL FOUR RESOLVED 2026-07-04:**
   - [x] UK sponsor register CSV — delivered (2026-07-03 snapshot, 142k rows) → `uk_sponsors_fixture.csv` (35 rows)
