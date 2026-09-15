@@ -1,7 +1,9 @@
 """The country/visa reference data (SPEC §4) is pure domain knowledge — every target
 country present, tiers per SPEC §3, and each row carries a verified date + source_url."""
 
+import re
 from datetime import date
+from pathlib import Path
 
 import pytest
 
@@ -9,8 +11,12 @@ from beacon.domain.visa import COUNTRY_REFERENCE, CountryReference, PriorityTier
 
 BY_CODE: dict[str, CountryReference] = {c.code: c for c in COUNTRY_REFERENCE}
 
-PRIMARY_CODES = {"SG", "AU", "JP", "NL", "US", "CA", "IE"}
-NICE_TO_HAVE_CODES = {"SE", "NO", "DK", "CH"}
+PRIMARY_CODES = {"SG", "AU", "JP", "NL", "US", "CA", "IE", "GB"}
+NICE_TO_HAVE_CODES = {"SE", "NO", "DK", "CH", "NZ", "TW", "HK"}
+
+# Slice 18 widened §4. These four were verified on their own date against official pages, so
+# they must not inherit the table-wide Jan-2026 knowledge date the original twelve share.
+SLICE_18_CODES = {"GB", "NZ", "TW", "HK"}
 
 
 HOME_CODE = "ID"
@@ -78,3 +84,72 @@ def test_sweden_citizenship_carries_the_reform_caveat() -> None:
     # Acceptance: a Swedish job's country card must show the 5yr→8yr reform caveat.
     citizenship = BY_CODE["SE"].citizenship_summary.lower()
     assert "8" in citizenship and "reform" in citizenship
+
+
+@pytest.mark.parametrize("country", COUNTRY_REFERENCE, ids=lambda c: c.code)
+def test_no_row_claims_to_be_verified_in_the_future(country: CountryReference) -> None:
+    """A future verified_at renders in the UI as "verified as of <date>" — a date that has not
+    happened yet is not optimism, it is a lie about reference data (CLAUDE.md data notes)."""
+    assert country.verified_at <= date.today()
+
+
+@pytest.mark.parametrize("code", sorted(SLICE_18_CODES))
+def test_slice_18_rows_carry_their_own_verification_date(code: str) -> None:
+    """The twelve original rows share SPEC §4's table-wide "as-known Jan 2026" date. A row
+    checked in September must say September — inheriting January would backdate research that
+    had not been done, which is the one thing verified_at exists to prevent."""
+    assert BY_CODE[code].verified_at > date(2026, 1, 15)
+
+
+def test_uk_registry_points_at_the_register_already_ingested() -> None:
+    """The UK register was ingested from slice 2 as a "sponsors somewhere" proxy. With GB a
+    target country the same bit now says something stronger — that a GB job's employer sponsors
+    *in the country the job is in* — so the row must name it rather than claim none exists."""
+    assert "register" in BY_CODE["GB"].registry_name.lower()
+
+
+def test_new_zealand_registry_states_why_it_cannot_be_ingested() -> None:
+    """INZ publishes accredited employers as a daily-updated SEARCH tool with no bulk export,
+    and lets employers opt out of appearing. That is not a registry this repo can ingest —
+    scraping it is out of scope by the cross-cutting rules — so the row says so plainly rather
+    than implying an ingester exists (the Sweden row is the precedent)."""
+    registry = BY_CODE["NZ"].registry_name.lower()
+
+    assert "search" in registry
+    assert "no bulk export" in registry or "not downloadable" in registry
+
+
+def test_taiwan_names_the_self_sponsored_card_in_its_visa_copy() -> None:
+    """The Gold Card carries its own work permit, so TW needs no sponsoring employer. That
+    fact belongs in the visa copy and NOWHERE else: `not_required` is a location predicate for
+    the home market only, and a second one in resolve_tier would break the single-source tier
+    chain (CLAUDE.md). This test is the reminder of where the fact is allowed to live."""
+    assert "self-sponsored" in BY_CODE["TW"].visa_summary.lower()
+
+
+def test_hong_kong_states_permanent_residency_is_the_endpoint() -> None:
+    """There is no separate HK citizenship — nationality is a PRC matter, and right of abode
+    after 7 years is the real endpoint. SPEC §4 distinguishes PR from citizenship precisely so
+    a market like this can be honest instead of leaving the column vague."""
+    citizenship = BY_CODE["HK"].citizenship_summary.lower()
+
+    assert "no separate" in citizenship or "none" in citizenship
+
+
+def test_every_country_has_a_globe_pin() -> None:
+    """A country row with no PIN_GEO entry is dropped from the globe SILENTLY — Globe.tsx
+    guards the lookup with a ternary, so the market renders in the card stack and the filter
+    menu and simply never appears on the map. Nothing fails; it is just quietly missing.
+
+    This is the one guard that has to cross stacks: COUNTRY_REFERENCE lives in the domain and
+    PIN_GEO lives in the frontend, and no single-stack test can see both. Reading the TS file
+    is deliberate — a brittle path that fails loudly beats a silent hole in the map."""
+    globe_geo = Path(__file__).parents[3] / "frontend/src/countries/globeGeo.ts"
+    # Split on "= {" then the closing "\n}": the declaration's own type annotation
+    # ({ lat: number; lon: number }) contains braces, so naive brace-splitting reads nothing.
+    body = globe_geo.read_text().split("export const PIN_GEO")[1].split("= {", 1)[1]
+    pinned = set(re.findall(r"^  ([A-Z]{2}):", body.split("\n}")[0], re.MULTILINE))
+
+    assert pinned, "no PIN_GEO entries parsed — the guard would pass vacuously"
+
+    assert {c.code for c in COUNTRY_REFERENCE} <= pinned

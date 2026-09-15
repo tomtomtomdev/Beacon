@@ -25,7 +25,7 @@ async def test_lists_every_market_including_the_home_row(client: httpx.AsyncClie
     resp = await client.get("/countries")
 
     assert resp.status_code == 200
-    assert len(resp.json()) == 12  # 11 relocation targets + the home market (SPEC §4)
+    assert len(resp.json()) == 16  # 15 relocation targets + the home market (SPEC §4)
 
 
 async def test_home_row_leads_then_primary_tier_countries(client: httpx.AsyncClient) -> None:

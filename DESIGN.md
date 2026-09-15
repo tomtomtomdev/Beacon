@@ -84,7 +84,9 @@ list is **not its own view** — it is a pane inside Countries, gated by a selec
     (14.5px/700, `#e3fdf6`) + hint "drag to rotate · tap a beacon" (12px mono, `#5f9a95`); right =
     legend "Primary target" (dot `#5eead4`, teal glow) / "Nice-to-have" (dot `#93a7ad`) / **"Home"
     (dot `#fcd34d`, amber glow)**, 12px `#9fc7c2`.
-  - **Bottom-left caption:** "live beacon field · 11 markets + home" (11px, uppercase, 0.06em mono,
+  - **Bottom-left caption:** "live beacon field · {n} markets" — **n is DERIVED from /countries,
+    never typed** (it read "11 markets + home" while the code already counted; slice 18 made that
+    drift visible by adding four). (11px, uppercase, 0.06em mono,
     `#3f7a76`).
   - **Bottom-right Source-health widget** (glass: bg `rgba(4,17,26,0.72)`, `backdrop-filter:blur(6px)`,
     border `#10424a`, radius 12px, min-width 186px): "SOURCE HEALTH" label + "poll 07:04" (mono),

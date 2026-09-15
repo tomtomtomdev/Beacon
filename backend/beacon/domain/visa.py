@@ -13,6 +13,10 @@ from enum import StrEnum
 # The table-wide knowledge date SPEC §4 states ("all figures as-known Jan 2026").
 _AS_KNOWN = date(2026, 1, 15)
 
+# Slice 18's four markets were read off official pages on this date, so they carry it instead
+# of _AS_KNOWN — backdating them to January would claim research that had not happened.
+_SLICE_18_VERIFIED = date(2026, 9, 15)
+
 
 class PriorityTier(StrEnum):
     """Target-geography weighting from SPEC §3 — drives the Countries-view legend/pins.
@@ -183,5 +187,52 @@ COUNTRY_REFERENCE: tuple[CountryReference, ...] = (
         priority_tier=PriorityTier.NICE_TO_HAVE,
         verified_at=_AS_KNOWN,
         source_url="https://www.sem.admin.ch",
+    ),
+    # ---- Slice 18: §4 widened. Every figure below was read off the cited official page on
+    # 2026-09-15, not recalled. GB is `primary` on supply evidence: 480 open canonical jobs
+    # across 47 firms at the time of writing, second only to Singapore.
+    CountryReference(
+        code="GB",
+        name="United Kingdom",
+        visa_summary="Skilled Worker, £41,700/yr or the going rate; licensed sponsor",
+        pr_summary="ILR after 5yr continuous residence",
+        citizenship_summary="12mo after ILR (~6yr); dual allowed",
+        registry_name="UK register of licensed sponsors (public) — already ingested, SPEC §5.3",
+        priority_tier=PriorityTier.PRIMARY,
+        verified_at=_SLICE_18_VERIFIED,
+        source_url="https://www.gov.uk/skilled-worker-visa/your-job",
+    ),
+    CountryReference(
+        code="NZ",
+        name="New Zealand",
+        visa_summary="Accredited Employer Work Visa, up to 5yr; employer must be accredited",
+        pr_summary="Green List Tier 1 → Straight to Residence; Tier 2 → 24mo to residence",
+        citizenship_summary="5yr resident (1,350 days present); dual allowed",
+        registry_name="Accredited employer list — daily search tool, no bulk export; opt-out",
+        priority_tier=PriorityTier.NICE_TO_HAVE,
+        verified_at=_SLICE_18_VERIFIED,
+        source_url="https://www.immigration.govt.nz/visas/accredited-employer-work-visa/",
+    ),
+    CountryReference(
+        code="TW",
+        name="Taiwan",
+        visa_summary="Gold Card — self-sponsored open work permit, 1–3yr (Economy NT$160k/mo)",
+        pr_summary="APRC at 5yr; 1yr if income ≥NT$6M/yr (2026 rule)",
+        citizenship_summary="High-level professionals 2yr, no renunciation; otherwise renounce",
+        registry_name="None — the Gold Card is self-sponsored, so there is no sponsor to register",
+        priority_tier=PriorityTier.NICE_TO_HAVE,
+        verified_at=_SLICE_18_VERIFIED,
+        source_url="https://goldcard.nat.gov.tw/en/",
+    ),
+    CountryReference(
+        code="HK",
+        name="Hong Kong",
+        visa_summary="GEP employment visa, quota-free, 36mo initial stay; employer sponsor",
+        pr_summary="Right of abode after 7yr continuous ordinary residence",
+        citizenship_summary="No separate HK citizenship — a PRC matter; PR is the endpoint",
+        registry_name="None public — GEP sponsoring employers are not published",
+        priority_tier=PriorityTier.NICE_TO_HAVE,
+        verified_at=_SLICE_18_VERIFIED,
+        source_url="https://www.immd.gov.hk/eng/services/visas/GEP.html",
     ),
 )

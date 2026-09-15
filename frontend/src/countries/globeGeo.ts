@@ -29,6 +29,8 @@ export const LAND: LonLat[][] = [
   [[-24, 65], [-22, 66], [-14, 66], [-13, 64], [-19, 63]],
   // Japan
   [[130, 31], [131, 34], [133, 36], [137, 37], [140, 40], [142, 40], [141, 42], [144, 43], [145, 44], [143, 42], [140, 38], [140, 35], [137, 34], [135, 34], [132, 33]],
+  // Taiwan — its own island; the Eurasia path runs up the mainland coast, not around it
+  [[120.1, 23.3], [120.5, 24.3], [121.0, 25.0], [121.8, 25.1], [121.9, 24.3], [121.2, 22.9], [120.7, 22.3], [120.2, 22.8]],
   // Australia
   [[114, -22], [113, -26], [115, -34], [118, -35], [123, -34], [129, -32], [134, -33], [138, -35], [140, -38], [143, -39], [148, -38], [150, -37], [153, -32], [153, -28], [151, -24], [149, -21], [146, -19], [145, -15], [142, -11], [141, -13], [139, -17], [136, -12], [132, -11], [129, -15], [126, -14], [122, -18], [121, -20], [119, -20]],
   // Tasmania
@@ -83,6 +85,12 @@ export const PIN_GEO: Record<string, { lat: number; lon: number }> = {
   NO: { lat: 60, lon: 10.7 },
   DK: { lat: 55.7, lon: 12.5 },
   CH: { lat: 47.4, lon: 8.5 },
+  // Slice 18's markets. GB and NZ sit on landmasses LAND already traced; HK rides the traced
+  // Pearl River Delta coast; TW got its own outline above, without which this pin is at sea.
+  GB: { lat: 54, lon: -2 },
+  NZ: { lat: -41, lon: 173 },
+  TW: { lat: 23.7, lon: 121 },
+  HK: { lat: 22.3, lon: 114.2 },
 }
 
 export function px(lon: number, W: number): number {
