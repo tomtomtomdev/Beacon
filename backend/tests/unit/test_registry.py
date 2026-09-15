@@ -4,9 +4,11 @@ import pytest
 
 from beacon.domain.registry import (
     REGISTRY_STALE_AFTER_DAYS,
+    SNAPSHOT_REGISTRIES,
     Registry,
     RegistryCompany,
     RegistryMeta,
+    count_per_registry,
     registry_names,
     stale_registries,
 )
@@ -114,3 +116,33 @@ def test_registry_company_defaults_to_no_aliases_or_evidence() -> None:
 
     assert entry.aliases == ()
     assert entry.evidence == ""
+
+
+def test_snapshot_registries_is_every_bit_except_the_hand_flag() -> None:
+    # Derived from the enum, never listed by hand: a bit appended later is a register that
+    # can go missing, and the coverage view must report it without anyone remembering to.
+    # MANUAL is the --flag bit — there is no snapshot to be missing.
+    assert set(SNAPSHOT_REGISTRIES) == set(Registry) - {Registry.MANUAL}
+    assert [r.name for r in SNAPSHOT_REGISTRIES] == ["UK", "NL", "US", "IE", "CA"]
+
+
+@pytest.mark.parametrize(
+    ("mask_counts", "expected"),
+    [
+        ({}, {}),
+        ({0: 2140}, {}),
+        ({int(Registry.IE): 20}, {Registry.IE: 20}),
+        # The case that rules out passing a GROUP BY registry_flags straight through: one
+        # company carrying both bits counts once for each.
+        (
+            {int(Registry.IE): 20, int(Registry.CA): 9, int(Registry.IE | Registry.CA): 1},
+            {Registry.IE: 21, Registry.CA: 10},
+        ),
+        ({int(Registry.MANUAL): 3}, {Registry.MANUAL: 3}),
+    ],
+    ids=["empty", "unmatched-only", "single-bit", "overlapping-bits", "manual"],
+)
+def test_count_per_registry_splits_a_bitmask_histogram(
+    mask_counts: dict[int, int], expected: dict[Registry, int]
+) -> None:
+    assert count_per_registry(mask_counts) == expected

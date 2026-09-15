@@ -34,6 +34,9 @@ class HealthSummary:
     quarantined: int
     pending: int
     by_ats: dict[str, int]  # ats_type → count, for the seed line
+    # The most recent successful poll of any source. None means nothing has ever polled —
+    # the widget must render that as "no poll yet" rather than inventing a time.
+    last_poll_at: datetime | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,6 +71,7 @@ def get_company_health(
     by_ats: dict[str, int] = {}
     for company in companies:
         by_ats[company.ats_type] = by_ats.get(company.ats_type, 0) + 1
+    polls = [row.last_success_at for row in rows if row.last_success_at is not None]
     summary = HealthSummary(
         seed=len(companies),
         supported=sum(1 for company in companies if company.ats_type in supported_ats),
@@ -76,5 +80,6 @@ def get_company_health(
         quarantined=statuses.count(Health.QUARANTINED.value),
         pending=statuses.count(PENDING),
         by_ats=by_ats,
+        last_poll_at=max(polls, default=None),
     )
     return CompanyHealthView(summary=summary, companies=rows)

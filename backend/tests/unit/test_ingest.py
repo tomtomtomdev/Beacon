@@ -594,6 +594,9 @@ class FakeCompanyRepo:
     def list_active(self) -> list[Company]:
         raise NotImplementedError("company-less ingest never lists")
 
+    def count_by_registry_flags(self) -> dict[int, int]:
+        raise NotImplementedError("ingest never reads registry coverage")
+
     def set_registry_match(
         self, company_id: int, flags: int, confidence: float | None, evidence: str | None
     ) -> None:

@@ -37,6 +37,7 @@ class HealthSummaryOut(BaseModel):
     quarantined: int
     pending: int
     by_ats: dict[str, int]
+    last_poll_at: datetime | None
 
 
 class CompanyHealthOut(BaseModel):
@@ -71,6 +72,7 @@ def _summary_out(summary: HealthSummary) -> HealthSummaryOut:
         quarantined=summary.quarantined,
         pending=summary.pending,
         by_ats=summary.by_ats,
+        last_poll_at=summary.last_poll_at,
     )
 
 

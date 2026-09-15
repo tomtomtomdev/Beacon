@@ -8,6 +8,7 @@ from beacon.adapters.persistence.db import MIGRATIONS_DIR, connect, run_migratio
 from beacon.api.companies import router as companies_router
 from beacon.api.countries import router as countries_router
 from beacon.api.jobs import router as jobs_router
+from beacon.api.registries import router as registries_router
 from beacon.api.resumes import router as resumes_router
 from beacon.api.searches import router as searches_router
 from beacon.api.settings import router as settings_router
@@ -38,6 +39,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(countries_router)
     app.include_router(companies_router)
     app.include_router(resumes_router)
+    app.include_router(registries_router)
 
     @app.get("/healthz")
     async def healthz() -> dict[str, str]:

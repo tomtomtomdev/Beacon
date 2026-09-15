@@ -357,6 +357,13 @@ class CompanyRepo(Protocol):
         Shadow employers (ats_type='none') are excluded — they aren't pollable sources."""
         ...
 
+    def count_by_registry_flags(self) -> dict[int, int]:
+        """Histogram of registry_flags: mask → how many companies carry exactly that mask.
+        The aggregate, not the rows — the coverage view needs 30 matches out of thousands of
+        companies. Decoding a mask into bits is domain work (see count_per_registry), so the
+        repo returns the raw masks and never reasons about what a bit means."""
+        ...
+
 
 class SearchRepo(Protocol):
     def create(self, search: SavedSearch) -> SavedSearch:

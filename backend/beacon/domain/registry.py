@@ -4,7 +4,7 @@ Bitmask members are UK | NL | US | MANUAL | IE | CA (SPEC §5.3). There is no SE
 Swedish employer-certification scheme was discontinued Dec 2023.
 """
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import IntFlag
@@ -25,6 +25,24 @@ class Registry(IntFlag):
     MANUAL = 8
     IE = 16
     CA = 32
+
+
+# The registers that are published as a downloadable snapshot, and can therefore be missing
+# from this box. Derived from the enum rather than listed, so a bit appended later is covered by
+# the coverage view for free. MANUAL is excluded deliberately: it is the hand-flag bit
+# (`refresh.py --flag`), not a register, so it has no snapshot that could be absent.
+SNAPSHOT_REGISTRIES: tuple[Registry, ...] = tuple(r for r in Registry if r is not Registry.MANUAL)
+
+
+def count_per_registry(mask_counts: Mapping[int, int]) -> dict[Registry, int]:
+    """Split a registry_flags histogram (mask → how many companies carry exactly that mask)
+    into a count per bit. A company matched by two registers counts once for each, so these
+    totals deliberately do not sum to the number of companies. Masks of 0 contribute nothing."""
+    counts: dict[Registry, int] = {}
+    for mask, companies in mask_counts.items():
+        for member in Registry(mask):
+            counts[member] = counts.get(member, 0) + companies
+    return counts
 
 
 def registry_names(flags: int) -> tuple[str, ...]:

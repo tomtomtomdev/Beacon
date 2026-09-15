@@ -179,6 +179,8 @@ export interface HealthSummary {
   quarantined: number
   pending: number
   by_ats: Record<string, number>
+  // The most recent successful poll of any source; null when nothing has ever polled.
+  last_poll_at: string | null
 }
 
 export interface CompanyHealth {

@@ -855,10 +855,152 @@ Acceptance:
 
 ---
 
-## Slice 19 candidates — measured 2026-09-15, none chosen yet
+## Slice 19 — Make coverage visible: every number on screen is derived, or says why it cannot be
+
+**Chosen 2026-09-15 from the three candidates below (A).** Slice 18 found the same defect three
+times in one session — Beacon asserting something it never measured — and fixed one of the three.
+This slice closes the class, not the instances. Measured against the real `beacon.db` on
+2026-09-15, **five hardcoded numbers are on screen right now and four of them are false**:
+
+| rendered | where | live |
+|---|---|---|
+| "44 OK" | `CountriesPage.tsx:131` | **65** |
+| "1 degraded" | `CountriesPage.tsx:135` | **0** |
+| "2 quarantined" | `CountriesPage.tsx:139` | **3** |
+| *(no row at all)* | — | **2 pending** — a status the widget has no concept of |
+| "poll 07:04" | `CountriesPage.tsx:126` | last successful poll **2026-09-15 05:00Z** |
+| "4" saved-search badge | `App.tsx:84` | **2** saved searches |
+| "07:04 · LIVE" rail footer | `App.tsx:100` | same 05:00Z poll |
+
+And the one that is not on screen at all, which is the reason this slice is worth doing:
+**registry coverage**. `registries_meta` holds **IE 6,360 rows and CA 7,884, both fetched
+2026-09-04 — and nothing else.** UK, NL and US are named in SPEC §4, have built and fixture-tested
+adapters, are wired into `refresh.py`, and have **never been ingested on this box**;
+`_available_ingesters` (`refresh.py:36`) prints a skip line and returns. That is how the single
+biggest tier lever in the repo stayed invisible for sixteen slices. Per-bit company counts confirm
+it: **IE 21, CA 10, UK/NL/US/MANUAL 0** (`registry_flags` histogram: 16→20, 32→9, 48→1).
+
+**Honest caveat, carried from the candidate write-up: this slice surfaces no new jobs.** It is
+maintenance. What it buys is that the next missing snapshot is visible the week it happens instead
+of sixteen slices later.
+
+**What it costs, verified against the code rather than assumed:** no new adapter, no new port
+*type*, no schema change, no migration, no seed row, and no job is touched. `GET /companies/health`
+**already exists, is tested, and has never been imported** — `frontend/src/api/companies.ts` was
+written for it in slice 11 and the second design handoff deleted the Companies view that consumed
+it. One new endpoint (`/registries`), one new repo read, two derived rollup fields.
+
+**Build order: 19a `last_poll_at` on the rollup → 19b registry coverage end-to-end → 19c wire the
+widget → 19d the coverage block → 19e the rail's two hardcoded numbers.** Backend first so the
+frontend never mocks a shape that does not exist yet.
+
+### 19a — `last_poll_at` on the health rollup (application + api)
+
+The widget renders "poll 07:04" and `HealthSummary` carries **no last-poll field at all**. The
+honest fix is a rollup field, not a client-side `Math.max` over the companies array — it is a
+rollup, and the rollup is the application layer's job (and the row list is a detail the widget
+does not otherwise need).
+
+- `test_summary_carries_the_latest_successful_poll` — RED first: a view over companies with mixed
+  `last_success_at` reports the maximum.
+- `test_last_poll_at_is_none_when_nothing_has_ever_polled` — the empty/never-polled case is `None`,
+  not `datetime.min` and not "now". A tool that has never polled must not render a time.
+- `HealthSummary.last_poll_at: datetime | None`, `HealthSummaryOut` mirrors it, `types.ts` mirrors
+  that. Pending companies contribute nothing by construction (never polled ⇒ `last_success_at` null).
+
+### 19b — Registry coverage, end to end (domain → application → api)
+
+The part with no existing surface. `registries_meta` already stores `fetched_at` + `row_count` and
+already nags the digest after 45 days; what is missing is the **absence** — a registry with no row
+is invisible, and that is precisely the UK bug.
+
+- `test_a_registry_with_no_snapshot_is_reported_as_never_ingested` — RED first, and the whole point
+  of the sub-slice: coverage lists **every** `Registry` member, not only the ones with a meta row.
+- `test_manual_is_not_reported_as_a_missing_snapshot` — `MANUAL` is the hand-flag bit
+  (`refresh.py --flag`), not a published register. It has no snapshot and never will; reporting it
+  as missing is a second lie in a slice about not lying.
+- `test_coverage_counts_companies_per_bit` — a company carrying `IE|CA` counts once for each, which
+  is why the count cannot be a `GROUP BY registry_flags` passed straight through.
+- `test_a_snapshot_older_than_the_window_is_stale` — reuses `REGISTRY_STALE_AFTER_DAYS` and
+  `RegistryMeta.is_stale`; the 45-day rule stays in one place (it is already the digest's).
+- Domain: `SNAPSHOT_REGISTRIES` **derived** from the enum (`every member except MANUAL`) so a bit
+  appended later is covered for free, and a pure `count_per_registry(mask_counts)` that turns a
+  bitmask histogram into per-bit counts. Bit arithmetic stays where `Registry` lives — never in SQL.
+- Port: `CompanyRepo.count_by_registry_flags() -> dict[int, int]`, the raw mask histogram (3 rows
+  live, vs. loading 2,210 `Company` objects to count 30 matches). The repo stays dumb; the meaning
+  of a bit stays pure.
+- Application: `get_registry_coverage(meta_repo, company_repo, *, now)`. API: `GET /registries`.
+
+### 19c — Wire the widget (frontend, DESIGN §1 bottom-right)
+
+- `test_source_health_widget_renders_the_api_counts` — RED first, mocked at the fetch boundary
+  (msw/`vi.fn`), never React Query internals. The red must fail on the *numbers*, not on a crash.
+- `test_widget_shows_a_pending_row` — the fourth status the design never had.
+- `test_widget_renders_no_poll_time_when_nothing_has_polled` — `last_poll_at: null` must render an
+  explicit "no poll yet", not a blank gap and not today's date.
+- Query key `['companyHealth']`, shared with 19e's rail so the two surfaces cost **one** request —
+  the 18a pattern, and the reason the repo has no global client-state lib.
+- Tokens already exist (`--health-ok-dot` / `-degraded-` / `-quarantined-`, `tokens.css`).
+  **Pending needs one new token** and takes the existing grey `#8296a0` (the `unknown` tier dot) —
+  pending is an absence of information, exactly like `unknown`, and reusing its grey is the
+  palette staying consistent rather than a new colour invented.
+
+### 19d — The registry-coverage block (frontend)
+
+Folded into the same glass widget under a divider rather than shipped as a second floating panel:
+one "what do we actually have" surface, and the globe has room for one.
+
+- `test_registry_block_names_a_registry_with_no_snapshot` — RED first. **UK/NL/US must read
+  "never ingested"**, not be absent and not read "0".
+- `test_registry_block_shows_rows_and_match_counts_for_an_ingested_snapshot` — "IE 6,360 · 21 firms".
+- `test_a_stale_snapshot_is_marked` — the 45-day flag the digest already nags about, made visible
+  before it is stale rather than only in a message that arrives at 06:00.
+
+### 19e — The rail's two hardcoded numbers (frontend)
+
+The same defect, one file over. Both are prototype constants that render as fact.
+
+- `test_saved_badge_counts_new_matches` — RED first: the badge is the sum of `new_count` across
+  `/searches`, via the **same `['searches']` key `SavedSearchesPage` already uses** (shared cache,
+  no second request).
+- `test_saved_badge_is_absent_when_nothing_is_new` — a zero badge is noise; **absence is the
+  honest rendering of zero**, and "4" against zero new matches is the bug being fixed.
+- `test_rail_footer_shows_the_real_poll_time` — from 19a's `last_poll_at`, rendered in local time.
+- **The per-job "source stale since" banner is CLOSED, not built** (deferred since slice 10). The
+  second design handoff deleted the Companies view and never respecified the banner; building it
+  needs `JobListing` to carry company health, which is real plumbing for a surface the frozen
+  design does not describe. Recorded in PROGRESS with the reason, not carried a fourth time.
+
+**Refactor watch.** `HealthSummary` gaining one field is fine; a second rollup field that is really
+a *different* question (registry coverage) does **not** join it — that is why 19b is its own
+endpoint. If the widget starts wanting per-company rows, that is a drawer, not a summary.
+
+Acceptance:
+- [ ] Not one number in the source-health widget or the icon rail is a literal — each is derived
+      from an API response, and the counts match the live DB when checked by hand
+- [ ] The widget renders four statuses; `pending` has a row, and 2 pending companies appear in it
+- [ ] `GET /registries` lists **every** registry bit; UK/NL/US read "never ingested" rather than
+      being absent or reading "0", and MANUAL is not reported as a missing snapshot
+- [ ] IE and CA show their real `fetched_at`, row counts (6,360 / 7,884) and company matches (21 / 10)
+- [ ] A registry bit appended to the enum appears in coverage with **no change to the use case, the
+      endpoint or the frontend** — proven by a test, not by inspection
+- [ ] `last_poll_at` is `None` when nothing has polled, and neither surface invents a time for it
+- [ ] The saved badge shows the real new-match count and **disappears at zero**
+- [ ] Both surfaces share one `['companyHealth']` fetch — no duplicate request
+- [ ] DESIGN.md §1 and §Icon-rail no longer name a count: the widget's rows, the poll time and the
+      rail badge are described as derived, the way slice 18 rewrote the markets caption
+- [ ] The per-job stale banner is recorded closed with its reason, not deferred again
+- [ ] No job row, `content_hash`, classification or tier moves — this slice reads and renders only
+- [ ] `make verify` green on both stacks
+
+---
+
+## Slice 19 candidates — measured 2026-09-15; **A chosen, B and C stand**
 
 Three levers, each measured against the real `beacon.db` rather than argued from the spec.
 Recorded together so the trade is visible; picking one is a decision, not a default.
+**A became slice 19 (above) on 2026-09-15.** B and C are unchanged and still measured —
+left here as the next two levers rather than rewritten as history.
 
 ### A — Make coverage visible (the class of defect slice 18 found)
 

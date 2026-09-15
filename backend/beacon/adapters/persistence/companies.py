@@ -101,6 +101,12 @@ class SqliteCompanyRepo:
         )
         self._conn.commit()
 
+    def count_by_registry_flags(self) -> dict[int, int]:
+        rows = self._conn.execute(
+            "SELECT registry_flags, COUNT(*) AS companies FROM companies GROUP BY registry_flags"
+        ).fetchall()
+        return {row["registry_flags"]: row["companies"] for row in rows}
+
     def get_health(self, company_id: int) -> SourceHealth:
         row = self._conn.execute(
             "SELECT consecutive_failures, health, quarantine_reason, last_success_at"
