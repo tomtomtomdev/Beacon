@@ -3,7 +3,7 @@ import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { Country } from '../api/types'
+import type { CompanyHealth, Country, RegistryCoverage } from '../api/types'
 import { CountriesPage } from './CountriesPage'
 import { TOUR_DWELL_MS, TOUR_IDLE_MS } from './useIdleTour'
 
@@ -45,6 +45,40 @@ const countries: Country[] = [
   },
 ]
 
+// The globe widget reads two rollups; the page tests only need them well-formed, so the
+// numbers themselves are pinned in SourceHealth.test.tsx rather than duplicated here.
+const health: CompanyHealth = {
+  summary: {
+    seed: 3,
+    supported: 2,
+    healthy: 2,
+    degraded: 0,
+    quarantined: 1,
+    pending: 0,
+    by_ats: { greenhouse: 2, gem: 1 },
+    last_poll_at: '2026-09-15T05:00:04Z',
+  },
+  companies: [],
+}
+
+const coverage: RegistryCoverage = {
+  registries: [{ registry: 'IE', fetched_at: '2026-09-04T05:29:57Z', row_count: 6360, companies: 21, stale: false }],
+}
+
+// One route → one body. A chain of ternaries silently served a jobs page to every URL it did
+// not recognise, so a new endpoint failed as a render crash instead of as a missing mock.
+const BODIES: Record<string, unknown> = {
+  '/resumes': [],
+  '/companies/health': health,
+  '/registries': coverage,
+}
+
+function bodyFor(url: string): unknown {
+  if (url in BODIES) return BODIES[url]
+  if (url.startsWith('/countries')) return countries
+  return { total: 0, jobs: [] }
+}
+
 const fetchMock = vi.fn()
 
 function renderPage() {
@@ -60,9 +94,7 @@ function renderPage() {
 
 beforeEach(() => {
   fetchMock.mockImplementation((url: RequestInfo | URL) => {
-    const u = String(url)
-    // The jobs pane reads the active resume; no resume is set in these tests.
-    const body = u.startsWith('/countries') ? countries : u === '/resumes' ? [] : { total: 0, jobs: [] }
+    const body = bodyFor(String(url))
     return Promise.resolve({ ok: true, json: () => Promise.resolve(body) } as Response)
   })
   vi.stubGlobal('fetch', fetchMock)

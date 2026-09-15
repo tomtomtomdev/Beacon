@@ -74,6 +74,9 @@
   --health-ok-dot: #34d399;
   --health-degraded-dot: #fbbf24;
   --health-quarantined-dot: #f87171;
+  /* Pending = a seed source with no adapter yet: an absence of information, exactly like
+     the `unknown` sponsorship tier, so it takes that same grey rather than a new colour. */
+  --health-pending-dot: #8296a0;
 
   /* Sponsorship tiers (bg / fg / dot) — dark rgba fills */
   --tier-yes-bg: rgba(52, 211, 153, 0.14);

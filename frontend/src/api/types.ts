@@ -188,6 +188,22 @@ export interface CompanyHealth {
   companies: CompanyHealthRow[]
 }
 
+// GET /registries (DESIGN §1). Sponsor-registry coverage: which registers actually have a
+// snapshot on this box. `fetched_at: null` means NEVER INGESTED — a different and worse state
+// than `stale` (a snapshot that aged past the 45-day window). SPEC §4 asserted the UK register
+// was ingested for sixteen slices while no snapshot existed; this row is how that stays visible.
+export interface RegistryCoverageRow {
+  registry: string
+  fetched_at: string | null
+  row_count: number | null
+  companies: number
+  stale: boolean
+}
+
+export interface RegistryCoverage {
+  registries: RegistryCoverageRow[]
+}
+
 // Target-geography weighting (SPEC §3) — drives the Countries-view legend and map pins.
 // 'home' is not a stronger 'primary': it is the one market that is not a relocation target
 // at all, which is why it leads the stack and renders a home-market block (DESIGN §1).

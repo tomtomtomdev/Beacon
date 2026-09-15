@@ -227,7 +227,7 @@
   bottom: 16px;
   right: 24px;
   z-index: 3;
-  min-width: 186px;
+  min-width: 218px;
   padding: 13px 16px;
   border: 1px solid var(--geo-panel-border);
   border-radius: var(--radius-menu);
@@ -293,6 +293,56 @@
 
 .dotQuarantined {
   background: var(--health-quarantined-dot);
+}
+
+.dotPending {
+  background: var(--health-pending-dot);
+}
+
+.healthState {
+  font-size: 11.5px;
+  color: var(--geo-caption);
+}
+
+/* Registry coverage, under a divider in the same glass widget — one "what do we actually
+   have" surface, and the globe has room for exactly one. */
+.registries {
+  margin-top: 11px;
+  padding-top: 10px;
+  border-top: 1px solid var(--geo-panel-border);
+}
+
+.registryRows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 7px;
+}
+
+.registryRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.registryName {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-body);
+  min-width: 20px;
+}
+
+.registryDetail {
+  font-family: var(--font-mono);
+  color: var(--geo-overlay-mono);
+}
+
+/* A register that was never ingested is the finding, not a footnote — it reads in the same
+   amber the digest nags in, so it is legible before anyone goes looking for it. */
+.registryMissing {
+  font-family: var(--font-mono);
+  color: var(--health-degraded-dot);
 }
 
 /* ---- Country cards (compact dark stack) ---- */

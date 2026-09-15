@@ -8,6 +8,7 @@ import { JobsPane } from '../jobs/JobsPane'
 import { PRIORITY_TIER_LABEL } from '../jobs/taxonomy'
 import styles from './CountriesPage.module.css'
 import { Globe } from './Globe'
+import { SourceHealth } from './SourceHealth'
 import { useIdleTour } from './useIdleTour'
 
 export function CountriesPage() {
@@ -113,33 +114,6 @@ export function CountriesPage() {
         </div>
       )}
     </main>
-  )
-}
-
-// Static source-health summary folded into the globe legend (Beacon-2: "static summary widget").
-// TODO: wire live counts + last-poll time from GET /companies/health rollup.
-function SourceHealth() {
-  return (
-    <div className={styles.health}>
-      <div className={styles.healthHead}>
-        <span className={styles.healthLabel}>Source health</span>
-        <span className={styles.healthPoll}>poll 07:04</span>
-      </div>
-      <div className={styles.healthRows}>
-        <div className={styles.healthRow}>
-          <span className={`${styles.healthDot} ${styles.dotOk}`} />
-          <span className={styles.healthCount}>44</span> OK
-        </div>
-        <div className={styles.healthRow}>
-          <span className={`${styles.healthDot} ${styles.dotDegraded}`} />
-          <span className={styles.healthCount}>1</span> degraded
-        </div>
-        <div className={styles.healthRow}>
-          <span className={`${styles.healthDot} ${styles.dotQuarantined}`} />
-          <span className={styles.healthCount}>2</span> quarantined
-        </div>
-      </div>
-    </div>
   )
 }
 

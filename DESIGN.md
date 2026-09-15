@@ -52,12 +52,19 @@ column** whose right-hand side panel owns the scroll (see §1). A **job-detail d
   (12.5px/700, `#e3fdf6`), gap 7px, 22px bottom padding.
 - **Nav** (2 items, stacked icon-over-label, gap 5px, 11×4 pad, radius 11px):
   - **Globe** (globe icon) → the Countries home. Default/active view.
-  - **Saved** (bookmark icon + mono "4" count badge, top-right of the icon) → Saved searches.
+  - **Saved** (bookmark icon + mono count badge, top-right of the icon) → Saved searches. **The
+    badge count is DERIVED** — the sum of `new_count` across `/searches`, never typed (it shipped
+    as a literal "4" beside two searches; slice 19). **It is absent, not "0", when nothing is
+    new**: a zero chip reads as a control with nothing in it.
   - Active item: bg `rgba(94,234,212,0.14)`, color `#5eead4`. Idle: color `#6c948f`. Label 10.5px/600.
   - Badge: absolute top:-5 right:-8, 9.5px/700 mono, bg `#5eead4`, color `#04121a`, radius 999px.
 - **Footer** (`margin-top:auto`): a **Settings gear** icon-button (off the main nav — reachable for
-  Telegram creds, slice 8) over a vertical mono tag "07:04 · LIVE" (9px, `#3f7a76`, `writing-mode:
-  vertical-rl`, letter-spacing 0.1em, opacity 0.8).
+  Telegram creds, slice 8) over a vertical mono tag (9px, `#3f7a76`, `writing-mode:
+  vertical-rl`, letter-spacing 0.1em, opacity 0.8). The tag reads **"{age} · LIVE"** from
+  `/companies/health`'s `last_poll_at` — e.g. "8h ago · LIVE" — and **"no poll yet"** when nothing
+  has ever polled. **An age, not a clock time**: "07:04" (the literal it shipped as) cannot tell
+  this morning's poll from last Tuesday's, and **"LIVE" is a claim, so it is only made when a poll
+  has actually landed.**
 
 ---
 
@@ -89,9 +96,21 @@ list is **not its own view** — it is a pane inside Countries, gated by a selec
     drift visible by adding four). (11px, uppercase, 0.06em mono,
     `#3f7a76`).
   - **Bottom-right Source-health widget** (glass: bg `rgba(4,17,26,0.72)`, `backdrop-filter:blur(6px)`,
-    border `#10424a`, radius 12px, min-width 186px): "SOURCE HEALTH" label + "poll 07:04" (mono),
-    then three dot rows — "44 OK" (`#34d399`), "1 degraded" (`#fbbf24`), "2 quarantined" (`#f87171`),
-    12px `#9fc7c2` with mono counts `#c4ebe4`. A **static summary widget** (wire to live counts later).
+    border `#10424a`, radius 12px, min-width 218px — widened from 186px in slice 19 for the second
+    block): "SOURCE HEALTH" label + the poll age (mono, "poll 8h ago" / "no poll yet" — see the rail
+    footer for why it is an age), then **four** dot rows — OK (`#34d399`), degraded (`#fbbf24`),
+    quarantined (`#f87171`), **pending** (`#8296a0`), 12px `#9fc7c2` with mono counts `#c4ebe4`.
+    **Every count is DERIVED from `/companies/health`, never typed** — it shipped as "44 OK / 1
+    degraded / 2 quarantined" against a live 65/0/3, with two `pending` sources it had no row for.
+    **Pending** is a seed company whose ATS has no adapter yet: never polled, so neither healthy nor
+    failing, and it takes the `unknown`-tier grey because it is the same absence of information.
+  - **Registers block**, under a 1px `#10424a` divider inside the same widget (one "what do we
+    actually have" surface; the globe has room for one). "REGISTERS" label, then one 11px mono row
+    per registry bit from `/registries`: name (`#c4ebe4`) + detail. Ingested reads
+    "6,360 · 21 firms · 11d ago" (`#9fc7c2`), with "· stale" appended past the 45-day window; a
+    register with no snapshot reads **"never ingested" in the degraded amber `#fbbf24`** — not
+    omitted and not "0". **The absence is the content:** UK/NL/US have adapters, are wired into
+    `refresh.py`, and had never been downloaded onto this box while SPEC §4 said otherwise.
 - **Side panel** (right pane; `<aside>`, `flex:1; min-width:372px; max-width:512px; overflow-y:auto`,
   bg `#071a22`, border `#123842`, radius 18px, its own scroll so the globe never leaves the viewport).
   It shows the **all-markets card stack** (no selection) OR the **jobs pane** (a country selected).
@@ -252,7 +271,9 @@ buttons provide keyboard/test selection).
   no `rgba(248,113,113,0.14)`/`#f7a6a2`/`#f87171`.
 - **Status pills (bg / fg):** new `rgba(94,234,212,0.16)`/`#5eead4` · seen `rgba(148,180,186,0.12)`/
   `#9fc7c2` · starred `rgba(94,234,212,0.16)`/`#5eead4` · hidden `rgba(248,113,113,0.14)`/`#f7a6a2`.
-- **Source-health dots:** OK `#34d399`, degraded `#fbbf24`, quarantined `#f87171`.
+- **Source-health dots:** OK `#34d399`, degraded `#fbbf24`, quarantined `#f87171`, **pending
+  `#8296a0`** (the `unknown`-tier grey, reused deliberately — both mean "not known", and a fifth
+  colour would imply a fifth kind of thing).
 
 ### Typography
 Geist (UI, 400/500/600/700) + Geist Mono (400/500). H1 24/700/-0.02em; drawer title 21/700; card

@@ -70,9 +70,11 @@ cd backend
 uv run uvicorn beacon.api.app:create_app --factory --port 8000
 # GET /healthz  → {"status":"ok"}
 # GET /jobs?q=&country=&posted_since=&limit=&offset=
+# GET /companies/health  → source-health rollup + per-company rows
+# GET /registries        → sponsor-registry coverage (incl. never-ingested)
 ```
 
-**3. Run the frontend** (Vite dev server; proxies `/jobs` and `/healthz` to `localhost:8000`):
+**3. Run the frontend** (Vite dev server; proxies the API routes to `localhost:8000`):
 
 ```bash
 cd frontend
@@ -87,8 +89,15 @@ timeout / transport), `schema_drift` (fetched but nothing parsed, the API change
 records them on the company. A source **quarantines** after 3 consecutive `gone`/`schema_drift`
 failures or 10 `unreachable` ones; a quarantined source stops being polled and its jobs are
 frozen (never closed), so a dead board can't corrupt the data. A weekly probe retries
-quarantined sources and auto-restores any that recover. Health surfaces in the **Companies**
-view (`GET /companies/health`) and in the Telegram digest.
+quarantined sources and auto-restores any that recover. Health surfaces in the **source-health
+widget on the globe** (`GET /companies/health` — live ok/degraded/quarantined/pending counts and
+the age of the last poll) and in the Telegram digest.
+
+Beside it, **registry coverage** (`GET /registries`) reports which sponsor registers actually
+have a snapshot here, how old it is, how many rows it held and how many companies it matched —
+and names the ones that have **never been ingested**. A missing snapshot is skipped silently by
+`refresh.py`, so without this it is invisible: the UK register was named in the spec as ingested
+for sixteen slices while no `uk_sponsors.csv` had ever been downloaded onto this box.
 
 **Recovering a moved board is a data edit, no code:** a company that switched ATS provider or
 renamed its slug just needs its row in `seeds/companies.csv` updated —
