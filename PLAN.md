@@ -757,7 +757,7 @@ Acceptance:
 
 ---
 
-## Slice 18 — §4 widening: reachable markets, and one country list
+## Slice 18 — §4 widening: reachable markets, and one country list — **DONE 2026-09-15**
 
 **Goal:** two problems with the same root — the country list is maintained in two places and only one of them is the source of truth. Measured on the real `beacon.db` (open canonical jobs, 2026-09-15):
 
@@ -778,7 +778,7 @@ Against the current bottom of the table — **DK 27/7, CH 12/6, NO 7/3** — non
 
 **Build order: 18a one country list (no §4 decision needed) → 18b verify the figures → 18c the rows → 18d globe + UI → 18e the NZ register (gated).** 18a leads because it is a pure refactor that every later sub-slice would otherwise duplicate work against.
 
-### 18a — One country list, and GB reachable (frontend; no §4 decision required)
+### 18a — One country list, and GB reachable (frontend; no §4 decision required) — **DONE 2026-09-15**
 
 The refactor that has to happen before rows are added, not after. **Behavior-preserving for the twelve existing markets** — it changes where the list comes from, not what it contains.
 
@@ -787,7 +787,7 @@ The refactor that has to happen before rows are added, not after. **Behavior-pre
 - Delete `COUNTRY_OPTIONS`; `countryName` and `COUNTRY_NAMES` derive from the `['countries']` query that `CountriesPage` already runs, so the cache is shared and no second request is made. `PriorityTier` stays in `types.ts` — the tier badge is presentation, the list is data.
 - **The GB question this sub-slice does *not* decide:** deriving from `/countries` alone leaves GB exactly as stranded, because GB has no row. Two ways out, and they are a product decision (see the decision box below): **promote GB to a §4 row** (18c covers it), or add an **"other markets" affordance** — the countries that have jobs but are not relocation targets, from a distinct-country rollup — so 480 GB jobs, and the rest of the 66-country tail slice 17 opened up, stop being invisible. **Until one of the two ships, 18a's acceptance is the refactor only; GB stays unreachable and that is stated, not quietly tolerated.**
 
-### 18b — Verify the figures before a single row is written (owner-run; gates 18c)
+### 18b — Verify the figures before a single row is written (owner-run; gates 18c) — **DONE 2026-09-15**
 
 **The slice's real cost, and it is not code.** CLAUDE.md is explicit: country visa data carries `verified_at` + `source_url`, and stale rows must never render as current. Three-to-four rows × five prose columns of policy that changes without notice — **none of it may be written from memory or from a model's recollection, including mine.** 18c does not start until this table is filled from official pages.
 
@@ -800,7 +800,7 @@ Three claims to check rather than assume, each of which changes what gets built:
 
 These rows get a **real `verified_at` of the date they are checked — not `_AS_KNOWN`** (`domain/visa.py:14`, the table-wide Jan 2026 date the existing twelve share). A row verified in September must not inherit January's date.
 
-### 18c — The `CountryReference` rows (domain, pure)
+### 18c — The `CountryReference` rows (domain, pure) — **DONE 2026-09-15**
 
 - `test_countries_endpoint_lists_the_new_markets` — RED first: `/countries` returns the new count; NZ/TW/HK each carry `priority_tier='nice_to_have'`.
 - `test_every_country_row_is_verifiable` — a guard over **all** of `COUNTRY_REFERENCE`, not just the new rows: every `source_url` is `https://`, every `verified_at` is a real date not in the future, no summary column is empty. Cheap, and it is what stops row sixteen being added with a blank PR path.
@@ -808,7 +808,7 @@ These rows get a **real `verified_at` of the date they are checked — not `_AS_
 
 Tasks: the `CountryReference` entries, filled from 18b's table. `registry_name` states why no register applies where none does — the Sweden row is the precedent for a note that explains an absence instead of sitting empty. **HK's `citizenship_summary` states the endpoint limitation directly**; a market is allowed to be honestly unattractive, and a vague column reads as missing research.
 
-### 18d — Globe + UI (DESIGN §1/§Globe)
+### 18d — Globe + UI (DESIGN §1/§Globe) — **DONE 2026-09-15**
 
 - `PIN_GEO` gains an entry per new market (`globeGeo.ts:71`), country-centroid values in the existing style.
 - **Taiwan needs a `LAND` trace and the others do not** — the one real geometry finding. `LAND` already carries New Zealand's North and South islands, and Hong Kong sits on the traced Pearl River Delta coastline, but **Taiwan is not an island in the outline**: the Eurasia path runs up the mainland Fujian coast, so a TW pin would float in open sea. Trace it as its own entry beside Japan / Sri Lanka / Tasmania, **from the same Natural Earth 1:110m silhouettes the file header cites** — traced, not eyeballed. (GB, if promoted, needs none: "Great Britain" is already traced.)
@@ -818,7 +818,7 @@ Tasks: the `CountryReference` entries, filled from 18b's table. `registry_name` 
 
 **Refactor watch — the trap in this slice.** If 18b confirms TW's Gold Card is self-sponsored, there will be a pull toward teaching `resolve_tier` about it, the way 15a taught it Indonesia. **Do not.** `not_required` is a location predicate for the *home* market — the one place the reader already holds the right to work. A Gold Card is still a permit somebody has to obtain, so TW is an ordinary market whose sponsorship tier means exactly what it means everywhere else. The Gold Card belongs in the country card's `visa_summary` copy. A second location predicate in the resolver is the CLAUDE.md single-source rule breaking, and it would be the layer-leak trigger that outranks all others.
 
-### 18e — The NZ accredited-employer register (gated on 18b.1)
+### 18e — The NZ accredited-employer register (gated on 18b.1) — **CLOSED 2026-09-15 on its pre-registered kill criterion**
 
 Only NZ of the three plausibly has one, and it is what would move NZ off a wall of `unknown` into `registry_inferred` — the NL/IE/CA pattern, and the reason NZ leads the three rather than HK's larger volume.
 
@@ -837,25 +837,25 @@ Only NZ of the three plausibly has one, and it is what would move NZ off a wall 
 **`priority_tier` — assumed `primary`, flip it with one word if that is wrong.** The supply case is strong: 480 open / 47 firms ranks GB **second by volume** behind SG (504) and ahead of JP (452), CA (299), NL (284), AU (238) and IE (162), with 53 target-profile jobs and sponsorship already well-evidenced. That is `primary` company on every measure this repo has. The counter-argument is not supply but endpoint — it belongs in 18b's research, not here.
 
 Acceptance:
-- [ ] `COUNTRY_OPTIONS` is deleted; the filter menu, the pane heading and the globe all read one list served by `/countries`, and the twelve existing markets behave byte-identically
-- [ ] A country added to `COUNTRY_REFERENCE` alone appears in the filter menu, with its real name and tier badge, with **no frontend edit** — the duplicate is provably gone
-- [ ] `test_every_country_has_a_pin` fails if a row is added without a `PIN_GEO` entry; it fired before the new pins were added
-- [ ] Every figure in every new row was read off an official page and carries its own `source_url` and a `verified_at` of the date it was checked — no row inherits `_AS_KNOWN`, and nothing was written from recollection
-- [ ] The verifiability guard passes over every row and fails if any is given a blank summary or a future date
-- [ ] The new markets appear on the globe, in the card stack, in the filter menu and in the idle tour, with **no code change to the markets caption** (already derived)
-- [ ] Taiwan is traced as its own landmass from Natural Earth 1:110m; its pin sits on land, and NZ/HK needed no new geometry
-- [ ] `resolve_tier` is **byte-identical** at the end of this slice — no new location predicate, no TW special case; the Gold Card lives in `visa_summary` copy
-- [ ] The already-ingested NZ/TW/HK/GB jobs surface with **no re-poll, no re-classification and no `content_hash` movement** — this slice adds reference data and deletes a duplicate; it does not touch jobs
+- [x] `COUNTRY_OPTIONS` is deleted; the filter menu, the pane heading and the globe all read one list served by `/countries`, and the twelve existing markets behave byte-identically — `grep COUNTRY_OPTIONS frontend/src/` is empty; `FilterBar` takes `markets: readonly Country[]` from `JobsPane`'s `['countries']` query
+- [x] A country added to `COUNTRY_REFERENCE` alone appears in the filter menu, with its real name and tier badge, with **no frontend edit** — the duplicate is provably gone (the four slice-18 rows landed in `domain/visa.py` only; no frontend list was touched)
+- [x] `test_every_country_has_a_pin` fails if a row is added without a `PIN_GEO` entry; it fired before the new pins were added — shipped as `test_every_country_has_a_globe_pin` (`test_visa.py:139`), green
+- [x] Every figure in every new row was read off an official page and carries its own `source_url` and a `verified_at` of the date it was checked — no row inherits `_AS_KNOWN`, and nothing was written from recollection. *(The one box on this list resting on the 18b session's own record rather than a mechanical re-check: PROGRESS 2026-09-15 states each figure was read off the cited official page that day. `test_slice_18_rows_carry_their_own_verification_date` pins that the four rows do not inherit the table-wide date.)*
+- [x] The verifiability guard passes over every row and fails if any is given a blank summary or a future date — `test_every_row_is_fully_populated` + `test_no_row_claims_to_be_verified_in_the_future`, both parametrized over all 16 rows
+- [x] The new markets appear on the globe, in the card stack, in the filter menu and in the idle tour, with **no code change to the markets caption** (already derived) — the caption line in `CountriesPage.tsx` is untouched across the slice's diff
+- [x] Taiwan is traced as its own landmass from Natural Earth 1:110m; its pin sits on land, and NZ/HK needed no new geometry — `globeGeo.ts:32`, the only geometry added
+- [x] `resolve_tier` is **byte-identical** at the end of this slice — no new location predicate, no TW special case; the Gold Card lives in `visa_summary` copy. Re-checked mechanically: `git diff` over `domain/sponsorship.py` across the whole slice-18→19 range is **empty**
+- [x] The already-ingested NZ/TW/HK/GB jobs surface with **no re-poll, no re-classification and no `content_hash` movement** — this slice adds reference data and deletes a duplicate; it does not touch jobs. Provable from the diff rather than from a count: the slice touched `domain/visa.py`, `globeGeo.ts`, `FilterBar`/`JobsPane`/`taxonomy` and docs — **no ingest, classifier, job repo or migration file is in it**
 - [x] The GB decision is recorded in PROGRESS with its reasoning — **promote to a full §4 row**, 2026-09-15
-- [ ] SPEC §4's "even though UK isn't a target country" note is rewritten, not merely extended — the premise is now false
-- [ ] GB's `unknown` share is measured before and after the row lands, to record what the already-ingested UK register buys once it is pointed at a target country
-- [ ] 18e either lands with `Registry.NZ = 64`, a fixture-tested adapter and a real snapshot in `data/registries/` — or is recorded closed in PROGRESS with the reason
-- [ ] DESIGN.md's "11 markets + home" caption no longer names a number
-- [ ] `make verify` green on both stacks
+- [x] SPEC §4's "even though UK isn't a target country" note is rewritten, not merely extended — the premise is now false. The old phrasing is gone; §4 now carries a full UK row plus a **"Measured 2026-09-15, and it is not what this section implied"** paragraph stating the register has no snapshot
+- [x] GB's `unknown` share is measured before and after the row lands, to record what the already-ingested UK register buys once it is pointed at a target country — **and the answer is nothing, because the premise was false.** Before: 66% (316 of 480). After, re-measured 2026-09-15: **314 of 477 open GB canonicals still `unknown` (65.8%)**, with 93 `registry_inferred` — every one of them from an Irish or Canadian match, not a UK one. The box was written expecting a gain; what it actually recorded is the finding that started slice 19
+- [x] 18e either lands with `Registry.NZ = 64`, a fixture-tested adapter and a real snapshot in `data/registries/` — or is recorded closed in PROGRESS with the reason. **Closed:** INZ publishes accredited employers as a daily-updated search tool with no bulk export and an employer opt-out — exactly the pre-registered kill criterion. `test_new_zealand_registry_states_why_it_cannot_be_ingested` pins that the row says so instead of implying an ingester exists
+- [x] DESIGN.md's "11 markets + home" caption no longer names a number — it now describes the derived count and names the drift it came from
+- [x] `make verify` green on both stacks — **935 backend + 80 frontend** at the close of slice 18 (measured as slice 19's opening baseline; PROGRESS's 906 + 80 was the mid-slice 18a figure). **952 + 98** after slice 19
 
 ---
 
-## Slice 19 — Make coverage visible: every number on screen is derived, or says why it cannot be
+## Slice 19 — Make coverage visible: every number on screen is derived, or says why it cannot be — **DONE 2026-09-15**
 
 **Chosen 2026-09-15 from the three candidates below (A).** Slice 18 found the same defect three
 times in one session — Beacon asserting something it never measured — and fixed one of the three.
@@ -894,7 +894,7 @@ it. One new endpoint (`/registries`), one new repo read, two derived rollup fiel
 widget → 19d the coverage block → 19e the rail's two hardcoded numbers.** Backend first so the
 frontend never mocks a shape that does not exist yet.
 
-### 19a — `last_poll_at` on the health rollup (application + api)
+### 19a — `last_poll_at` on the health rollup (application + api) — **DONE 2026-09-15**
 
 The widget renders "poll 07:04" and `HealthSummary` carries **no last-poll field at all**. The
 honest fix is a rollup field, not a client-side `Math.max` over the companies array — it is a
@@ -908,7 +908,7 @@ does not otherwise need).
 - `HealthSummary.last_poll_at: datetime | None`, `HealthSummaryOut` mirrors it, `types.ts` mirrors
   that. Pending companies contribute nothing by construction (never polled ⇒ `last_success_at` null).
 
-### 19b — Registry coverage, end to end (domain → application → api)
+### 19b — Registry coverage, end to end (domain → application → api) — **DONE 2026-09-15**
 
 The part with no existing surface. `registries_meta` already stores `fetched_at` + `row_count` and
 already nags the digest after 45 days; what is missing is the **absence** — a registry with no row
@@ -931,7 +931,7 @@ is invisible, and that is precisely the UK bug.
   of a bit stays pure.
 - Application: `get_registry_coverage(meta_repo, company_repo, *, now)`. API: `GET /registries`.
 
-### 19c — Wire the widget (frontend, DESIGN §1 bottom-right)
+### 19c — Wire the widget (frontend, DESIGN §1 bottom-right) — **DONE 2026-09-15**
 
 - `test_source_health_widget_renders_the_api_counts` — RED first, mocked at the fetch boundary
   (msw/`vi.fn`), never React Query internals. The red must fail on the *numbers*, not on a crash.
@@ -945,7 +945,7 @@ is invisible, and that is precisely the UK bug.
   pending is an absence of information, exactly like `unknown`, and reusing its grey is the
   palette staying consistent rather than a new colour invented.
 
-### 19d — The registry-coverage block (frontend)
+### 19d — The registry-coverage block (frontend) — **DONE 2026-09-15**
 
 Folded into the same glass widget under a divider rather than shipped as a second floating panel:
 one "what do we actually have" surface, and the globe has room for one.
@@ -956,7 +956,7 @@ one "what do we actually have" surface, and the globe has room for one.
 - `test_a_stale_snapshot_is_marked` — the 45-day flag the digest already nags about, made visible
   before it is stale rather than only in a message that arrives at 06:00.
 
-### 19e — The rail's two hardcoded numbers (frontend)
+### 19e — The rail's two hardcoded numbers (frontend) — **DONE 2026-09-15**
 
 The same defect, one file over. Both are prototype constants that render as fact.
 
