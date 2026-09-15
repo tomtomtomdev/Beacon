@@ -976,22 +976,24 @@ a *different* question (registry coverage) does **not** join it — that is why 
 endpoint. If the widget starts wanting per-company rows, that is a drawer, not a summary.
 
 Acceptance:
-- [ ] Not one number in the source-health widget or the icon rail is a literal — each is derived
-      from an API response, and the counts match the live DB when checked by hand
-- [ ] The widget renders four statuses; `pending` has a row, and 2 pending companies appear in it
-- [ ] `GET /registries` lists **every** registry bit; UK/NL/US read "never ingested" rather than
+- [x] Not one number in the source-health widget or the icon rail is a literal — each is derived
+      from an API response, and the counts match the live DB when checked by hand — verified over
+      HTTP against the real `beacon.db`: **65 OK / 0 degraded / 3 quarantined / 2 pending**, last
+      poll `2026-09-15T05:00:04Z`, exactly the raw-SQL figures
+- [x] The widget renders four statuses; `pending` has a row, and 2 pending companies appear in it — the two `gem`/`bendingspoons` seeds that were in no row before
+- [x] `GET /registries` lists **every** registry bit; UK/NL/US read "never ingested" rather than
       being absent or reading "0", and MANUAL is not reported as a missing snapshot
-- [ ] IE and CA show their real `fetched_at`, row counts (6,360 / 7,884) and company matches (21 / 10)
-- [ ] A registry bit appended to the enum appears in coverage with **no change to the use case, the
-      endpoint or the frontend** — proven by a test, not by inspection
-- [ ] `last_poll_at` is `None` when nothing has polled, and neither surface invents a time for it
-- [ ] The saved badge shows the real new-match count and **disappears at zero**
-- [ ] Both surfaces share one `['companyHealth']` fetch — no duplicate request
-- [ ] DESIGN.md §1 and §Icon-rail no longer name a count: the widget's rows, the poll time and the
-      rail badge are described as derived, the way slice 18 rewrote the markets caption
-- [ ] The per-job stale banner is recorded closed with its reason, not deferred again
-- [ ] No job row, `content_hash`, classification or tier moves — this slice reads and renders only
-- [ ] `make verify` green on both stacks
+- [x] IE and CA show their real `fetched_at` (2026-09-04), row counts (6,360 / 7,884) and company matches (21 / 10) — rendering as "6,360 · 21 firms · 11d ago"
+- [x] A registry bit appended to the enum appears in coverage with **no change to the use case, the
+      endpoint or the frontend** — proven by a test, not by inspection (`SNAPSHOT_REGISTRIES` is derived from the enum; the unit, use-case and API guards all assert against `set(Registry) - {MANUAL}`)
+- [x] `last_poll_at` is `None` when nothing has polled, and neither surface invents a time for it — the widget reads "no poll yet" and the rail drops its LIVE claim
+- [x] The saved badge shows the real new-match count and **disappears at zero**
+- [x] Both surfaces share one `['companyHealth']` fetch — no duplicate request. **This was false when first written and a test caught it**: the rail mounts immediately, the widget only once `/countries` resolves, and at the default `staleTime: 0` the second mount refetched. Fixed by one shared `companyHealthQuery` descriptor with a 60s staleTime
+- [x] DESIGN.md §1 and §Icon-rail no longer name a count: the widget's rows, the poll time and the
+      rail badge are described as derived, the way slice 18 rewrote the markets caption. **Two deliberate deviations from the frozen design, both recorded:** the poll time is an **age** not a clock ("07:04" cannot tell this morning from last Tuesday — the slice's own defect), and the widget widened 186px → 218px for the registers block
+- [x] The per-job stale banner is recorded closed with its reason, not deferred again — **and SPEC §7 corrected**, because it asserted the badge exists
+- [x] No job row, `content_hash`, classification or tier moves — this slice reads and renders only. Confirmed after the live check: `MAX(last_seen_at)` is still the 05:00 poll, 15,831 jobs / 14,660 hashes unchanged
+- [x] `make verify` green on both stacks — **952 backend + 98 frontend** (was 935 + 80)
 
 ---
 
