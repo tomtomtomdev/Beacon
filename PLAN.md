@@ -757,6 +757,96 @@ Acceptance:
 
 ---
 
+## Slice 18 — §4 widening: reachable markets, and one country list
+
+**Goal:** two problems with the same root — the country list is maintained in two places and only one of them is the source of truth. Measured on the real `beacon.db` (open canonical jobs, 2026-09-15):
+
+| | open | firms | iOS | backend | AI/ML | who is producing it |
+|---|---|---|---|---|---|---|
+| **GB** | **480** | **47** | 3 | **30** | **20** | 47 firms incl. OpenAI, Anthropic, Stripe — already `explicit_yes` on the rows sampled |
+| **HK** | 33 | 3 | 0 | 0 | 0 | Airwallex 18, Crypto.com 13, Carousell 2 |
+| **TW** | 13 | 7 | 1 | 1 | 0 | Stripe 4, Spotify 2, Crypto.com 2, Agoda 2, Proton/Bjak/Binance 1 each |
+| **NZ** | 8 | 4 | 0 | 1 | 0 | Databricks 3, Canva 2, Airwallex 2, Stripe 1 |
+
+Against the current bottom of the table — **DK 27/7, CH 12/6, NO 7/3** — none of NZ/TW/HK is out of place: **HK already outranks Denmark on volume**, TW ≈ Switzerland, NZ ≈ Norway. All three enter `nice_to_have` on supply evidence rather than on enthusiasm. **But say the weak part out loud: their combined target-profile supply is 3 jobs.** This slice buys them optionality and a truthful map, not volume.
+
+**GB is the finding that reframes the slice.** 480 open jobs — **53 of them target-profile** — are correctly countried by slice 17, fully searchable through the API (`/jobs?country=GB` → 682 total), and **unreachable in the UI**. Three independent reasons: the filter menu renders from a hardcoded `COUNTRY_OPTIONS` array with no GB row (`FilterBar.tsx:124`); `countryName('GB')` falls through to `?? code` so the heading would read "Jobs · GB" (`taxonomy.ts:71`); and there is no `PIN_GEO` entry, so the globe cannot select it. Filter state lives in URL params (`searchParams.getAll('country')`), so **hand-editing the URL to `?country=GB` works today** and renders degraded when it does. SPEC §4 excluded the UK as a *relocation target* deliberately — it never said the jobs should be unreachable, and the sponsorship signal is already there because the UK register is already ingested.
+
+**The structural cause, which this slice fixes first:** `COUNTRY_OPTIONS` (`taxonomy.ts:50`) is a **hand-maintained duplicate** of `COUNTRY_REFERENCE` (`domain/visa.py`), which `/countries` already serves and which `CountriesPage` already consumes. Two sources of truth for one table. Adding three rows without fixing this means editing both files and shipping a silent bug the first time one is forgotten — a country with a globe pin and no filter checkbox.
+
+**What this costs, verified against the code rather than assumed:** no new adapter, no new port, no schema change, no new seed company, and no migration. `006_countries.sql` says the `countries` table is "seeded from the domain constant `COUNTRY_REFERENCE` at startup — a queryable projection of that source of truth", upserted by the seed that already runs; the same finding that made 15c need no migration. Tests are count-agnostic (`test_countries_repo.py:50`), so rows do not break the suite. The globe caption is **already derived** (`CountriesPage.tsx:87` renders `{countries.length} markets`) — only DESIGN.md's frozen "11 markets + home" copy goes stale.
+
+**Build order: 18a one country list (no §4 decision needed) → 18b verify the figures → 18c the rows → 18d globe + UI → 18e the NZ register (gated).** 18a leads because it is a pure refactor that every later sub-slice would otherwise duplicate work against.
+
+### 18a — One country list, and GB reachable (frontend; no §4 decision required)
+
+The refactor that has to happen before rows are added, not after. **Behavior-preserving for the twelve existing markets** — it changes where the list comes from, not what it contains.
+
+- `test_filter_menu_lists_the_markets_the_api_serves` — RED first: the filter menu renders one row per `/countries` entry, tier badge included, with no hardcoded array behind it. Mock at the fetch boundary (msw/`vi.fn`), never React Query internals.
+- `test_country_name_never_falls_back_to_a_bare_code` — the `?? code` fallback is the bug that would render "Jobs · GB". Once names come from the API the fallback is unreachable for any served country; keep it for genuinely unknown codes but pin that a served country resolves its real name.
+- Delete `COUNTRY_OPTIONS`; `countryName` and `COUNTRY_NAMES` derive from the `['countries']` query that `CountriesPage` already runs, so the cache is shared and no second request is made. `PriorityTier` stays in `types.ts` — the tier badge is presentation, the list is data.
+- **The GB question this sub-slice does *not* decide:** deriving from `/countries` alone leaves GB exactly as stranded, because GB has no row. Two ways out, and they are a product decision (see the decision box below): **promote GB to a §4 row** (18c covers it), or add an **"other markets" affordance** — the countries that have jobs but are not relocation targets, from a distinct-country rollup — so 480 GB jobs, and the rest of the 66-country tail slice 17 opened up, stop being invisible. **Until one of the two ships, 18a's acceptance is the refactor only; GB stays unreachable and that is stated, not quietly tolerated.**
+
+### 18b — Verify the figures before a single row is written (owner-run; gates 18c)
+
+**The slice's real cost, and it is not code.** CLAUDE.md is explicit: country visa data carries `verified_at` + `source_url`, and stale rows must never render as current. Three-to-four rows × five prose columns of policy that changes without notice — **none of it may be written from memory or from a model's recollection, including mine.** 18c does not start until this table is filled from official pages.
+
+For each market, confirm and capture a `source_url`: the **entry work visa** and its salary/points threshold; the **PR path** and its clock; the **citizenship endpoint** — and for this profile specifically, whether **dual citizenship** is permitted, since Indonesia bars it for adults and SPEC §4 therefore distinguishes PR from citizenship deliberately; and whether a **public employer register** exists.
+
+Three claims to check rather than assume, each of which changes what gets built:
+1. **NZ is believed to publish a public accredited-employer list (AEWV).** If true it is the only registry candidate of the three and 18e is live; if it is not downloadable as a table, 18e dies here.
+2. **TW's Gold Card is believed to be self-sponsored** — an open work permit obtained by the applicant with no employer sponsor. If true it changes the *copy*, not the tier logic (see 18d's refactor watch).
+3. **HK's citizenship endpoint is believed to be effectively closed** (PRC nationality law), leaving PR as the real endpoint. The row must say so plainly rather than leave the column vague.
+
+These rows get a **real `verified_at` of the date they are checked — not `_AS_KNOWN`** (`domain/visa.py:14`, the table-wide Jan 2026 date the existing twelve share). A row verified in September must not inherit January's date.
+
+### 18c — The `CountryReference` rows (domain, pure)
+
+- `test_countries_endpoint_lists_the_new_markets` — RED first: `/countries` returns the new count; NZ/TW/HK each carry `priority_tier='nice_to_have'`.
+- `test_every_country_row_is_verifiable` — a guard over **all** of `COUNTRY_REFERENCE`, not just the new rows: every `source_url` is `https://`, every `verified_at` is a real date not in the future, no summary column is empty. Cheap, and it is what stops row sixteen being added with a blank PR path.
+- `test_new_rows_do_not_share_the_table_wide_knowledge_date` — pins 18b's rule.
+
+Tasks: the `CountryReference` entries, filled from 18b's table. `registry_name` states why no register applies where none does — the Sweden row is the precedent for a note that explains an absence instead of sitting empty. **HK's `citizenship_summary` states the endpoint limitation directly**; a market is allowed to be honestly unattractive, and a vague column reads as missing research.
+
+### 18d — Globe + UI (DESIGN §1/§Globe)
+
+- `PIN_GEO` gains an entry per new market (`globeGeo.ts:71`), country-centroid values in the existing style.
+- **Taiwan needs a `LAND` trace and the others do not** — the one real geometry finding. `LAND` already carries New Zealand's North and South islands, and Hong Kong sits on the traced Pearl River Delta coastline, but **Taiwan is not an island in the outline**: the Eurasia path runs up the mainland Fujian coast, so a TW pin would float in open sea. Trace it as its own entry beside Japan / Sri Lanka / Tasmania, **from the same Natural Earth 1:110m silhouettes the file header cites** — traced, not eyeballed. (GB, if promoted, needs none: "Great Britain" is already traced.)
+- `test_every_country_has_a_pin` — an exhaustiveness guard in the 15a spirit: every code `/countries` serves has a `PIN_GEO` entry. A country row without a pin is a market that renders in the card stack and nowhere on the globe. This is the test that makes 18a's single list actually safe.
+- **No caption change** — `CountriesPage.tsx:87` already derives the count. **DESIGN.md does need one**: its "live beacon field · 11 markets + home" (§1 bottom-left caption) is frozen copy the code outgrew; update it to describe the derived count rather than a number, so it cannot rot again.
+- The idle tour picks new markets up for free — it rotates whatever `codes` it is handed (`useIdleTour.ts:22`).
+
+**Refactor watch — the trap in this slice.** If 18b confirms TW's Gold Card is self-sponsored, there will be a pull toward teaching `resolve_tier` about it, the way 15a taught it Indonesia. **Do not.** `not_required` is a location predicate for the *home* market — the one place the reader already holds the right to work. A Gold Card is still a permit somebody has to obtain, so TW is an ordinary market whose sponsorship tier means exactly what it means everywhere else. The Gold Card belongs in the country card's `visa_summary` copy. A second location predicate in the resolver is the CLAUDE.md single-source rule breaking, and it would be the layer-leak trigger that outranks all others.
+
+### 18e — The NZ accredited-employer register (gated on 18b.1)
+
+Only NZ of the three plausibly has one, and it is what would move NZ off a wall of `unknown` into `registry_inferred` — the NL/IE/CA pattern, and the reason NZ leads the three rather than HK's larger volume.
+
+- `Registry.NZ = 64` — the next free bit. Values are **frozen and append-only** (`domain/registry.py:19`): `registry_flags` is a stored integer column, so renumbering would silently re-label every company already matched.
+- Adapter on the existing shape: `adapters/registries/nz.py` over `_csvfile.iter_rows` + `_evidence.counted`, fixture under `tests/fixtures/registries/nz_*.csv`, exactly as `ie.py` and `ca.py` are built. Zero changes to `application/` or `domain/` beyond the bit — if it needs more, the port is wrong (CLAUDE.md).
+- The snapshot is a **hand download into `data/registries/`** (gitignored, this box only) like IE/CA, and `registries_meta` nags after 45 days. Note the standing debt this adds to: the IE/CA snapshots already need a manual refresh, and this makes three.
+- The property test already in the suite covers the new bit for free: `registry_inferred` ⇒ `registry_flags != 0`.
+- **Kill criterion, stated now so it is not relitigated later:** if the register is not published as a downloadable table, 18e stops and NZ ships as a `nice_to_have` whose `registry_name` says why none applies. No HTML scraping of a government site — out of MVP scope by definition (cross-cutting rules).
+
+**Decision owed before 18c — GB (owner's call, not a data call).** The 480 GB jobs are a measured fact; whether the UK is a *relocation target* is a personal one, and SPEC §4 excluded it on purpose. Three options, in increasing cost: **(i)** leave GB out and ship the "other markets" affordance from 18a, so the jobs are reachable without claiming the UK as a target; **(ii)** promote GB to a full §4 row with verified visa/PR/citizenship data — note its citizenship endpoint is the relevant question given Indonesia's dual-citizenship bar; **(iii)** leave it exactly as it is, and accept that 480 jobs stay reachable only by hand-editing a URL. **(iii) is the status quo and the only one that is not a decision.**
+
+Acceptance:
+- [ ] `COUNTRY_OPTIONS` is deleted; the filter menu, the pane heading and the globe all read one list served by `/countries`, and the twelve existing markets behave byte-identically
+- [ ] A country added to `COUNTRY_REFERENCE` alone appears in the filter menu, with its real name and tier badge, with **no frontend edit** — the duplicate is provably gone
+- [ ] `test_every_country_has_a_pin` fails if a row is added without a `PIN_GEO` entry; it fired before the new pins were added
+- [ ] Every figure in every new row was read off an official page and carries its own `source_url` and a `verified_at` of the date it was checked — no row inherits `_AS_KNOWN`, and nothing was written from recollection
+- [ ] The verifiability guard passes over every row and fails if any is given a blank summary or a future date
+- [ ] The new markets appear on the globe, in the card stack, in the filter menu and in the idle tour, with **no code change to the markets caption** (already derived)
+- [ ] Taiwan is traced as its own landmass from Natural Earth 1:110m; its pin sits on land, and NZ/HK needed no new geometry
+- [ ] `resolve_tier` is **byte-identical** at the end of this slice — no new location predicate, no TW special case; the Gold Card lives in `visa_summary` copy
+- [ ] The already-ingested NZ/TW/HK/GB jobs surface with **no re-poll, no re-classification and no `content_hash` movement** — this slice adds reference data and deletes a duplicate; it does not touch jobs
+- [ ] The GB decision is recorded in PROGRESS with its reasoning, whichever way it goes
+- [ ] 18e either lands with `Registry.NZ = 64`, a fixture-tested adapter and a real snapshot in `data/registries/` — or is recorded closed in PROGRESS with the reason
+- [ ] DESIGN.md's "11 markets + home" caption no longer names a number
+- [ ] `make verify` green on both stacks
+
+---
+
 ## Cross-cutting rules
 
 - Every network adapter is tested against recorded fixtures only; live calls happen solely in manual acceptance checks
