@@ -1,9 +1,9 @@
 import { ChevronDown, Search } from 'lucide-react'
 import { useState } from 'react'
 import type { SortBy } from '../api/jobs'
-import type { PriorityTier, SponsorTier } from '../api/types'
+import type { Country, PriorityTier, SponsorTier } from '../api/types'
 import styles from './FilterBar.module.css'
-import { CATEGORY_OPTIONS, COUNTRY_OPTIONS, LEVEL_OPTIONS } from './taxonomy'
+import { CATEGORY_OPTIONS, LEVEL_OPTIONS } from './taxonomy'
 
 // DESIGN.md §1 sponsor-tier dropdown; dot colors reuse the tier tokens.
 const TIER_OPTIONS: ReadonlyArray<{ value: SponsorTier; label: string; dot: string }> = [
@@ -27,6 +27,9 @@ type OpenMenu = 'country' | 'tier' | null
 
 interface FilterBarProps {
   q: string
+  // The markets /countries serves, in the server's order (home, then primary, then
+  // alphabetical within tier) — rendered as served, never re-sorted here.
+  markets: readonly Country[]
   countries: string[]
   categories: string[]
   levels: string[]
@@ -44,6 +47,7 @@ interface FilterBarProps {
 
 export function FilterBar({
   q,
+  markets,
   countries,
   categories,
   levels,
@@ -121,7 +125,7 @@ export function FilterBar({
           <>
             <div className={styles.clickAway} onClick={() => setOpenMenu(null)} />
             <div className={styles.menu} role="group" aria-label="Filter by country">
-              {COUNTRY_OPTIONS.map(({ code, name, tier }) => (
+              {markets.map(({ code, name, priority_tier }) => (
                 <label key={code} className={styles.menuRow}>
                   <input
                     type="checkbox"
@@ -129,8 +133,8 @@ export function FilterBar({
                     onChange={() => onToggleCountry(code)}
                   />
                   <span className={styles.menuRowLabel}>{name}</span>
-                  <span className={COUNTRY_BADGE[tier].className} aria-hidden>
-                    {COUNTRY_BADGE[tier].glyph}
+                  <span className={COUNTRY_BADGE[priority_tier].className} aria-hidden>
+                    {COUNTRY_BADGE[priority_tier].glyph}
                   </span>
                 </label>
               ))}

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { fetchJobs, patchJobStatus, type SortBy, type StatusView } from '../api/jobs'
+import { fetchCountries } from '../api/countries'
 import { fetchResumes } from '../api/resumes'
 import type { Country, SponsorTier, UserStatus } from '../api/types'
 import { FilterBar } from './FilterBar'
@@ -39,6 +40,9 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
   const tiers = searchParams.getAll('sponsor_tier') as SponsorTier[]
   // The active resume (server-owned singleton) drives ?resume= scoring — a soft, opt-in signal.
   const { data: resumes } = useQuery({ queryKey: ['resumes'], queryFn: fetchResumes })
+  // Same ['countries'] key the drawer and the Countries view already use, so the query cache
+  // is the sharing mechanism and this costs no extra request.
+  const { data: markets } = useQuery({ queryKey: ['countries'], queryFn: fetchCountries })
   const activeResume = resumes?.find((resume) => resume.active) ?? null
   const resumeId = activeResume?.id ?? null
 
@@ -147,7 +151,8 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
     )
   }
 
-  const heading = countries.length === 1 ? `Jobs · ${countryName(countries[0])}` : 'Jobs'
+  const heading =
+    countries.length === 1 ? `Jobs · ${countryName(countries[0], markets ?? [])}` : 'Jobs'
   const sortLabel = sort === 'tier' ? 'sponsor tier' : sort === 'date' ? 'date' : 'fit'
   const resultLabel = data
     ? `${view === 'all' ? '' : `${view[0].toUpperCase()}${view.slice(1)} · `}${data.jobs.length}` +
@@ -204,6 +209,7 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
 
         <FilterBar
           q={q}
+          markets={markets ?? []}
           countries={countries}
           categories={categories}
           levels={levels}

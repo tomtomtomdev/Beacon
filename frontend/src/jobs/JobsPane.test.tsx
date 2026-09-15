@@ -3,7 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { JobsPageResponse, Resume } from '../api/types'
+import type { Country, JobsPageResponse, PriorityTier, Resume } from '../api/types'
 import { JobsPane } from './JobsPane'
 
 const payload: JobsPageResponse = {
@@ -84,12 +84,44 @@ const activeResume: Resume = {
   },
 }
 
+// The markets /countries serves. Only code/name/priority_tier matter to the Jobs pane — the
+// visa prose belongs to the reference card, so it is filled but never asserted on here.
+const market = (code: string, name: string, priority_tier: PriorityTier): Country => ({
+  code,
+  name,
+  priority_tier,
+  visa_summary: 'visa',
+  pr_summary: 'pr',
+  citizenship_summary: 'citizenship',
+  registry_name: 'registry',
+  verified_at: '2026-01-15',
+  source_url: 'https://example.test/source',
+})
+
+// In the server's order: home first, then primary, then alphabetical within tier
+// (SqliteCountryRepo.get_all) — the pane renders the list as served, it does not re-sort.
+const markets: Country[] = [
+  market('ID', 'Indonesia', 'home'),
+  market('AU', 'Australia', 'primary'),
+  market('CA', 'Canada', 'primary'),
+  market('IE', 'Ireland', 'primary'),
+  market('JP', 'Japan', 'primary'),
+  market('NL', 'Netherlands', 'primary'),
+  market('SG', 'Singapore', 'primary'),
+  market('US', 'United States', 'primary'),
+  market('CH', 'Switzerland', 'nice_to_have'),
+  market('DK', 'Denmark', 'nice_to_have'),
+  market('NO', 'Norway', 'nice_to_have'),
+  market('SE', 'Sweden', 'nice_to_have'),
+]
+
 const fetchMock = vi.fn()
 
 // Data-driven boundary mock: /resumes returns the resume list; a /jobs request that carries
 // ?resume= gets scored rows (mirrors the backend), everything else the unscored base.
 let jobsPayload: JobsPageResponse = payload
 let resumesPayload: Resume[] = []
+let countriesPayload: Country[] = markets
 
 function ok(body: unknown): Promise<Response> {
   return Promise.resolve({ ok: true, json: () => Promise.resolve(body) } as Response)
@@ -120,11 +152,12 @@ function firstJobsUrl(): string {
 beforeEach(() => {
   jobsPayload = payload
   resumesPayload = []
+  countriesPayload = markets
   fetchMock.mockImplementation((url: RequestInfo | URL, init?: RequestInit) => {
     const u = String(url)
     const method = init?.method ?? 'GET'
     if (u === '/resumes' && method === 'GET') return ok(resumesPayload)
-    if (u === '/countries') return ok([])
+    if (u === '/countries') return ok(countriesPayload)
     if (u.startsWith('/jobs/')) return ok({}) // detail / status PATCH — overridden where asserted
     if ((u === '/jobs' || u.startsWith('/jobs?')) && u.includes('resume=')) return ok(scoredPayload)
     return ok(jobsPayload)
@@ -173,6 +206,31 @@ describe('JobsPane', () => {
         true,
       )
     })
+  })
+
+  // 18a: the filter menu is built from /countries, not from a second hardcoded copy of the
+  // country table. GB is the case that exposed it — 480 open jobs the API can filter and the
+  // UI could not reach, because a market absent from the frontend array has no checkbox.
+  it('lists every market the API serves, including one the frontend never hardcoded', async () => {
+    const user = userEvent.setup()
+    countriesPayload = [...markets, market('GB', 'United Kingdom', 'primary')]
+    renderPage()
+    await screen.findByText('Swift Engineer')
+
+    await user.click(screen.getByRole('button', { name: /country/i }))
+
+    const gb = await screen.findByRole('checkbox', { name: /united kingdom/i })
+    await user.click(gb)
+    await waitFor(() => {
+      expect(jobListUrls().some((u) => u.includes('country=GB'))).toBe(true)
+    })
+  })
+
+  it('names a served country in the heading instead of falling back to its bare code', async () => {
+    countriesPayload = [...markets, market('GB', 'United Kingdom', 'primary')]
+    renderPage('/?country=GB')
+
+    expect(await screen.findByText('Jobs · United Kingdom')).toBeInTheDocument()
   })
 
   it('reads initial filters from the URL so filtered views are shareable', async () => {

@@ -1,4 +1,4 @@
-import type { PriorityTier, SponsorTier } from '../api/types'
+import type { Country, PriorityTier, SponsorTier } from '../api/types'
 
 // Category/level display taxonomy — shared by the FilterBar pills and the saved-search
 // summary so a code always renders the same label. Values are the API codes; labels are §2.
@@ -42,30 +42,11 @@ const CATEGORY_LABELS = new Map(CATEGORY_OPTIONS.map(({ value, label }) => [valu
 // Unknown codes (e.g. a new backend category not yet in the table) fall back to the raw code.
 export const categoryLabel = (value: string): string => CATEGORY_LABELS.get(value) ?? value
 
-// The 11 relocation markets plus the home market (SPEC §3/§4) — shared by the FilterBar
-// country dropdown and the "Jobs · {Country}" heading. Codes are the /jobs `country[]` param;
-// tier drives the badge. Indonesia leads for the same reason it leads the Countries stack: it
-// is the baseline the rest are read against. Its tier is PriorityTier, not a local literal —
-// one tier vocabulary, so a value added to the backend cannot be legal here and illegal there.
-export const COUNTRY_OPTIONS: ReadonlyArray<{
-  code: string
-  name: string
-  tier: PriorityTier
-}> = [
-  { code: 'ID', name: 'Indonesia', tier: 'home' },
-  { code: 'SG', name: 'Singapore', tier: 'primary' },
-  { code: 'AU', name: 'Australia', tier: 'primary' },
-  { code: 'JP', name: 'Japan', tier: 'primary' },
-  { code: 'NL', name: 'Netherlands', tier: 'primary' },
-  { code: 'US', name: 'United States', tier: 'primary' },
-  { code: 'CA', name: 'Canada', tier: 'primary' },
-  { code: 'IE', name: 'Ireland', tier: 'primary' },
-  { code: 'SE', name: 'Sweden', tier: 'nice_to_have' },
-  { code: 'NO', name: 'Norway', tier: 'nice_to_have' },
-  { code: 'DK', name: 'Denmark', tier: 'nice_to_have' },
-  { code: 'CH', name: 'Switzerland', tier: 'nice_to_have' },
-]
-
-const COUNTRY_NAMES = new Map(COUNTRY_OPTIONS.map(({ code, name }) => [code, name]))
-
-export const countryName = (code: string): string => COUNTRY_NAMES.get(code) ?? code
+// Names come from /countries — the seeded projection of domain/visa.py's COUNTRY_REFERENCE —
+// so the frontend keeps no second copy of the country table. A market added to the backend
+// reaches the filter menu and this heading with no edit here, which is the whole point: the
+// hardcoded array this replaced is why GB had 480 reachable jobs and no checkbox.
+// An unserved code falls back to itself — a job may carry a country the reference table has
+// no row for (slice 17 opened the corpus to 66 of them, against 12 reference rows).
+export const countryName = (code: string, markets: readonly Country[]): string =>
+  markets.find((market) => market.code === code)?.name ?? code

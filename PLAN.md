@@ -828,7 +828,13 @@ Only NZ of the three plausibly has one, and it is what would move NZ off a wall 
 - The property test already in the suite covers the new bit for free: `registry_inferred` ⇒ `registry_flags != 0`.
 - **Kill criterion, stated now so it is not relitigated later:** if the register is not published as a downloadable table, 18e stops and NZ ships as a `nice_to_have` whose `registry_name` says why none applies. No HTML scraping of a government site — out of MVP scope by definition (cross-cutting rules).
 
-**Decision owed before 18c — GB (owner's call, not a data call).** The 480 GB jobs are a measured fact; whether the UK is a *relocation target* is a personal one, and SPEC §4 excluded it on purpose. Three options, in increasing cost: **(i)** leave GB out and ship the "other markets" affordance from 18a, so the jobs are reachable without claiming the UK as a target; **(ii)** promote GB to a full §4 row with verified visa/PR/citizenship data — note its citizenship endpoint is the relevant question given Indonesia's dual-citizenship bar; **(iii)** leave it exactly as it is, and accept that 480 jobs stay reachable only by hand-editing a URL. **(iii) is the status quo and the only one that is not a decision.**
+**GB — DECIDED 2026-09-15: promote to a full §4 row** (option (ii) of the three this plan offered). GB joins NZ/TW/HK in 18b/18c/18d as a fourth new market, with verified visa/PR/citizenship data, a globe pin and a reference card. The "other markets" affordance from 18a is **no longer needed for GB** and drops out of this slice — the 66-country tail slice 17 opened is still unreachable, but that is a separate lever and is not smuggled in here.
+
+**Two consequences worth stating, because they are not obvious:**
+1. **SPEC §4's UK note must be rewritten, not just extended.** It currently reads that the UK register is ingested "even though UK isn't a target country… presence there is a company-level 'sponsors somewhere' signal." That premise is now false. The note becomes a statement that the UK is a target market whose register is ingested directly.
+2. **The UK register gets stronger, for free.** `Registry.UK` matches currently function as a *proxy* — evidence a company sponsors somewhere, used to infer tier for jobs anywhere. With GB a target country, a GB job at a UK-register company is `registry_inferred` **about the country the job is actually in**, which is the strongest form of that signal and exactly what the registry was built to say. No code change: the bit, the matcher and the tier resolver already do this; only the interpretation sharpens. Expect GB's `unknown` share to fall without a single line written.
+
+**`priority_tier` — assumed `primary`, flip it with one word if that is wrong.** The supply case is strong: 480 open / 47 firms ranks GB **second by volume** behind SG (504) and ahead of JP (452), CA (299), NL (284), AU (238) and IE (162), with 53 target-profile jobs and sponsorship already well-evidenced. That is `primary` company on every measure this repo has. The counter-argument is not supply but endpoint — it belongs in 18b's research, not here.
 
 Acceptance:
 - [ ] `COUNTRY_OPTIONS` is deleted; the filter menu, the pane heading and the globe all read one list served by `/countries`, and the twelve existing markets behave byte-identically
@@ -840,7 +846,9 @@ Acceptance:
 - [ ] Taiwan is traced as its own landmass from Natural Earth 1:110m; its pin sits on land, and NZ/HK needed no new geometry
 - [ ] `resolve_tier` is **byte-identical** at the end of this slice — no new location predicate, no TW special case; the Gold Card lives in `visa_summary` copy
 - [ ] The already-ingested NZ/TW/HK/GB jobs surface with **no re-poll, no re-classification and no `content_hash` movement** — this slice adds reference data and deletes a duplicate; it does not touch jobs
-- [ ] The GB decision is recorded in PROGRESS with its reasoning, whichever way it goes
+- [x] The GB decision is recorded in PROGRESS with its reasoning — **promote to a full §4 row**, 2026-09-15
+- [ ] SPEC §4's "even though UK isn't a target country" note is rewritten, not merely extended — the premise is now false
+- [ ] GB's `unknown` share is measured before and after the row lands, to record what the already-ingested UK register buys once it is pointed at a target country
 - [ ] 18e either lands with `Registry.NZ = 64`, a fixture-tested adapter and a real snapshot in `data/registries/` — or is recorded closed in PROGRESS with the reason
 - [ ] DESIGN.md's "11 markets + home" caption no longer names a number
 - [ ] `make verify` green on both stacks
