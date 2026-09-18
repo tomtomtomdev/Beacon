@@ -59,7 +59,9 @@
 | 17 | Country attribution: teach `parse_location` what the boards write | ✅ done | 2026-09-13 |
 | 18 | §4 widening (GB/NZ/TW/HK) + one country list; 18e closed on its kill criterion | ✅ done | 2026-09-15 |
 | 19 | Make coverage visible (A): live source health + `pending`, `/registries` coverage, the rail's two literals | ✅ done | 2026-09-15 |
-| 20 | Other markets: the 45 countries with jobs and no way to ask for them (candidate B, shape 1) | ⬜ not started — **chosen 2026-09-15, planned, re-measured** | — |
+| 20 | Other markets: the 47 countries with jobs and no way to ask for them (candidate B, shape 1); 20e exposed `closed_at` | ✅ done | 2026-09-18 |
+| 21 | The panel stops being a gate: jobs by default, `?focus=` becomes a filter, derived total + paging, globe-only idle tour | ✅ done | 2026-09-18 |
+| 22 | Closed postings leave the default listing, behind a "Show closed" toggle | ✅ done | 2026-09-18 |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (acceptance boxes checked)
 

@@ -1081,7 +1081,7 @@ that already exists — real, bounded, and explicitly diminishing.
 
 ---
 
-## Slice 20 — Other markets: the 45 countries with jobs and no way to ask for them
+## Slice 20 — Other markets: the countries with jobs and no way to ask for them — **DONE 2026-09-18**
 
 **Chosen 2026-09-15 from the slice-19 candidate block below (B, shape 1 — the generic
 affordance, explicitly *not* shape 2, widening §4).** Re-measured against the real `beacon.db`
@@ -1251,7 +1251,7 @@ Acceptance:
 
 ---
 
-## Slice 21 — The panel stops being a gate: all jobs by default
+## Slice 21 — The panel stops being a gate: all jobs by default — **DONE 2026-09-18**
 
 **Chosen and planned 2026-09-18 from the user's request, built the same session.** The side
 panel was gated on `?focus=`: with no country selected it showed 16 country cards and **the job
@@ -1345,7 +1345,7 @@ closed" toggle. Deliberately not decided here — it is a query-path change and 
 
 ---
 
-## Slice 22 — Closed postings leave the default listing
+## Slice 22 — Closed postings leave the default listing — **DONE 2026-09-18**
 
 **Asked for 2026-09-18 after seeing slice 21 running.** 20e exposed `closed_at` and greyed the
 rows, which is what made the density measurable — and the measurement is the argument for going
