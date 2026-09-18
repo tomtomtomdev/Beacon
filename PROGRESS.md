@@ -4,6 +4,24 @@
 
 ## Current status
 
+**2026-09-18 — the hand download is banked. All five sponsor registries are ingested for the first time.** The lever PROGRESS has called "the highest-value unbuilt item in the repo" since slice 18 is spent, and it needed no code — only the three files that had never been on this box.
+
+| register | rows | companies matched |
+|---|---|---|
+| UK licensed sponsors (gov.uk, 2026-09-17 snapshot) | 127,332 | **226** |
+| US H-1B LCA (DOL FY2026 Q3) | 60,511 employers | **297** |
+| NL IND recognised sponsors | 12,984 | **74** |
+| IE permits *(already held)* | 6,360 | 26 |
+| CA LMIA *(already held)* | 7,884 | 10 |
+
+**Companies carrying any registry bit went 30 → 419.** Open-job tiers moved further than any slice has moved them: **`unknown` 5,995 → 1,253 (−79%)** and **`registry_inferred` 1,827 → 6,578**. GB — the market the whole argument was built on — went from **318 unknown / 95 registry_inferred to 20 / 395**, i.e. 66% unknown to 4%.
+
+**Two of the three needed work beyond a download, both recorded so the next refresh is cheap.** US ships a 240MB XLSX and the adapter reads CSV, so it is converted to the three columns it uses (`CASE_STATUS`, `EMPLOYER_NAME`, `TRADE_NAME_DBA`) — 437,496 data rows and **595,239 padding rows**, exactly the `max_row` over-report `h1b.py` documents. NL has no bulk export at all, but the register is **server-rendered into the page HTML**, so it was extracted once into the two-column CSV the adapter wants; the header must read `Organisation,KvK number` because the site displays `KVK`.
+
+**Checked, not assumed — and it is not perfect.** The matcher requires distinctive token sets to be *equal*, so the bulk is well-evidenced (Databricks 459 US filings + NL KvK + UK; Adyen and Picnic on real KvK numbers; Coinbase 121 filings). **Short seed names are where it frays:** 25 companies of ≤4 characters carry 473 open jobs, and **`Dart` matched "Dallas Area Rapid Transit" at confidence 1.0** via its DBA alias. That one touches 0 open jobs, but **`Grab` (356 open jobs) rests on a single certified LCA filing by "Grab Technology LLC"** — the largest thinly-evidenced match in the corpus and the one worth a second look. See the Decisions entry.
+
+**`scripts/spot_check_registry.py` does not exist.** CLAUDE.md requires running it for any change touching registry matching; only `node-path.sh` is in `scripts/`. The check above was done by hand. Writing that script is the obvious next slice — this session is exactly the situation it was meant for.
+
 **Active slice:** 22 — Closed postings leave the default listing (**DONE 2026-09-18; verified live**). Slice 20e exposed `closed_at` and greyed the rows; seeing them is what made the density measurable, and the measurement is the argument for going further: **6,899 of 15,671 canonical jobs are closed (44%)**, and **Sweden is 2,669 canonical against 393 open — 86%**. The tier-then-date sort interleaves them, so a filtered list was mostly dead rows. Closed postings are now out of the default listing behind a **"Show closed"** pill (`?closed=1`); what comes back is still greyed and chipped, so hidden is not discarded. The live home screen went **15,671 → 9,152 postings**.
 
 **The default lives on `JobFilters`, not on the API layer**, so the saved-search card counts and the Telegram digest inherit it through `to_job_filters` — a digest alerting on a delisted job is the same defect as listing one, and there is now a test saying so.
@@ -46,6 +64,14 @@
 Legend: ⬜ not started · 🟨 in progress · ✅ done (acceptance boxes checked)
 
 ## Decisions log
+
+- **2026-09-18 (registry snapshots downloaded — the lever is spent, and what it cost)** — All three missing registers ingested. **UK needed nothing but the file**, as recorded: the live header is byte-identical to the fixture, CRLF and all, and the leading-whitespace names (`" AaruvikA Limited"`) are the hazard `uk.py` already handles. **US needed the XLSX→CSV step** PROGRESS predicted; 595,239 of the 1.03M sheet rows are padding, which is the `max_row` lie the adapter docstring names. **NL was recorded as "blocked — no downloadable file", and that is half-right**: there is no export, but the register is server-rendered into the page HTML, so a one-off extraction produces the CSV the adapter already reads. That keeps the cross-cutting "no HTML parsing of hostile sites" rule intact — the *adapter* still reads CSV; the parsing was data prep, done once, by hand.
+
+  **Names were kept verbatim, deliberately.** 13 organisations carry doubled quotes (`""Aa-Dee""`) and 4 government bodies have no KvK. Both are genuine source data, and CLAUDE.md calls name normalization the highest-risk code in the repo — massaging inputs to make matching prettier is how a normalizer's behaviour drifts without a test noticing.
+
+  **The matcher held up under a 14× bigger haystack, but not perfectly.** Distinctive-token *equality* is what keeps 200k entries from spraying matches, and the high-impact rows are all well-evidenced. The failure mode is short seed names, where a legitimate token-equal match is still the wrong company: **`Dart` → "Dallas Area Rapid Transit" at 1.0**, matched through the DBA alias the H-1B adapter records by design. Exposure is small (25 companies ≤4 chars, 473 open jobs) but **`Grab`'s 356 jobs hang on one certified filing**. Not fixed here: the honest options are a minimum-distinctive-length guard, or weighting confidence by filing count, and both are matcher changes that want the spot-check script first.
+
+  **That script does not exist.** CLAUDE.md has mandated `scripts/spot_check_registry.py` for every registry-matching change since slice 2; `scripts/` holds only `node-path.sh`. A required guard that was never built is the same defect class as SPEC §4 claiming the UK register was ingested — recorded rather than quietly worked around.
 
 - **2026-09-18 (launch-time registry check — and a correction to the premise)** — Asked for: "on first run if it's not ingested, immediately force ingest regardless of scheduling", about UK/NL/US. **Forcing the refresh could not have ingested them.** The registry adapters read local files (`settings.uk_registry_path` &c.), `_available_ingesters` skips any path that does not exist, and only `ie_permits.csv` and `ca_lmia.csv` are on this box. UK/NL/US are un-ingested because **three files were never downloaded**, not because the monthly agent was missed — running it on every launch would have printed three skip lines and matched IE+CA exactly as before.
 

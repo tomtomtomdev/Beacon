@@ -112,8 +112,10 @@ list is **not its own view** — it is a pane inside Countries, gated by a selec
     per registry bit from `/registries`: name (`#c4ebe4`) + detail. Ingested reads
     "6,360 · 21 firms · 11d ago" (`#9fc7c2`), with "· stale" appended past the 45-day window; a
     register with no snapshot reads **"never ingested" in the degraded amber `#fbbf24`** — not
-    omitted and not "0". **The absence is the content:** UK/NL/US have adapters, are wired into
+    omitted and not "0". **The absence is the content:** UK/NL/US had adapters, were wired into
     `refresh.py`, and had never been downloaded onto this box while SPEC §4 said otherwise.
+    All five were downloaded 2026-09-18, so no row reads amber today — the state is kept
+    because it is what will surface the *next* missing snapshot the week it happens.
 - **Side panel** (right pane; `<aside>`, `flex:1; min-width:372px; max-width:512px; overflow-y:auto`,
   bg `#071a22`, border `#123842`, radius 18px, its own scroll so the globe never leaves the viewport).
   It opens with a **two-segment tab strip** — **Jobs** (default) / **Markets** — and shows the
