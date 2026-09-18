@@ -9,6 +9,7 @@ from beacon.domain.registry import (
     RegistryCompany,
     RegistryMeta,
     count_per_registry,
+    registries_needing_refresh,
     registry_names,
     stale_registries,
 )
@@ -146,3 +147,41 @@ def test_count_per_registry_splits_a_bitmask_histogram(
     mask_counts: dict[int, int], expected: dict[Registry, int]
 ) -> None:
     assert count_per_registry(mask_counts) == expected
+
+
+# --- registries_needing_refresh (slice 23) ------------------------------------------------
+#
+# The monthly launchd agent is the wrong cadence for a snapshot that has never been ingested at
+# all: UK/NL/US sat un-ingested for sixteen slices while `_available_ingesters` printed a skip
+# line and returned. A snapshot that is present on disk and absent from registries_meta should
+# be picked up the next time Beacon starts, not on the 1st of next month.
+
+REFRESH_NOW = datetime(2026, 9, 18, 5, 0, tzinfo=UTC)
+
+
+def test_a_present_snapshot_that_was_never_ingested_needs_a_refresh() -> None:
+    assert registries_needing_refresh(("UK",), (), now=REFRESH_NOW) == ("UK",)
+
+
+def test_a_freshly_ingested_snapshot_does_not() -> None:
+    meta = RegistryMeta(registry="IE", fetched_at=REFRESH_NOW - timedelta(days=11), row_count=6360)
+
+    assert registries_needing_refresh(("IE",), (meta,), now=REFRESH_NOW) == ()
+
+
+def test_a_stale_snapshot_needs_a_refresh() -> None:
+    """Same window the digest nags on — one rule, not two."""
+    old = REFRESH_NOW - timedelta(days=REGISTRY_STALE_AFTER_DAYS + 1)
+    meta = RegistryMeta(registry="CA", fetched_at=old, row_count=7884)
+
+    assert registries_needing_refresh(("CA",), (meta,), now=REFRESH_NOW) == ("CA",)
+
+
+def test_a_registry_with_no_snapshot_on_disk_is_never_requested() -> None:
+    """The reason UK/NL/US are un-ingested is three missing files, not a missed schedule.
+    Asking for a refresh that can only print a skip line would be a lie about what it does."""
+    assert registries_needing_refresh((), (), now=REFRESH_NOW) == ()
+
+
+def test_the_result_is_ordered_by_the_names_given_so_the_log_line_is_stable() -> None:
+    assert registries_needing_refresh(("UK", "IE", "CA"), (), now=REFRESH_NOW) == ("UK", "IE", "CA")

@@ -32,8 +32,15 @@ def make_settings() -> Settings:
     return Settings(db_path=Path("beacon.db"), seeds_path=Path("seeds.csv"))
 
 
-def test_the_cli_offers_exactly_the_three_maintenance_jobs() -> None:
-    assert set(maintenance.JOBS) == {"refresh-registries", "backup", "probe"}
+def test_the_cli_offers_exactly_the_maintenance_jobs_the_deploy_agents_call() -> None:
+    """Three are launchd-fired; refresh-registries-if-needed is run.sh's launch-time check,
+    which is deliberately off the monthly schedule and has no plist of its own."""
+    assert set(maintenance.JOBS) == {
+        "refresh-registries",
+        "refresh-registries-if-needed",
+        "backup",
+        "probe",
+    }
 
 
 def recording_jobs(called: list[str]) -> dict[str, maintenance.Job]:

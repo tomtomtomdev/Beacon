@@ -66,6 +66,30 @@ class RegistryMeta:
         return (now - self.fetched_at) > timedelta(days=max_age_days)
 
 
+def registries_needing_refresh(
+    available: Iterable[str],
+    snapshots: Iterable[RegistryMeta],
+    *,
+    now: datetime,
+    max_age_days: int = REGISTRY_STALE_AFTER_DAYS,
+) -> tuple[str, ...]:
+    """Which present-on-disk snapshots want re-ingesting: never ingested, or gone stale.
+
+    `available` is the registries whose snapshot file actually exists. A registry with no file
+    is never returned — UK/NL/US are un-ingested because three files were never downloaded, not
+    because a schedule was missed, and asking to refresh one would only print a skip line.
+
+    Staleness reuses the digest's window so there is one rule, not two. Order follows
+    `available` so the log line is stable across runs.
+    """
+    fetched = {meta.registry: meta for meta in snapshots}
+    return tuple(
+        name
+        for name in available
+        if (meta := fetched.get(name)) is None or meta.is_stale(now=now, max_age_days=max_age_days)
+    )
+
+
 def stale_registries(
     metas: Iterable[RegistryMeta],
     *,

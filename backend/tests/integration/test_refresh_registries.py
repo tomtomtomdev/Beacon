@@ -22,7 +22,10 @@ from beacon.application.ports import RegistryIngester
 from beacon.application.refresh_registries import refresh_registries
 from beacon.domain.job import NormalizedJob
 from beacon.domain.registry import Registry
+from beacon.adapters.persistence.db import connect
+from beacon.config import Settings
 from beacon.domain.sponsorship import HOME_COUNTRY, SponsorSignal, SponsorTier
+from beacon.refresh import run_refresh_if_needed
 
 REGISTRIES = Path(__file__).parents[1] / "fixtures" / "registries"
 SEED_FILE = Path(__file__).parents[3] / "seeds" / "companies.csv"
@@ -189,3 +192,96 @@ def test_refresh_preserves_a_manual_flag(seeded: sqlite3.Connection) -> None:
     refresh_registries(repo.list_active(), ingesters(), repo, jobs)
 
     assert Registry(flags_of(seeded, "Lovable")) & Registry.MANUAL
+
+
+def _launch_settings(tmp_path: Path, *, with_uk: bool) -> Settings:
+    """A box with at most one snapshot on disk — the shape this repo has actually been in
+    since slice 2, where IE/CA were hand-downloaded and UK/NL/US never were."""
+    registries = tmp_path / "registries"
+    registries.mkdir()
+    if with_uk:
+        (registries / "uk_sponsors.csv").write_bytes(
+            (REGISTRIES / "uk_sponsors_fixture.csv").read_bytes()
+        )
+    return Settings(
+        db_path=tmp_path / "beacon.db",
+        seeds_path=SEED_FILE,
+        uk_registry_path=registries / "uk_sponsors.csv",
+        ind_registry_path=registries / "ind_sponsors.csv",
+        h1b_registry_path=registries / "h1b_lca.csv",
+        ie_registry_path=registries / "ie_permits.csv",
+        ca_registry_path=registries / "ca_lmia.csv",
+    )
+
+
+def test_launch_refresh_ingests_a_snapshot_that_was_never_read(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The whole point: a file dropped into data/registries/ is picked up on the next start,
+    not on the 1st of next month."""
+    settings = _launch_settings(tmp_path, with_uk=True)
+
+    assert run_refresh_if_needed(settings) == 0
+
+    out = capsys.readouterr().out
+    assert "registries needing ingest: UK" in out
+    meta = SqliteRegistriesMetaRepo(connect(settings.db_path)).list_all()
+    assert [m.registry for m in meta] == ["UK"]
+
+
+def test_launch_refresh_does_nothing_when_the_snapshot_is_already_fresh(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Matching every seed company is not free, so a launch with nothing to do says so."""
+    settings = _launch_settings(tmp_path, with_uk=True)
+    run_refresh_if_needed(settings)
+    capsys.readouterr()
+
+    assert run_refresh_if_needed(settings) == 0
+
+    assert "no refresh needed" in capsys.readouterr().out
+
+
+def test_launch_refresh_names_the_missing_snapshots_and_where_to_get_them(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """UK/NL/US are un-ingested because three files were never downloaded, not because a
+    schedule was missed. A quiet 'skip' line is how that hid for sixteen slices."""
+    settings = _launch_settings(tmp_path, with_uk=True)
+
+    run_refresh_if_needed(settings)
+
+    out = capsys.readouterr().out
+    assert "MISSING registry snapshot NL" in out
+    assert "MISSING registry snapshot US" in out
+    assert "ind.nl" in out and "dol.gov" in out
+
+
+def test_a_registry_with_no_file_is_never_requested_however_long_it_has_been_absent(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Nothing on disk at all: there is no refresh that could help, and claiming to run one
+    would be a lie about what it does."""
+    settings = _launch_settings(tmp_path, with_uk=False)
+
+    assert run_refresh_if_needed(settings) == 0
+
+    assert "no refresh needed" in capsys.readouterr().out
+
+
+def test_missing_snapshots_are_named_even_when_nothing_needs_refreshing(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The live box's exact shape: IE/CA ingested and fresh, UK/NL/US absent. Returning
+    'up to date' without naming the three missing files would be the sixteen-slice silence
+    wearing a new hat — up to date is true of what is here, and says nothing about what is not."""
+    settings = _launch_settings(tmp_path, with_uk=True)
+    run_refresh_if_needed(settings)  # ingests UK, leaving nothing stale
+    capsys.readouterr()
+
+    assert run_refresh_if_needed(settings) == 0
+
+    out = capsys.readouterr().out
+    assert "no refresh needed" in out
+    assert "MISSING registry snapshot NL" in out
+    assert "MISSING registry snapshot US" in out

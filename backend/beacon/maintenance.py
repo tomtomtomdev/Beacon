@@ -1,6 +1,9 @@
 """CLI composition root for the unattended maintenance jobs: python -m beacon.maintenance <job>.
 
     refresh-registries   re-match seeds against the registry snapshots (monthly, SPEC §9)
+    refresh-registries-if-needed
+                         the same, but only when a present snapshot is un-ingested or stale
+                         (run at launch by run.sh, off the monthly schedule)
     backup               timestamped SQLite copy, pruned to the newest 14 (nightly, SPEC §9)
     probe                retry quarantined sources so an outage self-heals (weekly, SPEC §7)
 
@@ -25,7 +28,7 @@ from beacon.adapters.persistence.backup import backup_database
 from beacon.config import Settings
 from beacon.ingest import run_probe
 from beacon.logging_setup import configure_cli_logging
-from beacon.refresh import run_refresh
+from beacon.refresh import run_refresh, run_refresh_if_needed
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +37,16 @@ Job = Callable[[Settings], int]
 
 def _refresh_registries(settings: Settings) -> int:
     return run_refresh(settings)
+
+
+def _refresh_registries_if_needed(settings: Settings) -> int:
+    """Launch-time variant: ingest a snapshot that has never been read, or has gone stale.
+
+    The monthly agent is the wrong cadence for a register that has never been ingested at all —
+    UK/NL/US sat that way for sixteen slices. run.sh calls this before serving, so a file
+    dropped into data/registries/ is picked up on the next start rather than on the 1st.
+    """
+    return run_refresh_if_needed(settings)
 
 
 def _backup(settings: Settings) -> int:
@@ -48,6 +61,7 @@ def _probe(settings: Settings) -> int:
 
 JOBS: Mapping[str, Job] = {
     "refresh-registries": _refresh_registries,
+    "refresh-registries-if-needed": _refresh_registries_if_needed,
     "backup": _backup,
     "probe": _probe,
 }

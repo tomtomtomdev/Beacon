@@ -3,6 +3,9 @@
 #
 #   ./run.sh                serve the cached beacon.db immediately, refresh from the source
 #                           APIs in the background; fresh jobs are cached for the next run
+#
+# Every run first checks the sponsor-registry snapshots and ingests any that are new to this
+# box or stale, regardless of the monthly schedule — see "registry snapshots" below.
 #   ./run.sh --no-ingest    skip the refresh entirely (cached jobs only)
 #   ./run.sh --wait-ingest  old behaviour: finish the refresh before serving anything
 #   ./run.sh --setup        force a dependency (re)install before running
@@ -81,6 +84,17 @@ if [[ $INGEST -eq 1 && $WAIT_INGEST -eq 1 ]]; then
   (cd "$BACKEND" && uv run python -m beacon.ingest) || echo "⚠ refresh reported errors — continuing to serve"
   INGEST=0
 fi
+
+# --- registry snapshots -----------------------------------------------------
+# Off the monthly com.beacon.refresh schedule on purpose: a register that has never been
+# ingested at all should not wait for the 1st. This ingests any snapshot on disk that has no
+# registries_meta row or has gone stale, and NAMES the ones whose file is simply absent —
+# UK/NL/US sat un-ingested for sixteen slices behind a single quiet "skip" line, because
+# `_available_ingesters` skips a missing file by design. A missing snapshot is a hand
+# download; no amount of re-running fixes it, so the line says where to get the file.
+log "Checking registry snapshots (ingests anything new or stale; monthly agent runs anyway)"
+(cd "$BACKEND" && uv run python -m beacon.maintenance refresh-registries-if-needed) \
+  || echo "⚠ registry check reported errors — continuing to serve"
 
 # --- launch digest ----------------------------------------------------------
 # Anything the last poll left un-notified, on the phone now — before the API, so the report
