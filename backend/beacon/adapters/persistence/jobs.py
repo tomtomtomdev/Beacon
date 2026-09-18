@@ -113,7 +113,8 @@ class SqliteJobRepo:
             f"""
             SELECT jobs.id, jobs.title, companies.name AS company, jobs.url,
                    jobs.location_raw, jobs.country, jobs.city, jobs.categories,
-                   jobs.level, jobs.posted_at, jobs.sponsor_tier, jobs.user_status
+                   jobs.level, jobs.posted_at, jobs.sponsor_tier, jobs.user_status,
+                   jobs.closed_at
             FROM jobs JOIN companies ON companies.id = jobs.company_id
             {join}
             {where}
@@ -226,6 +227,15 @@ class SqliteJobRepo:
             for row in rows
         ]
 
+    def count_open_by_country(self) -> dict[str, int]:
+        rows = self._conn.execute(
+            "SELECT country, COUNT(*) AS n FROM jobs"
+            " WHERE canonical_id IS NULL AND closed_at IS NULL"
+            "   AND country IS NOT NULL AND country <> ''"
+            " GROUP BY country"
+        ).fetchall()
+        return {row["country"]: row["n"] for row in rows}
+
     def set_canonical_links(self, links: Mapping[int, int | None]) -> None:
         self._conn.executemany(
             "UPDATE jobs SET canonical_id = ? WHERE id = ?",
@@ -258,7 +268,7 @@ class SqliteJobRepo:
             SELECT jobs.id, jobs.title, companies.name AS company, jobs.url, jobs.description,
                    jobs.location_raw, jobs.country, jobs.city, jobs.categories, jobs.level,
                    jobs.posted_at, jobs.sponsor_tier, jobs.sponsor_evidence, jobs.user_status,
-                   companies.registry_flags, companies.match_confidence
+                   jobs.closed_at, companies.registry_flags, companies.match_confidence
             FROM jobs JOIN companies ON companies.id = jobs.company_id
             WHERE jobs.id = ?
             """,
@@ -277,6 +287,7 @@ class SqliteJobRepo:
 
         categories = job["categories"]
         posted_at = job["posted_at"]
+        closed_at = job["closed_at"]
         return JobDetail(
             id=job["id"],
             title=job["title"],
@@ -291,6 +302,7 @@ class SqliteJobRepo:
             posted_at=datetime.fromisoformat(posted_at) if posted_at else None,
             sponsor_tier=job["sponsor_tier"],
             sponsor_evidence=job["sponsor_evidence"],
+            closed_at=datetime.fromisoformat(closed_at) if closed_at else None,
             # Derived here for the same reason registry_names is: a presentation value read
             # straight off stored text by a pure domain function, with nothing to persist.
             contact_email=extract_contact_email(job["description"]),
@@ -440,6 +452,7 @@ def _row_to_normalized(row: sqlite3.Row) -> NormalizedJob:
 
 def _row_to_listing(row: sqlite3.Row) -> JobListing:
     posted_at = row["posted_at"]
+    closed_at = row["closed_at"]
     categories = row["categories"]
     return JobListing(
         id=row["id"],
@@ -454,4 +467,5 @@ def _row_to_listing(row: sqlite3.Row) -> JobListing:
         posted_at=datetime.fromisoformat(posted_at) if posted_at else None,
         sponsor_tier=row["sponsor_tier"],
         user_status=row["user_status"],
+        closed_at=datetime.fromisoformat(closed_at) if closed_at else None,
     )

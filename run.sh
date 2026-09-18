@@ -30,7 +30,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND="$ROOT/backend"
 FRONTEND="$ROOT/frontend"
-API_PORT=8000   # hardcoded: frontend/vite.config proxies the API routes (/jobs, /countries, /companies, /resumes, /searches, /settings, /healthz) to localhost:8000
+API_PORT=8000   # hardcoded: frontend/vite.config proxies the API routes (/jobs, /countries, /markets, /companies, /resumes, /registries, /searches, /settings, /healthz) to localhost:8000
 
 DB="${BEACON_DB_PATH:-$ROOT/beacon.db}"   # the cache itself; matches Settings.from_env()
 INGEST_LOG="$ROOT/.ingest.log"
@@ -107,7 +107,7 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-log "Starting API → http://localhost:$API_PORT  (healthz, /jobs, /companies/health, /countries, …)"
+log "Starting API → http://localhost:$API_PORT  (healthz, /jobs, /companies/health, /countries, /markets, …)"
 (cd "$BACKEND" && exec uv run uvicorn beacon.api.app:create_app --factory --port "$API_PORT") &
 API_PID=$!
 

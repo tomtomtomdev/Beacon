@@ -193,3 +193,16 @@
 .explicit_no .tierDot {
   background: var(--tier-no-dot);
 }
+
+/* A delisted posting (SPEC §5: kept, greyed out). Neutral grey rather than a tier colour —
+   closed is a fact about the posting's life, not about its sponsorship. */
+.closedChip {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-pill);
+  color: var(--text-label);
+}

@@ -46,7 +46,20 @@ export const categoryLabel = (value: string): string => CATEGORY_LABELS.get(valu
 // so the frontend keeps no second copy of the country table. A market added to the backend
 // reaches the filter menu and this heading with no edit here, which is the whole point: the
 // hardcoded array this replaced is why GB had 480 reachable jobs and no checkbox.
-// An unserved code falls back to itself — a job may carry a country the reference table has
-// no row for (slice 17 opened the corpus to 66 of them, against 12 reference rows).
+// A code the reference has no row for falls back to the browser's own ISO-3166 table: slice 17
+// opened the corpus to countries §4 never assessed, and 47 of them hold open jobs today. A
+// code→name table here would be a second source of truth for something every browser ships.
 export const countryName = (code: string, markets: readonly Country[]): string =>
-  markets.find((market) => market.code === code)?.name ?? code
+  markets.find((market) => market.code === code)?.name ?? regionName(code)
+
+const REGION_NAMES = new Intl.DisplayNames(['en'], { type: 'region' })
+
+// `of` throws RangeError on a structurally invalid code and returns undefined for an unknown
+// one; both mean "no name to show", and the bare code is the honest rendering of that.
+export const regionName = (code: string): string => {
+  try {
+    return REGION_NAMES.of(code) ?? code
+  } catch {
+    return code
+  }
+}

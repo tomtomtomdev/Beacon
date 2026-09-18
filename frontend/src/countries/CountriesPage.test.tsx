@@ -3,7 +3,7 @@ import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { CompanyHealth, Country, RegistryCoverage } from '../api/types'
+import type { CompanyHealth, Country, MarketCoverage, RegistryCoverage } from '../api/types'
 import { CountriesPage } from './CountriesPage'
 import { TOUR_DWELL_MS, TOUR_IDLE_MS } from './useIdleTour'
 
@@ -65,12 +65,23 @@ const coverage: RegistryCoverage = {
   registries: [{ registry: 'IE', fetched_at: '2026-09-04T05:29:57Z', row_count: 6360, companies: 21, stale: false }],
 }
 
+// The §4 markets the stack shows, plus one country the reference never assessed.
+const markets: MarketCoverage = {
+  target_markets: [
+    { code: 'ID', open_jobs: 12 },
+    { code: 'NL', open_jobs: 272 },
+    { code: 'SE', open_jobs: 393 },
+  ],
+  other_markets: [{ code: 'DE', open_jobs: 198 }],
+}
+
 // One route → one body. A chain of ternaries silently served a jobs page to every URL it did
 // not recognise, so a new endpoint failed as a render crash instead of as a missing mock.
 const BODIES: Record<string, unknown> = {
   '/resumes': [],
   '/companies/health': health,
   '/registries': coverage,
+  '/markets': markets,
 }
 
 function bodyFor(url: string): unknown {

@@ -134,6 +134,10 @@ class JobListing:
     posted_at: datetime | None
     sponsor_tier: str
     user_status: str
+    # When the closed-posting sweep delisted it, or None while it is still live. SPEC §5 keeps
+    # a closed posting and renders it greyed rather than dropping it, and the list cannot grey
+    # what the read model never carried.
+    closed_at: datetime | None = None
     # Attached only when the request names an active resume (?resume=<id>); None otherwise, so
     # a fit score is a soft, opt-in signal exactly like sponsorship — never a filter-out.
     match_score: MatchScore | None = None
@@ -193,6 +197,8 @@ class JobDetail:
     posted_at: datetime | None
     sponsor_tier: str
     sponsor_evidence: str | None
+    # When the closed-posting sweep delisted it, or None while it is still live (SPEC §5).
+    closed_at: datetime | None
     # An address in the posting that could plausibly reach a human about the job, or None —
     # which is the answer for the large majority of postings (see domain/contact.py).
     contact_email: str | None
@@ -255,6 +261,12 @@ class JobRepo(Protocol):
         moved. Touches nothing else on the row — not content_hash, not the seen timestamps,
         not user_status. Deliberately dumb: which country gets which tier is the domain's
         question, answered by resolve_tier."""
+        ...
+
+    def count_open_by_country(self) -> dict[str, int]:
+        """Open, canonical jobs per ISO-3166 alpha-2 code. One GROUP BY rather than loading
+        9,000 rows to count them. A job with no parsed country is absent — it is not a market,
+        and an "unknown" bucket here would only have to be special-cased back out in the domain."""
         ...
 
     def list_dedup_rows(self) -> list[DedupRow]:

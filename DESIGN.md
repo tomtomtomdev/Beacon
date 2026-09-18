@@ -167,6 +167,19 @@ header is sticky.
     count ("Country · 2"). Menus: bg `#0c2831`, border `#1a4650`, radius 12px, shadow `0 16px 40px
     rgba(2,10,14,0.6)`, fade-in. Country rows carry a P/☆ tier badge; the Sponsor-tier menu opens
     with "Opt-in filter. Off by default — nothing is hidden." **Tier filter is never on by default.**
+  - **The country menu has two groups, and the divide is the point.** It opens with the caption
+    "Open postings per market — the list also carries closed ones, greyed", then the **§4 markets**
+    in the order `/countries` serves them, each with a mono open count (`#9fc7c2`, 11px) between
+    the name and its tier badge. Then a 1px `#123842` divider, an uppercase **"Other markets"**
+    heading (`#5f8f8a`, 10.5px, 0.06em) and the note "Not relocation targets — no visa reference,
+    no globe pin. Postings only.", then the countries §4 has **never assessed**, ordered by open
+    count descending (ties on code). **Measured 2026-09-18: 47 of them, 1,844 open jobs, led by
+    IN 355 · MY 235 · TH 215 · DE 198** — every one of which `/jobs` already served, with no way
+    to ask for it. Those rows carry **no P/☆/⌂ glyph**: the badge is keyed by `priority_tier`, a
+    §4 concept these countries do not have, and a grey "unknown" glyph would assert a tier had
+    been assessed and come back empty. Their names come from `Intl.DisplayNames`, not from a
+    code→name table in the repo. **Every count is DERIVED from `/markets`, never typed.** The
+    menu scrolls (`max-height:320px`) — 63 rows do not fit on screen.
   - **Chip row:** "CATEGORY" label + 7 category pills (iOS, Backend, AI/ML, Android, Flutter,
     Fullstack, Frontend) · divider · "LEVEL" + 3 pills (Senior, Staff, Lead). Pill styles as above.
 - **Job list** (pad `4×20×22`; a **stack of compact cards**, `flex-direction:column; gap:10px` — not
@@ -175,8 +188,16 @@ header is sticky.
   - **Top row:** left = title (14px/600/-0.01em, `#e3fdf6`) over company (12px/500, `#9fc7c2`) — the
     title block is the drawer-open trigger; right (flex-shrink:0) = Star + Hide (Restore when hidden)
     icon buttons (28px, hover `#0f333c`, star fills teal `#5eead4`).
-  - **Meta row** (margin-top 11px, wraps): sponsorship tier chip (6px dot + label) + city (11.5px
-    `#c4ebe4`) + level (11px mono uppercase `#5f8f8a`) + posted age (11.5px `#5f8f8a`, pushed right).
+  - **Meta row** (margin-top 11px, wraps): a **"Closed" chip** when the posting is delisted, then
+    the sponsorship tier chip (6px dot + label) + city (11.5px `#c4ebe4`) + level (11px mono
+    uppercase `#5f8f8a`) + posted age (11.5px `#5f8f8a`, pushed right).
+  - **Closed postings are greyed, not dropped** (`opacity:0.55`, the same mute a hidden row
+    takes) and carry a neutral outlined "Closed" chip — 11px mono uppercase, border `#123842`,
+    text `#5f8f8a`. **Grey, deliberately not a tier colour:** closed is a fact about the
+    posting's life, not about its sponsorship. SPEC §5 always said a delisted posting is "kept,
+    greyed out", but `closed_at` was never on the `/jobs` DTO, so **6,518 of the 15,648 rows the
+    endpoint serves — 42% — rendered as though you could still apply**. The list cannot grey what
+    the API does not tell it. The drawer reports the same field for the same reason.
   - Category chips and a per-row "open original" link are **not** on the card — categories stay as
     filter pills, and the original-posting link lives in the drawer CTA. Per-view empty states
     (New → "You're all caught up", etc.).

@@ -11,6 +11,7 @@ export default defineConfig({
       '/companies': 'http://localhost:8000',
       '/resumes': 'http://localhost:8000',
       '/registries': 'http://localhost:8000',
+      '/markets': 'http://localhost:8000',
       '/searches': 'http://localhost:8000',
       '/settings': 'http://localhost:8000',
       '/healthz': 'http://localhost:8000',

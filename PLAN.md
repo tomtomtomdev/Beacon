@@ -997,12 +997,13 @@ Acceptance:
 
 ---
 
-## Slice 19 candidates — measured 2026-09-15; **A chosen, B and C stand**
+## Slice 19 candidates — measured 2026-09-15; **A became slice 19, B became slice 20, C stands**
 
 Three levers, each measured against the real `beacon.db` rather than argued from the spec.
 Recorded together so the trade is visible; picking one is a decision, not a default.
-**A became slice 19 (above) on 2026-09-15.** B and C are unchanged and still measured —
-left here as the next two levers rather than rewritten as history.
+**A became slice 19 (above) on 2026-09-15; B's shape (1) became slice 20 (below) the same
+day, re-measured first.** C is unchanged and still measured — left here as the next lever rather
+than rewritten as history.
 
 ### A — Make coverage visible (the class of defect slice 18 found)
 
@@ -1077,6 +1078,176 @@ slash-separated **12**, bare US state name **9**, 8 other.
 17d costed it honestly and the cost has not changed: **slice 17 bought 33.7 points of country
 coverage; closing all six families buys 3.9.** A day of table-and-regex work against machinery
 that already exists — real, bounded, and explicitly diminishing.
+
+---
+
+## Slice 20 — Other markets: the 45 countries with jobs and no way to ask for them
+
+**Chosen 2026-09-15 from the slice-19 candidate block below (B, shape 1 — the generic
+affordance, explicitly *not* shape 2, widening §4).** Re-measured against the real `beacon.db`
+before writing this, because the candidate numbers were a week old and the corpus moved:
+
+| | candidate (measured for slice 19) | re-measured 2026-09-15 |
+|---|---|---|
+| open canonical jobs outside §4 | 1,808 | **1,823** |
+| countries | 45 | **45** |
+| firms | 106 | **105** |
+
+The top of the tail, open canonical jobs: **IN 347 · MY 237 · TH 220 · DE 197 · FR 106 ·
+CN 81 · VN 73 · MX 71 · KR 70 · PH 53 · BR 52 · ES 44**.
+
+**Three measurements taken for this slice that the candidate block does not record, and all
+three narrow the work:**
+
+1. **`/jobs` already accepts an arbitrary `?country=`** — `api/jobs.py:61` passes the query
+   through uppercased with no check against the `countries` table. Every one of those 1,823
+   jobs is *already served*; what is missing is only the way to ask. This is a **discovery**
+   slice, not a filtering one, and no query-path code changes.
+2. **There is no facet or rollup endpoint anywhere in the repo** — nothing counts jobs by
+   anything. So this is one new repo read, one pure partition, one endpoint, one menu section,
+   in the shape 19b→19d just proved.
+3. **The tail matches badly, and that is the argument for the affordance over §4 rows.** Of its
+   942 scored jobs, **15 reach overall ≥ 50 and zero reach ≥ 70** — a 1.6% rate against the
+   corpus-wide **424 of 8,259 = 5.1%**, so the tail matches roughly three times worse. Sponsor
+   signal is the one bright spot — **409 of 1,823** carry `explicit_yes` or `registry_inferred`
+   (DE alone: 29 of 197). Paying 18b's per-row visa research for markets that match at a third
+   the rate is a trade to make **after** looking, not before, and this slice is what makes
+   looking possible.
+
+**The open question stays open on purpose.** Whether those markets are *wanted* is not a
+measurement and this slice does not answer it — it declines to. An other-market chip claims
+nothing: no §4 row, no visa summary, no globe pin, no priority tier, no relocation target. It
+only stops the corpus from hiding behind the reference table.
+
+**Honest caveat.** Unlike slice 19 this does surface jobs — 1,823 of them — but it surfaces
+them *unqualified*: no verified visa route, no sponsorship reference, and a measured-worse match
+rate. The risk is not that it lies; it is that it dilutes. Ordering and labelling carry that
+weight, which is why they are acceptance criteria rather than polish.
+
+**Out of scope, named so it is not scope-crept in:** widening SPEC §4 (candidate B shape 2,
+including the Germany row), the 898 jobs with no country at all (candidate C — a chip cannot
+help a job whose country was never parsed), and the globe, which plots §4 markets and keeps
+doing exactly that.
+
+**Build order: 20a the repo read → 20b the pure partition → 20c use case + endpoint → 20d the
+menu section.** Backend first so the frontend never mocks a shape that does not exist yet.
+
+### 20a — `JobRepo.count_open_by_country()` (port + adapter)
+
+The dumb histogram, modelled on 19b's `CompanyRepo.count_by_registry_flags()` — and dumb for the
+same reason: one `GROUP BY` returning ~61 rows, against loading 9,060 job rows to count them in
+Python. The repo counts; what a country *means* is not persistence's business.
+
+- `test_counts_open_canonical_jobs_by_country` — RED first, integration against a tmp SQLite
+  file with real migrations.
+- `test_a_duplicate_does_not_count_twice` — `canonical_id IS NULL` is the filter, and the whole
+  reason the measured figure is 1,823 and not 1,940-odd. A slice about honest counts cannot
+  double-count.
+- `test_a_closed_job_is_not_counted` — `closed_at IS NULL`. A chip promising 216 German jobs
+  that opens onto 40 live ones is slice 18's defect wearing a new hat.
+- `test_a_job_with_no_country_is_absent_from_the_histogram` — NULL and `''` are not a bucket
+  here. They are candidate C's 898 jobs and they get no chip; the port must not invent an
+  `"unknown"` key that the domain would then have to special-case.
+
+### 20b — The partition (domain, pure)
+
+- `test_a_country_in_the_reference_is_a_target_market` and
+  `test_a_country_absent_from_the_reference_is_an_other_market` — RED first, one each way.
+  `partition_markets(counts)` reads
+  `COUNTRY_REFERENCE` and splits the histogram in two. Pure, no IO, and it lives beside the
+  reference it reads.
+- `test_a_reference_country_with_no_open_jobs_is_still_a_target_market_at_zero` — measured:
+  every §4 row has jobs today (NZ 8 is the floor), but a target market is a *reference* fact,
+  not a corpus fact, and it must not vanish on a quiet week. **The two halves are asymmetric on
+  purpose:** target markets come from the reference and carry zero; other markets come from the
+  corpus and a zero cannot exist.
+- `test_other_markets_are_ordered_by_open_count_descending` — the ordering is a domain decision,
+  not a render detail, because it is what keeps the long tail from drowning the list: **25 of
+  the 45 tail countries have fewer than 10 open jobs.** Ties break on code so the list is
+  deterministic across polls.
+- Names come from the existing reference for §4 codes; **other markets have no name source in
+  the repo**, and inventing a 45-row code→name table here is a second source of truth for
+  something `pycountry`-shaped. The DTO carries the ISO-3166 alpha-2 code and the frontend
+  renders it through `Intl.DisplayNames`, which the browser already ships. Recorded as a
+  decision, not a shortcut.
+
+### 20c — `get_market_coverage` + `GET /markets` (application + api)
+
+- `test_endpoint_reports_both_halves` — RED first, one call, two lists.
+- `test_endpoint_reports_zero_other_markets_on_an_empty_corpus` — an empty list, not an absent
+  key; the frontend must not have to distinguish the two.
+- **Its own endpoint, not a field on `/countries`.** 19b's refactor watch says a rollup
+  answering a *different question* does not join an existing one — `/countries` is the §4 visa
+  reference, cached and seeded at startup, and hanging a live job count off it would make a
+  reference resource change every poll.
+
+### 20d — The "Other markets" menu section (frontend)
+
+`FilterBar.tsx:124` renders the country menu from `markets` = `/countries` — the 16 §4 rows, and
+the only reason the tail is unreachable. It gains a second, divided group.
+
+- `test_other_markets_appear_under_their_own_heading` — RED first, mocked at the fetch boundary.
+  The heading is load-bearing: it is what stops a DE chip reading as a relocation target.
+- `test_checking_an_other_market_filters_the_list` — the behaviour, end to end through the URL
+  search params that already hold filter state. No new state, no new lib.
+- `test_target_markets_render_their_open_counts` — free from the same response, and the same
+  principle as slice 19: a number on screen is derived or it is not there.
+- `test_no_market_is_preselected` — the CLAUDE.md rule for tier chips, and it binds here too:
+  the default view claims nothing and hides nothing.
+- Other-market rows carry **no priority-tier glyph** — `COUNTRY_BADGE` is keyed by
+  `priority_tier`, a §4 concept these countries do not have. A missing glyph is the honest
+  rendering; a grey "unknown" glyph would assert a tier was assessed.
+
+**Refactor watch.** If `partition_markets` starts taking a "should this be a target" argument,
+the abstraction has become candidate B shape 2 by the back door — stop and make it a §4 row
+properly. If the menu grows a third group, it is a drawer, not a menu.
+
+### 20e — The chip's number and the list it opens (backend + frontend)
+
+**Not planned; forced by the 20d acceptance check, and it is the same defect class as slices
+18–19.** The menu chip read "Germany 198" and opened onto **266**. Neither number was wrong —
+they count different populations. `/jobs` serves closed (delisted) postings alongside live ones:
+**6,518 of the 15,648 rows it returns, 42%.** SPEC §5 already says a closed posting is "kept,
+greyed out" — but `closed_at` was **never on the `/jobs` DTO**, so the UI could not grey what the
+API never told it, and 6,518 dead postings rendered as live ones.
+
+Chosen over hiding closed postings behind a query-path change (which 20d's acceptance forbids,
+and which would drop the visible corpus from 15,648 to 9,130) and over counting closed jobs in
+the histogram (which contradicts 20a's `test_a_closed_job_is_not_counted`).
+
+- `test_a_closed_posting_reports_when_it_closed_and_a_live_one_reports_null` — RED first.
+  `closed_at` joins `JobListing`, the `search` SELECT, and `JobOut`.
+- `test_the_detail_view_also_reports_a_closed_posting` — `JobDetailOut` **inherits** `closed_at`
+  from `JobOut`, so it defaulted to `None`: the drawer would have presented a delisted job as
+  live while the list beside it greyed the same row. Threaded through `JobDetail` as well.
+- Frontend: a closed card is muted like a hidden one and carries a neutral "Closed" chip —
+  grey, not a tier colour, because closed is a fact about the posting's life, not its
+  sponsorship. The country menu says what its numbers count: "Open postings per market".
+- The three test fixtures that predated the field were caught by `tsc`, not by a green run —
+  `closed_at` is required on `Job`, so a fixture omitting it fails the type-check.
+
+Acceptance:
+- [x] `GET /markets` returns both halves; other markets are ordered by open count descending and
+      the top four read **IN 355 · MY 235 · TH 215 · DE 198** against the live `beacon.db`
+      *(re-measured over HTTP 2026-09-18; the plan's 2026-09-15 figures — IN 347 · MY 237 ·
+      TH 220 · DE 197 — had moved, and are left above as written rather than backdated)*
+- [x] Every one of the **47** countries outside §4 is reachable from the country menu, and the
+      totals sum to **1,844** — checked by hand against raw SQL (`47|1844`), not from a fixture
+      *(45 / 1,823 when planned three days earlier)*
+- [x] Checking an other-market chip filters the job list and the filter survives a reload
+      (URL search params), with **no change to `/jobs`'s query path** — the endpoint already
+      accepted the code
+- [x] Target markets render a derived open count; no literal count ships in the menu
+- [x] Nothing is preselected, nothing is hidden, and an other-market row shows no priority-tier
+      glyph and no visa copy
+- [x] The globe still plots §4 markets only, and SPEC §4 gains no rows in this slice
+- [x] No job row, `content_hash`, classification, tier or `canonical_id` moves — this slice
+      reads and renders only, confirmed against the live DB after the check
+- [x] DESIGN.md's filter-bar section describes the second group and says other markets are not
+      relocation targets, so the next design handoff cannot delete the distinction by accident
+- [x] **(20e)** The chip's count and the list it opens reconcile: DE serves **266**, of which
+      **68** are closed, leaving the **198** the chip claims — and the closed ones now say so
+- [x] `make verify` green on both stacks (967 backend, 107 frontend)
 
 ---
 

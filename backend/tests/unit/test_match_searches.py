@@ -110,6 +110,9 @@ class FakeJobRepo:
     def set_tier_for_country(self, country: str, tier: SponsorTier) -> int:
         raise NotImplementedError
 
+    def count_open_by_country(self) -> dict[str, int]:
+        raise NotImplementedError
+
 
 class FakeSearchRepo:
     def __init__(self, searches: list[SavedSearch]) -> None:

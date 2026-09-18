@@ -626,3 +626,49 @@ async def test_patch_status_on_duplicate_updates_canonical(
     assert response.json()["id"] == ids["1"]
     canonical = seeded.execute("SELECT user_status FROM jobs WHERE id = ?", (ids["1"],)).fetchone()
     assert canonical["user_status"] == "hidden"
+
+
+async def test_a_closed_posting_reports_when_it_closed_and_a_live_one_reports_null(
+    client: httpx.AsyncClient, db_path: Path
+) -> None:
+    """SPEC §5 keeps a delisted posting and says it renders greyed out — but closed_at was never
+    on the DTO, so 6,518 of the 15,648 rows /jobs serves looked exactly like live ones. The
+    list cannot grey what the API does not tell it.
+    """
+    conn = connect(db_path)
+    companies = SqliteCompanyRepo(conn)
+    company = companies.upsert(
+        Company(name="Tines", ats_type="greenhouse", ats_slug="tines", country_hq="IE", priority=2)
+    )
+    assert company.id is not None
+    jobs = SqliteJobRepo(conn)
+    jobs.upsert(company.id, make_job("live", "Still Hiring", "IE", POLL_AT), POLL_AT)
+    jobs.upsert(company.id, make_job("gone", "Delisted", "IE", POLL_AT), POLL_AT)
+    jobs.sweep_absent_jobs("greenhouse", company.id, {"live"}, POLL_AT, threshold=1)
+
+    body = (await client.get("/jobs?status=all")).json()
+    by_title = {job["title"]: job for job in body["jobs"]}
+
+    assert by_title["Delisted"]["closed_at"] is not None
+    assert by_title["Still Hiring"]["closed_at"] is None
+
+
+async def test_the_detail_view_also_reports_a_closed_posting(
+    client: httpx.AsyncClient, db_path: Path
+) -> None:
+    """JobDetailOut inherits closed_at from JobOut, so it defaults to None — which would have
+    let the drawer present a delisted job as live while the list beside it greyed the same row.
+    """
+    conn = connect(db_path)
+    company = SqliteCompanyRepo(conn).upsert(
+        Company(name="Tines", ats_type="greenhouse", ats_slug="tines", country_hq="IE", priority=2)
+    )
+    assert company.id is not None
+    jobs = SqliteJobRepo(conn)
+    jobs.upsert(company.id, make_job("gone", "Delisted", "IE", POLL_AT), POLL_AT)
+    jobs.sweep_absent_jobs("greenhouse", company.id, set(), POLL_AT, threshold=1)
+    job_id = conn.execute("SELECT id FROM jobs WHERE external_id = 'gone'").fetchone()["id"]
+
+    body = (await client.get(f"/jobs/{job_id}")).json()
+
+    assert body["closed_at"] is not None

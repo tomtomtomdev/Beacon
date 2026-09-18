@@ -3,6 +3,7 @@ import { ChevronLeft } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { fetchJobs, patchJobStatus, type SortBy, type StatusView } from '../api/jobs'
 import { fetchCountries } from '../api/countries'
+import { fetchMarkets } from '../api/markets'
 import { fetchResumes } from '../api/resumes'
 import type { Country, SponsorTier, UserStatus } from '../api/types'
 import { FilterBar } from './FilterBar'
@@ -43,6 +44,9 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
   // Same ['countries'] key the drawer and the Countries view already use, so the query cache
   // is the sharing mechanism and this costs no extra request.
   const { data: markets } = useQuery({ queryKey: ['countries'], queryFn: fetchCountries })
+  // /markets is the live rollup (open jobs per country, split against §4) — deliberately not a
+  // field on /countries, which is the seeded visa reference and must not change every poll.
+  const { data: coverage } = useQuery({ queryKey: ['markets'], queryFn: fetchMarkets })
   const activeResume = resumes?.find((resume) => resume.active) ?? null
   const resumeId = activeResume?.id ?? null
 
@@ -210,6 +214,7 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
         <FilterBar
           q={q}
           markets={markets ?? []}
+          coverage={coverage ?? null}
           countries={countries}
           categories={categories}
           levels={levels}

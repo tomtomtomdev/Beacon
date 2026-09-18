@@ -1,9 +1,9 @@
 import { ChevronDown, Search } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { SortBy } from '../api/jobs'
-import type { Country, PriorityTier, SponsorTier } from '../api/types'
+import type { Country, MarketCoverage, PriorityTier, SponsorTier } from '../api/types'
 import styles from './FilterBar.module.css'
-import { CATEGORY_OPTIONS, LEVEL_OPTIONS } from './taxonomy'
+import { CATEGORY_OPTIONS, LEVEL_OPTIONS, regionName } from './taxonomy'
 
 // DESIGN.md §1 sponsor-tier dropdown; dot colors reuse the tier tokens.
 const TIER_OPTIONS: ReadonlyArray<{ value: SponsorTier; label: string; dot: string }> = [
@@ -30,6 +30,9 @@ interface FilterBarProps {
   // The markets /countries serves, in the server's order (home, then primary, then
   // alphabetical within tier) — rendered as served, never re-sorted here.
   markets: readonly Country[]
+  // GET /markets: the open-job count per country, and the countries §4 never assessed. Null
+  // until it lands — counts are derived or absent, never a placeholder (slice 19's rule).
+  coverage: MarketCoverage | null
   countries: string[]
   categories: string[]
   levels: string[]
@@ -48,6 +51,7 @@ interface FilterBarProps {
 export function FilterBar({
   q,
   markets,
+  coverage,
   countries,
   categories,
   levels,
@@ -62,6 +66,12 @@ export function FilterBar({
   showFitSort,
 }: FilterBarProps) {
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null)
+  // Derived during render from the one response — no state, no effect.
+  const openJobs = useMemo(
+    () => new Map(coverage?.target_markets.map((market) => [market.code, market.open_jobs])),
+    [coverage],
+  )
+  const otherMarkets = coverage?.other_markets ?? []
   const toggleMenu = (menu: 'country' | 'tier') =>
     setOpenMenu((current) => (current === menu ? null : menu))
 
@@ -124,20 +134,43 @@ export function FilterBar({
         {openMenu === 'country' && (
           <>
             <div className={styles.clickAway} onClick={() => setOpenMenu(null)} />
-            <div className={styles.menu} role="group" aria-label="Filter by country">
+            <div
+              className={`${styles.menu} ${styles.menuScroll}`}
+              role="group"
+              aria-label="Filter by country"
+            >
+              <p className={styles.menuNote}>
+                Open postings per market — the list also carries closed ones, greyed.
+              </p>
               {markets.map(({ code, name, priority_tier }) => (
-                <label key={code} className={styles.menuRow}>
-                  <input
-                    type="checkbox"
-                    checked={countries.includes(code)}
-                    onChange={() => onToggleCountry(code)}
-                  />
-                  <span className={styles.menuRowLabel}>{name}</span>
-                  <span className={COUNTRY_BADGE[priority_tier].className} aria-hidden>
-                    {COUNTRY_BADGE[priority_tier].glyph}
-                  </span>
-                </label>
+                <CountryRow
+                  key={code}
+                  name={name}
+                  openJobs={openJobs.get(code)}
+                  checked={countries.includes(code)}
+                  onToggle={() => onToggleCountry(code)}
+                  tier={priority_tier}
+                />
               ))}
+              {otherMarkets.length > 0 && (
+                <>
+                  <div className={styles.menuDivider} aria-hidden />
+                  <p className={styles.menuHeading}>Other markets</p>
+                  <p className={styles.menuNote}>
+                    Not relocation targets — no visa reference, no globe pin. Postings only.
+                  </p>
+                  {otherMarkets.map(({ code, open_jobs }) => (
+                    <CountryRow
+                      key={code}
+                      name={regionName(code)}
+                      openJobs={open_jobs}
+                      checked={countries.includes(code)}
+                      onToggle={() => onToggleCountry(code)}
+                      tier={null}
+                    />
+                  ))}
+                </>
+              )}
             </div>
           </>
         )}
@@ -204,4 +237,44 @@ export function FilterBar({
       </div>
     </div>
   )
+}
+
+// One row shape for both groups. `tier` is null for an other market: COUNTRY_BADGE is keyed by
+// priority_tier, a §4 concept those countries do not have, and a grey "unknown" glyph would
+// assert a tier had been assessed and come back empty. The whitespace after the name is
+// load-bearing — without it the accessible name concatenates to "Norway0".
+function CountryRow({
+  name,
+  openJobs,
+  checked,
+  onToggle,
+  tier,
+}: {
+  name: string
+  openJobs: number | undefined
+  checked: boolean
+  onToggle: () => void
+  tier: PriorityTier | null
+}) {
+  const badge = tier ? COUNTRY_BADGE[tier] : null
+  return (
+    <label className={styles.menuRow}>
+      <input type="checkbox" checked={checked} onChange={onToggle} />
+      <span className={styles.menuRowLabel}>{name}</span>{' '}
+      <MarketCount openJobs={openJobs} />
+      {badge && (
+        <span className={badge.className} aria-hidden>
+          {badge.glyph}
+        </span>
+      )}
+    </label>
+  )
+}
+
+// A target market keeps its row at zero — it is a reference fact, not a corpus one — so the
+// zero renders rather than being hidden: it is what tells you the box will return nothing.
+// Absent (the response has not landed) is the one case that renders no number at all.
+function MarketCount({ openJobs }: { openJobs: number | undefined }) {
+  if (openJobs === undefined) return null
+  return <span className={styles.menuCount}>{openJobs.toLocaleString()}</span>
 }

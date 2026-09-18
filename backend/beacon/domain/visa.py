@@ -6,6 +6,7 @@ This is the source of truth; the countries table is a seeded projection of it. E
 figure = editing a row here (and bumping its verified_at), never inventing data downstream.
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
@@ -236,3 +237,58 @@ COUNTRY_REFERENCE: tuple[CountryReference, ...] = (
         source_url="https://www.immd.gov.hk/eng/services/visas/GEP.html",
     ),
 )
+
+
+_REFERENCE_CODES: frozenset[str] = frozenset(country.code for country in COUNTRY_REFERENCE)
+
+
+@dataclass(frozen=True, slots=True)
+class MarketCount:
+    """One country's open, canonical job count.
+
+    Carries the ISO-3166-1 alpha-2 code and nothing else. §4 names already live in
+    COUNTRY_REFERENCE, and the countries outside it have no name source anywhere in this repo
+    — a 45-row code→name table here would be a second source of truth for something the
+    browser already ships as Intl.DisplayNames.
+    """
+
+    code: str
+    open_jobs: int
+
+
+@dataclass(frozen=True, slots=True)
+class MarketCoverage:
+    """Which countries hold open jobs, split by whether §4 has assessed them.
+
+    The two halves are asymmetric on purpose. A target market is a *reference* fact: it is
+    listed because SPEC §4 assessed it, so it survives a quiet week at zero. An other market
+    is a *corpus* fact: it is listed because jobs were found there, so a zero cannot exist.
+    """
+
+    target_markets: tuple[MarketCount, ...]
+    other_markets: tuple[MarketCount, ...]
+
+
+def partition_markets(open_by_country: Mapping[str, int]) -> MarketCoverage:
+    """Split an open-jobs-by-country histogram against the §4 reference.
+
+    Target markets follow COUNTRY_REFERENCE's own order — the reference decides membership,
+    so it decides sequence too. Other markets are ordered by open count descending because 25
+    of the 45 tail countries hold fewer than 10 jobs and would otherwise drown the rest; ties
+    break on code so the list does not reshuffle between polls.
+    """
+    target = tuple(
+        MarketCount(code=country.code, open_jobs=open_by_country.get(country.code, 0))
+        for country in COUNTRY_REFERENCE
+    )
+    other = tuple(
+        sorted(
+            (
+                MarketCount(code=code, open_jobs=open_jobs)
+                for code, open_jobs in open_by_country.items()
+                if code not in _REFERENCE_CODES
+            ),
+            key=lambda market: (-market.open_jobs, market.code),
+        )
+    )
+    return MarketCoverage(target_markets=target, other_markets=other)

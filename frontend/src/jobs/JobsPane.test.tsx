@@ -3,7 +3,13 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { Country, JobsPageResponse, PriorityTier, Resume } from '../api/types'
+import type {
+  Country,
+  JobsPageResponse,
+  MarketCoverage,
+  PriorityTier,
+  Resume,
+} from '../api/types'
 import { JobsPane } from './JobsPane'
 
 const payload: JobsPageResponse = {
@@ -22,6 +28,7 @@ const payload: JobsPageResponse = {
       posted_at: '2026-07-01T00:00:00+00:00',
       sponsor_tier: 'unknown',
       user_status: 'new',
+      closed_at: null,
     },
     {
       id: 2,
@@ -36,6 +43,23 @@ const payload: JobsPageResponse = {
       posted_at: null,
       sponsor_tier: 'unknown',
       user_status: 'starred',
+      closed_at: null,
+    },
+  ],
+}
+
+// One live row and one the closed-posting sweep delisted. SPEC §5 keeps a closed posting and
+// renders it greyed rather than dropping it — it is evidence about a company that was hiring.
+const withClosedPayload: JobsPageResponse = {
+  total: 2,
+  jobs: [
+    payload.jobs[0],
+    {
+      ...payload.jobs[1],
+      id: 3,
+      title: 'Delisted Engineer',
+      company: 'SAP',
+      closed_at: '2026-08-20T05:00:00+00:00',
     },
   ],
 }
@@ -115,6 +139,20 @@ const markets: Country[] = [
   market('SE', 'Sweden', 'nice_to_have'),
 ]
 
+// GET /markets — the open-job histogram split against SPEC §4. Target markets come from the
+// reference and may read zero; other markets come from the corpus, so a zero cannot exist.
+const coverage: MarketCoverage = {
+  target_markets: [
+    { code: 'ID', open_jobs: 12 },
+    { code: 'SE', open_jobs: 393 },
+    { code: 'NO', open_jobs: 0 },
+  ],
+  other_markets: [
+    { code: 'IN', open_jobs: 355 },
+    { code: 'DE', open_jobs: 198 },
+  ],
+}
+
 const fetchMock = vi.fn()
 
 // Data-driven boundary mock: /resumes returns the resume list; a /jobs request that carries
@@ -122,6 +160,7 @@ const fetchMock = vi.fn()
 let jobsPayload: JobsPageResponse = payload
 let resumesPayload: Resume[] = []
 let countriesPayload: Country[] = markets
+let coveragePayload: MarketCoverage = coverage
 
 function ok(body: unknown): Promise<Response> {
   return Promise.resolve({ ok: true, json: () => Promise.resolve(body) } as Response)
@@ -153,11 +192,13 @@ beforeEach(() => {
   jobsPayload = payload
   resumesPayload = []
   countriesPayload = markets
+  coveragePayload = coverage
   fetchMock.mockImplementation((url: RequestInfo | URL, init?: RequestInit) => {
     const u = String(url)
     const method = init?.method ?? 'GET'
     if (u === '/resumes' && method === 'GET') return ok(resumesPayload)
     if (u === '/countries') return ok(countriesPayload)
+    if (u === '/markets') return ok(coveragePayload)
     if (u.startsWith('/jobs/')) return ok({}) // detail / status PATCH — overridden where asserted
     if ((u === '/jobs' || u.startsWith('/jobs?')) && u.includes('resume=')) return ok(scoredPayload)
     return ok(jobsPayload)
@@ -224,6 +265,99 @@ describe('JobsPane', () => {
     await waitFor(() => {
       expect(jobListUrls().some((u) => u.includes('country=GB'))).toBe(true)
     })
+  })
+
+  // 20d: the countries holding open jobs that SPEC §4 has never assessed. /jobs already took an
+  // arbitrary ?country=, so every one of those jobs was already served — what was missing was
+  // the way to ask for them. Measured against the live DB on 2026-09-18: 47 countries, 1,844
+  // open canonical jobs, led by IN 355 · MY 235 · TH 215 · DE 198.
+  async function openCountryMenu(): Promise<HTMLElement> {
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByText('Swift Engineer')
+    await user.click(screen.getByRole('button', { name: /country/i }))
+    return screen.getByRole('group', { name: 'Filter by country' })
+  }
+
+  it('groups the markets §4 never assessed under their own heading', async () => {
+    const menu = within(await openCountryMenu())
+
+    // The heading is load-bearing: it is what stops a DE row reading as a relocation target.
+    expect(menu.getByText('Other markets')).toBeInTheDocument()
+    expect(menu.getByText(/not relocation targets/i)).toBeInTheDocument()
+  })
+
+  it('names an other market rather than showing its bare code', async () => {
+    // These countries have no name source in the repo, and a 47-row code→name table here would
+    // be a second source of truth for something the browser already ships as Intl.DisplayNames.
+    const menu = within(await openCountryMenu())
+
+    expect(menu.getByRole('checkbox', { name: /germany/i })).toBeInTheDocument()
+    expect(menu.getByRole('checkbox', { name: /india/i })).toBeInTheDocument()
+  })
+
+  it('checking an other market filters the list', async () => {
+    const user = userEvent.setup()
+    const menu = within(await openCountryMenu())
+
+    await user.click(menu.getByRole('checkbox', { name: /germany/i }))
+
+    await waitFor(() => {
+      expect(jobListUrls().some((u) => u.includes('country=DE'))).toBe(true)
+    })
+  })
+
+  it('renders every market open count from /markets, including an assessed market at zero', async () => {
+    // Slice 19's rule, and it binds here: a number on screen is derived or it is not there. A
+    // target market is a reference fact and keeps its row at zero; an other market is a corpus
+    // fact, so a zero one cannot exist.
+    const menu = within(await openCountryMenu())
+
+    expect(menu.getByRole('checkbox', { name: /sweden/i })).toHaveAccessibleName(/393/)
+    expect(menu.getByRole('checkbox', { name: /norway/i })).toHaveAccessibleName(/\b0\b/)
+    expect(menu.getByRole('checkbox', { name: /germany/i })).toHaveAccessibleName(/198/)
+  })
+
+  it('gives an other market no priority-tier glyph — none was ever assessed', async () => {
+    // COUNTRY_BADGE is keyed by priority_tier, a §4 concept these countries do not have. A grey
+    // "unknown" glyph would assert a tier had been considered and found wanting.
+    const menu = within(await openCountryMenu())
+
+    const germany = menu.getByRole('checkbox', { name: /germany/i }).closest('label')
+    const sweden = menu.getByRole('checkbox', { name: /sweden/i }).closest('label')
+
+    expect(within(sweden as HTMLElement).getByText('☆')).toBeInTheDocument()
+    expect(within(germany as HTMLElement).queryByText(/^[P☆⌂]$/)).not.toBeInTheDocument()
+  })
+
+  it('preselects no market at all — the default view claims nothing and hides nothing', async () => {
+    const menu = within(await openCountryMenu())
+
+    for (const box of menu.getAllByRole('checkbox')) expect(box).not.toBeChecked()
+  })
+
+  // 20e: /jobs serves 6,518 closed postings among 15,648 rows and said nothing about them, so
+  // a delisted job read exactly like a live one — and the country menu's "198" opened onto 266.
+  it('marks a closed posting as closed instead of serving it as though you could apply', async () => {
+    jobsPayload = withClosedPayload
+    renderPage()
+
+    const closed = (await screen.findByText('Delisted Engineer')).closest(`[class*="card"]`)
+    expect(within(closed as HTMLElement).getByText(/closed/i)).toBeInTheDocument()
+  })
+
+  it('leaves a live posting unmarked', async () => {
+    jobsPayload = withClosedPayload
+    renderPage()
+
+    const live = (await screen.findByText('Swift Engineer')).closest(`[class*="card"]`)
+    expect(within(live as HTMLElement).queryByText(/closed/i)).not.toBeInTheDocument()
+  })
+
+  it('says the country-menu counts are open postings, since the list also carries closed ones', async () => {
+    const menu = within(await openCountryMenu())
+
+    expect(menu.getByText(/open postings/i)).toBeInTheDocument()
   })
 
   it('names a served country in the heading instead of falling back to its bare code', async () => {
@@ -428,6 +562,7 @@ describe('JobsPane', () => {
       const u = String(url)
       if (u === '/resumes') return ok([])
       if (u === '/countries') return ok([])
+      if (u === '/markets') return ok(coverage)
       if (u.startsWith('/jobs/') && !u.includes('/status')) return ok(detail)
       return ok(payload)
     })

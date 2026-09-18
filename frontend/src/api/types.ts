@@ -82,8 +82,27 @@ export interface Job {
   posted_at: string | null
   sponsor_tier: SponsorTier
   user_status: UserStatus
+  // Set once the closed-posting sweep delisted it; null while it is still live. SPEC §5 keeps
+  // a closed posting and renders it greyed rather than dropping it.
+  closed_at: string | null
   // Attached only when the request named an active resume; null / absent otherwise.
   match_score?: MatchScore | null
+}
+
+// GET /markets. One country's open, canonical job count — the code and nothing else: §4 names
+// come from /countries, and the markets outside it have no name source in the repo, so the UI
+// renders those through Intl.DisplayNames (see jobs/taxonomy.ts).
+export interface MarketCount {
+  code: string
+  open_jobs: number
+}
+
+// The two halves are asymmetric on purpose. A target market is a *reference* fact — listed
+// because §4 assessed it, so it survives a quiet week at zero. An other market is a *corpus*
+// fact — listed because jobs were found there, so a zero cannot exist.
+export interface MarketCoverage {
+  target_markets: MarketCount[]
+  other_markets: MarketCount[]
 }
 
 export interface JobsPageResponse {

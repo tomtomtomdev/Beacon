@@ -7,7 +7,13 @@ from pathlib import Path
 
 import pytest
 
-from beacon.domain.visa import COUNTRY_REFERENCE, CountryReference, PriorityTier
+from beacon.domain.visa import (
+    COUNTRY_REFERENCE,
+    CountryReference,
+    MarketCount,
+    PriorityTier,
+    partition_markets,
+)
 
 BY_CODE: dict[str, CountryReference] = {c.code: c for c in COUNTRY_REFERENCE}
 
@@ -153,3 +159,51 @@ def test_every_country_has_a_globe_pin() -> None:
     assert pinned, "no PIN_GEO entries parsed — the guard would pass vacuously"
 
     assert {c.code for c in COUNTRY_REFERENCE} <= pinned
+
+
+# --- partition_markets (slice 20b) -------------------------------------------------------
+#
+# The histogram from JobRepo.count_open_by_country() split against the §4 reference. The two
+# halves are asymmetric on purpose: a target market is a *reference* fact and survives a quiet
+# week at zero; an other market is a *corpus* fact and a zero one cannot exist.
+
+
+def test_a_country_in_the_reference_is_a_target_market() -> None:
+    coverage = partition_markets({"NL": 272})
+
+    assert MarketCount(code="NL", open_jobs=272) in coverage.target_markets
+    assert coverage.other_markets == ()
+
+
+def test_a_country_absent_from_the_reference_is_an_other_market() -> None:
+    """Germany holds the fourth-largest block of open jobs in the corpus and has no §4 row.
+    It is a market Beacon can serve, not a market Beacon has assessed."""
+    coverage = partition_markets({"DE": 198})
+
+    assert coverage.other_markets == (MarketCount(code="DE", open_jobs=198),)
+    assert "DE" not in {market.code for market in coverage.target_markets}
+
+
+def test_a_reference_country_with_no_open_jobs_is_still_a_target_market_at_zero() -> None:
+    """Every §4 row has jobs today (NZ 8 is the floor), but a target market is a reference
+    fact, not a corpus fact — it must not vanish from the menu on a quiet week."""
+    coverage = partition_markets({})
+
+    assert [market.code for market in coverage.target_markets] == [
+        country.code for country in COUNTRY_REFERENCE
+    ]
+    assert {market.open_jobs for market in coverage.target_markets} == {0}
+
+
+def test_other_markets_are_ordered_by_open_count_descending() -> None:
+    """The ordering is a domain decision, not a render detail: 25 of the 45 tail countries
+    hold fewer than 10 open jobs, and unordered they drown the ones that matter."""
+    coverage = partition_markets({"DE": 198, "IN": 347, "TH": 220, "MY": 237})
+
+    assert [market.code for market in coverage.other_markets] == ["IN", "MY", "TH", "DE"]
+
+
+def test_other_markets_tie_break_on_code_so_the_order_survives_a_poll() -> None:
+    coverage = partition_markets({"VN": 73, "BR": 73, "MX": 73})
+
+    assert [market.code for market in coverage.other_markets] == ["BR", "MX", "VN"]

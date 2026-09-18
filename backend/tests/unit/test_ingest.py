@@ -153,6 +153,9 @@ class FakeJobRepo:
     def set_tier_for_country(self, country: str, tier: SponsorTier) -> int:
         raise NotImplementedError("ingest never backfills tiers")
 
+    def count_open_by_country(self) -> dict[str, int]:
+        raise NotImplementedError("ingest never rolls up")
+
 
 COMPANY = Company(
     name="Tines", ats_type="greenhouse", ats_slug="tines", country_hq="IE", priority=2, id=7

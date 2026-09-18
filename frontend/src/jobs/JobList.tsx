@@ -18,8 +18,13 @@ export function JobList({ jobs, onOpen, onSetStatus }: JobListProps) {
       {jobs.map((job) => {
         const starred = job.user_status === 'starred'
         const hidden = job.user_status === 'hidden'
+        // A delisted posting is kept (SPEC §5) but it is not something you can apply to, so it
+        // is muted like a hidden one and says why. Without this the 6,518 closed rows /jobs
+        // serves read exactly like the live ones.
+        const closed = job.closed_at !== null
+        const muted = hidden || closed
         return (
-          <div key={job.id} className={hidden ? `${styles.card} ${styles.cardMuted}` : styles.card}>
+          <div key={job.id} className={muted ? `${styles.card} ${styles.cardMuted}` : styles.card}>
             <div className={styles.top}>
               <button
                 type="button"
@@ -51,6 +56,7 @@ export function JobList({ jobs, onOpen, onSetStatus }: JobListProps) {
               </div>
             </div>
             <div className={styles.meta}>
+              {closed && <span className={styles.closedChip}>Closed</span>}
               <span className={`${styles.tierChip} ${styles[job.sponsor_tier]}`}>
                 <span className={styles.tierDot} aria-hidden />
                 {TIER_LABEL[job.sponsor_tier]}

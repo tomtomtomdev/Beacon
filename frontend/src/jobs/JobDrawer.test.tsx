@@ -18,6 +18,7 @@ const seJob: JobDetail = {
   posted_at: '2026-07-01T00:00:00+00:00',
   sponsor_tier: 'registry_inferred',
   user_status: 'new',
+  closed_at: null,
   description: 'Build the iOS app.\n\nWork with a strong team.',
   sponsor_evidence: null,
   contact_email: null,

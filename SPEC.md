@@ -264,7 +264,7 @@ job_match_scores(resume_hash, job_canonical_id, overall, skills_score, level_sco
                  content_hash, computed_at)  -- §11; PK (resume_hash, job_canonical_id); content_hash gates cache like classification
 ```
 
-Closed-posting detection: a job absent from N consecutive **successful** polls of its source gets `closed_at` set (kept, greyed out — useful for company-hiring-velocity stats later). Failed polls contribute nothing to absence — a 404'd board must never mass-close its jobs.
+Closed-posting detection: a job absent from N consecutive **successful** polls of its source gets `closed_at` set (kept, greyed out — useful for company-hiring-velocity stats later). Failed polls contribute nothing to absence — a 404'd board must never mass-close its jobs. *(The "greyed out" half of that sentence was only true of the database until slice 20e: `closed_at` was set correctly from slice 5 but never reached the `/jobs` DTO, so **6,518 of the 15,648 rows the endpoint serves — 42% — rendered exactly like live postings**. It is now on the list DTO and the detail DTO, and the card mutes and labels it. Recorded here rather than quietly fixed, because a spec sentence that was true of the schema and false on screen is the defect slices 18–19 exist to close.)*
 
 ### Source health & recovery
 

@@ -44,6 +44,8 @@ class JobOut(BaseModel):
     posted_at: datetime | None
     sponsor_tier: str
     user_status: UserStatus
+    # Non-null once the closed-posting sweep delisted it (SPEC §5: kept, greyed out).
+    closed_at: datetime | None = None
     match_score: MatchScoreOut | None = None
 
 
@@ -190,6 +192,7 @@ def _to_detail_dto(detail: JobDetail) -> JobDetailOut:
         posted_at=detail.posted_at,
         sponsor_tier=detail.sponsor_tier,
         user_status=UserStatus(detail.user_status),
+        closed_at=detail.closed_at,
         description=detail.description,
         sponsor_evidence=detail.sponsor_evidence,
         contact_email=detail.contact_email,
@@ -216,6 +219,7 @@ def _to_dto(job: JobListing) -> JobOut:
         posted_at=job.posted_at,
         sponsor_tier=job.sponsor_tier,
         user_status=UserStatus(job.user_status),
+        closed_at=job.closed_at,
         match_score=_to_match_score(job.match_score),
     )
 
