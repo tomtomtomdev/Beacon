@@ -3,6 +3,7 @@
   /* Surfaces / structure */
   --bg-page: #04121a;
   --bg-sidebar: #071a22;
+  --panel-tabs-h: 45px; /* side-panel tab strip: the offset the pane header sticks below */
   --surface: #0a2028; /* cards, inputs */
   --surface-raised: #0c2831; /* segmented tracks, table header, menus */
   --surface-hover: #0d2a33; /* row hover */

@@ -1,5 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft } from 'lucide-react'
+import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { fetchJobs, patchJobStatus, type SortBy, type StatusView } from '../api/jobs'
 import { fetchCountries } from '../api/countries'
@@ -118,11 +119,39 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
   const openJobId = jobParam ? Number(jobParam) : null
 
   const queryClient = useQueryClient()
-  const { data, isPending, isError } = useQuery({
-    queryKey: ['jobs', q, countries, categories, levels, tiers, sort, view, resumeId],
-    queryFn: () =>
-      fetchJobs({ q, countries, categories, levels, tiers, sort, status: view, resume: resumeId }),
-  })
+  // Paged, because the API serves 50 rows and the corpus holds 9,130 open canonical jobs. The
+  // offset is the page param, never part of the key — a filter change starts a new list, but
+  // paging deeper into the same one must not.
+  const { data, isPending, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: ['jobs', q, countries, categories, levels, tiers, sort, view, resumeId],
+      queryFn: ({ pageParam }) =>
+        fetchJobs({
+          q,
+          countries,
+          categories,
+          levels,
+          tiers,
+          sort,
+          status: view,
+          resume: resumeId,
+          offset: pageParam,
+        }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage, pages) => {
+        const loaded = pages.reduce((rows, page) => rows + page.jobs.length, 0)
+        // A page that came back short of what `total` promised means the corpus moved under
+        // us; stopping is the honest response to that, not requesting the same offset forever.
+        if (loaded >= lastPage.total || lastPage.jobs.length === 0) return undefined
+        return loaded
+      },
+    })
+
+  // One flattened list feeds the rows, the drawer's lookup and its fit hand-down — three
+  // readers that must not disagree about which jobs are on screen.
+  const jobs = useMemo(() => data?.pages.flatMap((page) => page.jobs) ?? [], [data])
+  // The server's count of everything matching these filters, not the number of rows fetched.
+  const total = data?.pages[0]?.total ?? null
 
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: UserStatus }) => patchJobStatus(id, status),
@@ -141,7 +170,7 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
       { replace: true },
     )
     // Opening a `new` job marks it seen (Beacon-2 §2 status workflow).
-    const job = data?.jobs.find((candidate) => candidate.id === id)
+    const job = jobs.find((candidate) => candidate.id === id)
     if (job?.user_status === 'new') statusMutation.mutate({ id, status: 'seen' })
   }
 
@@ -158,18 +187,24 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
   const heading =
     countries.length === 1 ? `Jobs · ${countryName(countries[0], markets ?? [])}` : 'Jobs'
   const sortLabel = sort === 'tier' ? 'sponsor tier' : sort === 'date' ? 'date' : 'fit'
-  const resultLabel = data
-    ? `${view === 'all' ? '' : `${view[0].toUpperCase()}${view.slice(1)} · `}${data.jobs.length}` +
-      `${data.jobs.length === 1 ? ' posting' : ' postings'} · sorted by ${sortLabel}`
-    : 'Loading…'
+  const resultLabel =
+    total === null
+      ? 'Loading…'
+      : `${view === 'all' ? '' : `${view[0].toUpperCase()}${view.slice(1)} · `}` +
+        `${total.toLocaleString()}${total === 1 ? ' posting' : ' postings'} · sorted by ${sortLabel}`
 
   return (
     <section className={styles.pane}>
       <header className={styles.header}>
-        <button type="button" className={styles.back} onClick={onBack}>
-          <ChevronLeft size={14} aria-hidden />
-          All markets
-        </button>
+        {/* Only when there is a filter to clear. The panel is no longer gated on a selection,
+            so on the default view this was a control that undid nothing, sitting above a
+            heading that already read "Jobs". */}
+        {countries.length > 0 && (
+          <button type="button" className={styles.back} onClick={onBack}>
+            <ChevronLeft size={14} aria-hidden />
+            All markets
+          </button>
+        )}
         <h1 className={styles.h1}>{heading}</h1>
         <p className={styles.subtitle}>{resultLabel}</p>
       </header>
@@ -232,18 +267,30 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
 
       <div className={styles.listWrap}>
         {isError && <p className={styles.stateText}>Could not reach the Beacon API.</p>}
-        {!isError && !isPending && data && data.jobs.length === 0 && (
+        {!isError && !isPending && jobs.length === 0 && (
           <div className={styles.empty}>
             <p className={styles.emptyTitle}>{EMPTY_TEXT[view].title}</p>
             <p className={styles.stateText}>{EMPTY_TEXT[view].subtitle}</p>
           </div>
         )}
-        {data && data.jobs.length > 0 && (
+        {jobs.length > 0 && (
           <JobList
-            jobs={data.jobs}
+            jobs={jobs}
             onOpen={openJob}
             onSetStatus={(id, status) => statusMutation.mutate({ id, status })}
           />
+        )}
+        {hasNextPage && (
+          <button
+            type="button"
+            className={styles.loadMore}
+            onClick={() => void fetchNextPage()}
+            disabled={isFetchingNextPage}
+          >
+            {isFetchingNextPage
+              ? 'Loading…'
+              : `Load more · ${jobs.length.toLocaleString()} of ${total?.toLocaleString() ?? '?'}`}
+          </button>
         )}
       </div>
 
@@ -252,7 +299,7 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
           jobId={openJobId}
           // The row is already scored (page-bounded, §11) — hand its fit down so the drawer's
           // Fit card needs no extra fetch; null when no resume is active.
-          matchScore={data?.jobs.find((job) => job.id === openJobId)?.match_score ?? null}
+          matchScore={jobs.find((job) => job.id === openJobId)?.match_score ?? null}
           // The active resume id drives the drawer's on-demand "Assess fit" LLM deep-match (§11).
           resumeId={resumeId}
           onClose={closeJob}

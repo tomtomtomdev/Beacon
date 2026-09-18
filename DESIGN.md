@@ -74,14 +74,17 @@ The main area shows one of three views (`?view=` param, default **countries**): 
 list is **not its own view** — it is a pane inside Countries, gated by a selected country
 (`?focus=CODE`). The **Job-detail drawer** (`?job=id`) overlays any view.
 
-### 1. Countries & visa reference (home)
+### 1. Open roles & target markets (home)
 - **Layout:** the view is a fixed-height flex column (`100vh`, `overflow:hidden`, pad `24×34×26`):
   header on top, then a **two-pane row** (`display:flex; gap:18px; flex:1; min-height:0`) — the
   **globe panel** left (`flex:1.35; min-width:0; min-height:420px`) and the **side panel** right (see
   below). The globe is always visible; only the side panel changes with selection.
-- **Header:** H1 "Country & visa reference" (24px/700/-0.02em, `#e3fdf6`); sub (13.5px, `#7fa8a3`,
-  max-width 820px): "As-known Jan 2026 — thresholds and timelines change. Tap a beacon to inspect
-  that market and its live postings in the panel beside the globe."
+- **Header:** H1 "Open roles & target markets" (24px/700/-0.02em, `#e3fdf6`); sub (13.5px,
+  `#7fa8a3`, max-width 820px): "Every market's live postings, sponsor-tier first. Tap a beacon to
+  narrow to one market; Markets holds the visa reference, as-known Jan 2026 — thresholds and
+  timelines change." **The old copy ("Tap a beacon to inspect that market and its live postings")
+  described a page whose default state showed no postings at all** — it named the only path to
+  the list rather than the screen you land on.
 - **Globe panel** (always visible, left pane; radius 18px, overflow hidden, `flex:1.35`,
   min-height 420px; dark radial bg `radial-gradient(125% 105% at 50% 4%, #0c3138, #06181f 52%,
   #04111a)`; border `#10424a`; shadow `0 24px 60px rgba(4,18,26,0.35), inset 0 0 90px
@@ -113,7 +116,17 @@ list is **not its own view** — it is a pane inside Countries, gated by a selec
     `refresh.py`, and had never been downloaded onto this box while SPEC §4 said otherwise.
 - **Side panel** (right pane; `<aside>`, `flex:1; min-width:372px; max-width:512px; overflow-y:auto`,
   bg `#071a22`, border `#123842`, radius 18px, its own scroll so the globe never leaves the viewport).
-  It shows the **all-markets card stack** (no selection) OR the **jobs pane** (a country selected).
+  It opens with a **two-segment tab strip** — **Jobs** (default) / **Markets** — and shows the
+  **jobs pane** or the **all-markets card stack** accordingly (`?panel=markets`; Jobs is the absent
+  value). The strip is `position:sticky; top:0; z-index:7`, pad `12×20×10`, bg `#071a22`, 1px
+  `#123842` bottom border; segments reuse the §2 segmented-control style (active bg
+  `rgba(94,234,212,0.16)`, fg `#5eead4`, radius 7px; idle `#7fa8a3`). The jobs pane's own sticky
+  header sits **directly below it** at `top: var(--panel-tabs-h)` (45px), `z-index:6` — stacked
+  stickies, so both the panel switch and the result count stay put while the list scrolls.
+  **The panel is not gated on a selection.** Until slice 21 it was: no country selected meant the
+  card stack and **no jobs on screen at all**, while the corpus held 9,130 open canonical ones.
+  `?focus=` is now a *filter* — it seeds the country filter and the relocation legend — and the
+  visa reference is a tab you choose, not a state you fall back into.
 
 - **All-markets card stack** (no selection; pad `16×20×20`): a small uppercase caption "N markets ·
   tap a beacon or a card" (`#5f8f8a`) then a **vertical stack** of country cards (`flex-direction:
@@ -137,11 +150,19 @@ list is **not its own view** — it is a pane inside Countries, gated by a selec
 ### 2. Jobs pane (in the side panel, beside the globe; `?focus=CODE`)
 Rendered inside the §1 side panel, so its sections carry their own 20px horizontal inset; only the
 header is sticky.
-- **Sticky header** (`position:sticky; top:0; z-index:6`, bg `#071a22`, pad `17×20×13`, border-bottom
-  `#123842`): an "← All markets" back button (chevron + text, 12.5px/600, `#5eead4`, no bg) that
-  clears the selection; then H2 = "Jobs · {Country}" (20px/700) when exactly one country is filtered,
-  else "Jobs"; then a result sub-line (12.5px `#7fa8a3`, e.g. "New · N postings · sorted by sponsor
-  tier").
+- **Sticky header** (`position:sticky; top: var(--panel-tabs-h); z-index:6`, bg `#071a22`, pad
+  `17×20×13`, border-bottom `#123842`): an "← All markets" back button (chevron + text, 12.5px/600,
+  `#5eead4`, no bg) that clears the country filter — **shown only when a country is filtered**, since
+  on the default view it was a control that undid nothing above a heading already reading "Jobs";
+  then H2 = "Jobs · {Country}" (20px/700) when exactly one country is filtered, else "Jobs"; then a
+  result sub-line (12.5px `#7fa8a3`, e.g. "New · 15,641 postings · sorted by sponsor tier").
+  **The count is the server's `total`, not the number of rows on the page.** It read `jobs.length`
+  — one page of 50 — so selecting the US reported "50 postings" against a live 3,365.
+- **Load more** (end of the list; full width, dashed `#14514c` border, radius 12px, bg `#0a2028`,
+  teal 12.5px/600 label, hover bg `#0d2a33` + solid teal border): "Load more · {loaded} of {total}".
+  The API serves 50 rows a page and the list pages by `?offset=`; the control disappears once every
+  row is loaded. A derived total over a list you cannot page past row 50 is its own kind of lie,
+  which is why the two shipped together.
 - **Relocation-reference legend** (shown for the selected market; margin `15×20×0`, bg
   `rgba(94,234,212,0.06)`, border `#14514c`, radius 13px, pad `15×17`): title "{Country} — relocation
   reference" (14px/700) + tier badge; then **Work visa / PR path / Citizenship** blocks (labels teal
@@ -228,16 +249,28 @@ Telegram bot-token / chat_id form + "Send test" (slice 8). Reachable via the rai
 ---
 
 ## Interactions & Behavior
-- **Navigation:** `?view=` (countries default / searches / settings). Within Countries, `?focus=CODE`
-  decides the side panel's card stack (unset) vs jobs pane (set). Selecting a country sets `focus=CODE`, seeds
-  `country=CODE`, and `status=all`. Clearing (back button, ocean tap, Globe nav) removes them. All
-  filter/view/drawer state lives in URL search params (shareable, bookmarkable, Back-button undo).
+- **Navigation:** `?view=` (countries default / searches / settings). Within Countries, **`?panel=`**
+  decides the side panel — jobs (absent, the default) vs the card stack (`markets`) — and `?focus=CODE`
+  is a *filter*, not a gate. Selecting a country sets `focus=CODE`, seeds `country=CODE` and returns the
+  panel to jobs; it **does not touch `?status=`**, because forcing `status=all` moved the list out from
+  under the reader on every beacon tap. Clearing (back button, ocean tap) drops `focus`/`country` only;
+  the Globe nav resets `panel` too. All filter/view/drawer state lives in URL search params (shareable,
+  bookmarkable, Back-button undo).
 - **Globe:** drag rotates (yaw += dx·0.45, pitch clamped ±82°; a >3px drag is a rotate, not a click).
   Pointer-up without a drag: on a pin (≤15px) selects that country; on empty ocean clears the selection.
   The **Jakarta origin marker is hit-tested as a pin** on the same 15px radius and selects `focus=ID`.
-  With a selection, the globe eases to the Jakarta↔country great-circle midpoint; **when `ID` is the
+  With a highlight, the globe eases to the Jakarta↔country great-circle midpoint; **when `ID` is the
   selection that midpoint degenerates to Jakarta itself, so the globe simply eases to Jakarta and no arc
   is drawn**; idle it slow-spins.
+- **Idle tour:** untouched for 15s, the globe starts walking the markets by itself, one per 9s —
+  a lit beacon field rather than a dead screen, and the caption says "auto-touring — move to take
+  over". Any pointer move >2px, key, wheel, touch or scroll hands control straight back, and
+  `prefers-reduced-motion` switches it off entirely. **It drives the globe and nothing else.**
+  It used to write `?focus=`, which was harmless while the panel showed visa cards and
+  intolerable once the panel shows the job list: it would take the list away from a reader every
+  9 seconds and never return to the unfiltered view. What is *lit* (arc, pin pulse, camera) and
+  what is *filtered* (`aria-pressed`, the country filter) are now separate facts — `Globe` takes
+  `highlightCode` alongside `selectedCode`, defaulting to it.
 - **Filtering (jobs pane):** keyword (title/company/description/categories), country[], category[],
   level[], sponsor-tier[] (opt-in). AND across dimensions, OR within one. Re-fetches live.
 - **Sorting:** Sponsor tier → `sort_rank DESC, posted_at DESC` (yes=4, **not_required=3**, registry=2,

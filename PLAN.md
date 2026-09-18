@@ -1251,6 +1251,100 @@ Acceptance:
 
 ---
 
+## Slice 21 — The panel stops being a gate: all jobs by default
+
+**Chosen and planned 2026-09-18 from the user's request, built the same session.** The side
+panel was gated on `?focus=`: with no country selected it showed 16 country cards and **the job
+list was unreachable**. The corpus held **9,130 open canonical jobs** and the home screen showed
+none of them. The visa reference — which changes a few times a year — occupied the surface a
+daily-use tool should give to the thing that changes every poll.
+
+`?focus=` is now a *filter*: it seeds the country filter and the relocation legend and no longer
+decides what kind of thing the panel is. That is `?panel=`, and the card stack lives behind a
+**Jobs / Markets** tab rather than being deleted.
+
+**Four decisions, taken by the user before the build:**
+
+| Question | Decision |
+|---|---|
+| Card stack | Kept, behind a Jobs/Markets toggle (`?panel=markets`), Jobs default |
+| Idle tour | Drives the **globe highlight only** — no longer writes `?focus=` |
+| List depth | Derived `total` + **Load more** via `useInfiniteQuery` (no IntersectionObserver) |
+| Status on select | Picking a country **no longer forces `status=all`**; selection is purely additive |
+
+### 21a — Deterministic paging (`adapters/persistence/jobs.py`)
+
+`ORDER BY` had no final key and ties run up to **35 rows** at one (tier, posted_at) pair, so
+`LIMIT/OFFSET` over a partial order is only as stable as the query plan.
+
+- `test_paging_by_offset_yields_every_row_exactly_once_across_a_tie` — twelve rows sharing one
+  tier and one `posted_at`, paged at `limit=3`.
+- **Honest note: the test passed before the fix.** SQLite is consistent here today, so this was
+  never a demonstrated live bug — `jobs.id DESC` makes the sequence *total* rather than relying
+  on unspecified behaviour, and `sort=match` explicitly reorders between page fetches as the
+  score cache warms. Recorded as a guard, not as a bug fixed.
+
+### 21b/21c — The pane pages, and says how many there are
+
+- `test_reports_the_server_total_not_the_number_of_rows_on_the_page` — RED first. The sub-line
+  read `data.jobs.length`, one page of 50, so **selecting the US reported "50 postings" against
+  a live 3,365**. It reads `total` now, and `toLocaleString()`'d.
+- `test_loads_the_next_page_on_demand_and_appends_it` / `test_offers_no_load_more_once_every_row_is_loaded`
+  / `test_sends_no_offset_param_on_the_first_page`. `useQuery` → `useInfiniteQuery`, offset as
+  the page param and never part of the key.
+- One flattened `jobs` array feeds the rows, the drawer's lookup and its fit hand-down — three
+  readers that must not disagree about what is on screen.
+- `test_offers_no_all_markets_escape_when_the_list_is_already_every_market` — **found by running
+  the real app, not by the suite.** The back button rendered unconditionally, so the default view
+  carried an "← All markets" control that undid nothing, above a heading already reading "Jobs".
+
+### 21d — The panel toggle (`countries/PanelTabs.tsx`, new)
+
+- `test_opens_on_the_jobs_panel_not_the_card_stack`,
+  `test_shows_the_card_stack_on_the_markets_tab_and_the_tab_survives_a_reload`,
+  `test_switches_between_the_two_panels_from_the_tabs`,
+  `test_selecting_a_country_adds_its_filter_without_moving_the_status_view`.
+- Stacked stickies: the tab strip owns `top:0` (z 7) and the pane's own header sits at
+  `top: var(--panel-tabs-h)` (z 6), so DESIGN §2's sticky header survives intact.
+- The four card-stack tests gained a `?panel=markets` entry rather than losing their assertions.
+
+### 21e — The tour lets go of the panel
+
+`useIdleTour` itself is unchanged — the *caller* changed what it hands the tour. `CountriesPage`
+holds `touredCode` and passes `onAdvance: setTouredCode`; `Globe` gains `highlightCode`
+(defaulting to `selectedCode`) driving the arc, pin emphasis and camera, while `selectedCode`
+keeps driving `aria-pressed` and what a click toggles.
+
+- `test_tours_the_globe_once_the_page_has_gone_idle_without_touching_the_job_list`.
+
+Acceptance:
+- [x] The side panel opens on jobs with no country selected; `?panel=markets` shows the card
+      stack and survives a reload — **checked in the real app**, not only in jsdom
+- [x] The result sub-line reads the server total: the live home screen reads **"New · 15,641
+      postings · sorted by sponsor tier"**, and "Load more · 50 of 15,641" sits under the list
+- [x] Paging converges with no duplicate id — NZ paged to the end: **11 total, 11 rows, 11
+      unique ids**
+- [x] Tapping a beacon filters the list and **does not move the status tab**; the back button
+      appears only when a country is filtered
+- [x] Left idle, the globe walks the markets (`data-touring`, caption "auto-touring") while the
+      panel heading stays the unfiltered "Jobs" — verified in a headless Chrome at 30s
+- [x] DESIGN.md §1/§2/Interactions describe the tab strip, the derived total, Load more, the
+      conditional back button and the globe-only tour
+- [x] No job row, `content_hash`, classification, tier or `canonical_id` moves — `jobs` held
+      **16,810 rows before and after**. *(`job_match_scores` grew 8,651 → 8,699 while browsing:
+      the §11 fit cache warming on a resume-scored list, pre-existing slice-12 behaviour.)*
+- [x] `make verify` green on both stacks (968 backend, 117 frontend)
+
+**Finding, not fixed here — the list is mostly closed postings in some markets.** Now that
+closed rows are visible (20e) the density is measurable: corpus-wide **6,518 of 15,648 canonical
+jobs are closed (42%)**, but **Sweden is 2,669 canonical against 393 open — 86% closed**. The
+default sort is tier-then-date, which interleaves them, so the top of a filtered list can be
+mostly grey. Options if it bites: sort live before closed within a tier, or an opt-in "hide
+closed" toggle. Deliberately not decided here — it is a query-path change and the user chose
+"keep and grey" with the 42% figure in hand.
+
+---
+
 ## Cross-cutting rules
 
 - Every network adapter is tested against recorded fixtures only; live calls happen solely in manual acceptance checks

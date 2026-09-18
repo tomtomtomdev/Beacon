@@ -92,11 +92,11 @@ function bodyFor(url: string): unknown {
 
 const fetchMock = vi.fn()
 
-function renderPage() {
+function renderPage(initialUrl = '/') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={['/']}>
+      <MemoryRouter initialEntries={[initialUrl]}>
         <CountriesPage />
       </MemoryRouter>
     </QueryClientProvider>,
@@ -124,7 +124,7 @@ afterEach(() => {
 
 describe('CountriesPage', () => {
   it('renders a card per country from the API', async () => {
-    renderPage()
+    renderPage('/?panel=markets')
 
     expect(await screen.findByRole('button', { name: 'Netherlands details' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sweden details' })).toBeInTheDocument()
@@ -145,7 +145,7 @@ describe('CountriesPage', () => {
   it('pins the home market first and badges it Home, not as a relocation tier', async () => {
     // SPEC §4 / DESIGN §1: Indonesia is the baseline every relocation is measured against,
     // so it leads the stack — and it is not a "primary" target, it is not a target at all.
-    renderPage()
+    renderPage('/?panel=markets')
 
     const cards = await screen.findAllByRole('button', { name: /details$/ })
     expect(cards[0]).toHaveAccessibleName('Indonesia details')
@@ -157,7 +157,7 @@ describe('CountriesPage', () => {
     // as "n/a" would read as missing data rather than as an absent question. No verified date
     // either — the row states a fact about citizenship, not a policy that expires.
     const user = userEvent.setup()
-    renderPage()
+    renderPage('/?panel=markets')
 
     await user.click(await screen.findByRole('button', { name: 'Indonesia details' }))
 
@@ -169,7 +169,7 @@ describe('CountriesPage', () => {
   })
 
   it('surfaces Sweden’s no-registry note and verified date verbatim on the card', async () => {
-    renderPage()
+    renderPage('/?panel=markets')
 
     const card = await screen.findByRole('button', { name: 'Sweden details' })
     const swedish = within(card)
@@ -179,20 +179,64 @@ describe('CountriesPage', () => {
     expect(swedish.getByText(/✓ 2026-01-15/)).toBeInTheDocument()
   })
 
-  it('selecting a country opens its jobs pane + reference legend; back returns to the stack', async () => {
+  it('picking a country from the stack shows its jobs + reference legend; back clears the filter', async () => {
     const user = userEvent.setup()
-    renderPage()
+    renderPage('/?panel=markets')
 
     await user.click(await screen.findByRole('button', { name: 'Sweden details' }))
 
-    // The card stack is replaced by the jobs pane, filtered to that country.
+    // Picking a market from the stack switches the panel to that market's jobs.
     expect(await screen.findByRole('heading', { name: 'Jobs · Sweden' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Sweden details' })).not.toBeInTheDocument()
     // The relocation-reference legend surfaces the country's citizenship figure verbatim.
     expect(screen.getByText(/reform to 8yr/)).toBeInTheDocument()
 
+    // Back clears the country filter and leaves the jobs panel showing every market.
     await user.click(screen.getByRole('button', { name: /all markets/i }))
+    expect(await screen.findByRole('heading', { name: 'Jobs' })).toBeInTheDocument()
+    expect(screen.queryByText(/reform to 8yr/)).not.toBeInTheDocument()
+  })
+
+  // 21d: the panel used to be gated on ?focus= — no country selected meant no jobs on screen at
+  // all, while the corpus held 9,130 open canonical ones. ?focus= is now a filter, not a gate.
+  it('opens on the jobs panel, not the card stack', async () => {
+    renderPage()
+
+    expect(await screen.findByRole('heading', { name: 'Jobs' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Sweden details' })).not.toBeInTheDocument()
+  })
+
+  it('shows the card stack on the Markets tab, and the tab survives a reload', async () => {
+    renderPage('/?panel=markets')
+
     expect(await screen.findByRole('button', { name: 'Sweden details' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Jobs' })).not.toBeInTheDocument()
+  })
+
+  it('switches between the two panels from the tabs', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByRole('heading', { name: 'Jobs' })
+
+    await user.click(screen.getByRole('button', { name: /^markets$/i }))
+    expect(await screen.findByRole('button', { name: 'Sweden details' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /^jobs$/i }))
+    expect(await screen.findByRole('heading', { name: 'Jobs' })).toBeInTheDocument()
+  })
+
+  it('selecting a country adds its filter without moving the status view', async () => {
+    // Selection used to force status=all, so every beacon tap moved the list out from under
+    // the reader. It is purely additive now: a country filter and a reference legend.
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByRole('heading', { name: 'Jobs' })
+    const before = screen.getByRole('button', { name: 'New' }).getAttribute('aria-pressed')
+
+    await user.click(screen.getByRole('button', { name: 'Sweden on globe' }))
+
+    expect(await screen.findByRole('heading', { name: 'Jobs · Sweden' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'New' })).toHaveAttribute('aria-pressed', before ?? '')
   })
 
   it('gives the home market a pin like any other, and draws it no arc', async () => {
@@ -212,7 +256,7 @@ describe('CountriesPage', () => {
   it('a globe pin control opens the selection', async () => {
     const user = userEvent.setup()
     renderPage()
-    await screen.findByRole('button', { name: 'Sweden details' })
+    await screen.findByRole('heading', { name: 'Jobs' })
 
     const pin = screen.getByRole('button', { name: 'Sweden on globe' })
     expect(pin).toHaveAttribute('aria-pressed', 'false')
@@ -221,28 +265,42 @@ describe('CountriesPage', () => {
     expect(await screen.findByRole('heading', { name: 'Jobs · Sweden' })).toBeInTheDocument()
   })
 
-  it('tours the markets once the page has gone idle, and yields the moment the user moves', async () => {
+  // 21e: the tour used to rewrite ?focus= every 9s, which was harmless while the panel showed
+  // visa cards and intolerable once it shows the job list — it would take the list away from a
+  // reader mid-scan and never return to the unfiltered view. It drives the globe now, and only
+  // the globe: the lit beacon field survives, the reading surface stops moving.
+  it('tours the globe once the page has gone idle, without touching the job list', async () => {
     // The idle timer is armed on mount, so the clock has to be fake before the page renders.
     vi.useFakeTimers()
     renderPage()
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1)
     })
-    expect(screen.getByRole('button', { name: 'Sweden details' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Jobs' })).toBeInTheDocument()
 
     // Untouched for the idle delay: the globe starts walking the markets on its own, in the
     // order the stack shows them — so the home market leads (DESIGN §1).
     await act(async () => {
       vi.advanceTimersByTime(TOUR_IDLE_MS)
     })
-    expect(screen.getByRole('heading', { name: 'Jobs · Indonesia' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Indonesia on globe' })).toHaveAttribute(
+      'data-touring',
+      'true',
+    )
+    // The panel did not move: no country filter, no heading change, nothing refetched under
+    // the reader.
+    expect(screen.getByRole('heading', { name: 'Jobs' })).toBeInTheDocument()
 
     await act(async () => {
       vi.advanceTimersByTime(TOUR_DWELL_MS)
     })
-    expect(screen.getByRole('heading', { name: 'Jobs · Netherlands' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Netherlands on globe' })).toHaveAttribute(
+      'data-touring',
+      'true',
+    )
+    expect(screen.getByRole('heading', { name: 'Jobs' })).toBeInTheDocument()
 
-    // A real pointer move hands control back, leaving that market selected. Asserted over the
+    // A real pointer move hands control back and the highlight goes out. Asserted over the
     // restarted countdown rather than a dwell multiple: the tour is *meant* to resume once the
     // page goes quiet again, so a window longer than TOUR_IDLE_MS would be testing the opposite.
     await act(async () => {
@@ -251,6 +309,9 @@ describe('CountriesPage', () => {
     await act(async () => {
       vi.advanceTimersByTime(TOUR_IDLE_MS - 1)
     })
-    expect(screen.getByRole('heading', { name: 'Jobs · Netherlands' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Netherlands on globe' })).toHaveAttribute(
+      'data-touring',
+      'false',
+    )
   })
 })

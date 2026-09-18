@@ -11,7 +11,8 @@ import { SavedSearchesPage } from './searches/SavedSearchesPage'
 import { SettingsPage } from './settings/SettingsPage'
 
 // The main area shows one of three views. Countries is home; the Jobs list is not its own
-// view — it is a pane inside Countries, gated by a selected country (?focus=).
+// view — it is the default panel inside Countries, beside the globe. ?focus= filters it to one
+// market and ?panel=markets swaps it for the visa-reference card stack; neither is a gate.
 type View = 'countries' | 'searches' | 'settings'
 
 const VIEWS: readonly View[] = ['countries', 'searches', 'settings']
@@ -29,10 +30,12 @@ function AppShell() {
       (params) => {
         if (next === 'countries') {
           params.delete('view')
-          // Returning to the globe home clears any selected-country jobs pane.
+          // Returning to the globe home resets the side panel to its default: every market's
+          // jobs, no country filter, no status view carried over from wherever you were.
           params.delete('focus')
           params.delete('country')
           params.delete('status')
+          params.delete('panel')
         } else {
           params.set('view', next)
         }

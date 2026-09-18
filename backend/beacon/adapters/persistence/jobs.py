@@ -104,6 +104,12 @@ class SqliteJobRepo:
         else:
             # the default keeps likely sponsors on top (posted_at breaks ties).
             order_by = f"{_SORT_RANK_CASE} DESC, jobs.posted_at DESC"
+        # Every sort above can tie — the live corpus has 35 rows at one (tier, posted_at) pair —
+        # and LIMIT/OFFSET over a partial order is only as stable as the query plan. SQLite
+        # happens to be consistent here today (the paging guard passes without this line), but
+        # "happens to be" is not a guarantee, and sort=match explicitly changes its ordering
+        # between page fetches as the score cache warms. id makes the sequence total.
+        order_by += ", jobs.id DESC"
 
         total = self._conn.execute(
             f"SELECT COUNT(*) AS n FROM jobs {where}",

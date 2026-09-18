@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Globe as GlobeIcon } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { fetchCountries } from '../api/countries'
@@ -8,6 +8,7 @@ import { JobsPane } from '../jobs/JobsPane'
 import { PRIORITY_TIER_LABEL } from '../jobs/taxonomy'
 import styles from './CountriesPage.module.css'
 import { Globe } from './Globe'
+import { PanelTabs, type Panel } from './PanelTabs'
 import { SourceHealth } from './SourceHealth'
 import { useIdleTour } from './useIdleTour'
 
@@ -17,24 +18,38 @@ export function CountriesPage() {
     queryFn: fetchCountries,
   })
 
-  // The selected country is a URL param (?focus=CODE) — shareable, and the pivot that decides
-  // globe auto-focus + whether the side panel shows the jobs pane (set) or the card stack (unset).
+  // The selected country is a URL param (?focus=CODE) — shareable, and now a *filter* rather
+  // than a gate: it seeds the country filter and the relocation legend, and no longer decides
+  // what kind of thing the side panel is. That is ?panel=, below.
   const [searchParams, setSearchParams] = useSearchParams()
   const focus = searchParams.get('focus')
   const selectedCountry = focus ? countries?.find((c) => c.code === focus) : undefined
+  const panel: Panel = searchParams.get('panel') === 'markets' ? 'markets' : 'jobs'
 
-  // Selecting a country seeds the country filter + opens the jobs pane on the "All" status view;
-  // clearing (ocean tap, back button) returns to the card stack.
+  const setPanel = (next: Panel) =>
+    setSearchParams(
+      (params) => {
+        // Jobs is the default, so it is the absent value — a shared URL stays clean.
+        if (next === 'markets') params.set('panel', 'markets')
+        else params.delete('panel')
+        return params
+      },
+      { replace: true },
+    )
+
+  // Selecting a country seeds the country filter and shows that market's jobs. It deliberately
+  // does **not** touch ?status= any more: forcing status=all moved the list out from under the
+  // reader on every beacon tap. Selection is purely additive; clearing drops the filter only.
   const setFocus = (code: string | null) =>
     setSearchParams(
       (params) => {
         params.delete('country')
-        params.delete('status')
         params.delete('focus')
         if (code) {
           params.set('focus', code)
           params.append('country', code)
-          params.set('status', 'all')
+          // Picking a market is a request to see its jobs, wherever the pick came from.
+          params.delete('panel')
         }
         return params
       },
@@ -43,16 +58,35 @@ export function CountriesPage() {
 
   // Left alone, the page walks the markets by itself — a lit beacon field rather than a dead
   // screen. Any pointer, key or scroll hands control straight back (see useIdleTour).
+  //
+  // The tour drives the *globe* and nothing else. It used to write ?focus=, which was harmless
+  // while the panel showed visa cards and intolerable now the panel shows the job list: it
+  // would take the list away from a reader every 9s and never return to the unfiltered view.
   const codes = useMemo(() => countries?.map((c) => c.code) ?? [], [countries])
-  const touring = useIdleTour({ codes, current: focus, onAdvance: setFocus })
+  const [touredCode, setTouredCode] = useState<string | null>(null)
+  const touring = useIdleTour({
+    // Resume from wherever the user left off, then from wherever the tour got to.
+    current: touredCode ?? focus,
+    codes,
+    onAdvance: setTouredCode,
+  })
+  // What is *lit* and what is *filtered* stop being the same fact.
+  const highlight = touring ? touredCode : focus
+
+  const selectCountry = (code: string | null) => {
+    // A real selection re-seeds the rotation, so the tour does not resume from a stale market.
+    setTouredCode(null)
+    setFocus(code)
+  }
 
   return (
     <main className={styles.main}>
       <header className={styles.header}>
-        <h1 className={styles.h1}>Country &amp; visa reference</h1>
+        <h1 className={styles.h1}>Open roles &amp; target markets</h1>
         <p className={styles.subtitle}>
-          As-known Jan 2026 — thresholds and timelines change. Tap a beacon to inspect that market
-          and its live postings in the panel beside the globe.
+          Every market&rsquo;s live postings, sponsor-tier first. Tap a beacon to narrow to one
+          market; Markets holds the visa reference, as-known Jan 2026 — thresholds and timelines
+          change.
         </p>
       </header>
 
@@ -62,7 +96,12 @@ export function CountriesPage() {
       {countries && (
         <div className={styles.row}>
           <section className={styles.geoPanel}>
-            <Globe countries={countries} selectedCode={focus} onSelect={setFocus} />
+            <Globe
+              countries={countries}
+              selectedCode={focus}
+              highlightCode={highlight}
+              onSelect={selectCountry}
+            />
             <div className={styles.geoTop}>
               <div className={styles.geoTitleGroup}>
                 <GlobeIcon size={18} aria-hidden />
@@ -92,8 +131,9 @@ export function CountriesPage() {
           </section>
 
           <aside className={`${styles.sidePanel} bk-scroll`}>
-            {focus ? (
-              <JobsPane country={selectedCountry} onBack={() => setFocus(null)} />
+            <PanelTabs panel={panel} onPanelChange={setPanel} />
+            {panel === 'jobs' ? (
+              <JobsPane country={selectedCountry} onBack={() => selectCountry(null)} />
             ) : (
               <div className={styles.markets}>
                 <div className={styles.marketsCaption}>
@@ -104,7 +144,7 @@ export function CountriesPage() {
                     <CountryCard
                       key={country.code}
                       country={country}
-                      onSelect={() => setFocus(country.code)}
+                      onSelect={() => selectCountry(country.code)}
                     />
                   ))}
                 </div>

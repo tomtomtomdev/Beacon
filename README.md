@@ -12,7 +12,7 @@ It exists to answer one question that no job board answers directly: *which seni
 
 ## Status
 
-Shipped in vertical slices. Current: **slices 0–20 done, slice 21 next.** Running against a live
+Shipped in vertical slices. Current: **slices 0–21 done.** Running against a live
 corpus — **16,810 postings, of which 9,130 are open and canonical**, from 70 seeded companies across
 16 source adapters (15 of which have landed jobs). Corpus figures measured 2026-09-18; the company
 and adapter counts are carried from 2026-09-15 and were not re-measured.
@@ -28,7 +28,7 @@ and adapter counts are carried from 2026-09-15 and were not re-measured.
 | 18 | SPEC §4 widening (GB/NZ/TW/HK) + one country list | ✅ |
 | 19 | Make coverage visible: live source health, `/registries`, no literal counts on screen | ✅ |
 | 20 | Other markets — the 47 countries with jobs and no way to ask for them; closed postings finally greyed | ✅ |
-| 21 | The panel stops being a gate: all jobs by default, `?focus=` becomes a filter | ⬜ next |
+| 21 | The panel stops being a gate: all jobs by default, `?focus=` becomes a filter | ✅ |
 
 `PROGRESS.md` is the live source of truth for what's built; `PLAN.md` is the slice order.
 

@@ -51,6 +51,7 @@ beforeEach(() => {
     else if (String(url).startsWith('/resumes')) body = []
     else if (String(url) === '/companies/health') body = health
     else if (String(url) === '/registries') body = { registries: [] }
+    else if (String(url) === '/markets') body = { target_markets: [], other_markets: [] }
     else if (String(url).startsWith('/settings/telegram')) {
       body = { chat_id: null, bot_token_set: false }
     }
@@ -73,11 +74,13 @@ describe('App', () => {
     expect(screen.getByText('Beacon')).toBeInTheDocument()
   })
 
-  it('defaults to the Countries globe home', async () => {
+  it('defaults to the Countries globe home, with the jobs panel open', async () => {
     render(<App />)
     expect(
-      await screen.findByRole('heading', { name: /country & visa reference/i }),
+      await screen.findByRole('heading', { name: /open roles & target markets/i }),
     ).toBeInTheDocument()
+    // The panel is no longer gated on a selected country — the list is there on arrival.
+    expect(await screen.findByRole('heading', { name: 'Jobs' })).toBeInTheDocument()
   })
 
   it('switches to the Saved searches view from the nav', async () => {

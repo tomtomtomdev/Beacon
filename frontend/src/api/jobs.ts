@@ -22,6 +22,9 @@ export interface JobsQuery {
   status: StatusView
   // The active resume's id, or null. When set, each row carries a fit `match_score` (§11).
   resume: number | null
+  // Row to start from. The page size is the API's own default (50); the pane pages by offset
+  // and reports `total`, so the count on screen is the corpus's, not the page's.
+  offset: number
 }
 
 export async function fetchJobs({
@@ -33,6 +36,7 @@ export async function fetchJobs({
   sort,
   status,
   resume,
+  offset,
 }: JobsQuery): Promise<JobsPageResponse> {
   const params = new URLSearchParams()
   if (q) params.set('q', q)
@@ -48,6 +52,8 @@ export async function fetchJobs({
   else if (sort === 'match' && resume !== null) params.set('sort', 'match')
   // 'all' = the API's param-less default (everything but hidden); the rest filter to one status.
   if (status !== 'all') params.set('status', status)
+  // Omitted on the first page, like every other default — a shared URL stays clean.
+  if (offset > 0) params.set('offset', String(offset))
   const qs = params.toString()
 
   const response = await fetch(qs ? `/jobs?${qs}` : '/jobs')

@@ -672,3 +672,28 @@ async def test_the_detail_view_also_reports_a_closed_posting(
     body = (await client.get(f"/jobs/{job_id}")).json()
 
     assert body["closed_at"] is not None
+
+
+async def test_paging_by_offset_yields_every_row_exactly_once_across_a_tie(
+    client: httpx.AsyncClient, db_path: Path
+) -> None:
+    """Every row shares one sponsor tier and one posted_at, so the ORDER BY cannot separate
+    them and only a final tiebreaker makes the sequence total. Ties this size are real: the
+    live corpus has 35 rows at one (tier, posted_at) pair, and slice 21 pages the list.
+    """
+    conn = connect(db_path)
+    company = SqliteCompanyRepo(conn).upsert(
+        Company(name="Tines", ats_type="greenhouse", ats_slug="tines", country_hq="IE", priority=2)
+    )
+    assert company.id is not None
+    jobs = SqliteJobRepo(conn)
+    for index in range(12):
+        jobs.upsert(company.id, make_job(f"j{index}", f"Engineer {index}", "IE", POLL_AT), POLL_AT)
+
+    seen: list[int] = []
+    for offset in range(0, 12, 3):
+        page = await get_jobs(client, limit=3, offset=offset, status="all")
+        seen += [job["id"] for job in page["jobs"]]
+
+    assert len(seen) == 12
+    assert len(set(seen)) == 12

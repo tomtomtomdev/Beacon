@@ -104,9 +104,12 @@ function renderGlobe(
   g: GlState,
   landPts: [number, number][],
   pins: Pin[],
-  selectedCode: string | null,
+  // What is *lit*: the selected market, or the one the idle tour is walking past. The tour
+  // moves this without touching the selection, so the globe animates while the job list beside
+  // it stays where the reader left it.
+  highlightCode: string | null,
 ) {
-  const selPin = selectedCode ? pins.find((p) => p.code === selectedCode) : null
+  const selPin = highlightCode ? pins.find((p) => p.code === highlightCode) : null
   if (selPin) {
     if (!g.dragging) {
       // Center on the great-circle midpoint between Jakarta and the destination.
@@ -285,7 +288,7 @@ function renderGlobe(
     const sy = cy - p.Y * R
     if (front) g.pinScreens.push({ code: pin.code, name: pin.name, x: sx, y: sy })
     const primary = pin.primary
-    const on = selectedCode === pin.code || g.hover === pin.code
+    const on = highlightCode === pin.code || g.hover === pin.code
     // Amber for the origin (DESIGN §Globe/§Tokens) — the same #fcd34d as the not_required
     // job badge and the home card accent, so "you are already here" reads as one colour.
     const col = pin.origin ? '#fcd34d' : primary ? '#5eead4' : '#9fb6bb'
@@ -333,12 +336,18 @@ function renderGlobe(
 export function Globe({
   countries,
   selectedCode,
+  highlightCode,
   onSelect,
 }: {
   countries: Country[]
+  // The country actually filtered on (?focus=) — drives aria-pressed and what a click toggles.
   selectedCode: string | null
+  // The country drawn lit: the selection, or the market the idle tour is passing through.
+  // Defaults to the selection, so a caller that has no tour needs no second prop.
+  highlightCode?: string | null
   onSelect: (code: string | null) => void
 }) {
+  const lit = highlightCode === undefined ? selectedCode : highlightCode
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const pins = useMemo<Pin[]>(
@@ -363,14 +372,14 @@ export function Globe({
 
   // Latest props kept in refs so the animation loop reads current values without re-subscribing.
   const pinsRef = useRef(pins)
-  const selectedRef = useRef(selectedCode)
+  const litRef = useRef(lit)
   const onSelectRef = useRef(onSelect)
   useEffect(() => {
     pinsRef.current = pins
   }, [pins])
   useEffect(() => {
-    selectedRef.current = selectedCode
-  }, [selectedCode])
+    litRef.current = lit
+  }, [lit])
   useEffect(() => {
     onSelectRef.current = onSelect
   }, [onSelect])
@@ -457,7 +466,7 @@ export function Globe({
 
     let raf = 0
     const loop = () => {
-      renderGlobe(ctx, canvas, gl, landPts, pinsRef.current, selectedRef.current)
+      renderGlobe(ctx, canvas, gl, landPts, pinsRef.current, litRef.current)
       raf = requestAnimationFrame(loop)
     }
     raf = requestAnimationFrame(loop)
@@ -482,6 +491,7 @@ export function Globe({
             type="button"
             aria-label={`${pin.name} on globe`}
             aria-pressed={selectedCode === pin.code}
+            data-touring={lit === pin.code && selectedCode !== pin.code}
             data-origin={pin.origin}
             onClick={() => onSelect(selectedCode === pin.code ? null : pin.code)}
           >

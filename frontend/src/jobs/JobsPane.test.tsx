@@ -166,12 +166,12 @@ function ok(body: unknown): Promise<Response> {
   return Promise.resolve({ ok: true, json: () => Promise.resolve(body) } as Response)
 }
 
-function renderPage(initialUrl = '/') {
+function renderPage(initialUrl = '/', onBack: () => void = () => {}) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={[initialUrl]}>
-        <JobsPane onBack={() => {}} />
+        <JobsPane onBack={onBack} />
       </MemoryRouter>
     </QueryClientProvider>,
   )
@@ -358,6 +358,95 @@ describe('JobsPane', () => {
     const menu = within(await openCountryMenu())
 
     expect(menu.getByText(/open postings/i)).toBeInTheDocument()
+  })
+
+  // 21c: the sub-line read `data.jobs.length` — one page of 50 — so selecting the US reported
+  // "50 postings" against a live 3,365, and the unfiltered list would have read 50 of 9,130.
+  // A number on screen is derived or it is not there (slice 19), and a list you cannot page
+  // past row 50 makes the derived number a different kind of lie.
+  function pageOf(count: number, offset: number, total: number): JobsPageResponse {
+    return {
+      total,
+      jobs: Array.from({ length: count }, (_, index) => ({
+        ...payload.jobs[0],
+        id: offset + index + 1,
+        title: `Engineer ${offset + index + 1}`,
+      })),
+    }
+  }
+
+  function servePages(pageSize: number, total: number): void {
+    fetchMock.mockImplementation((url: RequestInfo | URL, init?: RequestInit) => {
+      const u = String(url)
+      if ((init?.method ?? 'GET') !== 'GET') return ok({})
+      if (u === '/resumes') return ok([])
+      if (u === '/countries') return ok(markets)
+      if (u === '/markets') return ok(coverage)
+      if (u.startsWith('/jobs/')) return ok({})
+      const offset = Number(new URL(u, 'http://t').searchParams.get('offset') ?? 0)
+      return ok(pageOf(Math.min(pageSize, total - offset), offset, total))
+    })
+  }
+
+  it('reports the server total, not the number of rows on the page', async () => {
+    servePages(50, 9130)
+    renderPage()
+
+    expect(await screen.findByText(/9,130 postings/)).toBeInTheDocument()
+    expect(screen.queryByText(/50 postings/)).not.toBeInTheDocument()
+  })
+
+  it('loads the next page on demand and appends it to the list', async () => {
+    const user = userEvent.setup()
+    servePages(50, 120)
+    renderPage()
+    await screen.findByText('Engineer 1')
+    expect(screen.queryByText('Engineer 51')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /load more/i }))
+
+    expect(await screen.findByText('Engineer 51')).toBeInTheDocument()
+    // The first page is still there — pages append, they do not replace.
+    expect(screen.getByText('Engineer 1')).toBeInTheDocument()
+    expect(jobListUrls().some((u) => u.includes('offset=50'))).toBe(true)
+  })
+
+  it('offers no Load more once every row is loaded', async () => {
+    servePages(50, 40)
+    renderPage()
+    await screen.findByText('Engineer 1')
+
+    expect(screen.queryByRole('button', { name: /load more/i })).not.toBeInTheDocument()
+  })
+
+  it('offers no "All markets" escape when the list is already every market', async () => {
+    // The back button clears the country filter. With no filter set it is a control that
+    // undoes nothing, on a view whose heading already says "Jobs".
+    renderPage()
+    await screen.findByText('Swift Engineer')
+
+    expect(screen.queryByRole('button', { name: /all markets/i })).not.toBeInTheDocument()
+  })
+
+  it('offers it once a country is filtered, and it asks the page to clear the selection', async () => {
+    // Clearing spans both params — ?country= is this pane's, ?focus= is the page's — so the
+    // button reports up rather than half-clearing. CountriesPage covers the end-to-end drop.
+    const user = userEvent.setup()
+    const onBack = vi.fn()
+    renderPage('/?focus=SE&country=SE', onBack)
+    await screen.findByText('Swift Engineer')
+
+    await user.click(screen.getByRole('button', { name: /all markets/i }))
+
+    expect(onBack).toHaveBeenCalledOnce()
+  })
+
+  it('sends no offset param on the first page, so a shared URL stays clean', async () => {
+    servePages(50, 120)
+    renderPage()
+    await screen.findByText('Engineer 1')
+
+    expect(firstJobsUrl()).not.toContain('offset')
   })
 
   it('names a served country in the heading instead of falling back to its bare code', async () => {
