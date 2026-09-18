@@ -1345,6 +1345,44 @@ closed" toggle. Deliberately not decided here — it is a query-path change and 
 
 ---
 
+## Slice 22 — Closed postings leave the default listing
+
+**Asked for 2026-09-18 after seeing slice 21 running.** 20e exposed `closed_at` and greyed the
+rows, which is what made the density measurable — and the measurement is the argument for going
+further: **6,899 of 15,671 canonical jobs are closed (44%)**, and **Sweden is 2,669 canonical
+against 393 open, 86% closed**. The tier-then-date sort interleaves them, so a filtered list was
+mostly dead rows. This is option (b) from the 20e decision, taken deliberately after (a) had
+shipped and could be looked at.
+
+- `test_a_closed_posting_is_absent_by_default` / `test_closed_postings_are_reachable_on_request`
+  — RED first. `JobFilters.include_closed: bool = False`; the adapter adds
+  `jobs.closed_at IS NULL` unless set; `/jobs` takes `?include_closed=true`.
+- `test_a_saved_search_does_not_match_a_closed_posting` — **the default lives on `JobFilters`,
+  not on the API layer**, so the saved-search card counts and the Telegram digest inherit it
+  through `to_job_filters`. A digest alerting on a delisted job is the same defect as listing one.
+- Frontend: a "Show closed" pill beside the Country and Sponsor-tier dropdowns, `?closed=1` so
+  the view is shareable like every other filter. What comes back is still greyed and chipped —
+  hidden is not discarded.
+- The country-menu caption drops its "the list also carries closed ones, greyed" clause, because
+  it no longer does.
+
+Acceptance:
+- [x] The default listing excludes closed postings: the live home screen went **15,671 → 9,152
+      postings**, and `?closed=1` brings the full set back
+- [x] **A chip's count and the list it opens are now the same number, by construction** — checked
+      live: SE 393/393, DE 201/201, IN 355/355, NZ 8/8. 20e's labelling caveat is retired
+- [x] `/markets` reconciles with `/jobs`: target 6,410 + other 1,854 + **894 uncountried** = the
+      **9,158** open canonical rows raw SQL reports
+- [x] Saved-search counts and the digest inherit the default — asserted, not assumed
+- [x] Closed postings stay reachable, greyed and labelled, one click away
+- [x] `make verify` green on both stacks (971 backend, 120 frontend)
+
+**Measured note: the corpus moved mid-session.** A scheduled launchd poll landed at 05:00 and
+took `jobs` from 16,810 to 16,841 rows (open canonical 9,130 → 9,158, closed 6,518 → 6,899). The
+figures above are the post-poll ones; slice 20 and 21's boxes keep theirs with their own dates.
+
+---
+
 ## Cross-cutting rules
 
 - Every network adapter is tested against recorded fixtures only; live calls happen solely in manual acceptance checks

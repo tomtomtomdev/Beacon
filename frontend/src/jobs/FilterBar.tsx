@@ -43,6 +43,9 @@ interface FilterBarProps {
   onToggleCategory: (value: string) => void
   onToggleLevel: (value: string) => void
   onToggleTier: (tier: SponsorTier) => void
+  // Delisted postings are out of the list by default; this brings them back, greyed.
+  includeClosed: boolean
+  onToggleClosed: () => void
   onSortChange: (sort: SortBy) => void
   // The Fit sort option only appears once a resume is active (§11 — opt-in, never default).
   showFitSort: boolean
@@ -62,6 +65,8 @@ export function FilterBar({
   onToggleCategory,
   onToggleLevel,
   onToggleTier,
+  includeClosed,
+  onToggleClosed,
   onSortChange,
   showFitSort,
 }: FilterBarProps) {
@@ -139,9 +144,7 @@ export function FilterBar({
               role="group"
               aria-label="Filter by country"
             >
-              <p className={styles.menuNote}>
-                Open postings per market — the list also carries closed ones, greyed.
-              </p>
+              <p className={styles.menuNote}>Open postings per market.</p>
               {markets.map(({ code, name, priority_tier }) => (
                 <CountryRow
                   key={code}
@@ -206,6 +209,18 @@ export function FilterBar({
           </>
         )}
         </div>
+
+        {/* Opt-in, like the tier filter: closed postings are kept (SPEC §5) and reachable,
+            just not carried by default — Sweden is 86% closed and the list was mostly dead
+            rows. What comes back is greyed and labelled, never silently mixed in. */}
+        <button
+          type="button"
+          className={includeClosed ? styles.pillButtonActive : styles.pillButton}
+          aria-pressed={includeClosed}
+          onClick={onToggleClosed}
+        >
+          Show closed
+        </button>
       </div>
 
       <div className={styles.chipRow}>

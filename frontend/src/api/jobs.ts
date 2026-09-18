@@ -25,6 +25,9 @@ export interface JobsQuery {
   // Row to start from. The page size is the API's own default (50); the pane pages by offset
   // and reports `total`, so the count on screen is the corpus's, not the page's.
   offset: number
+  // Delisted postings are out of the list unless asked for. Kept (SPEC §5), not discarded —
+  // the toggle brings them back, greyed and labelled.
+  includeClosed: boolean
 }
 
 export async function fetchJobs({
@@ -37,6 +40,7 @@ export async function fetchJobs({
   status,
   resume,
   offset,
+  includeClosed,
 }: JobsQuery): Promise<JobsPageResponse> {
   const params = new URLSearchParams()
   if (q) params.set('q', q)
@@ -54,6 +58,8 @@ export async function fetchJobs({
   if (status !== 'all') params.set('status', status)
   // Omitted on the first page, like every other default — a shared URL stays clean.
   if (offset > 0) params.set('offset', String(offset))
+  // Off is the API default, so only the opt-in is ever spelled out.
+  if (includeClosed) params.set('include_closed', 'true')
   const qs = params.toString()
 
   const response = await fetch(qs ? `/jobs?${qs}` : '/jobs')

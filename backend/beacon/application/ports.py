@@ -110,6 +110,11 @@ class JobFilters:
     # None → default view (everything except 'hidden'); "all" → no status filter;
     # a specific status → only that status (e.g. "new" for the morning scan).
     status: str | None = None
+    # A delisted posting is kept (SPEC §5) but is not something you can apply to, so it is out
+    # of every listing unless asked for. Default False rather than an API-layer default, so the
+    # saved-search cards and the Telegram digest inherit it too — alerting on a closed job is
+    # the same defect as listing one.
+    include_closed: bool = False
     sort: str = "tier"
     # Set only for sort="match": the active resume's hash, so the listing can ORDER BY the
     # cached fit score (join onto job_match_scores). None leaves ordering resume-independent.

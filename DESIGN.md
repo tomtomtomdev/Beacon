@@ -200,7 +200,9 @@ header is sticky.
     §4 concept these countries do not have, and a grey "unknown" glyph would assert a tier had
     been assessed and come back empty. Their names come from `Intl.DisplayNames`, not from a
     code→name table in the repo. **Every count is DERIVED from `/markets`, never typed.** The
-    menu scrolls (`max-height:320px`) — 63 rows do not fit on screen.
+    menu scrolls (`max-height:320px`) — 63 rows do not fit on screen. The caption reads "Open
+    postings per market", and since closed rows left the default list that is exactly what the
+    chip opens onto.
   - **Chip row:** "CATEGORY" label + 7 category pills (iOS, Backend, AI/ML, Android, Flutter,
     Fullstack, Frontend) · divider · "LEVEL" + 3 pills (Senior, Staff, Lead). Pill styles as above.
 - **Job list** (pad `4×20×22`; a **stack of compact cards**, `flex-direction:column; gap:10px` — not
@@ -212,13 +214,17 @@ header is sticky.
   - **Meta row** (margin-top 11px, wraps): a **"Closed" chip** when the posting is delisted, then
     the sponsorship tier chip (6px dot + label) + city (11.5px `#c4ebe4`) + level (11px mono
     uppercase `#5f8f8a`) + posted age (11.5px `#5f8f8a`, pushed right).
-  - **Closed postings are greyed, not dropped** (`opacity:0.55`, the same mute a hidden row
-    takes) and carry a neutral outlined "Closed" chip — 11px mono uppercase, border `#123842`,
-    text `#5f8f8a`. **Grey, deliberately not a tier colour:** closed is a fact about the
+  - **Closed postings are out of the list by default, and greyed when you ask for them.** The
+    "Show closed" pill (same idle/active pill styling as the Country and Sponsor-tier dropdowns,
+    `?closed=1`) brings them back; a returned row is muted (`opacity:0.55`, the same mute a hidden
+    row takes) and carries a neutral outlined "Closed" chip — 11px mono uppercase, border
+    `#123842`, text `#5f8f8a`. **Grey, deliberately not a tier colour:** closed is a fact about the
     posting's life, not about its sponsorship. SPEC §5 always said a delisted posting is "kept,
     greyed out", but `closed_at` was never on the `/jobs` DTO, so **6,518 of the 15,648 rows the
-    endpoint serves — 42% — rendered as though you could still apply**. The list cannot grey what
-    the API does not tell it. The drawer reports the same field for the same reason.
+    endpoint served — 42% — rendered as though you could still apply**. Greying them made the
+    density visible and the density is why they are now hidden: **Sweden measured 2,669 canonical
+    against 393 open, 86% closed**, so a filtered list was mostly dead rows. Hidden is not
+    discarded — the toggle is one click and the drawer reports the same field.
   - Category chips and a per-row "open original" link are **not** on the card — categories stay as
     filter pills, and the original-posting link lives in the drawer CTA. Per-view empty states
     (New → "You're all caught up", etc.).
@@ -273,6 +279,10 @@ Telegram bot-token / chat_id form + "Send test" (slice 8). Reachable via the rai
   `highlightCode` alongside `selectedCode`, defaulting to it.
 - **Filtering (jobs pane):** keyword (title/company/description/categories), country[], category[],
   level[], sponsor-tier[] (opt-in). AND across dimensions, OR within one. Re-fetches live.
+  **Closed postings are excluded unless "Show closed" is on** — the default everywhere, including
+  the saved-search card counts and the Telegram digest, because alerting on a delisted job is the
+  same defect as listing one. This is what makes a country chip's count and the list it opens the
+  same number: SE reads 393 on the chip and returns 393 rows.
 - **Sorting:** Sponsor tier → `sort_rank DESC, posted_at DESC` (yes=4, **not_required=3**, registry=2,
   unknown=1, no=0); Date → newest first. **`explicit_no` shows last, never hidden by default.** A
   confirmed sponsor abroad outranks a home role; a home role outranks anything speculative.

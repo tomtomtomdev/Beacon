@@ -40,6 +40,8 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
   const categories = searchParams.getAll('category')
   const levels = searchParams.getAll('level')
   const tiers = searchParams.getAll('sponsor_tier') as SponsorTier[]
+  // ?closed=1 — shareable like every other filter, and absent in the default view.
+  const includeClosed = searchParams.get('closed') === '1'
   // The active resume (server-owned singleton) drives ?resume= scoring — a soft, opt-in signal.
   const { data: resumes } = useQuery({ queryKey: ['resumes'], queryFn: fetchResumes })
   // Same ['countries'] key the drawer and the Countries view already use, so the query cache
@@ -90,6 +92,17 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
     )
   }
 
+  const toggleClosed = () => {
+    setSearchParams(
+      (params) => {
+        if (includeClosed) params.delete('closed')
+        else params.set('closed', '1')
+        return params
+      },
+      { replace: true },
+    )
+  }
+
   const setSort = (value: SortBy) => {
     setSearchParams(
       (params) => {
@@ -124,7 +137,18 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
   // paging deeper into the same one must not.
   const { data, isPending, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteQuery({
-      queryKey: ['jobs', q, countries, categories, levels, tiers, sort, view, resumeId],
+      queryKey: [
+        'jobs',
+        q,
+        countries,
+        categories,
+        levels,
+        tiers,
+        sort,
+        view,
+        resumeId,
+        includeClosed,
+      ],
       queryFn: ({ pageParam }) =>
         fetchJobs({
           q,
@@ -136,6 +160,7 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
           status: view,
           resume: resumeId,
           offset: pageParam,
+          includeClosed,
         }),
       initialPageParam: 0,
       getNextPageParam: (lastPage, pages) => {
@@ -260,6 +285,8 @@ export function JobsPane({ country, onBack }: { country?: Country; onBack: () =>
           onToggleCategory={(value) => toggleParam('category', value)}
           onToggleLevel={(value) => toggleParam('level', value)}
           onToggleTier={(tier) => toggleParam('sponsor_tier', tier)}
+          includeClosed={includeClosed}
+          onToggleClosed={toggleClosed}
           onSortChange={setSort}
           showFitSort={resumeId !== null}
         />

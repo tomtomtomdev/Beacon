@@ -49,6 +49,8 @@ class SqliteJobRepo:
         # Duplicates hang off their canonical via canonical_id; the list shows canonicals only.
         clauses: list[str] = ["jobs.canonical_id IS NULL"]
         params: list[str] = []
+        if not filters.include_closed:
+            clauses.append("jobs.closed_at IS NULL")
         if filters.q:
             clauses.append("(jobs.title LIKE ? OR jobs.description LIKE ?)")
             params += [f"%{filters.q}%"] * 2

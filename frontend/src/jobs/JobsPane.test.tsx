@@ -441,6 +441,39 @@ describe('JobsPane', () => {
     expect(onBack).toHaveBeenCalledOnce()
   })
 
+  // 22: closed postings are out of the list by default. They are kept (SPEC §5) and reachable,
+  // but Sweden measured 2,669 canonical against 393 open — 86% closed — so carrying them by
+  // default made a filtered list mostly dead rows.
+  it('asks for no closed postings by default', async () => {
+    renderPage()
+    await screen.findByText('Swift Engineer')
+
+    expect(firstJobsUrl()).not.toContain('include_closed')
+  })
+
+  it('brings them back on request, and says so in the URL', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByText('Swift Engineer')
+
+    await user.click(screen.getByRole('button', { name: /show closed/i }))
+
+    await waitFor(() => {
+      expect(jobListUrls().some((u) => u.includes('include_closed=true'))).toBe(true)
+    })
+  })
+
+  it('reads the closed toggle from the URL, so the view is shareable', async () => {
+    renderPage('/?closed=1')
+    await screen.findByText('Swift Engineer')
+
+    expect(firstJobsUrl()).toContain('include_closed=true')
+    expect(screen.getByRole('button', { name: /show closed/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+  })
+
   it('sends no offset param on the first page, so a shared URL stays clean', async () => {
     servePages(50, 120)
     renderPage()

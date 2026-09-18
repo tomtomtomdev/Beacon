@@ -646,7 +646,7 @@ async def test_a_closed_posting_reports_when_it_closed_and_a_live_one_reports_nu
     jobs.upsert(company.id, make_job("gone", "Delisted", "IE", POLL_AT), POLL_AT)
     jobs.sweep_absent_jobs("greenhouse", company.id, {"live"}, POLL_AT, threshold=1)
 
-    body = (await client.get("/jobs?status=all")).json()
+    body = (await client.get("/jobs?status=all&include_closed=true")).json()
     by_title = {job["title"]: job for job in body["jobs"]}
 
     assert by_title["Delisted"]["closed_at"] is not None
@@ -697,3 +697,53 @@ async def test_paging_by_offset_yields_every_row_exactly_once_across_a_tie(
 
     assert len(seen) == 12
     assert len(set(seen)) == 12
+
+
+async def _closed_and_live(db_path: Path) -> None:
+    conn = connect(db_path)
+    company = SqliteCompanyRepo(conn).upsert(
+        Company(name="Tines", ats_type="greenhouse", ats_slug="tines", country_hq="IE", priority=2)
+    )
+    assert company.id is not None
+    jobs = SqliteJobRepo(conn)
+    jobs.upsert(company.id, make_job("live", "Still Hiring", "IE", POLL_AT), POLL_AT)
+    jobs.upsert(company.id, make_job("gone", "Delisted", "IE", POLL_AT), POLL_AT)
+    jobs.sweep_absent_jobs("greenhouse", company.id, {"live"}, POLL_AT, threshold=1)
+
+
+async def test_a_closed_posting_is_absent_by_default(
+    client: httpx.AsyncClient, db_path: Path
+) -> None:
+    """A delisted posting is not something you can apply to. Sweden measured 2,669 canonical
+    against 393 open — 86% closed — so a list that carries them by default is mostly dead rows."""
+    await _closed_and_live(db_path)
+
+    body = (await client.get("/jobs?status=all")).json()
+
+    assert [job["title"] for job in body["jobs"]] == ["Still Hiring"]
+    assert body["total"] == 1
+
+
+async def test_closed_postings_are_reachable_on_request(
+    client: httpx.AsyncClient, db_path: Path
+) -> None:
+    """SPEC §5 keeps them deliberately — hidden by default is not the same as discarded."""
+    await _closed_and_live(db_path)
+
+    body = (await client.get("/jobs?status=all&include_closed=true")).json()
+
+    assert sorted(job["title"] for job in body["jobs"]) == ["Delisted", "Still Hiring"]
+    assert body["total"] == 2
+
+
+async def test_a_saved_search_does_not_match_a_closed_posting(
+    client: httpx.AsyncClient, db_path: Path
+) -> None:
+    """The same default reaches the saved-search card count and the Telegram digest through
+    to_job_filters — a digest alerting on a delisted job is the same defect wearing a hat."""
+    await _closed_and_live(db_path)
+    await client.post("/searches", json={"name": "Irish roles", "filters": {"countries": ["IE"]}})
+
+    body = (await client.get("/searches")).json()
+
+    assert body[0]["new_count"] == 1

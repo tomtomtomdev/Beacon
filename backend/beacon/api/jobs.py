@@ -66,6 +66,9 @@ def get_jobs(
     posted_since: datetime | None = None,
     sponsor_tier: Annotated[list[str] | None, Query()] = None,
     status: UserStatus | Literal["all"] | None = None,
+    # Delisted postings are out of the listing unless asked for (SPEC §5 keeps them; the UI
+    # offers a "Show closed" toggle and greys the rows it brings back).
+    include_closed: bool = False,
     sort: Literal["tier", "date", "match"] = "tier",
     resume: Annotated[int | None, Query()] = None,
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
@@ -88,6 +91,7 @@ def get_jobs(
         posted_since=posted_since,
         sponsor_tiers=tuple(sponsor_tier or ()),
         status=status,
+        include_closed=include_closed,
         sort=sort,
         resume_hash=active_resume.resume_hash if active_resume else None,
         limit=limit,
