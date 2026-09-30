@@ -7,7 +7,7 @@ stays dormant (no adapter) until one is added.
 from collections.abc import Callable
 
 from beacon.adapters.sources.ashby import AshbyAdapter
-from beacon.adapters.sources.greenhouse import GreenhouseAdapter
+from beacon.adapters.sources.greenhouse import GreenhouseAdapter, GreenhouseEUAdapter
 from beacon.adapters.sources.himalayas import HimalayasAdapter
 from beacon.adapters.sources.hn import HNAdapter
 from beacon.adapters.sources.jobtech import JobTechAdapter
@@ -30,6 +30,7 @@ type _BuildAdapter = Callable[[str, Fetcher], JobSource]
 
 _ADAPTERS: dict[str, _BuildAdapter] = {
     "greenhouse": GreenhouseAdapter,
+    "greenhouse_eu": GreenhouseEUAdapter,
     "lever": LeverAdapter,
     "ashby": AshbyAdapter,
     "smartrecruiters": SmartRecruitersAdapter,

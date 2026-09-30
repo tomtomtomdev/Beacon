@@ -49,6 +49,7 @@ def test_delivered_seed_file_parses_completely() -> None:
     assert len(companies) == len(data_lines)
     assert {c.ats_type for c in companies} <= {
         "greenhouse",
+        "greenhouse_eu",
         "lever",
         "ashby",
         "smartrecruiters",

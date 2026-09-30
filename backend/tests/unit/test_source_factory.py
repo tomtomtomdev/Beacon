@@ -28,6 +28,7 @@ def make_company(ats_type: str) -> Company:
 def test_supported_ats_covers_every_seeded_ats_with_an_adapter() -> None:
     assert SUPPORTED_ATS == {
         "greenhouse",
+        "greenhouse_eu",
         "lever",
         "ashby",
         "smartrecruiters",

@@ -89,6 +89,8 @@ Each takes a `(slug, fetcher)` pair. Slug comes from `seeds/companies.csv`. Addi
 | Posted at | `first_published` (ISO-8601, tz-aware) — may be absent |
 | Seed rows | **24** (largest coverage) |
 
+**EU region — `source_id: greenhouse_eu`** (added 2026-09-30). The API and payload are identical, but EU-resident boards are served from `boards-api.eu.greenhouse.io`, and the public board URL is `job-boards.eu.greenhouse.io/{slug}`. Nothing in the slug says which region a board is in, so the seed row's `ats_type` carries it. `GreenhouseEUAdapter` subclasses the US adapter and changes only the host. First row: Binance.
+
 ### 3.2 Lever — `source_id: lever`
 | | |
 |---|---|
@@ -218,6 +220,7 @@ Each takes a `(slug, fetcher)` pair. Slug comes from `seeds/companies.csv`. Addi
 | ats_type | Rows | Adapter |
 |---|---|---|
 | greenhouse | 24 | ✅ |
+| greenhouse_eu | 1 | ✅ (2026-09-30 — Binance) |
 | ashby | 11 | ✅ |
 | lever | 10 | ✅ |
 | workday | 4 | ✅ |
