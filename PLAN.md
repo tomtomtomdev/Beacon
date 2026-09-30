@@ -305,7 +305,7 @@ Tasks:
 3. **Countries view (DESIGN.md §4):** country cards grid + target-geography world-map (`<canvas>` dot-grid + lon/lat pins, primary vs nice-to-have colors, pin↔card cross-highlight). Sweden card surfaces "no sponsor registry" exactly as written.
 4. Job-detail drawer (DESIGN.md §2): slide-over with sponsorship-evidence card, chips, description, country panel, sources + CTA; opening a `new` job marks it `seen` (ties to slice 5.5)
 5. `RemoteOKAdapter` (JSON), `WWRAdapter` (RSS)
-4. launchd one-shots per SPEC §9 (`com.beacon.digest` for polls, `com.beacon.{refresh,backup,probe}` for maintenance — no always-on scheduler process); closed-posting sweep — **absence counts only on successful polls**: the sweep increments a per-job miss counter solely when its source's poll succeeded and the job wasn't in the response; failed polls leave counters untouched (test: `test_failed_poll_never_closes_jobs`)
+4. launchd one-shots per SPEC §9 (`com.beacon.digest` for polls — **once a day at 16:00** since 2026-09-30, `com.beacon.{refresh,backup,probe}` for maintenance — no always-on scheduler process); closed-posting sweep — **absence counts only on successful polls**: the sweep increments a per-job miss counter solely when its source's poll succeeded and the job wasn't in the response; failed polls leave counters untouched (test: `test_failed_poll_never_closes_jobs`)
 5. Nightly SQLite backup script
 
 Acceptance:

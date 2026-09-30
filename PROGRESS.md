@@ -4,6 +4,8 @@
 
 ## Current status
 
+**2026-09-30 — the digest fires once a day, at 16:00.** `com.beacon.digest` narrowed from three fires (08:00/12:00/16:30) to one, on request. `test_digest_schedule.py` pins `{(16, 0)}`, and its no-collision check now counts the wrap to the next day's fire, which is the only gap a single fire has. **Not yet reinstalled on the Mac:** copy the plist into `~/Library/LaunchAgents/` and run `launchctl bootout`/`bootstrap` (commands are in the plist header). LinkedIn: asked for a headed-Chrome crawler, then withdrawn in favour of adding seeds for the companies found there (SPEC §2 non-goal unchanged). **Next action:** add those seed rows once the company list comes in.
+
 **2026-09-18 — the hand download is banked. All five sponsor registries are ingested for the first time.** The lever PROGRESS has called "the highest-value unbuilt item in the repo" since slice 18 is spent, and it needed no code — only the three files that had never been on this box.
 
 | register | rows | companies matched |
@@ -66,6 +68,8 @@
 Legend: ⬜ not started · 🟨 in progress · ✅ done (acceptance boxes checked)
 
 ## Decisions log
+
+- **2026-09-30 (digest-one-fire)** — **The digest window narrowed from three fires to one: 16:00 Asia/Jakarta.** User request. Supersedes the *schedule* half of **2026-09-11 (digest-three-fires)**; the lock, the watchdog and the headless path are unchanged. What it costs: **closure is slower.** `CLOSE_AFTER_MISSES = 2` counts successful polls, so a delisted posting now leaves the default listing after about two days rather than within one. A stale row is still greyed once closed, and the digest sends at most one message a day, so the added lag is small. The no-collision test used to take `min(pairwise(...))` over the fires of a single day, and with only one fire that list would be empty. It now includes the midnight wrap. **Also considered and dropped the same day:** a headed-Chrome LinkedIn crawler with credentials in env. It was withdrawn before any code was written, so SPEC §2's non-goal stands, and LinkedIn is only used by hand to find companies whose ATS then gets a seed row.
 
 - **2026-09-18 (registry snapshots downloaded — the lever is spent, and what it cost)** — All three missing registers ingested. **UK needed nothing but the file**, as recorded: the live header is byte-identical to the fixture, CRLF and all, and the leading-whitespace names (`" AaruvikA Limited"`) are the hazard `uk.py` already handles. **US needed the XLSX→CSV step** PROGRESS predicted; 595,239 of the 1.03M sheet rows are padding, which is the `max_row` lie the adapter docstring names. **NL was recorded as "blocked — no downloadable file", and that is half-right**: there is no export, but the register is server-rendered into the page HTML, so a one-off extraction produces the CSV the adapter already reads. That keeps the cross-cutting "no HTML parsing of hostile sites" rule intact — the *adapter* still reads CSV; the parsing was data prep, done once, by hand.
 
@@ -348,6 +352,8 @@ silently (empty name → `continue`), not an error. Drop each file in `data/regi
 ## Session log
 
 *(newest first)*
+
+- **2026-09-30** — Digest schedule cut to one daily fire at 16:00 (plist, schedule test, README/SPEC §9/SOURCES/PLAN). The LinkedIn crawler request was withdrawn in favour of seed rows, and those wait on the company list. `make verify` green. See Decisions 2026-09-30 (digest-one-fire).
 
 - **2026-09-10 (last, cont.)** — **The hourly window shipped, then failed its first real fire, and the cause was the folder it lived in.** `exit 126 / Operation not permitted` at 16:30 → probed TCC from a launchd fire (Documents denied, home dir fine) → moved `~/Documents/beacon` → **`~/Projects/beacon`** (your suggestion; the dir already existed), repointed both plists, rebuilt the venv, reloaded both agents, and re-proved the wrapper from a launchd-started probe rather than by hand. `make verify` green at the new path. See Decisions 2026-09-10 (tcc-move).
 

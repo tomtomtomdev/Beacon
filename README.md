@@ -137,7 +137,7 @@ Four launchd agents, all installed from `deploy/`:
 
 | Agent | When | What |
 |---|---|---|
-| `com.beacon.digest` | 08:00, 12:00, 16:30 local | One fire of `deploy/hourly-digest.sh`: poll → dedup → Telegram digest, then exit. Lock-guarded (a fire that finds the previous one still polling skips) and capped at 50 min, after which the digest still goes out via `python -m beacon.notify`. A full poll runs 30–45 min, which is why the gaps are hours and not one hour. |
+| `com.beacon.digest` | 16:00 local, once a day | One fire of `deploy/hourly-digest.sh`: poll → dedup → Telegram digest, then exit. Lock-guarded (a fire that finds the previous one still polling skips) and capped at 50 min, after which the digest still goes out via `python -m beacon.notify`. A full poll runs 30–45 min. |
 | `com.beacon.refresh` | 1st of the month, 03:00 | `python -m beacon.maintenance refresh-registries` — rematch the seeds against the registry snapshots. |
 | `com.beacon.backup` | daily, 04:00 | `python -m beacon.maintenance backup` — timestamped SQLite copy, pruned to the newest 14. |
 | `com.beacon.probe` | Mondays, 05:00 | `python -m beacon.maintenance probe` — retry quarantined sources so a temporary outage self-heals. |

@@ -447,7 +447,7 @@ Every scheduled job is a **launchd one-shot**, keyed to the system zone = **Asia
 
 | Agent | Fires | Notes |
 |---|---|---|
-| `com.beacon.digest` | **08:00, 12:00, 16:30** | Poll every source → dedup → Telegram digest, then exit. A full poll runs 30–45 min under a 50 min watchdog, which is why the gaps are hours. HN's daily-first-week cadence is folded in here — its per-thread unseen-kids cache makes frequent re-polls cheap |
+| `com.beacon.digest` | **16:00** daily | Poll every source → dedup → Telegram digest, then exit. A full poll runs 30–45 min under a 50 min watchdog. HN's daily-first-week cadence is folded in here — its per-thread unseen-kids cache makes frequent re-polls cheap |
 | `com.beacon.refresh` | **day 1 @ 03:00** | Match seeds against available snapshots; write `registries_meta` |
 | `com.beacon.backup` | **04:00 daily** | Timestamped SQLite copy to `backups/`, pruned to the newest 14 |
 | `com.beacon.probe` | **Mon @ 05:00** | One retry per quarantined source; success restores, failure does **not** inflate counters |
