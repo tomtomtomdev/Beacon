@@ -1383,6 +1383,129 @@ figures above are the post-poll ones; slice 20 and 21's boxes keep theirs with t
 
 ---
 
+## Slice 23 — Sources the GB/DE decisions unblock, and the AU occupation list as reference
+
+**Asked for 2026-10-07**, against two pasted lists (visa/sponsor data and job APIs). Audited
+first. All five sponsor registers that publish a file are already ingested (UK, US, NL, IE, CA).
+NZ was closed in 18e. **Three owner decisions taken 2026-10-07:** (1) **DE joins §4 as
+`nice_to_have`**; FR stays out. (2) **Adzuna stays rejected**, because its quota arithmetic is
+unchanged. (3) **The AU Core Skills Occupation List is reference text, not an ingester**: it has
+no downloadable table (a legislative-instrument PDF plus a web page), and every software ANZSCO
+code is on it, so a per-job flag would carry almost no information.
+
+**What 2026-09-15 already unblocked:** Arbeitnow and Reed were held only "iff §4 adds the UK".
+GB became `primary` in 18 and nobody went back for them.
+
+**Probed live 2026-10-07, and the results shape the sub-slices:**
+- **Arbeitnow** `GET /api/job-board-api`, no auth, 325 rows/page, `created_at`-ordered with
+  `links.next`. **`search=` is ignored** (identical page 1). **`visa_sponsorship=true` is
+  honoured** (a different 318-row set). So the firehose *can* be advanced but *cannot* be
+  steered by role. Page 1 geography: London 43 / Paris 31 / Berlin 25 / Zürich 17.
+- **Bundesagentur Jobsuche**: `pc/v4/jobs` (what bund.dev documents) now returns **403**.
+  **`pc/v6/jobs` returns 200** with the public `X-API-Key: jobboerse-jobsuche`. List rows have
+  no ad text, and **the detail lives at `pc/v4/jobdetails/{base64(refnr)}`** (v6 detail is
+  403), returning `stellenangebotsBeschreibung`. `was=iOS Entwickler` gives 21 results. Two
+  calls per posting, but a small steered set.
+- **Reed** cannot be probed without a key. HTTP Basic, key as username, empty password.
+  `search` returns a truncated `jobDescription`; `jobs/{id}` returns the full one. **Needs the
+  owner to register a free key** (reed.co.uk/developers) before its fixture can be recorded.
+
+**Build order: 23a Arbeitnow → 23b the credential door → 23c DE row → 23d Bundesagentur → 23e
+AU reference → 23f Reed (gated on the key) → 23g docs.** Each sub-slice is one TDD loop
+(RED → GREEN → REFACTOR scan), `make verify`, one `slice-23x:` commit, push.
+
+### 23a — Arbeitnow as a company-less source
+
+- `test_arbeitnow_normalizes_a_recorded_posting` (RED): a fixture recorded live 2026-10-07 under
+  `tests/fixtures/arbeitnow/`. `external_id = slug`, `posted_at` from epoch `created_at`,
+  country via `parse_location`, `company_name` from the row.
+- `test_arbeitnow_walks_links_next_up_to_the_page_cap_and_logs_it`: follows `links.next`, stops
+  at `max_pages` (default 3), and logs `arbeitnow_page_cap` like Himalayas.
+- `test_arbeitnow_requests_the_visa_sponsorship_subset`: the request carries
+  `visa_sponsorship=true`. **This is a fetch filter, not a tier claim.** The payload has no
+  per-row visa field (SPEC §5.4), and `resolve_tier` does not change. The filter only decides
+  which postings Beacon pays to ingest.
+- Wired into `make_companyless_sources`. Live acceptance on a temp DB, zero errors.
+
+### 23b — One credential door: bearer, basic, API-key header
+
+`PoliteClient(bearer_tokens=…)` becomes `PoliteClient(credentials={host: HostCredential})`, where
+`HostCredential = Bearer | Basic | ApiKeyHeader`, all holding `SecretStr`. NAV migrates to it as
+a no-behaviour-change refactor. **The `Fetcher` Protocol does not change.** Adapters still never
+hold a credential (the 14e decision, extended).
+
+- `test_basic_credential_sends_key_as_username_with_empty_password` (RED).
+- `test_api_key_header_is_sent_only_to_its_host`.
+- `test_repr_names_hosts_never_secrets`, extended to all three kinds.
+- The existing NAV bearer tests stay green, unedited, through the migration.
+
+### 23c — Germany as a §4 `nice_to_have` row (domain, pure)
+
+- **Verify before writing (the 18b rule):** each figure is read off the official page on the day
+  and carries that date, never `_AS_KNOWN`. Sources: make-it-in-germany.com / BAMF for the EU
+  Blue Card salary floors (general and shortage), the settlement permit (Blue Card months with
+  B1 vs A1), and citizenship (residence years after the 2025 change, dual nationality since
+  2024-06-27).
+- `test_germany_is_a_nice_to_have_market` (RED). `registry_name` states that there is **no public
+  sponsor register** (the Bundesagentur approves per case), the NZ/SE pattern.
+- Globe: a `DE` entry in `PIN_GEO` (Europe is already traced). `test_every_country_has_a_globe_pin`
+  is the guard.
+- **No migration**: `countries` is a seeded projection of `COUNTRY_REFERENCE` (the 15c/18 finding).
+
+### 23d — Bundesagentur Jobsuche as a company-less source
+
+- Credential: `ApiKeyHeader("X-API-Key", "jobboerse-jobsuche")` for `rest.arbeitsagentur.de`,
+  registered on the door from 23b. The key is a published public constant, so it is not a
+  setting and needs no gating.
+- `ROLE_QUERIES` as data. Each phrasing is measured live and the counts are recorded in the
+  docstring (the Himalayas precedent), e.g. `iOS Entwickler` 21.
+- Two-step: v6 list, then the v4 detail at `base64(refnr)`. Dedup by `referenznummer` before the
+  detail spend. A failed detail is skipped and logged, never fatal (rule 6).
+- Normalization: `country = "DE"` only when `land == "DEUTSCHLAND"`; city from `ort`; `posted_at`
+  from `datumErsteVeroeffentlichung` as midnight UTC (the date-only rule from slice 13); `url` is
+  the public jobdetail page.
+- **Known gap, recorded and not fixed here:** the descriptions are German, and the sponsorship
+  regex is English. DE rows will mostly read `unknown` unless the registry or English text says
+  otherwise. German phrasings belong in a later vocabulary slice with spot-check rows, not
+  smuggled in here.
+
+### 23e — The AU occupation list, as reference text
+
+- Re-verify the **whole AU row** on the day: the Core Skills Income Threshold (indexed 1 July),
+  the specialist tier, PR and citizenship. Bumping `verified_at` claims every column, so only
+  a full re-read earns it.
+- `visa_summary` gains one clause saying the software ANZSCO codes are on the Core Skills
+  Occupation List. The codes are read off the current instrument, never from memory.
+  `source_url` moves to the CSOL page on immi.homeaffairs.gov.au.
+- `test_australia_row_names_the_core_skills_list` (RED). `resolve_tier` stays byte-identical
+  (the TW Gold Card precedent: a visa fact lives in copy, not in tiering).
+
+### 23f — Reed as a company-less source (gated on the owner's key)
+
+- `BEACON_REED_API_KEY` → `Settings.reed_api_key: SecretStr | None`. With no key the source is
+  not wired at all (the NAV/Telegram/LLM rule).
+- Fixture recorded live with the key. **If no key exists by the time 23a–23e are done, 23f
+  stops here and is recorded open.** No hand-built fixture is passed off as recorded.
+- Search per `ROLE_QUERIES`, then the `jobs/{id}` detail for the full description. Dedup by
+  `jobId`. `country = "GB"`. `date` is `dd/mm/yyyy`, so date-only becomes midnight UTC.
+
+### 23g — Docs
+
+SPEC §5.4/§5.5: Arbeitnow, Reed and Bundesagentur become **reversals on the record**, with
+today's probes. Remotive (redundant), Adzuna (quota) and France Travail (FR not in §4) are
+re-confirmed as rejected with today's reasons. SPEC §4 gains the DE row. SOURCES.md gets the
+three adapters. PROGRESS: status plus a Decisions entry for the three owner decisions above.
+
+Acceptance:
+- [ ] Arbeitnow, Bundesagentur (and Reed, if keyed) each poll live on a temp DB with zero errors,
+      with fetched/upserted counts recorded
+- [ ] NAV behaves identically on the new credential door (its tests unedited)
+- [ ] DE renders as a `nice_to_have` market with a globe pin and dated figures
+- [ ] The AU row names the Core Skills list with a fresh `verified_at`; `resolve_tier` is unchanged
+- [ ] `make verify` green on both stacks at every commit
+
+---
+
 ## Cross-cutting rules
 
 - Every network adapter is tested against recorded fixtures only; live calls happen solely in manual acceptance checks
