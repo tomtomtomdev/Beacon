@@ -18,7 +18,7 @@ from beacon.domain.visa import (
 BY_CODE: dict[str, CountryReference] = {c.code: c for c in COUNTRY_REFERENCE}
 
 PRIMARY_CODES = {"SG", "AU", "JP", "NL", "US", "CA", "IE", "GB"}
-NICE_TO_HAVE_CODES = {"SE", "NO", "DK", "CH", "NZ", "TW", "HK"}
+NICE_TO_HAVE_CODES = {"SE", "NO", "DK", "CH", "NZ", "TW", "HK", "DE"}
 
 # Slice 18 widened §4. These four were verified on their own date against official pages, so
 # they must not inherit the table-wide Jan-2026 knowledge date the original twelve share.
@@ -125,6 +125,20 @@ def test_new_zealand_registry_states_why_it_cannot_be_ingested() -> None:
     assert "no bulk export" in registry or "not downloadable" in registry
 
 
+def test_germany_is_a_nice_to_have_market() -> None:
+    """Slice 23c: Germany held the fourth-largest block of open jobs as an "other market" and
+    is now assessed. Its figures were read off official pages on 2026-10-07, so the row carries
+    that date. There is no public sponsor register — the Bundesagentur approves case by case
+    and the general Blue Card needs no approval at all — so the row says why, the SE/NZ way."""
+    germany = BY_CODE["DE"]
+
+    assert germany.name == "Germany"
+    assert germany.priority_tier is PriorityTier.NICE_TO_HAVE
+    assert germany.verified_at == date(2026, 10, 7)
+    assert "no public" in germany.registry_name.lower()
+    assert "bundesagentur" in germany.registry_name.lower()
+
+
 def test_taiwan_names_the_self_sponsored_card_in_its_visa_copy() -> None:
     """The Gold Card carries its own work permit, so TW needs no sponsoring employer. That
     fact belongs in the visa copy and NOWHERE else: `not_required` is a location predicate for
@@ -176,12 +190,12 @@ def test_a_country_in_the_reference_is_a_target_market() -> None:
 
 
 def test_a_country_absent_from_the_reference_is_an_other_market() -> None:
-    """Germany holds the fourth-largest block of open jobs in the corpus and has no §4 row.
-    It is a market Beacon can serve, not a market Beacon has assessed."""
-    coverage = partition_markets({"DE": 198})
+    """India holds the largest block of open jobs in the corpus and has no §4 row. It is a
+    market Beacon can serve, not a market Beacon has assessed."""
+    coverage = partition_markets({"IN": 347})
 
-    assert coverage.other_markets == (MarketCount(code="DE", open_jobs=198),)
-    assert "DE" not in {market.code for market in coverage.target_markets}
+    assert coverage.other_markets == (MarketCount(code="IN", open_jobs=347),)
+    assert "IN" not in {market.code for market in coverage.target_markets}
 
 
 def test_a_reference_country_with_no_open_jobs_is_still_a_target_market_at_zero() -> None:
@@ -198,9 +212,9 @@ def test_a_reference_country_with_no_open_jobs_is_still_a_target_market_at_zero(
 def test_other_markets_are_ordered_by_open_count_descending() -> None:
     """The ordering is a domain decision, not a render detail: 25 of the 45 tail countries
     hold fewer than 10 open jobs, and unordered they drown the ones that matter."""
-    coverage = partition_markets({"DE": 198, "IN": 347, "TH": 220, "MY": 237})
+    coverage = partition_markets({"PH": 198, "IN": 347, "TH": 220, "MY": 237})
 
-    assert [market.code for market in coverage.other_markets] == ["IN", "MY", "TH", "DE"]
+    assert [market.code for market in coverage.other_markets] == ["IN", "MY", "TH", "PH"]
 
 
 def test_other_markets_tie_break_on_code_so_the_order_survives_a_poll() -> None:

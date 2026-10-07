@@ -18,6 +18,11 @@ _AS_KNOWN = date(2026, 1, 15)
 # of _AS_KNOWN — backdating them to January would claim research that had not happened.
 _SLICE_18_VERIFIED = date(2026, 9, 15)
 
+# Slice 23's Germany row was read off official pages (the BMI's Bundesanzeiger notice of the
+# 2026 Blue Card floors, AufenthG §18c/§18g and StAG §10 as consolidated on
+# gesetze-im-internet.de, the Auswärtiges Amt on dual nationality) on this date.
+_SLICE_23_VERIFIED = date(2026, 10, 7)
+
 
 class PriorityTier(StrEnum):
     """Target-geography weighting from SPEC §3 — drives the Countries-view legend/pins.
@@ -235,6 +240,20 @@ COUNTRY_REFERENCE: tuple[CountryReference, ...] = (
         priority_tier=PriorityTier.NICE_TO_HAVE,
         verified_at=_SLICE_18_VERIFIED,
         source_url="https://www.immd.gov.hk/eng/services/visas/GEP.html",
+    ),
+    # ---- Slice 23: Germany promoted from "other market" (fourth-largest open-job block).
+    # Reduced floor = shortage occupations, degree <3yr old, or IT specialists without a degree
+    # (3yr experience); those routes need Bundesagentur approval, the general one does not.
+    CountryReference(
+        code="DE",
+        name="Germany",
+        visa_summary="EU Blue Card, €50,700/yr (€45,934 shortage, new grad or IT w/o degree)",
+        pr_summary="Settlement permit after 21mo with B1 German, 27mo with A1",
+        citizenship_summary="5yr (3yr fast track abolished); dual allowed since 2024-06-27",
+        registry_name="None — no public sponsor register; the Bundesagentur approves per case",
+        priority_tier=PriorityTier.NICE_TO_HAVE,
+        verified_at=_SLICE_23_VERIFIED,
+        source_url="https://www.gesetze-im-internet.de/aufenthg_2004/__18g.html",
     ),
 )
 

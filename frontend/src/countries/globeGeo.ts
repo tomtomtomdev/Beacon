@@ -91,6 +91,8 @@ export const PIN_GEO: Record<string, { lat: number; lon: number }> = {
   NZ: { lat: -41, lon: 173 },
   TW: { lat: 23.7, lon: 121 },
   HK: { lat: 22.3, lon: 114.2 },
+  // Slice 23. Central Germany lies inside the traced Eurasia outline — no new LAND entry.
+  DE: { lat: 51, lon: 10 },
 }
 
 export function px(lon: number, W: number): number {
