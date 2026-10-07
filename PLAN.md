@@ -1498,7 +1498,8 @@ three adapters. PROGRESS: status plus a Decisions entry for the three owner deci
 
 Acceptance:
 - [ ] Arbeitnow, Bundesagentur (and Reed, if keyed) each poll live on a temp DB with zero errors,
-      with fetched/upserted counts recorded
+      with fetched/upserted counts recorded — *Arbeitnow done 2026-10-07 (23a): fetched=318
+      upserted=318 errors=0, one page (visa subset has no `links.next`); Bundesagentur/Reed open*
 - [ ] NAV behaves identically on the new credential door (its tests unedited)
 - [ ] DE renders as a `nice_to_have` market with a globe pin and dated figures
 - [ ] The AU row names the Core Skills list with a fresh `verified_at`; `resolve_tier` is unchanged

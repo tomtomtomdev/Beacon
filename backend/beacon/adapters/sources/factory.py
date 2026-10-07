@@ -6,6 +6,7 @@ stays dormant (no adapter) until one is added.
 
 from collections.abc import Callable
 
+from beacon.adapters.sources.arbeitnow import ArbeitnowAdapter
 from beacon.adapters.sources.ashby import AshbyAdapter
 from beacon.adapters.sources.greenhouse import GreenhouseAdapter, GreenhouseEUAdapter
 from beacon.adapters.sources.himalayas import HimalayasAdapter
@@ -67,6 +68,7 @@ def make_companyless_sources(
         WWRAdapter(fetcher),
         HimalayasAdapter(fetcher),
         MyCareersFutureAdapter(fetcher),
+        ArbeitnowAdapter(fetcher),
     ]
     if nav_authenticated:
         sources.append(NAVAdapter(fetcher))
