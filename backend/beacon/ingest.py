@@ -9,9 +9,9 @@ import logging
 from datetime import UTC, datetime
 
 import httpx
-from pydantic import SecretStr
 
 from beacon.adapters.classify.factory import make_classifier
+from beacon.adapters.http.credentials import Bearer, HostCredential
 from beacon.adapters.http.polite import PoliteClient
 from beacon.adapters.persistence.companies import SqliteCompanyRepo
 from beacon.adapters.persistence.countries import SqliteCountryRepo
@@ -31,10 +31,10 @@ from beacon.notify import send_digest
 from beacon.logging_setup import configure_cli_logging
 
 
-def _bearer_tokens(settings: Settings) -> dict[str, SecretStr]:
+def _credentials(settings: Settings) -> dict[str, HostCredential]:
     """Per-host credentials for the HTTP door. Only the hosts we actually have a token for,
     so a missing credential means a source is not wired rather than a 401 every poll."""
-    return {NAV_HOST: settings.nav_api_token} if settings.nav_api_token else {}
+    return {NAV_HOST: Bearer(settings.nav_api_token)} if settings.nav_api_token else {}
 
 
 async def run_ingest(
@@ -70,7 +70,7 @@ async def run_ingest(
         )
 
         async with httpx.AsyncClient(timeout=15.0) as client:
-            fetcher = PoliteClient(client, bearer_tokens=_bearer_tokens(settings))
+            fetcher = PoliteClient(client, credentials=_credentials(settings))
 
             # ATS boards: one seed company each. Shadow rows (ats_type='none', left by a
             # prior company-less poll) are excluded — no adapter polls them.
@@ -155,7 +155,7 @@ async def run_probe(settings: Settings) -> int:
             result = await probe_quarantined(
                 company_repo,
                 jobs,
-                make_source_factory(PoliteClient(client, bearer_tokens=_bearer_tokens(settings))),
+                make_source_factory(PoliteClient(client, credentials=_credentials(settings))),
                 classifier,
                 now=now,
             )

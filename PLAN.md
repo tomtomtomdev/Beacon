@@ -1500,7 +1500,7 @@ Acceptance:
 - [ ] Arbeitnow, Bundesagentur (and Reed, if keyed) each poll live on a temp DB with zero errors,
       with fetched/upserted counts recorded — *Arbeitnow done 2026-10-07 (23a): fetched=318
       upserted=318 errors=0, one page (visa subset has no `links.next`); Bundesagentur/Reed open*
-- [ ] NAV behaves identically on the new credential door (its tests unedited)
+- [ ] NAV behaves identically on the new credential door (its tests unedited) — 23b: behaviour identical and every assertion untouched (test_nav.py unedited), but the three slice-14e auth tests in test_polite.py had their constructor kwarg changed `bearer_tokens={h: SecretStr(..)}` → `credentials={h: Bearer(SecretStr(..))}` since the parameter was removed; left unticked for review
 - [ ] DE renders as a `nice_to_have` market with a globe pin and dated figures
 - [ ] The AU row names the Core Skills list with a fresh `verified_at`; `resolve_tier` is unchanged
 - [ ] `make verify` green on both stacks at every commit

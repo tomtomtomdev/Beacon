@@ -7,9 +7,9 @@ backoff over transient failures. Clock and sleep are injected so tests never rea
 Share ONE instance across all adapters so the per-host budget is global — every Greenhouse
 board sits behind the same host and must collectively obey 1 rps.
 
-Credentials (slice 14e) are configured HERE, per host, not handed to adapters: an adapter
-that never holds a token cannot leak one into a log, a repr or another host's request. They
-are SecretStr for the same reason telegram_bot_token is.
+Credentials (slice 14e, generalised in 23b) are configured HERE, per host, not handed to
+adapters: an adapter that never holds a token cannot leak one into a log, a repr or another
+host's request. Each is a HostCredential (Bearer | Basic | ApiKeyHeader) holding SecretStr.
 """
 
 import asyncio
@@ -22,8 +22,8 @@ from typing import Any, cast
 from urllib.parse import urlsplit
 
 import httpx
-from pydantic import SecretStr
 
+from beacon.adapters.http.credentials import HostCredential
 from beacon.application.errors import SourceUnavailable
 from beacon.domain.health import FailureKind
 
@@ -51,12 +51,12 @@ class PoliteClient:
         timeout: float = 15.0,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         monotonic: Callable[[], float] = time.monotonic,
-        bearer_tokens: Mapping[str, SecretStr] | None = None,
+        credentials: Mapping[str, HostCredential] | None = None,
     ) -> None:
         self._client = client
-        # host -> bearer token. Absent host => no Authorization header, so a credential can
-        # only ever reach the one host it was configured for.
-        self._bearer_tokens = dict(bearer_tokens or {})
+        # host -> credential. Absent host => no auth header, so a credential can only ever
+        # reach the one host it was configured for.
+        self._credentials = dict(credentials or {})
         self._min_interval = min_interval
         self._max_retries = max_retries
         self._timeout = timeout
@@ -184,9 +184,10 @@ class PoliteClient:
         headers = self._conditional_headers(key) if conditional else {}
         if modified_since is not None:
             headers["If-Modified-Since"] = format_datetime(modified_since, usegmt=True)
-        token = self._bearer_tokens.get(host)
-        if token is not None:
-            headers["Authorization"] = f"Bearer {token.get_secret_value()}"
+        credential = self._credentials.get(host)
+        if credential is not None:
+            name, value = credential.header()
+            headers[name] = value
         return headers
 
     def _conditional_headers(self, key: str) -> dict[str, str]:
@@ -194,8 +195,8 @@ class PoliteClient:
         return dict(cached[0]) if cached else {}
 
     def __repr__(self) -> str:
-        # Never render the tokens themselves — only which hosts are configured.
-        return f"PoliteClient(authenticated_hosts={sorted(self._bearer_tokens)})"
+        # Never render the credentials themselves — only which hosts are configured.
+        return f"PoliteClient(authenticated_hosts={sorted(self._credentials)})"
 
     def _store(self, key: str, response: httpx.Response, data: Any) -> None:
         validators: dict[str, str] = {}
