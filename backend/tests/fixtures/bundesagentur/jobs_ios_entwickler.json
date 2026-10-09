@@ -1,0 +1,261 @@
+{
+  "ergebnisliste": [
+    {
+      "stellenangebotsart": "ARBEIT",
+      "stellenangebotsTitel": "iOS-Entwickler (m/w/d)",
+      "quereinstiegGeeignet": true,
+      "arbeitszeitSchichtNachtWochenende": false,
+      "arbeitszeitTeilzeitAbend": false,
+      "arbeitszeitTeilzeitNachmittag": false,
+      "arbeitszeitTeilzeitVormittag": false,
+      "arbeitszeitTeilzeitFlexibel": false,
+      "arbeitszeitVollzeit": true,
+      "eintrittszeitraum": {
+        "von": "2026-09-02"
+      },
+      "verguetungsangabe": "KEINE_ANGABEN",
+      "vertragsdauer": "UNBEFRISTET",
+      "stellenlokationen": [
+        {
+          "adresse": {
+            "strasse": "Clemensänger-Ring",
+            "hausnummer": "24",
+            "plz": "85356",
+            "ort": "Freising, Oberbayern",
+            "region": "BAYERN",
+            "land": "DEUTSCHLAND"
+          },
+          "breite": 48.3780496,
+          "laenge": 11.7526704
+        }
+      ],
+      "homeofficemoeglich": true,
+      "homeofficetyp": "ANGABE_IN_PROZENT",
+      "homeofficeprozent": 60,
+      "veroeffentlichungszeitraum": {
+        "von": "2026-09-02"
+      },
+      "datumErsteVeroeffentlichung": "2026-07-28",
+      "aenderungsdatum": "2026-09-02T09:29:11.576",
+      "hauptberuf": "Softwareentwickler/in",
+      "alternativBeruf1": "Fachinformatiker/in - Anwendungsentwicklung",
+      "alternativBeruf2": "Informatiker/in",
+      "firma": "petaFuel GmbH",
+      "arbeitgeberKundennummerHash": "kK5F5JnM-P56JqX_3Wp0flSsai0Ku6aY8-RHC1uePbE=",
+      "referenznummer": "10001-1003456610-S",
+      "alleBerufe": [
+        "Softwareentwickler/in",
+        "Fachinformatiker/in - Anwendungsentwicklung",
+        "Informatiker/in"
+      ]
+    },
+    {
+      "stellenangebotsart": "ARBEIT",
+      "stellenangebotsTitel": "Junior iOS Entwickler (m/w/d)",
+      "quereinstiegGeeignet": false,
+      "arbeitszeitSchichtNachtWochenende": false,
+      "arbeitszeitTeilzeitAbend": false,
+      "arbeitszeitTeilzeitNachmittag": false,
+      "arbeitszeitTeilzeitVormittag": false,
+      "arbeitszeitTeilzeitFlexibel": false,
+      "arbeitszeitVollzeit": false,
+      "eintrittszeitraum": {
+        "von": "2026-10-01"
+      },
+      "verguetungsangabe": "KEINE_ANGABEN",
+      "vertragsdauer": "KEINE_ANGABE",
+      "istGeringfuegigeBeschaeftigung": false,
+      "stellenlokationen": [
+        {
+          "adresse": {
+            "plz": "86150",
+            "ort": "Augsburg, Bayern",
+            "region": "BAYERN",
+            "land": "DEUTSCHLAND"
+          },
+          "breite": 48.3648495,
+          "laenge": 10.8925892
+        }
+      ],
+      "homeofficemoeglich": false,
+      "chiffrenummer": "123163",
+      "veroeffentlichungszeitraum": {
+        "von": "2026-09-03"
+      },
+      "datumErsteVeroeffentlichung": "2026-09-03",
+      "aenderungsdatum": "2026-10-01T07:08:25.454",
+      "externeURL": "https://www.get-in-it.de/jobsuche/p123163?utm_source=arbeitsagentur&utm_medium=organic&utm_campaign=launch-basic",
+      "hauptberuf": "Anwendungsprogrammierer/in",
+      "firma": "Stampay",
+      "referenznummer": "13644-123163-S",
+      "alleBerufe": [
+        "Anwendungsprogrammierer/in"
+      ]
+    },
+    {
+      "stellenangebotsart": "ARBEIT",
+      "stellenangebotsTitel": "iOS Entwickler:in (Homeoffice möglich)",
+      "arbeitszeitTeilzeitAbend": true,
+      "arbeitszeitTeilzeitNachmittag": true,
+      "arbeitszeitTeilzeitVormittag": true,
+      "arbeitszeitVollzeit": true,
+      "eintrittszeitraum": {
+        "von": "2026-10-05"
+      },
+      "verguetungsangabe": "KEINE_ANGABEN",
+      "vertragsdauer": "UNBEFRISTET",
+      "stellenlokationen": [
+        {
+          "adresse": {
+            "ort": "Frankfurt am Main",
+            "region": "HESSEN",
+            "land": "DEUTSCHLAND"
+          },
+          "breite": 50.1290867,
+          "laenge": 8.6470147
+        },
+        {
+          "adresse": {
+            "ort": "Stuttgart",
+            "region": "BADEN_WUERTTEMBERG",
+            "land": "DEUTSCHLAND"
+          },
+          "breite": 48.7747722,
+          "laenge": 9.1745798
+        },
+        {
+          "adresse": {
+            "ort": "Erfurt",
+            "region": "THUERINGEN",
+            "land": "DEUTSCHLAND"
+          },
+          "breite": 50.9820612,
+          "laenge": 11.019243
+        },
+        {
+          "adresse": {
+            "ort": "Köln",
+            "region": "NORDRHEIN_WESTFALEN",
+            "land": "DEUTSCHLAND"
+          },
+          "breite": 50.9455299,
+          "laenge": 6.970144
+        },
+        {
+          "adresse": {
+            "ort": "Hannover",
+            "region": "NIEDERSACHSEN",
+            "land": "DEUTSCHLAND"
+          },
+          "breite": 52.3822076,
+          "laenge": 9.7519279
+        },
+        {
+          "adresse": {
+            "ort": "Berlin",
+            "region": "BERLIN",
+            "land": "DEUTSCHLAND"
+          },
+          "breite": 52.4926832,
+          "laenge": 13.4025753
+        },
+        {
+          "adresse": {
+            "ort": "München",
+            "region": "BAYERN",
+            "land": "DEUTSCHLAND"
+          },
+          "breite": 48.1520872,
+          "laenge": 11.5502466
+        },
+        {
+          "adresse": {
+            "strasse": "Ernst-Haeckel-Platz",
+            "hausnummer": "5/6",
+            "plz": "07745",
+            "ort": "Jena",
+            "region": "THUERINGEN",
+            "land": "DEUTSCHLAND"
+          },
+          "breite": 50.9264106,
+          "laenge": 11.5810852
+        },
+        {
+          "adresse": {
+            "ort": "Dresden",
+            "region": "SACHSEN",
+            "land": "DEUTSCHLAND"
+          },
+          "breite": 51.0665003,
+          "laenge": 13.7726772
+        },
+        {
+          "adresse": {
+            "ort": "Hamburg",
+            "region": "HAMBURG",
+            "land": "DEUTSCHLAND"
+          },
+          "breite": 53.5460482,
+          "laenge": 10.0393138
+        }
+      ],
+      "homeofficemoeglich": true,
+      "homeofficetyp": "NACH_VEREINBARUNG",
+      "veroeffentlichungszeitraum": {
+        "von": "2026-10-05"
+      },
+      "datumErsteVeroeffentlichung": "2025-09-23",
+      "aenderungsdatum": "2026-10-05T11:34:35.335",
+      "hauptberuf": "Softwareentwickler/in",
+      "firma": "zollsoft GmbH    ",
+      "arbeitgeberKundennummerHash": "tpU2b8_iEK2tTuHBLXmgBxKc9J19yGytntSB3y6O1Yo=",
+      "referenznummer": "10001-1001883604-S",
+      "alleBerufe": [
+        "Softwareentwickler/in"
+      ]
+    },
+    {
+      "stellenangebotsart": "ARBEIT",
+      "stellenangebotsTitel": "Softwareentwickler/in",
+      "quereinstiegGeeignet": false,
+      "arbeitszeitSchichtNachtWochenende": false,
+      "arbeitszeitTeilzeitAbend": false,
+      "arbeitszeitTeilzeitNachmittag": false,
+      "arbeitszeitTeilzeitVormittag": false,
+      "arbeitszeitTeilzeitFlexibel": false,
+      "arbeitszeitVollzeit": true,
+      "eintrittszeitraum": {
+        "von": "2026-10-07"
+      },
+      "verguetungsangabe": "KEINE_ANGABEN",
+      "vertragsdauer": "UNBEFRISTET",
+      "istGeringfuegigeBeschaeftigung": false,
+      "stellenlokationen": [
+        {
+          "adresse": {
+            "plz": "1030",
+            "ort": "Wien,Landstraße",
+            "region": "WIEN",
+            "land": "OESTERREICH"
+          }
+        }
+      ],
+      "homeofficemoeglich": false,
+      "veroeffentlichungszeitraum": {
+        "von": "2026-10-06"
+      },
+      "datumErsteVeroeffentlichung": "2026-10-06",
+      "aenderungsdatum": "2026-10-06T17:04:10.428",
+      "externeURL": "https://jobs.ams.at/public/emps/jobs/89371095-3881-3e9b-959a-4663c138b5ec",
+      "hauptberuf": "Softwareentwickler/in",
+      "firma": "BUNDESRECHENZENTRUM GmbH",
+      "referenznummer": "11949-17378531-S",
+      "alleBerufe": [
+        "Softwareentwickler/in"
+      ]
+    }
+  ],
+  "maxErgebnisse": 21,
+  "page": 1,
+  "size": 25
+}

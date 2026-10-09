@@ -8,6 +8,7 @@ from collections.abc import Callable
 
 from beacon.adapters.sources.arbeitnow import ArbeitnowAdapter
 from beacon.adapters.sources.ashby import AshbyAdapter
+from beacon.adapters.sources.bundesagentur import BundesagenturAdapter
 from beacon.adapters.sources.greenhouse import GreenhouseAdapter, GreenhouseEUAdapter
 from beacon.adapters.sources.himalayas import HimalayasAdapter
 from beacon.adapters.sources.hn import HNAdapter
@@ -69,6 +70,7 @@ def make_companyless_sources(
         HimalayasAdapter(fetcher),
         MyCareersFutureAdapter(fetcher),
         ArbeitnowAdapter(fetcher),
+        BundesagenturAdapter(fetcher),
     ]
     if nav_authenticated:
         sources.append(NAVAdapter(fetcher))

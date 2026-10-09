@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 import httpx
 
 from beacon.adapters.classify.factory import make_classifier
-from beacon.adapters.http.credentials import Bearer, HostCredential
+from beacon.adapters.http.credentials import ApiKeyHeader, Bearer, HostCredential
 from beacon.adapters.http.polite import PoliteClient
 from beacon.adapters.persistence.companies import SqliteCompanyRepo
 from beacon.adapters.persistence.countries import SqliteCountryRepo
@@ -20,6 +20,7 @@ from beacon.adapters.persistence.jobs import SqliteJobRepo
 from beacon.adapters.persistence.llm_budget import SqliteLLMBudget
 from beacon.adapters.seeds import parse_seed_csv
 from beacon.adapters.sources.factory import make_companyless_sources, make_source_factory
+from beacon.adapters.sources.bundesagentur import BUNDESAGENTUR_HOST, BUNDESAGENTUR_API_KEY
 from beacon.adapters.sources.nav import NAV_HOST
 from beacon.application.countries import seed_countries
 from beacon.application.dedup import dedupe_jobs
@@ -31,10 +32,16 @@ from beacon.notify import send_digest
 from beacon.logging_setup import configure_cli_logging
 
 
-def _credentials(settings: Settings) -> dict[str, HostCredential]:
+def host_credentials(settings: Settings) -> dict[str, HostCredential]:
     """Per-host credentials for the HTTP door. Only the hosts we actually have a token for,
-    so a missing credential means a source is not wired rather than a 401 every poll."""
-    return {NAV_HOST: Bearer(settings.nav_api_token)} if settings.nav_api_token else {}
+    so a missing credential means a source is not wired rather than a 401 every poll.
+    Bundesagentur's key is a published public constant, so it is always present."""
+    credentials: dict[str, HostCredential] = {
+        BUNDESAGENTUR_HOST: ApiKeyHeader("X-API-Key", BUNDESAGENTUR_API_KEY),
+    }
+    if settings.nav_api_token:
+        credentials[NAV_HOST] = Bearer(settings.nav_api_token)
+    return credentials
 
 
 async def run_ingest(
@@ -70,7 +77,7 @@ async def run_ingest(
         )
 
         async with httpx.AsyncClient(timeout=15.0) as client:
-            fetcher = PoliteClient(client, credentials=_credentials(settings))
+            fetcher = PoliteClient(client, credentials=host_credentials(settings))
 
             # ATS boards: one seed company each. Shadow rows (ats_type='none', left by a
             # prior company-less poll) are excluded — no adapter polls them.
@@ -155,7 +162,7 @@ async def run_probe(settings: Settings) -> int:
             result = await probe_quarantined(
                 company_repo,
                 jobs,
-                make_source_factory(PoliteClient(client, credentials=_credentials(settings))),
+                make_source_factory(PoliteClient(client, credentials=host_credentials(settings))),
                 classifier,
                 now=now,
             )
@@ -172,7 +179,7 @@ def main(argv: list[str] | None = None) -> int:
         metavar="ID",
         help=(
             "only this company-less source (hn/jobtech/remoteok/weworkremotely/himalayas/"
-            "mycareersfuture/arbeitnow/nav)"
+            "mycareersfuture/arbeitnow/bundesagentur/nav)"
         ),
     )
     args = parser.parse_args(argv)

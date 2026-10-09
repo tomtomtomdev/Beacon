@@ -71,6 +71,7 @@ def test_companyless_sources_are_the_board_sources() -> None:
         "himalayas",
         "mycareersfuture",
         "arbeitnow",
+        "bundesagentur",
     }
     assert all(callable(s.fetch) and callable(s.normalize) for s in sources)
 

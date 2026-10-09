@@ -1,0 +1,47 @@
+{
+  "stellenangebotsart": "ARBEIT",
+  "stellenangebotsTitel": "Junior iOS Entwickler (m/w/d)",
+  "quereinstiegGeeignet": false,
+  "stellenangebotsBeschreibung": "## Deine Aufgaben\n\n- Konzeption und Weiterentwicklung der iOS App für Endkunden und Partner\n- Enge Zusammenarbeit mit UX-/Produktmanagemen\n\n## Dein Profil\n\n- Erste Erfahrungen im Programmieren von iOS Apps in Swift und dem Storyboard-Builder\n- Idealerweise kennst du dich bereits mit CocoaPods, Alamofire, etc. aus\n- Erfahrungen mit Git und Kenntnisse der JsonAPI Spezifikation bringen dir extra Punkte\n- Gute Teamfähigkeit, hohe Einsatzbereitschaft, selbstständiges Arbeiten und eine schnelle Auffassungsgabe\n- Spaß an der Arbeit und Begeisterung für innovative Ideen in der App-Entwicklung\n- Gute Deutschkenntnisse / ggf. auch Englisch\n\n## Was wir Dir bieten\n\n- Sicherheit eines etablierten Unternehmens mit Start-Up Flair\n- Du agierst in einem kleinen, agilen Team und hast vielfältige Aufgaben\n- Aktive Produktgestaltung durch die Einbringung eigener Ideen\n- Durch unsere Duz-Kultur herrscht ein kollegiales und freundschaftliches Umfeld\n- Wasser-, Kaffee & Tee-Flatrate, sowie Müsli sind bei uns selbstverständlich!\n- Erfolge feiern wir gerne gemeinsam im Team\n- Kickern zwischendurch mit Kollegen gehört auch zum Standard",
+  "arbeitszeitSchichtNachtWochenende": false,
+  "arbeitszeitTeilzeitAbend": false,
+  "arbeitszeitTeilzeitNachmittag": false,
+  "arbeitszeitTeilzeitVormittag": false,
+  "arbeitszeitTeilzeitFlexibel": false,
+  "arbeitszeitVollzeit": false,
+  "eintrittszeitraum": {
+    "von": "2026-10-01"
+  },
+  "verguetungsangabe": "KEINE_ANGABEN",
+  "vertragsdauer": "KEINE_ANGABE",
+  "istGeringfuegigeBeschaeftigung": false,
+  "istBehinderungGefordert": false,
+  "stellenlokationen": [
+    {
+      "adresse": {
+        "plz": "86150",
+        "ort": "Augsburg, Bayern",
+        "region": "BAYERN",
+        "land": "DEUTSCHLAND"
+      },
+      "breite": 48.3648495,
+      "laenge": 10.8925892
+    }
+  ],
+  "homeofficemoeglich": false,
+  "chiffrenummer": "123163",
+  "istPrivateArbeitsvermittlung": false,
+  "istArbeitnehmerUeberlassung": false,
+  "veroeffentlichungszeitraum": {
+    "von": "2026-09-03"
+  },
+  "datumErsteVeroeffentlichung": "2026-09-03",
+  "aenderungsdatum": "2026-10-01T07:08:25.454",
+  "externeURL": "https://www.get-in-it.de/jobsuche/p123163?utm_source=arbeitsagentur&utm_medium=organic&utm_campaign=launch-basic",
+  "istBetreut": false,
+  "hauptberuf": "Anwendungsprogrammierer/in",
+  "firma": "Stampay",
+  "allianzpartnerUrl": "www.get-in-IT.de",
+  "allianzpartnerName": "get in GmbH",
+  "referenznummer": "13644-123163-S"
+}
