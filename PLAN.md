@@ -1482,6 +1482,9 @@ hold a credential (the 14e decision, extended).
 
 ### 23f — Reed as a company-less source (gated on the owner's key)
 
+**Skipped 2026-10-09 by owner decision** — no key registered. Recorded open in SPEC §5.4; the
+`Basic` credential from 23b stays ready for it.
+
 - `BEACON_REED_API_KEY` → `Settings.reed_api_key: SecretStr | None`. With no key the source is
   not wired at all (the NAV/Telegram/LLM rule).
 - Fixture recorded live with the key. **If no key exists by the time 23a–23e are done, 23f
@@ -1489,7 +1492,7 @@ hold a credential (the 14e decision, extended).
 - Search per `ROLE_QUERIES`, then the `jobs/{id}` detail for the full description. Dedup by
   `jobId`. `country = "GB"`. `date` is `dd/mm/yyyy`, so date-only becomes midnight UTC.
 
-### 23g — Docs
+### 23g — Docs ✅ 2026-10-09
 
 SPEC §5.4/§5.5: Arbeitnow, Reed and Bundesagentur become **reversals on the record**, with
 today's probes. Remotive (redundant), Adzuna (quota) and France Travail (FR not in §4) are
@@ -1497,13 +1500,13 @@ re-confirmed as rejected with today's reasons. SPEC §4 gains the DE row. SOURCE
 three adapters. PROGRESS: status plus a Decisions entry for the three owner decisions above.
 
 Acceptance:
-- [ ] Arbeitnow, Bundesagentur (and Reed, if keyed) each poll live on a temp DB with zero errors,
+- [x] Arbeitnow, Bundesagentur (and Reed, if keyed) each poll live on a temp DB with zero errors,
       with fetched/upserted counts recorded — *Arbeitnow done 2026-10-07 (23a): fetched=318
-      upserted=318 errors=0, one page (visa subset has no `links.next`); Bundesagentur done 2026-10-09 (23d): fetched=231 upserted=231 errors=0, 230 DE + 1 uncountried, page cap hit on Java Backend (100/323) and ML Engineer (100/124); Reed open*
+      upserted=318 errors=0, one page (visa subset has no `links.next`); Bundesagentur done 2026-10-09 (23d): fetched=231 upserted=231 errors=0, 230 DE + 1 uncountried, page cap hit on Java Backend (100/323) and ML Engineer (100/124); Reed not keyed, skipped (23f)*
 - [ ] NAV behaves identically on the new credential door (its tests unedited) — 23b: behaviour identical and every assertion untouched (test_nav.py unedited), but the three slice-14e auth tests in test_polite.py had their constructor kwarg changed `bearer_tokens={h: SecretStr(..)}` → `credentials={h: Bearer(SecretStr(..))}` since the parameter was removed; left unticked for review
 - [x] DE renders as a `nice_to_have` market with a globe pin and dated figures
 - [x] The AU row names the Core Skills list with a fresh `verified_at`; `resolve_tier` is unchanged
-- [ ] `make verify` green on both stacks at every commit
+- [x] `make verify` green on both stacks at every commit — *every code commit 23a–23e; the docs-only commits change no code*
 
 ---
 

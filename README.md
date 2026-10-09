@@ -15,7 +15,7 @@ It exists to answer one question that no job board answers directly: *which seni
 Shipped in vertical slices. Current: **slices 0–22 done, slice 23 in progress.** Running against
 a live corpus — **16,810 postings, of which 9,130 are open and canonical** (measured 2026-09-18).
 Since then the seed list has grown to **81 companies** (LinkedIn leads, 2026-09-30) and there are
-**18 source adapters**: 10 per-company ATS boards plus 8 company-less feeds.
+**19 source adapters**: 10 per-company ATS boards plus 9 company-less feeds.
 
 | # | Slice | Status |
 |---|---|---|
@@ -30,7 +30,7 @@ Since then the seed list has grown to **81 companies** (LinkedIn leads, 2026-09-
 | 20 | Other markets — the 47 countries with jobs and no way to ask for them; closed postings finally greyed | ✅ |
 | 21 | The panel stops being a gate: all jobs by default, `?focus=` becomes a filter | ✅ |
 | 22 | Closed postings leave the default listing, behind a "Show closed" toggle | ✅ |
-| 23 | Arbeitnow (visa-sponsorship subset), one credential door (bearer/basic/API-key), DE as a `nice_to_have` market; Bundesagentur, AU reference text, Reed (key-gated) next | 🟨 23a–23c done |
+| 23 | Arbeitnow (visa-sponsorship subset), one credential door (bearer/basic/API-key), DE as a `nice_to_have` market, Bundesagentur Jobsuche, AU Core Skills list as reference text. Reed skipped (no key) | ✅ |
 
 `PROGRESS.md` is the live source of truth for what's built; `PLAN.md` is the slice order.
 
@@ -189,7 +189,7 @@ backend/
   beacon/
     domain/           pure models + logic (job, sponsorship, location, visa, vocabulary, matching, dedup)
     application/      use cases + port protocols (ingest, queries, scoring, health, coverage)
-    adapters/         sources/ (18 boards + factory), persistence/, registries/, classify/, notify/, http/ (polite client + credentials)
+    adapters/         sources/ (19 boards + factory), persistence/, registries/, classify/, notify/, http/ (polite client + credentials)
     api/              app factory, eight routers, deps
     maintenance.py    launchd one-shot entry points (refresh-registries, backup, probe)
   migrations/         001–010, numbered and forward-only
