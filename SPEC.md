@@ -130,12 +130,13 @@ Company slugs live in a `companies` seed table loaded from `seeds/companies.csv`
 | MANUAL — curated sponsor boards | Hand-entered flag; evidence note + date required | Ad hoc |
 | **IE DETE employment permits** *(slice 14)* | Monthly XLSX — `employment-permits-issued-to-companies-{year}.xlsx` (332 KB), company-name column | Monthly |
 | **CA TFWP positive LMIA employers** *(slice 14)* | Quarterly CSV/XLSX on open.canada.ca — employer, program stream, NOC 2021, business location | Quarterly |
+| **US PERM labor certifications** *(slice 24)* | Quarterly XLSX (DOL OFLC) → CSV of `EMP_BUSINESS_NAME`, `CASE_STATUS`, `EMP_TRADE_NAME`. Certified + Certified - Expired count. The first step of an employment-based green card, so it is a stronger signal than an LCA and gets its own bit | Quarterly |
 
 ~~SE Migrationsverket certified employers~~ — **does not exist**: the certification scheme was discontinued Dec 2023 (Sweden has no employer licensing for sponsorship; see §4).
 
 The `MANUAL` flag encodes human-verified sponsorship signals that have no machine-readable register: a company listed on relocate.me / swedishtechjobs / jobbatical (posting there is a self-declaration of sponsorship), a confirmed sponsorship from an application, or direct knowledge. It is **never scraped** — curated boards' lists are their product and off-limits to automation per Non-Goals; the workflow is: browse occasionally, flag companies by hand (one CLI/UI action storing `evidence` + `flagged_at`). MANUAL participates in `registry_inferred` exactly like the machine registries.
 
-Registry match is fuzzy company-name matching (normalized legal suffixes, token overlap) → sets `companies.registry_flags` (bitmask per registry) with a `match_confidence`. MANUAL flags are set directly (confidence 1.0, no fuzzy matching). **Bitmask members: `UK | NL | US | MANUAL`**, extended to `| IE | CA` by slice 14 (no SE — no Swedish register exists; the bit is not reserved). `registry_flags` is a plain integer column, so new members are additive — a new `Registry` enum value and its ingester, no migration.
+Registry match is fuzzy company-name matching (normalized legal suffixes, token overlap) → sets `companies.registry_flags` (bitmask per registry) with a `match_confidence`. MANUAL flags are set directly (confidence 1.0, no fuzzy matching). **Bitmask members: `UK | NL | US | MANUAL`**, extended to `| IE | CA` by slice 14 and `| PERM` (bit 64) by slice 24 (no SE — no Swedish register exists; the bit is not reserved). `registry_flags` is a plain integer column, so new members are additive — a new `Registry` enum value and its ingester, no migration.
 
 ### 5.4 Evaluated, not yet built (slice 14 candidates)
 
@@ -160,6 +161,15 @@ Source survey run **2026-08-26**, prompted by the resume-match spot check: the s
 > **Arbeitnow's `visa_sponsorship` is a query filter, not a response field.** The 2026-08-23 note called the `visa_sponsorship=true` filter "genuinely interesting"; the 2026-08-26 pull of `/api/job-board-api` returns exactly `company_name, created_at, description, job_types, location, remote, slug, tags, title, url` — **no per-posting visa flag**. Both are true and they are not the same thing: an adapter cannot read a tier off a row, it can only fetch a pre-filtered subset. Do not design a sponsorship shortcut around a field that isn't in the payload.
 
 **Auth is no longer a blocker.** The door gained per-host bearer tokens in slice 14e and NAV Norway shipped on it (the public experimentation token is published at `/api/publicToken`; the older `arbeidsplassen.nav.no/public-feed/...` path is **dead — 404**). Slice 23b generalised it to one credential door — `Bearer | Basic | ApiKeyHeader`, keyed by host — which Bundesagentur now uses and Reed would.
+
+**Probed 2026-10-09, gated on keys (slice 24d, recorded open):**
+
+| Source | Probe | Status |
+|---|---|---|
+| Careerjet | v4 `search.api.careerjet.net/v4/query` → **401**. v3 → **403**: *"provide your API key via HTTP Basic Auth as username value … password needs to be empty"* | The `Basic` credential (23b) already fits. Unbuilt until the owner registers a key. Then it must clear quota, full text vs snippet, role steering, and the affiliate terms on link display |
+| Jooble | `POST jooble.org/api/` → **403** without a key (also asks for a `Referer`) | Same four checks, plus one more: the key goes **in the URL path**, which no `HostCredential` kind can express. Either the door gains a path-key kind, or Jooble is rejected. The adapter never holds the key |
+
+**Not taken up (2026-10-09):** **USAJOBS** — US federal jobs generally require citizenship, so there is no sponsorship to find. **USCIS H-1B Employer Data Hub** — it overlaps the DOL LCA filings already ingested as `US`. PERM was the gap in the US data.
 
 **Adzuna stays rejected** (re-confirmed by owner decision 2026-10-07). Its country reach is genuinely the best on offer (`ca us gb es it fr sg au nz` — seven of nine targets, no `jp`, no Nordics), and the 2026-08-26 probe confirms the endpoint is live (`400` without a key). But the 2026-08-23 rejection was **quota**, not auth, and the arithmetic is unchanged: the free tier is **1,000 calls/month** against a 4h poll cycle — 6 polls/day × 30 days = **180 calls/month per country per page**, so nine countries at three pages each is ~4,860, roughly 5× over. An auth-capable `Fetcher` does not fix this. Adzuna becomes viable only on a *separate, slower* cadence (e.g. one country-scoped daily sweep) — which is a scheduler change, not an adapter, and is not proposed here.
 

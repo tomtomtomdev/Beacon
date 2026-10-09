@@ -1586,6 +1586,8 @@ Jooble/Careerjet probes (gated on the owner's keys) → 24e docs.** Each sub-sli
 
 ### 24d — Jooble and Careerjet: probe with keys, then decide (gated on the owner)
 
+**Recorded open 2026-10-09**: no keys registered. The keyless probes are in SPEC §5.4.
+
 **Nothing is built here without a key and a recorded fixture.** If the owner registers neither
 key, 24d is recorded open, as 23f was. With a key, each one answers:
 1. **Quota.** Adzuna died on this (1,000/month vs ~4,860). One daily poll × role queries × pages
@@ -1602,7 +1604,7 @@ key, 24d is recorded open, as 23f was. With a key, each one answers:
 Each source ends as an adapter (fixture tests + `make_companyless_sources` + live temp-DB poll)
 or as a SPEC §5.5 row with the probe that decided it.
 
-### 24e — Docs
+### 24e — Docs ✅ 2026-10-09
 
 SPEC §5.3 gains the PERM register and the `PERM` bitmask member. §5.4/§5.5 get the Jooble and
 Careerjet verdicts, plus one line each recording why USAJOBS and the USCIS Employer Data Hub were
@@ -1617,8 +1619,8 @@ Acceptance:
       (126 open jobs)**, Linear → "Linear Solutions Inc" (25), Fig → "FIG LLC", GMP Recruitment
       → "Group-S LLC" — all the structural-token drop at 0.9, a matcher defect shared with LCA,
       recorded in PROGRESS, not fixed here*
-- [ ] Jooble and Careerjet each end as a shipped adapter or a §5.5 row (or recorded open, if no key)
-- [ ] `make verify` green on both stacks at every commit
+- [x] Jooble and Careerjet each end as a shipped adapter or a §5.5 row (or recorded open, if no key) — *recorded open in SPEC §5.4, no keys*
+- [x] `make verify` green on both stacks at every commit
 
 ---
 

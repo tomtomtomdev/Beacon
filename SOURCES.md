@@ -14,7 +14,7 @@
 
 Where this file and SPEC.md disagree, **SPEC.md wins** and this file is the bug.
 
-Compiled 2026-08-26 from `backend/beacon/adapters/`, `seeds/companies.csv`, and `backend/beacon/scheduler/schedule.py`; last updated 2026-10-09. Covers sources shipped through **slice 23d**.
+Compiled 2026-08-26 from `backend/beacon/adapters/`, `seeds/companies.csv`, and `backend/beacon/scheduler/schedule.py`; last updated 2026-10-09. Covers sources shipped through **slice 24c**.
 
 ---
 
@@ -26,10 +26,10 @@ Beacon consumes **four classes of external data**:
 |---|---|---|---|---|
 | ATS adapters (per-company job boards) | 10 | Inbound, read | `JobSource` | daily, in the **16:00** digest fire (§7) |
 | Board adapters (company-less job feeds) | 9 | Inbound, read | `JobSource` | daily, in the **16:00** digest fire (§7) |
-| Registry ingesters (company-level sponsor signals) | 5 + 1 manual | Inbound, read (local snapshot files) | `RegistryIngester` | **monthly** (1st, 03:00 local) |
+| Registry ingesters (company-level sponsor signals) | 6 + 1 manual | Inbound, read (local snapshot files) | `RegistryIngester` | **monthly** (1st, 03:00 local) |
 | Outbound services | 2 | Outbound | `Classifier` / `Notifier` | on demand |
 
-**Total: 19 live job sources (NAV only when its token is set), 6 registry signals, 2 outbound APIs.**
+**Total: 19 live job sources (NAV only when its token is set), 7 registry signals, 2 outbound APIs.**
 
 All inbound HTTP goes through a single shared `PoliteClient` (`adapters/http/polite.py`). Registry snapshots are *files on disk*, manually refreshed — nothing scrapes a government site.
 
@@ -385,7 +385,7 @@ These are not tied to a seed company; each yields jobs across many employers, so
 
 Not job feeds. These set `companies.registry_flags` (a bitmask) via fuzzy company-name matching with a `match_confidence`.
 
-**Bitmask members: `UK | NL | US | MANUAL | IE | CA`.** Values are **frozen and only appended** — `registry_flags` is a stored integer, so renumbering a bit would silently re-label every company already matched (this is why MANUAL keeps bit 8 and IE/CA took 16/32). There is deliberately **no SE bit** — Sweden's Migrationsverket certified-employer scheme was **discontinued Dec 2023**; no Swedish employer register exists.
+**Bitmask members: `UK | NL | US | MANUAL | IE | CA | PERM`.** Values are **frozen and only appended** — `registry_flags` is a stored integer, so renumbering a bit would silently re-label every company already matched (this is why MANUAL keeps bit 8, IE/CA took 16/32 and PERM took 64). There is deliberately **no SE bit** — Sweden's Migrationsverket certified-employer scheme was **discontinued Dec 2023**; no Swedish employer register exists.
 
 All file-based registries read through one shared contract (`_csvfile.iter_rows`: `newline=""` for the csv module, `utf-8-sig` to drop a BOM). The CA export prints a title banner *above* its header row, so it reads through `iter_rows_below_banner(header_column="Employer")` instead — a file whose header is never found **raises**, rather than yielding rows keyed on junk. Snapshots are **downloaded by hand** and dropped in `data/registries/` — a missing snapshot is *skipped, not fatal*.
 
@@ -396,6 +396,7 @@ All file-based registries read through one shared contract (`_csvfile.iter_rows`
 | US H-1B LCA disclosures (DOL) | `Registry.US` | `data/registries/h1b_lca.csv` (`BEACON_H1B_REGISTRY_PATH`) | Quarterly XLSX → CSV | Quarterly |
 | IE DETE employment permits | `Registry.IE` | `data/registries/ie_permits.csv` (`BEACON_IE_REGISTRY_PATH`) | Monthly XLSX → CSV | Monthly |
 | CA TFWP positive LMIA employers | `Registry.CA` | `data/registries/ca_lmia.csv` (`BEACON_CA_REGISTRY_PATH`) | Quarterly XLSX → CSV | Quarterly |
+| US PERM labor certifications (DOL) | `Registry.PERM` | `data/registries/us_perm.csv` (`BEACON_PERM_REGISTRY_PATH`) | Quarterly XLSX → CSV | Quarterly |
 | MANUAL — curated sponsor boards | `Registry.MANUAL` | n/a (CLI) | Hand-entered | Ad hoc |
 
 ### 5.1 UK sponsor register
@@ -430,7 +431,16 @@ Columns `Province/Territory`, `Program Stream`, `Employer`, `Address`, `Occupati
 - **Publisher caveat, not hidden:** the list *excludes all personal names and business names built on personal names*, so it is incomplete by construction — **absence from it is not evidence of non-sponsorship**.
 - Reference scale: 2026Q1 XLSX = 8,797 rows / **7,884 employers**.
 
-### 5.6 MANUAL
+### 5.6 US PERM labor certifications
+Columns `EMP_BUSINESS_NAME`, `CASE_STATUS`, `EMP_TRADE_NAME` (the 137-column file converted to these three).
+- A certified PERM labor certification is the first step of an **employment-based green card**, so it is different evidence from an H-1B LCA and has its **own bit**. The drawer labels it "US PERM labor certifications (green card)".
+- **`Certified`** and **`Certified - Expired`** count; Denied/Withdrawn contribute nothing. **The live file spells it with spaces.** DOL's record layout says `Certified-Expired`, and code written from the layout would silently drop ~16k filings.
+- Shares `_certified.certified_employers` with the H-1B ingester (padding rows, per-employer counts, trade-name aliases); only the columns, statuses and placeholders differ.
+- **Placeholder trade names are not aliases**: `N/A` alone is the trade name on 11,441 rows, plus `n/a`, `NA`, `None`, `Not Applicable` (compared casefolded).
+- **Getting the file:** dol.gov's bot manager answers scripted requests with 403. The browser download of the FY2026 Q3 file (156MB, at `dol.gov/media/…`, not the older `/sites/dolgov/files/…` path) stalled twice. It was completed with byte-range requests made from inside the page (the server answers 206).
+- Reference scale: FY2026 Q3 XLSX = 925,430 rows, of which **812,880 are padding** / 112,550 filings (87,741 Certified, 16,287 Certified - Expired, 3,879 Denied, 4,643 Withdrawn) / **28,479 certified employers**.
+
+### 5.7 MANUAL
 Encodes human-verified sponsorship signals with no machine-readable register: a company listed on relocate.me / swedishtechjobs / jobbatical (posting there is a self-declaration), a confirmed sponsorship from an application, or direct knowledge.
 
 **Never scraped** — curated boards' lists are their product and off-limits per Non-Goals. Workflow:
@@ -441,7 +451,7 @@ python -m beacon.refresh --flag "Lovable" --evidence "listed on relocate.me"
 
 Sets the flag directly at confidence **1.0**, no fuzzy matching. Participates in `registry_inferred` exactly like the machine registries.
 
-### 5.7 Staleness
+### 5.8 Staleness
 `registries_meta` records each snapshot's ingest time. A snapshot older than **45 days** (`REGISTRY_STALE_AFTER_DAYS`) raises a `RegistryStale` alert in the Telegram digest. Registries **never quarantine** — they just nag.
 
 ---

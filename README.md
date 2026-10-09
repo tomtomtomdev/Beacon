@@ -31,6 +31,7 @@ Since then the seed list has grown to **81 companies** (LinkedIn leads, 2026-09-
 | 21 | The panel stops being a gate: all jobs by default, `?focus=` becomes a filter | ✅ |
 | 22 | Closed postings leave the default listing, behind a "Show closed" toggle | ✅ |
 | 23 | Arbeitnow (visa-sponsorship subset), one credential door (bearer/basic/API-key), DE as a `nice_to_have` market, Bundesagentur Jobsuche, AU Core Skills list as reference text. Reed skipped (no key) | ✅ |
+| 24 | US PERM labor certifications as a sponsor register (green-card evidence, its own bit); Jooble/Careerjet probed, waiting on keys | ✅ (24d open) |
 
 `PROGRESS.md` is the live source of truth for what's built; `PLAN.md` is the slice order.
 
@@ -133,7 +134,7 @@ All env reads live in one place (`beacon/config.py`). Defaults work out of the b
 | `BEACON_DB_PATH` | `./beacon.db` | SQLite database file |
 | `BEACON_SEEDS_PATH` | `./seeds/companies.csv` | Curated company seed list |
 | `BEACON_BACKUPS_PATH` | `./backups` | Where `maintenance backup` writes snapshots |
-| `BEACON_{UK,IND,H1B,IE,CA}_REGISTRY_PATH` | `./data/registries/*.csv` | Sponsor-register snapshots (missing file → skipped) |
+| `BEACON_{UK,IND,H1B,IE,CA,PERM}_REGISTRY_PATH` | `./data/registries/*.csv` | Sponsor-register snapshots (missing file → skipped) |
 | `BEACON_TELEGRAM_BOT_TOKEN`, `BEACON_TELEGRAM_CHAT_ID` | unset | Digest delivery; unset → stdout (also settable in the UI) |
 | `BEACON_NAV_API_TOKEN` | unset | NAV Norway feed; unset → source not wired |
 | `BEACON_ANTHROPIC_API_KEY` | unset | LLM fallback classifier; unset → heuristic only |
