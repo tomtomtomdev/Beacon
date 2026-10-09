@@ -1499,7 +1499,7 @@ three adapters. PROGRESS: status plus a Decisions entry for the three owner deci
 Acceptance:
 - [ ] Arbeitnow, Bundesagentur (and Reed, if keyed) each poll live on a temp DB with zero errors,
       with fetched/upserted counts recorded — *Arbeitnow done 2026-10-07 (23a): fetched=318
-      upserted=318 errors=0, one page (visa subset has no `links.next`); Bundesagentur/Reed open*
+      upserted=318 errors=0, one page (visa subset has no `links.next`); Bundesagentur done 2026-10-09 (23d): fetched=231 upserted=231 errors=0, 230 DE + 1 uncountried, page cap hit on Java Backend (100/323) and ML Engineer (100/124); Reed open*
 - [ ] NAV behaves identically on the new credential door (its tests unedited) — 23b: behaviour identical and every assertion untouched (test_nav.py unedited), but the three slice-14e auth tests in test_polite.py had their constructor kwarg changed `bearer_tokens={h: SecretStr(..)}` → `credentials={h: Bearer(SecretStr(..))}` since the parameter was removed; left unticked for review
 - [x] DE renders as a `nice_to_have` market with a globe pin and dated figures
 - [ ] The AU row names the Core Skills list with a fresh `verified_at`; `resolve_tier` is unchanged
