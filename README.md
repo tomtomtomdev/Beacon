@@ -32,6 +32,7 @@ Since then the seed list has grown to **81 companies** (LinkedIn leads, 2026-09-
 | 22 | Closed postings leave the default listing, behind a "Show closed" toggle | ✅ |
 | 23 | Arbeitnow (visa-sponsorship subset), one credential door (bearer/basic/API-key), DE as a `nice_to_have` market, Bundesagentur Jobsuche, AU Core Skills list as reference text. Reed skipped (no key) | ✅ |
 | 24 | US PERM labor certifications as a sponsor register (green-card evidence, its own bit); Jooble/Careerjet probed, waiting on keys | ✅ (24d open) |
+| 25 | Registry spot-check sees real snapshots and every company; place-only parentheticals stop matching; reviewed rejection table | ✅ |
 
 `PROGRESS.md` is the live source of truth for what's built; `PLAN.md` is the slice order.
 
@@ -198,6 +199,7 @@ backend/
 frontend/
   src/                jobs/, countries/, searches/, settings/, api/ (client + types), tokens.css
 seeds/companies.csv   81 companies (name,ats_type,ats_slug,country_hq,priority)
+seeds/registry_rejections.csv  registry matches reviewed and refused (spot-check → reason → row)
 deploy/               four launchd agents: digest window, registry refresh, backup, quarantine probe
 ```
 

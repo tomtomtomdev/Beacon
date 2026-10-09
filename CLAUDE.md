@@ -79,7 +79,7 @@ New source = new adapter + fixture tests + one seed row. Zero changes to applica
 
 ## Data correctness notes
 
-- Company name normalization is the highest-risk code in the repo. Any change to the normalizer requires running the full registry-match spot-check script (`scripts/spot_check_registry.py`) and eyeballing the diff.
+- Company name normalization is the highest-risk code in the repo. Any change to the normalizer requires running the full registry-match spot-check script (`backend/scripts/spot_check_registry.py`) and eyeballing the diff: take a `--snapshots --from-db --baseline FILE` run before the change and diff after it (fixtures alone hide what the real registers do). A match reviewed and refused goes into `seeds/registry_rejections.csv` with a reason. It is data, not a new rule in the matcher.
 - Country visa data (`countries` table) is reference material with `verified_at` dates — when updating rows, always update `verified_at` and `source_url`. Never present stale rows as current in UI copy; the "verified as of" date must render.
 - `content_hash` = sha256 of normalized description; it gates re-classification and LLM spend. Do not change the normalization without a backfill plan.
 

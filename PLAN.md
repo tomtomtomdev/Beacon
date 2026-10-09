@@ -1688,7 +1688,7 @@ rejection table → 25d docs.** One TDD loop each, `make verify`, one `slice-25x
 - Acceptance: the PERM refresh on the DB copy no longer flags Cohere or Linear, and every other
   match from 24c is unchanged (the spot-check diff proves it).
 
-### 25d — Docs
+### 25d — Docs ✅ 2026-10-09
 
 CLAUDE.md's "run the spot-check" line points at a script that now exists. SPEC §5.3 states that
 matching is token-equality **plus a reviewed rejection table**. PROGRESS: status, tracker,
@@ -1698,7 +1698,7 @@ Acceptance:
 - [x] `scripts/spot_check_registry.py` runs against the present snapshots and diffs a baseline — *25a: on the FY2026 Q3 PERM file, `--from-db --only-stripped` lists 27 matches. Cohere, Linear, Vanguard, ABS and the two `(S)` → Group-S rows are among them*
 - [x] No seed yields a single-letter or geography-only parenthetical variant — *25b: real-data diff −2 (both `(S)` → Group-S) +3 (Akkodis/Keysight/OmniVision Singapore → their US parents, via `singapore` joining GEO_TOKENS); fixture run unchanged*
 - [x] Cohere and Linear lose the PERM bit; every other 24c match is unchanged — *25c: the real-data spot-check diff is exactly 25b's five reviewed lines plus −Cohere, −Linear, −VANGUARD SOFTWARE; nothing else moved*
-- [ ] `make verify` green on both stacks at every commit
+- [x] `make verify` green on both stacks at every commit
 
 ---
 
