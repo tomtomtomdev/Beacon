@@ -1624,6 +1624,80 @@ Acceptance:
 
 ---
 
+## Slice 25 — The registry spot-check, and the matcher's false positives
+
+**Why now:** slice 24's PERM ingest (measured on a copy of this box's DB) matched **Cohere →
+"Cohere Technologies Inc."**, a wireless company, which covers **126 open jobs**. CLAUDE.md gates every
+matcher change on `scripts/spot_check_registry.py`, and that script **has never existed**
+(PROGRESS 2026-09-18 already noticed). The spot-check comes first. Fixes come only against it.
+
+**Measured 2026-10-09, PERM vs the 685 companies on this box: 27 matches exist only after
+token stripping.** They fall into three groups:
+- **Geography drops are right every time** (`Woven by Toyota, U.S.`, `Backbase U.S.A.`,
+  `SmartNews International`, `SPOTIFY USA`, `Atlassian US`, `DoiT International USA`).
+- **Structural drops are mixed, and token rules cannot separate them.** Right: `OpenAI OpCo`,
+  `Notion Labs`, `Faire Wholesale`, `Ripple Labs`, `Robinhood Markets`, `HealthEdge Software`.
+  Wrong: `Cohere Technologies` (Cohere), `Linear Solutions` (Linear), `The Vanguard Group` (Vanguard
+  Software Pte), `Avant, LLC` (Avant Digital). "Cohere Technologies" and "Notion Labs" have
+  the same shape. Only a person with the evidence can tell them apart, so the fix is
+  **data, not a smarter rule**.
+- **A real rule bug: single-letter parentheticals become seed variants.** `GMP RECRUITMENT
+  SERVICES (S) PTE LTD` and `TRAINOCATE (S) PTE. LTD.` yield the variant `S`, which matches
+  `Group-S LLC`. `(S)` is Singapore shorthand, not an alias. `American Bureau of Shipping (ABS)` →
+  `ABS Digital Solutions` is the same mechanism with a real acronym.
+
+**Build order: 25a spot-check script → 25b the parenthetical rule → 25c the reviewed
+rejection table → 25d docs.** One TDD loop each, `make verify`, one `slice-25x:` commit, push.
+
+### 25a — `scripts/spot_check_registry.py`
+
+- Reads the seed list and every present snapshot through the **real ingesters** (no copy of
+  the matching logic), and prints one stable, sorted line per (company, registry) match:
+  `company | registry | entry | confidence | dropped tokens | evidence`.
+- `--only-stripped` narrows to confidence < 1.0 (the review set). `--baseline FILE` writes or
+  diffs against a saved run, so a normalizer change is reviewed as a diff, which is what CLAUDE.md
+  asks for.
+- The pure part (`dropped tokens` for a match, line formatting) lives in `domain/matching.py`
+  and is unit-tested. The script is wiring only.
+
+### 25b — Parentheticals that are not aliases (domain, pure)
+
+- `test_single_letter_parenthetical_is_not_a_seed_variant` (RED): `seed_name_variants("GMP
+  RECRUITMENT SERVICES (S) PTE LTD")` has no `S` variant. Appended parametrized rows only.
+- Rule: a parenthetical shorter than **2 characters**, or one that normalizes to geography
+  only (e.g. `(Singapore)`), is not a variant. `(ABS)` stays a variant. Acronyms are real
+  aliases, and the ABS case goes to the 25c table instead.
+- Run the spot-check before and after. The diff is the review, and it goes in the commit message.
+
+### 25c — The reviewed rejection table (data)
+
+- `seeds/registry_rejections.csv`: `company,registry,entry,reason,reviewed_at`. Each row is a
+  match a person looked at and rejected with a reason. `match_company` skips a rejected
+  (company, registry, entry) and nothing else.
+- Port: `RegistryRejections` is read by the refresh use case, and the adapter reads the CSV. The
+  domain receives a frozenset, never a path.
+- Seeded only with matches whose evidence is conclusive: Cohere/`Cohere Technologies Inc.`,
+  Linear/`Linear Solutions Inc`, `VANGUARD SOFTWARE PTE. LTD.`/`The Vanguard Group`, `American
+  Bureau of Shipping (ABS)`/`ABS Digital Solutions, LLC`. **Ambiguous ones (Mercury, Evolve,
+  Avant, Randstad) are left for the owner.** The spot-check prints them, and the table is where
+  the answer goes.
+- Acceptance: the PERM refresh on the DB copy no longer flags Cohere or Linear, and every other
+  match from 24c is unchanged (the spot-check diff proves it).
+
+### 25d — Docs
+
+CLAUDE.md's "run the spot-check" line points at a script that now exists. SPEC §5.3 states that
+matching is token-equality **plus a reviewed rejection table**. PROGRESS: status, tracker,
+Decisions.
+
+Acceptance:
+- [ ] `scripts/spot_check_registry.py` runs against the present snapshots and diffs a baseline
+- [ ] No seed yields a single-letter or geography-only parenthetical variant
+- [ ] Cohere and Linear lose the PERM bit; every other 24c match is unchanged
+- [ ] `make verify` green on both stacks at every commit
+
+---
+
 ## Cross-cutting rules
 
 - Every network adapter is tested against recorded fixtures only; live calls happen solely in manual acceptance checks
