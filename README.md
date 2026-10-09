@@ -12,10 +12,10 @@ It exists to answer one question that no job board answers directly: *which seni
 
 ## Status
 
-Shipped in vertical slices. Current: **slices 0–22 done.** Running against a live
-corpus — **16,810 postings, of which 9,130 are open and canonical**, from 70 seeded companies across
-16 source adapters (15 of which have landed jobs). Corpus figures measured 2026-09-18; the company
-and adapter counts are carried from 2026-09-15 and were not re-measured.
+Shipped in vertical slices. Current: **slices 0–22 done, slice 23 in progress.** Running against
+a live corpus — **16,810 postings, of which 9,130 are open and canonical** (measured 2026-09-18).
+Since then the seed list has grown to **81 companies** (LinkedIn leads, 2026-09-30) and there are
+**18 source adapters**: 10 per-company ATS boards plus 8 company-less feeds.
 
 | # | Slice | Status |
 |---|---|---|
@@ -30,6 +30,7 @@ and adapter counts are carried from 2026-09-15 and were not re-measured.
 | 20 | Other markets — the 47 countries with jobs and no way to ask for them; closed postings finally greyed | ✅ |
 | 21 | The panel stops being a gate: all jobs by default, `?focus=` becomes a filter | ✅ |
 | 22 | Closed postings leave the default listing, behind a "Show closed" toggle | ✅ |
+| 23 | Arbeitnow (visa-sponsorship subset), one credential door (bearer/basic/API-key), DE as a `nice_to_have` market; Bundesagentur, AU reference text, Reed (key-gated) next | 🟨 23a–23c done |
 
 `PROGRESS.md` is the live source of truth for what's built; `PLAN.md` is the slice order.
 
@@ -82,6 +83,7 @@ uv run uvicorn beacon.api.app:create_app --factory --port 8000
 # GET /jobs?q=&country=&posted_since=&limit=&offset=
 # GET /companies/health  → source-health rollup + per-company rows
 # GET /registries        → sponsor-registry coverage (incl. never-ingested)
+# GET /countries, /markets, /searches, /settings, /resumes
 ```
 
 **3. Run the frontend** (Vite dev server; proxies the API routes to `localhost:8000`):
@@ -130,6 +132,12 @@ All env reads live in one place (`beacon/config.py`). Defaults work out of the b
 |---|---|---|
 | `BEACON_DB_PATH` | `./beacon.db` | SQLite database file |
 | `BEACON_SEEDS_PATH` | `./seeds/companies.csv` | Curated company seed list |
+| `BEACON_BACKUPS_PATH` | `./backups` | Where `maintenance backup` writes snapshots |
+| `BEACON_{UK,IND,H1B,IE,CA}_REGISTRY_PATH` | `./data/registries/*.csv` | Sponsor-register snapshots (missing file → skipped) |
+| `BEACON_TELEGRAM_BOT_TOKEN`, `BEACON_TELEGRAM_CHAT_ID` | unset | Digest delivery; unset → stdout (also settable in the UI) |
+| `BEACON_NAV_API_TOKEN` | unset | NAV Norway feed; unset → source not wired |
+| `BEACON_ANTHROPIC_API_KEY` | unset | LLM fallback classifier; unset → heuristic only |
+| `BEACON_LLM_MODEL`, `BEACON_LLM_MONTHLY_BUDGET` | Haiku 4.5, `500` | LLM model and hard monthly call cap |
 
 ### Scheduling
 
@@ -181,14 +189,14 @@ backend/
   beacon/
     domain/           pure models + logic (job, sponsorship, location, visa, vocabulary, matching, dedup)
     application/      use cases + port protocols (ingest, queries, scoring, health, coverage)
-    adapters/         sources/ (16 boards + factory), persistence/, registries/, classify/, notify/, http/
-    api/              app factory, seven routers, deps
+    adapters/         sources/ (18 boards + factory), persistence/, registries/, classify/, notify/, http/ (polite client + credentials)
+    api/              app factory, eight routers, deps
     maintenance.py    launchd one-shot entry points (refresh-registries, backup, probe)
   migrations/         001–010, numbered and forward-only
   tests/              unit / adapters / api / integration, with fixtures/
 frontend/
   src/                jobs/, countries/, searches/, settings/, api/ (client + types), tokens.css
-seeds/companies.csv   70 verified companies (name,ats_type,ats_slug,country_hq,priority)
+seeds/companies.csv   81 companies (name,ats_type,ats_slug,country_hq,priority)
 deploy/               four launchd agents: digest window, registry refresh, backup, quarantine probe
 ```
 
@@ -201,4 +209,5 @@ deploy/               four launchd agents: digest window, registry refresh, back
 | `PROGRESS.md` | Live state — slice tracker, decisions log, open items (update every session) |
 | `DESIGN.md` | Visual source of truth — "Nordic Slate & Teal" tokens and views |
 | `CLAUDE.md` | Working conventions and architecture-boundary enforcement |
+| `SOURCES.md` | Operating detail per polled source — endpoint, auth, pagination, normalization quirks |
 | `VERIFY-COUNTRIES.md` | Checklist for re-verifying country/visa reference data |
