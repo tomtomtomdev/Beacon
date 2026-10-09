@@ -194,7 +194,9 @@ def test_refresh_preserves_a_manual_flag(seeded: sqlite3.Connection) -> None:
     assert Registry(flags_of(seeded, "Lovable")) & Registry.MANUAL
 
 
-def _launch_settings(tmp_path: Path, *, with_uk: bool, with_perm: bool = False) -> Settings:
+def _launch_settings(
+    tmp_path: Path, *, with_uk: bool, with_perm: bool = False, rejections: str = ""
+) -> Settings:
     """A box with at most one snapshot on disk — the shape this repo has actually been in
     since slice 2, where IE/CA were hand-downloaded and UK/NL/US never were."""
     registries = tmp_path / "registries"
@@ -205,6 +207,9 @@ def _launch_settings(tmp_path: Path, *, with_uk: bool, with_perm: bool = False) 
         )
     if with_perm:
         (registries / "us_perm.csv").write_bytes((REGISTRIES / "us_perm_fixture.csv").read_bytes())
+    (tmp_path / "rejections.csv").write_text(
+        "company,registry,entry,reason,reviewed_at\n" + rejections
+    )
     return Settings(
         db_path=tmp_path / "beacon.db",
         seeds_path=SEED_FILE,
@@ -214,6 +219,7 @@ def _launch_settings(tmp_path: Path, *, with_uk: bool, with_perm: bool = False) 
         ie_registry_path=registries / "ie_permits.csv",
         ca_registry_path=registries / "ca_lmia.csv",
         perm_registry_path=registries / "us_perm.csv",
+        rejections_path=tmp_path / "rejections.csv",
     )
 
 
@@ -241,6 +247,20 @@ def test_launch_refresh_ingests_a_perm_snapshot(tmp_path: Path) -> None:
     assert [m.registry for m in SqliteRegistriesMetaRepo(conn).list_all()] == ["PERM"]
     assert flags_of(conn, "Stripe") & Registry.PERM
     assert not flags_of(conn, "Stripe") & Registry.US
+
+
+def test_a_reviewed_rejection_keeps_its_bit_off(tmp_path: Path) -> None:
+    """Slice 25c: a row in the rejection table is honoured by the real refresh path."""
+    settings = _launch_settings(
+        tmp_path,
+        with_uk=False,
+        with_perm=True,
+        rejections='Stripe,PERM,"Stripe, Inc.",test rejection,2026-10-09\n',
+    )
+
+    run_refresh_if_needed(settings)
+
+    assert not flags_of(connect(settings.db_path), "Stripe") & Registry.PERM
 
 
 def test_launch_refresh_ingests_a_snapshot_that_was_never_read(

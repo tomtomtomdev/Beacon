@@ -1673,7 +1673,7 @@ rejection table → 25d docs.** One TDD loop each, `make verify`, one `slice-25x
   aliases, and the ABS case goes to the 25c table instead.
 - Run the spot-check before and after. The diff is the review, and it goes in the commit message.
 
-### 25c — The reviewed rejection table (data)
+### 25c — The reviewed rejection table (data) ✅ 2026-10-09
 
 - `seeds/registry_rejections.csv`: `company,registry,entry,reason,reviewed_at`. Each row is a
   match a person looked at and rejected with a reason. `match_company` skips a rejected
@@ -1697,7 +1697,7 @@ Decisions.
 Acceptance:
 - [x] `scripts/spot_check_registry.py` runs against the present snapshots and diffs a baseline — *25a: on the FY2026 Q3 PERM file, `--from-db --only-stripped` lists 27 matches. Cohere, Linear, Vanguard, ABS and the two `(S)` → Group-S rows are among them*
 - [x] No seed yields a single-letter or geography-only parenthetical variant — *25b: real-data diff −2 (both `(S)` → Group-S) +3 (Akkodis/Keysight/OmniVision Singapore → their US parents, via `singapore` joining GEO_TOKENS); fixture run unchanged*
-- [ ] Cohere and Linear lose the PERM bit; every other 24c match is unchanged
+- [x] Cohere and Linear lose the PERM bit; every other 24c match is unchanged — *25c: the real-data spot-check diff is exactly 25b's five reviewed lines plus −Cohere, −Linear, −VANGUARD SOFTWARE; nothing else moved*
 - [ ] `make verify` green on both stacks at every commit
 
 ---

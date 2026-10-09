@@ -22,6 +22,7 @@ from beacon.adapters.persistence.registries_meta import SqliteRegistriesMetaRepo
 from beacon.adapters.registries.ca import CALMIARegistry
 from beacon.adapters.registries.h1b import H1BLCARegistry
 from beacon.adapters.registries.perm import PERMRegistry
+from beacon.adapters.registries.rejections import parse_rejections_csv
 from beacon.adapters.registries.ie import IEPermitsRegistry
 from beacon.adapters.registries.ind import INDRegistry
 from beacon.adapters.registries.uk import UKSponsorRegistry
@@ -134,6 +135,7 @@ def run_refresh(settings: Settings) -> int:
         jobs,
         meta_repo=SqliteRegistriesMetaRepo(conn),
         now=datetime.now(UTC),
+        rejected=parse_rejections_csv(settings.rejections_path.read_text()),
     )
     print(f"refresh companies={result.companies} matched={result.matched}")
     return 0

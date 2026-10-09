@@ -30,11 +30,12 @@ from beacon.adapters.registries.h1b import H1BLCARegistry
 from beacon.adapters.registries.ie import IEPermitsRegistry
 from beacon.adapters.registries.ind import INDRegistry
 from beacon.adapters.registries.perm import PERMRegistry
+from beacon.adapters.registries.rejections import parse_rejections_csv
 from beacon.adapters.registries.uk import UKSponsorRegistry
 from beacon.adapters.seeds import parse_seed_csv
 from beacon.application.ports import RegistryIngester
 from beacon.config import Settings
-from beacon.domain.matching import dropped_tokens, registry_matches
+from beacon.domain.matching import RegistryRejection, dropped_tokens, registry_matches
 from beacon.domain.registry import Registry, RegistryCompany
 from beacon.refresh import available_ingesters
 
@@ -54,11 +55,15 @@ def _fixture_ingesters() -> list[RegistryIngester]:
 
 
 def report_lines(
-    seed_names: list[str], entries: dict[Registry, list[RegistryCompany]], *, only_stripped: bool
+    seed_names: list[str],
+    entries: dict[Registry, list[RegistryCompany]],
+    *,
+    only_stripped: bool,
+    rejected: frozenset[RegistryRejection],
 ) -> list[str]:
     lines: list[str] = []
     for seed in sorted(seed_names, key=str.casefold):
-        for match in registry_matches(seed, entries):
+        for match in registry_matches(seed, entries, rejected=rejected):
             if only_stripped and match.confidence >= 1.0:
                 continue
             dropped = ",".join(sorted(dropped_tokens(seed, match.entry) or ())) or "—"
@@ -88,7 +93,9 @@ def main(argv: list[str] | None = None) -> int:
         seeds = [c.name for c in SqliteCompanyRepo(connect(settings.db_path)).list_active()]
     else:
         seeds = [company.name for company in parse_seed_csv(settings.seeds_path.read_text())]
-    lines = report_lines(seeds, entries, only_stripped=args.only_stripped)
+    # The refresh honours the reviewed rejections, so the spot-check shows what it will write.
+    rejected = parse_rejections_csv(settings.rejections_path.read_text())
+    lines = report_lines(seeds, entries, only_stripped=args.only_stripped, rejected=rejected)
 
     if args.baseline is None:
         print("\n".join(lines))

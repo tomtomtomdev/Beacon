@@ -6,6 +6,7 @@ this table is append-only.
 import pytest
 
 from beacon.domain.matching import (
+    RegistryRejection,
     dropped_tokens,
     match_company,
     match_confidence,
@@ -223,3 +224,34 @@ def test_dropped_tokens_name_what_stripping_removed(
     seed: str, entry: str, dropped: set[str]
 ) -> None:
     assert dropped_tokens(seed, RegistryCompany(name=entry)) == frozenset(dropped)
+
+
+# ── Reviewed rejections (slice 25c): a person looked, and said no ──────────────────
+COHERE_PERM_REJECTED = RegistryRejection(
+    company="Cohere", registry=Registry.PERM, entry="Cohere Technologies Inc."
+)
+
+
+def test_a_rejected_entry_does_not_match() -> None:
+    entries = {Registry.US: [COHERE_US], Registry.PERM: [COHERE_TECH]}
+
+    result = match_company("Cohere", entries, rejected=frozenset({COHERE_PERM_REJECTED}))
+
+    assert result.flags == Registry.US
+
+
+def test_a_rejection_skips_one_entry_and_the_next_best_still_matches() -> None:
+    cohere_inc = RegistryCompany(name="Cohere Inc.", evidence="4 certified PERM filings")
+    entries = {Registry.PERM: [COHERE_TECH, cohere_inc]}
+
+    matches = registry_matches("Cohere", entries, rejected=frozenset({COHERE_PERM_REJECTED}))
+
+    assert [m.entry.name for m in matches] == ["Cohere Inc."]
+
+
+def test_a_rejection_is_scoped_to_its_registry_and_company() -> None:
+    # The same entry name in another register, or for another company, is a separate
+    # judgement nobody has made yet.
+    entries = {Registry.US: [COHERE_TECH]}
+
+    assert match_company("Cohere", entries, rejected=frozenset({COHERE_PERM_REJECTED})).flags

@@ -208,6 +208,17 @@ def dropped_tokens(seed_name: str, entry: RegistryCompany) -> frozenset[str] | N
 
 
 @dataclass(frozen=True, slots=True)
+class RegistryRejection:
+    """One match a person reviewed and rejected (seeds/registry_rejections.csv, slice 25c):
+    this company is not this entry in this register. Scoped to all three, because the same
+    entry name in another register or for another company is a judgement nobody has made."""
+
+    company: str
+    registry: Registry
+    entry: str
+
+
+@dataclass(frozen=True, slots=True)
 class RegistryEntryMatch:
     """One registry's best entry for a seed: what the spot-check prints, one line each."""
 
@@ -217,15 +228,21 @@ class RegistryEntryMatch:
 
 
 def registry_matches(
-    seed_name: str, entries_by_registry: Mapping[Registry, Sequence[RegistryCompany]]
+    seed_name: str,
+    entries_by_registry: Mapping[Registry, Sequence[RegistryCompany]],
+    *,
+    rejected: frozenset[RegistryRejection] = frozenset(),
 ) -> list[RegistryEntryMatch]:
     """The best-matching entry in each registry that has one, in the mapping's order.
 
     Registry match is company-level: a registry contributes on its single best entry hit
-    (multi-entity companies are counted once)."""
+    (multi-entity companies are counted once). A rejected entry is skipped, not the whole
+    register, so the company's real entity there still matches."""
     matches: list[RegistryEntryMatch] = []
     for registry, entries in entries_by_registry.items():
-        best = _best_entry(seed_name, entries)
+        refused = {r.entry for r in rejected if r.company == seed_name and r.registry == registry}
+        allowed = [e for e in entries if e.name not in refused] if refused else entries
+        best = _best_entry(seed_name, allowed)
         if best is not None:
             confidence, entry = best
             matches.append(
@@ -244,11 +261,14 @@ class RegistryMatch:
 
 
 def match_company(
-    seed_name: str, entries_by_registry: Mapping[Registry, Sequence[RegistryCompany]]
+    seed_name: str,
+    entries_by_registry: Mapping[Registry, Sequence[RegistryCompany]],
+    *,
+    rejected: frozenset[RegistryRejection] = frozenset(),
 ) -> RegistryMatch:
     """Match one seed name against every registry's entries, OR-ing the bits that hit.
     Confidence is the best across registries; evidence keeps a per-registry audit line."""
-    matches = registry_matches(seed_name, entries_by_registry)
+    matches = registry_matches(seed_name, entries_by_registry, rejected=rejected)
     flags = Registry(0)
     for match in matches:
         flags |= match.registry
