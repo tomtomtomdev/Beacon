@@ -1664,7 +1664,7 @@ rejection table → 25d docs.** One TDD loop each, `make verify`, one `slice-25x
 - The pure part (`dropped tokens` for a match, line formatting) lives in `domain/matching.py`
   and is unit-tested. The script is wiring only.
 
-### 25b — Parentheticals that are not aliases (domain, pure)
+### 25b — Parentheticals that are not aliases (domain, pure) ✅ 2026-10-09
 
 - `test_single_letter_parenthetical_is_not_a_seed_variant` (RED): `seed_name_variants("GMP
   RECRUITMENT SERVICES (S) PTE LTD")` has no `S` variant. Appended parametrized rows only.
@@ -1696,7 +1696,7 @@ Decisions.
 
 Acceptance:
 - [x] `scripts/spot_check_registry.py` runs against the present snapshots and diffs a baseline — *25a: on the FY2026 Q3 PERM file, `--from-db --only-stripped` lists 27 matches. Cohere, Linear, Vanguard, ABS and the two `(S)` → Group-S rows are among them*
-- [ ] No seed yields a single-letter or geography-only parenthetical variant
+- [x] No seed yields a single-letter or geography-only parenthetical variant — *25b: real-data diff −2 (both `(S)` → Group-S) +3 (Akkodis/Keysight/OmniVision Singapore → their US parents, via `singapore` joining GEO_TOKENS); fixture run unchanged*
 - [ ] Cohere and Linear lose the PERM bit; every other 24c match is unchanged
 - [ ] `make verify` green on both stacks at every commit
 

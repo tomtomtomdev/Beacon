@@ -159,6 +159,27 @@ def test_seed_parenthetical_becomes_an_alias_variant() -> None:
     assert seed_name_variants("Bird (MessageBird)") == ("Bird", "MessageBird")
 
 
+@pytest.mark.parametrize(
+    ("seed", "variants"),
+    [
+        # Singapore shorthand in MyCareersFuture employer names (slice 25b): geography, not a
+        # brand. "(S)" alone matched PERM's "Group-S LLC" for two unrelated companies.
+        ("GMP RECRUITMENT SERVICES (S) PTE LTD", ("GMP RECRUITMENT SERVICES  PTE LTD",)),
+        ("TRAINOCATE (S) PTE. LTD.", ("TRAINOCATE  PTE. LTD.",)),
+        ("SEATRIUM (SG) PTE. LTD.", ("SEATRIUM  PTE. LTD.",)),
+        ("AIRWALLEX (SINGAPORE) PTE. LTD.", ("AIRWALLEX  PTE. LTD.",)),
+        # Real aliases stay variants, acronyms included.
+        ("American Bureau of Shipping (ABS)", ("American Bureau of Shipping", "ABS")),
+        ("Procreate (Savage Interactive)", ("Procreate", "Savage Interactive")),
+    ],
+    ids=["s", "trainocate-s", "sg", "singapore", "acronym", "legal-name"],
+)
+def test_geography_and_single_letter_parentheticals_are_not_variants(
+    seed: str, variants: tuple[str, ...]
+) -> None:
+    assert seed_name_variants(seed) == variants
+
+
 def test_parenthetical_alias_matching() -> None:
     assert match_confidence("Bird (MessageBird)", RegistryCompany("Messagebird B.V.")) is not None
     assert match_confidence("Bird (MessageBird)", RegistryCompany("Q*BIRD B.V.")) is None

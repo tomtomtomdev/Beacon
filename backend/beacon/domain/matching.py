@@ -69,6 +69,8 @@ GEO_TOKENS: frozenset[str] = frozenset(
         "netherlands",
         "ireland",
         "sweden",
+        # Slice 25b: MyCareersFuture names read "X (SINGAPORE) PTE. LTD."; SG is a §4 primary.
+        "singapore",
         "international",
         "global",
         "worldwide",
@@ -113,6 +115,8 @@ STRIPPED_CONFIDENCE = 0.9
 _TRADING_AS = re.compile(r"\s+(?:trading\s+as|t/a|dba)\s+", re.IGNORECASE)
 _PARENTHETICAL = re.compile(r"\(([^)]*)\)")
 _NON_ALNUM = re.compile(r"[^a-z0-9]+")
+# "(S)", "(SG)": a parenthetical this short is a place or form code, never a brand alias.
+_MAX_SHORTHAND_CHARS = 2
 
 
 @dataclass(frozen=True, slots=True)
@@ -151,10 +155,18 @@ def seed_name_variants(seed: str) -> tuple[str, ...]:
     """A seed's matchable names: the base name plus any parenthetical alias.
 
     "Bird (MessageBird)" → ("Bird", "MessageBird") — the register keeps the renamed
-    legal name, so both must be tried."""
-    aliases = [inner.strip() for inner in _PARENTHETICAL.findall(seed) if inner.strip()]
+    legal name, so both must be tried. A parenthetical that is only a place is not an alias
+    ("(SINGAPORE)", or the "(S)"/"(SG)" shorthand: two characters or fewer), because as a
+    variant it matches any registrant with that word in its name (slice 25b, "Group-S LLC")."""
+    aliases = [inner.strip() for inner in _PARENTHETICAL.findall(seed) if _is_alias(inner)]
     base = _PARENTHETICAL.sub("", seed).strip()
     return (base, *aliases)
+
+
+def _is_alias(parenthetical: str) -> bool:
+    if len(_NON_ALNUM.sub("", parenthetical.casefold())) <= _MAX_SHORTHAND_CHARS:
+        return False
+    return bool(normalize_name(parenthetical).key)
 
 
 def match_confidence(seed_name: str, entry: RegistryCompany) -> float | None:
