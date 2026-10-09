@@ -139,6 +139,20 @@ def test_germany_is_a_nice_to_have_market() -> None:
     assert "bundesagentur" in germany.registry_name.lower()
 
 
+def test_australia_row_names_the_core_skills_list() -> None:
+    """Slice 23e: the software ANZSCO codes (261311–261317, 261399) sit on the Core Skills
+    Occupation List (LIN 24/089, compilation 3), so the AU visa copy says so — a fact in copy,
+    never a tier (resolve_tier is untouched, the TW precedent). Bumping verified_at claims every
+    column, so the whole row was re-read on 2026-10-09, thresholds as indexed on 1 July 2026."""
+    australia = BY_CODE["AU"]
+
+    assert "core skills" in australia.visa_summary.lower()
+    assert "79,423" in australia.visa_summary
+    assert australia.verified_at == date(2026, 10, 9)
+    assert australia.source_url.startswith("https://immi.homeaffairs.gov.au/")
+    assert "skill-occupation-list" in australia.source_url
+
+
 def test_taiwan_names_the_self_sponsored_card_in_its_visa_copy() -> None:
     """The Gold Card carries its own work permit, so TW needs no sponsoring employer. That
     fact belongs in the visa copy and NOWHERE else: `not_required` is a location predicate for

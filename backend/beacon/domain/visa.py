@@ -23,6 +23,11 @@ _SLICE_18_VERIFIED = date(2026, 9, 15)
 # gesetze-im-internet.de, the Auswärtiges Amt on dual nationality) on this date.
 _SLICE_23_VERIFIED = date(2026, 10, 7)
 
+# Slice 23e re-read the whole Australia row on this date: the CSIT/SSIT indexed 1 July 2026
+# (Home Affairs salary requirements), the CSOL in LIN 24/089 compilation 3 (7 Nov 2025), the
+# 186 TRT stream and the citizenship general residence requirement.
+_SLICE_23E_VERIFIED = date(2026, 10, 9)
+
 
 class PriorityTier(StrEnum):
     """Target-geography weighting from SPEC §3 — drives the Countries-view legend/pins.
@@ -98,13 +103,16 @@ COUNTRY_REFERENCE: tuple[CountryReference, ...] = (
     CountryReference(
         code="AU",
         name="Australia",
-        visa_summary="Skills in Demand (~AU$76k floor; AU$141k specialist tier)",
-        pr_summary="2–3yr via employer 186 or points 189",
-        citizenship_summary="4yr residence",
+        visa_summary=(
+            "Skills in Demand, AU$79,423 floor (AU$146,576 specialist); "
+            "software roles on the Core Skills list"
+        ),
+        pr_summary="Employer 186 after 2yr sponsored work, or points-tested 189",
+        citizenship_summary="4yr lawful residence, the last 12mo as a permanent resident",
         registry_name="None public (sponsor status inferable from posting text)",
         priority_tier=PriorityTier.PRIMARY,
-        verified_at=_AS_KNOWN,
-        source_url="https://immi.homeaffairs.gov.au",
+        verified_at=_SLICE_23E_VERIFIED,
+        source_url="https://immi.homeaffairs.gov.au/visas/working-in-australia/skill-occupation-list",
     ),
     CountryReference(
         code="NL",
