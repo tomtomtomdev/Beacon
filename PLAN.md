@@ -1610,8 +1610,13 @@ not taken up. SOURCES.md §5 gains PERM. PROGRESS: status, tracker row, Decision
 
 Acceptance:
 - [x] `Registry.PERM == 64`; `/registries` lists PERM; the drawer labels PERM, IE and CA
-- [ ] PERM ingested from a real FY2026 file; companies matched and tier movement recorded; the
-      thinly-evidenced large matches eyeballed
+- [x] PERM ingested from a real FY2026 file; companies matched and tier movement recorded; the
+      thinly-evidenced large matches eyeballed — *2026-10-09, FY2026 Q3 (156MB; 28,479 certified
+      employers), on a copy of this box's `beacon.db`: 95/685 companies matched; open-job
+      `unknown` 7,782 → 3,674. False positives found: **Cohere → "Cohere Technologies Inc."
+      (126 open jobs)**, Linear → "Linear Solutions Inc" (25), Fig → "FIG LLC", GMP Recruitment
+      → "Group-S LLC" — all the structural-token drop at 0.9, a matcher defect shared with LCA,
+      recorded in PROGRESS, not fixed here*
 - [ ] Jooble and Careerjet each end as a shipped adapter or a §5.5 row (or recorded open, if no key)
 - [ ] `make verify` green on both stacks at every commit
 

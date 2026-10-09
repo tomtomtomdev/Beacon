@@ -30,6 +30,8 @@ class Settings:
     h1b_registry_path: Path = _REGISTRIES / "h1b_lca.csv"
     ie_registry_path: Path = _REGISTRIES / "ie_permits.csv"
     ca_registry_path: Path = _REGISTRIES / "ca_lmia.csv"
+    # US PERM labor certifications (slice 24): DOL XLSX converted to its three used columns.
+    perm_registry_path: Path = _REGISTRIES / "us_perm.csv"
     # Telegram Bot API credentials for the digest (slice 8). Absent → StdoutNotifier.
     # SecretStr keeps the token out of reprs/logs.
     telegram_bot_token: SecretStr | None = None
@@ -70,6 +72,9 @@ class Settings:
             ),
             ca_registry_path=Path(
                 source.get("BEACON_CA_REGISTRY_PATH", str(_REGISTRIES / "ca_lmia.csv"))
+            ),
+            perm_registry_path=Path(
+                source.get("BEACON_PERM_REGISTRY_PATH", str(_REGISTRIES / "us_perm.csv"))
             ),
             telegram_bot_token=SecretStr(token) if token else None,
             telegram_chat_id=source.get("BEACON_TELEGRAM_CHAT_ID"),

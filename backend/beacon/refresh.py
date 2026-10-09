@@ -21,6 +21,7 @@ from beacon.adapters.persistence.jobs import SqliteJobRepo
 from beacon.adapters.persistence.registries_meta import SqliteRegistriesMetaRepo
 from beacon.adapters.registries.ca import CALMIARegistry
 from beacon.adapters.registries.h1b import H1BLCARegistry
+from beacon.adapters.registries.perm import PERMRegistry
 from beacon.adapters.registries.ie import IEPermitsRegistry
 from beacon.adapters.registries.ind import INDRegistry
 from beacon.adapters.registries.uk import UKSponsorRegistry
@@ -44,6 +45,7 @@ _SNAPSHOT_SOURCES: dict[str, str] = {
     "US": "https://www.dol.gov/agencies/eta/foreign-labor/performance (XLSX, export to CSV)",
     "IE": "https://enterprise.gov.ie employment-permits-issued-to-companies-<year>.xlsx",
     "CA": "https://open.canada.ca TFWP positive-LMIA employers",
+    "PERM": "https://www.dol.gov/agencies/eta/foreign-labor/performance (PERM XLSX, export to CSV)",
 }
 
 
@@ -58,6 +60,7 @@ def _snapshot_specs(settings: Settings) -> tuple[_SnapshotSpec, ...]:
         ("US", settings.h1b_registry_path, H1BLCARegistry),
         ("IE", settings.ie_registry_path, IEPermitsRegistry),
         ("CA", settings.ca_registry_path, CALMIARegistry),
+        ("PERM", settings.perm_registry_path, PERMRegistry),
     )
 
 

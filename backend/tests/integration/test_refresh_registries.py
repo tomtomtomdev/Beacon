@@ -21,11 +21,11 @@ from beacon.application.flag_sponsor import flag_manual_sponsor
 from beacon.application.ports import RegistryIngester
 from beacon.application.refresh_registries import refresh_registries
 from beacon.domain.job import NormalizedJob
-from beacon.domain.registry import Registry
+from beacon.domain.registry import SNAPSHOT_REGISTRIES, Registry
 from beacon.adapters.persistence.db import connect
 from beacon.config import Settings
 from beacon.domain.sponsorship import HOME_COUNTRY, SponsorSignal, SponsorTier
-from beacon.refresh import run_refresh_if_needed
+from beacon.refresh import report_missing_snapshots, run_refresh_if_needed
 
 REGISTRIES = Path(__file__).parents[1] / "fixtures" / "registries"
 SEED_FILE = Path(__file__).parents[3] / "seeds" / "companies.csv"
@@ -194,7 +194,7 @@ def test_refresh_preserves_a_manual_flag(seeded: sqlite3.Connection) -> None:
     assert Registry(flags_of(seeded, "Lovable")) & Registry.MANUAL
 
 
-def _launch_settings(tmp_path: Path, *, with_uk: bool) -> Settings:
+def _launch_settings(tmp_path: Path, *, with_uk: bool, with_perm: bool = False) -> Settings:
     """A box with at most one snapshot on disk — the shape this repo has actually been in
     since slice 2, where IE/CA were hand-downloaded and UK/NL/US never were."""
     registries = tmp_path / "registries"
@@ -203,6 +203,8 @@ def _launch_settings(tmp_path: Path, *, with_uk: bool) -> Settings:
         (registries / "uk_sponsors.csv").write_bytes(
             (REGISTRIES / "uk_sponsors_fixture.csv").read_bytes()
         )
+    if with_perm:
+        (registries / "us_perm.csv").write_bytes((REGISTRIES / "us_perm_fixture.csv").read_bytes())
     return Settings(
         db_path=tmp_path / "beacon.db",
         seeds_path=SEED_FILE,
@@ -211,7 +213,34 @@ def _launch_settings(tmp_path: Path, *, with_uk: bool) -> Settings:
         h1b_registry_path=registries / "h1b_lca.csv",
         ie_registry_path=registries / "ie_permits.csv",
         ca_registry_path=registries / "ca_lmia.csv",
+        perm_registry_path=registries / "us_perm.csv",
     )
+
+
+def test_every_snapshot_register_has_a_file_to_read(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A bit appended to Registry with no snapshot spec would be listed by /registries and
+    never read by a refresh. On an empty box every register is missing, so the missing list
+    is exactly the spec list, and it must be every snapshot register."""
+    settings = _launch_settings(tmp_path, with_uk=False)
+
+    missing = report_missing_snapshots(settings)
+
+    assert missing == tuple(r.name for r in SNAPSHOT_REGISTRIES)
+    assert "MISSING registry snapshot PERM" in capsys.readouterr().out
+
+
+def test_launch_refresh_ingests_a_perm_snapshot(tmp_path: Path) -> None:
+    """Slice 24c: a PERM file dropped into data/registries/ sets the PERM bit, apart from US."""
+    settings = _launch_settings(tmp_path, with_uk=False, with_perm=True)
+
+    assert run_refresh_if_needed(settings) == 0
+
+    conn = connect(settings.db_path)
+    assert [m.registry for m in SqliteRegistriesMetaRepo(conn).list_all()] == ["PERM"]
+    assert flags_of(conn, "Stripe") & Registry.PERM
+    assert not flags_of(conn, "Stripe") & Registry.US
 
 
 def test_launch_refresh_ingests_a_snapshot_that_was_never_read(
