@@ -1,6 +1,6 @@
 """Sponsor registries as a company-level bitmask, and the shape a registry yields.
 
-Bitmask members are UK | NL | US | MANUAL | IE | CA (SPEC §5.3). There is no SE bit — the
+Bitmask members are UK | NL | US | MANUAL | IE | CA | PERM (SPEC §5.3). There is no SE bit — the
 Swedish employer-certification scheme was discontinued Dec 2023.
 """
 
@@ -17,7 +17,9 @@ REGISTRY_STALE_AFTER_DAYS = 45
 class Registry(IntFlag):
     """Values are FROZEN and members are only ever appended: registry_flags is a stored
     integer column, so renumbering a bit would silently re-label every company already
-    matched in the DB. IE + CA were appended in slice 14 (hence MANUAL keeping bit 8)."""
+    matched in the DB. IE + CA were appended in slice 14 (hence MANUAL keeping bit 8); PERM in
+    slice 24, kept apart from US because a green-card filing is different evidence from an
+    H-1B one, and the drawer should be able to say which."""
 
     UK = 1
     NL = 2
@@ -25,6 +27,7 @@ class Registry(IntFlag):
     MANUAL = 8
     IE = 16
     CA = 32
+    PERM = 64
 
 
 # The registers that are published as a downloadable snapshot, and can therefore be missing
@@ -47,7 +50,7 @@ def count_per_registry(mask_counts: Mapping[int, int]) -> dict[Registry, int]:
 
 def registry_names(flags: int) -> tuple[str, ...]:
     """The names of the registries a company matched, in bitmask definition order
-    (UK, NL, US, MANUAL, IE, CA) — what the drawer lists for a registry_inferred tier."""
+    (UK, NL, US, MANUAL, IE, CA, PERM) — what the drawer lists for a registry_inferred tier."""
     # Iterating a flag yields its canonical members, each with a real name (mypy types
     # Enum.name as str | None, so narrow it explicitly).
     return tuple(member.name for member in Registry(flags) if member.name is not None)
@@ -56,7 +59,7 @@ def registry_names(flags: int) -> tuple[str, ...]:
 @dataclass(frozen=True, slots=True)
 class RegistryMeta:
     """A registry snapshot's freshness bookkeeping (the registries_meta table). `registry` is
-    the bitmask member name (UK/NL/US/MANUAL/IE/CA); `fetched_at` is when it was ingested."""
+    the bitmask member name (UK/NL/US/MANUAL/IE/CA/PERM); `fetched_at` is when it was ingested."""
 
     registry: str
     fetched_at: datetime

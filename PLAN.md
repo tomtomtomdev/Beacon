@@ -1609,7 +1609,7 @@ Careerjet verdicts, plus one line each recording why USAJOBS and the USCIS Emplo
 not taken up. SOURCES.md §5 gains PERM. PROGRESS: status, tracker row, Decisions entry.
 
 Acceptance:
-- [ ] `Registry.PERM == 64`; `/registries` lists PERM; the drawer labels PERM, IE and CA
+- [x] `Registry.PERM == 64`; `/registries` lists PERM; the drawer labels PERM, IE and CA
 - [ ] PERM ingested from a real FY2026 file; companies matched and tier movement recorded; the
       thinly-evidenced large matches eyeballed
 - [ ] Jooble and Careerjet each end as a shipped adapter or a §5.5 row (or recorded open, if no key)

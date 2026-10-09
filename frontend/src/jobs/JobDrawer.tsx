@@ -30,6 +30,9 @@ const REGISTRY_LABEL: Record<string, string> = {
   NL: 'IND recognised sponsors (Netherlands)',
   US: 'US H-1B LCA disclosures',
   MANUAL: 'Manually verified sponsor',
+  IE: 'Irish employment permits issued',
+  CA: 'Canada positive LMIA employers',
+  PERM: 'US PERM labor certifications (green card)',
 }
 
 interface JobDrawerProps {
