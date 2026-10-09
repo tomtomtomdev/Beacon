@@ -9,6 +9,7 @@ from beacon.adapters.registries.ca import CALMIARegistry
 from beacon.adapters.registries.h1b import H1BLCARegistry
 from beacon.adapters.registries.ie import IEPermitsRegistry
 from beacon.adapters.registries.ind import INDRegistry
+from beacon.adapters.registries.perm import PERMRegistry
 from beacon.adapters.registries.uk import UKSponsorRegistry
 from beacon.domain.matching import match_confidence
 from beacon.domain.registry import Registry
@@ -19,6 +20,9 @@ IND_FIXTURE = REGISTRIES / "ind_sponsors_fixture.csv"
 H1B_FIXTURE = REGISTRIES / "h1b_lca_fixture.csv"
 IE_FIXTURE = REGISTRIES / "ie_permits_fixture.csv"
 CA_FIXTURE = REGISTRIES / "ca_lmia_fixture.csv"
+# Rows cut verbatim from DOL's PERM_Disclosure_Data_FY2026_Q3.xlsx (downloaded 2026-10-09),
+# reduced to the three columns the ingester reads, plus one blank padding row.
+PERM_FIXTURE = REGISTRIES / "us_perm_fixture.csv"
 
 
 # ── UK Home Office register ──────────────────────────────────────────────────────
@@ -89,6 +93,45 @@ def test_h1b_dba_from_name_and_column_become_aliases() -> None:
 
     tek = next(c for c in companies if c.name.startswith("Tek Ninjas Solutions"))
     assert "Tek Ninjas" in tek.aliases  # separate TRADE_NAME_DBA column
+
+
+# ── US PERM labor certifications ────────────────────────────────────────────────
+def test_perm_ingester_declares_perm_registry() -> None:
+    assert PERMRegistry(PERM_FIXTURE).registry is Registry.PERM
+
+
+def test_perm_counts_certified_and_certified_expired_filings() -> None:
+    companies = PERMRegistry(PERM_FIXTURE).fetch()
+
+    # The live file spells it "Certified - Expired" (the record layout says "Certified-
+    # Expired"); an expired certification was still a sponsorship. Withdrawn counts nothing.
+    stripe = next(c for c in companies if c.name == "Stripe, Inc.")
+    assert stripe.evidence == "3 certified PERM filings"
+
+
+def test_perm_ignores_denied_only_employers_and_padding_rows() -> None:
+    names = {c.name for c in PERMRegistry(PERM_FIXTURE).fetch()}
+
+    assert "Con Hambre  Restaurant" not in names
+    assert "" not in names
+    assert len(names) == 7
+
+
+def test_perm_trade_name_becomes_an_alias() -> None:
+    companies = PERMRegistry(PERM_FIXTURE).fetch()
+
+    rippling = next(c for c in companies if c.name.startswith("People Center"))
+    assert rippling.aliases == ("Rippling",)
+    assert match_confidence("Rippling", rippling) is not None
+
+
+@pytest.mark.parametrize("employer", ["Faire Wholesale", "HALLANDALE OASIS", "J&K CABINETRY"])
+def test_perm_placeholder_trade_names_are_not_aliases(employer: str) -> None:
+    # "N/A" alone is the trade name on 11,441 rows of the live file; "None" and
+    # "Not Applicable" are its rarer spellings. A placeholder is not a brand.
+    company = next(c for c in PERMRegistry(PERM_FIXTURE).fetch() if c.name.startswith(employer))
+
+    assert company.aliases == ()
 
 
 # ── IE DETE employment-permits register ──────────────────────────────────────────
