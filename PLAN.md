@@ -1510,6 +1510,113 @@ Acceptance:
 
 ---
 
+## Slice 24 — US PERM as a sponsor register; Jooble and Careerjet probed behind keys
+
+**Asked for 2026-10-09**, after auditing a pasted "Public Job & Visa API Reference" against the
+repo. Nearly every job source on that list is already shipped or recorded as rejected (SPEC
+§5.2/§5.5). Three gaps were never evaluated: **DOL PERM disclosures**, **Jooble** and
+**Careerjet**. USAJOBS was not taken up, because US federal jobs generally require citizenship,
+so there is no sponsorship to find. The USCIS H-1B Employer Data Hub overlaps the LCA data
+already ingested. The rules/quota sources (Visa Bulletin, Express Entry draws) carry no employer or
+job signal, and the travel-visa datasets answer a question Beacon does not ask.
+
+**Why PERM is worth a slice:** an H-1B LCA shows an employer *filed* for temporary sponsorship.
+A certified PERM labor certification is the first step of an **employment-based green card**, a
+stronger and rarer commitment. It also lines up with the PR path SPEC §4 already gives for
+the US ("GC ~1.5–3yr via PERM"). It reads like `H1BLCARegistry`: a quarterly DOL XLSX converted
+to CSV, aggregated per employer.
+
+**Probed 2026-10-09:**
+- **DOL** `dol.gov/agencies/eta/foreign-labor/performance` and the record-layout PDFs answer
+  **403** to scripted fetches (as with the LCA file), so the snapshot is a **hand download**.
+  Search snippets quoting DOL's record layouts (the PDFs themselves were not opened, so 24b
+  must confirm against the downloaded file): **`EMP_BUSINESS_NAME`** (legal name, 9089 §A.1),
+  **`EMP_TRADE_NAME`** (trade name, §A.2), and **`CASE_STATUS`** ∈ {`Certified`,
+  `Certified-Expired`, `Denied`, `Withdrawn`}. The spelling is not LCA's `Certified - Withdrawn`.
+  The FY2026 Q3 release is out.
+- **Careerjet**: v4 `search.api.careerjet.net/v4/query` → **401**. v3 → **403** with *"provide
+  your API key via HTTP Basic Auth as username value … password needs to be empty"*, which is
+  exactly the `Basic` credential from 23b.
+- **Jooble**: `POST jooble.org/api/` → **403** without a key (it also demands a `Referer`). The key
+  goes **in the URL path** (`/api/{key}`), which no `HostCredential` kind can express today.
+
+**Build order: 24a the PERM bit → 24b the PERM ingester → 24c wiring + hand download → 24d
+Jooble/Careerjet probes (gated on the owner's keys) → 24e docs.** Each sub-slice is one TDD loop,
+`make verify`, one `slice-24x:` commit, push.
+
+### 24a — `Registry.PERM`, appended (domain, pure)
+
+- `test_perm_is_appended_as_bit_64` (RED). The enum's values are frozen and append-only (its
+  docstring), so PERM takes **64**. `registry_flags` is a plain integer column, so **no migration**.
+- `SNAPSHOT_REGISTRIES` derives from the enum, so `/registries` coverage lists PERM, as never
+  ingested, with no further code. `test_snapshot_registries_cover_every_bit_but_manual` is the guard.
+- **The bit is separate from `US` on purpose.** They are different evidence (temporary vs
+  permanent sponsorship), and the drawer should be able to say which. `registry_inferred` is
+  `flags != 0`, so the tier logic and the hypothesis invariant are unchanged.
+- Frontend: the drawer's `REGISTRY_LABEL` gains `PERM: 'US PERM labor certifications (green
+  card)'`. **Found while planning:** it also lacks `IE` and `CA` (since slice 14), so those
+  registries render as bare codes. Add both with a test that every backend registry name has a
+  label.
+
+### 24b — `PERMRegistry` (adapter)
+
+- Fixture cut from the **real downloaded file**: its header row verbatim plus a handful of rows
+  (certified, certified-expired, denied, withdrawn, a trade name, a padding row). **No
+  hand-built header is passed off as recorded.** If the live header differs from the layout
+  above, the file wins.
+- `test_perm_counts_certified_and_certified_expired_filings` (RED). An expired certification was
+  still a sponsorship. Denied and Withdrawn count for nothing.
+- `test_perm_trade_name_becomes_an_alias`, `test_perm_skips_padding_rows`.
+- Evidence via `counted(n, "certified PERM filing")`.
+- **Refactor trigger, expected:** this is the second "aggregate certified rows per employer with
+  a DBA alias" ingester. On green, extract the shared aggregation from `h1b.py` rather than
+  carrying two copies. The column names and status sets stay per-register data.
+
+### 24c — Wiring and the hand download
+
+- `Settings.perm_registry_path` ← `BEACON_PERM_REGISTRY_PATH`, default
+  `data/registries/us_perm.csv`. `refresh.py` gains the spec row and a `_SNAPSHOT_SOURCES` line
+  (DOL performance page, "XLSX, export to CSV").
+- Hand step, recorded like the LCA one: download the FY2026 PERM XLSX and convert it to a CSV of
+  the three columns used. Run `refresh-registries`.
+- Live acceptance: record the companies matched, the overlap with `US`, and the tier movement on
+  open jobs (`unknown` → `registry_inferred`). Spot-check the **short-name hazard** (PROGRESS
+  2026-09-18: `Dart` matched "Dallas Area Rapid Transit"). Every match touching ≥50 open jobs
+  that rests on a single PERM filing gets eyeballed.
+
+### 24d — Jooble and Careerjet: probe with keys, then decide (gated on the owner)
+
+**Nothing is built here without a key and a recorded fixture.** If the owner registers neither
+key, 24d is recorded open, as 23f was. With a key, each one answers:
+1. **Quota.** Adzuna died on this (1,000/month vs ~4,860). One daily poll × role queries × pages
+   must fit.
+2. **Full text or snippet?** A snippet-only row means no `content_hash`, no tier and no resume
+   score (the Breezy rejection). A source with no detail call is rejected on that alone.
+3. **Steerable by role?** If `keywords` is ignored, it is a firehose (the Arbeitnow/Muse lesson).
+4. **Terms.** Careerjet is an affiliate programme: check whether results must be shown with its
+   tracking links.
+5. **Jooble only: the key-in-path problem.** No `HostCredential` kind can express it. Either add a
+   fourth kind that rewrites the path on the door, or reject Jooble. **The adapter never holds
+   the key** (the 14e/23b rule).
+
+Each source ends as an adapter (fixture tests + `make_companyless_sources` + live temp-DB poll)
+or as a SPEC §5.5 row with the probe that decided it.
+
+### 24e — Docs
+
+SPEC §5.3 gains the PERM register and the `PERM` bitmask member. §5.4/§5.5 get the Jooble and
+Careerjet verdicts, plus one line each recording why USAJOBS and the USCIS Employer Data Hub were
+not taken up. SOURCES.md §5 gains PERM. PROGRESS: status, tracker row, Decisions entry.
+
+Acceptance:
+- [ ] `Registry.PERM == 64`; `/registries` lists PERM; the drawer labels PERM, IE and CA
+- [ ] PERM ingested from a real FY2026 file; companies matched and tier movement recorded; the
+      thinly-evidenced large matches eyeballed
+- [ ] Jooble and Careerjet each end as a shipped adapter or a §5.5 row (or recorded open, if no key)
+- [ ] `make verify` green on both stacks at every commit
+
+---
+
 ## Cross-cutting rules
 
 - Every network adapter is tested against recorded fixtures only; live calls happen solely in manual acceptance checks
