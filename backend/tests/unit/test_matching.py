@@ -6,12 +6,15 @@ this table is append-only.
 import pytest
 
 from beacon.domain.matching import (
+    dropped_tokens,
+    match_company,
     match_confidence,
     normalize_name,
+    registry_matches,
     seed_name_variants,
     split_trading_as,
 )
-from beacon.domain.registry import RegistryCompany
+from beacon.domain.registry import Registry, RegistryCompany
 
 
 # ── Normalization: legal-suffix and casing variants collapse to one key ──────────
@@ -159,3 +162,43 @@ def test_seed_parenthetical_becomes_an_alias_variant() -> None:
 def test_parenthetical_alias_matching() -> None:
     assert match_confidence("Bird (MessageBird)", RegistryCompany("Messagebird B.V.")) is not None
     assert match_confidence("Bird (MessageBird)", RegistryCompany("Q*BIRD B.V.")) is None
+
+
+# ── Spot-check support (slice 25a): per-registry matches, and why a match was stripped ──
+COHERE_TECH = RegistryCompany(name="Cohere Technologies Inc.", evidence="1 certified PERM filing")
+COHERE_US = RegistryCompany(name="Cohere US, Inc.", evidence="3 certified LCA filings")
+
+
+def test_registry_matches_reports_the_best_entry_per_registry() -> None:
+    entries = {Registry.US: [COHERE_US], Registry.PERM: [COHERE_TECH]}
+
+    matches = registry_matches("Cohere", entries)
+
+    assert [(m.registry, m.entry.name, m.confidence) for m in matches] == [
+        (Registry.US, "Cohere US, Inc.", 0.9),
+        (Registry.PERM, "Cohere Technologies Inc.", 0.9),
+    ]
+
+
+def test_match_company_is_the_fold_of_registry_matches() -> None:
+    entries = {Registry.US: [COHERE_US], Registry.PERM: [COHERE_TECH]}
+
+    result = match_company("Cohere", entries)
+
+    assert result.flags == Registry.US | Registry.PERM
+    assert result.evidence == "US 3 certified LCA filings; PERM 1 certified PERM filing"
+
+
+@pytest.mark.parametrize(
+    ("seed", "entry", "dropped"),
+    [
+        ("Cohere", "Cohere Technologies Inc.", {"technologies"}),  # structural: review it
+        ("Backbase", "Backbase U.S.A. Inc.", {"usa"}),  # geography: the safe kind
+        ("Stripe", "Stripe, Inc.", set()),  # suffix-only: a full-confidence hit
+    ],
+    ids=["structural", "geography", "suffix-only"],
+)
+def test_dropped_tokens_name_what_stripping_removed(
+    seed: str, entry: str, dropped: set[str]
+) -> None:
+    assert dropped_tokens(seed, RegistryCompany(name=entry)) == frozenset(dropped)

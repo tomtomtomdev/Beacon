@@ -67,7 +67,7 @@ def _snapshot_specs(settings: Settings) -> tuple[_SnapshotSpec, ...]:
 def report_missing_snapshots(settings: Settings) -> tuple[str, ...]:
     """Name every register whose file is absent, and where to get it.
 
-    Absence is the content. `_available_ingesters` skips a missing file by design, which is how
+    Absence is the content. `available_ingesters` skips a missing file by design, which is how
     SPEC §4 came to claim the UK register was ingested while its bit sat on zero companies for
     sixteen slices. No re-run fixes a missing file — it is a hand download — so the line says so.
     """
@@ -78,7 +78,7 @@ def report_missing_snapshots(settings: Settings) -> tuple[str, ...]:
     return missing
 
 
-def _available_ingesters(settings: Settings) -> list[RegistryIngester]:
+def available_ingesters(settings: Settings) -> list[RegistryIngester]:
     """Only the snapshots that are actually present — a missing register is skipped, not fatal."""
     report_missing_snapshots(settings)
     return [build(path) for _name, path, build in _snapshot_specs(settings) if path.exists()]
@@ -123,7 +123,7 @@ def _wire(settings: Settings) -> tuple[sqlite3.Connection, SqliteCompanyRepo, Sq
 
 def run_refresh(settings: Settings) -> int:
     conn, company_repo, jobs = _wire(settings)
-    ingesters = _available_ingesters(settings)
+    ingesters = available_ingesters(settings)
     if not ingesters:
         print("no registry snapshots available — nothing to match")
         return 1

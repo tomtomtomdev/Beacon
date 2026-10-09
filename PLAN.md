@@ -1628,8 +1628,10 @@ Acceptance:
 
 **Why now:** slice 24's PERM ingest (measured on a copy of this box's DB) matched **Cohere →
 "Cohere Technologies Inc."**, a wireless company, which covers **126 open jobs**. CLAUDE.md gates every
-matcher change on `scripts/spot_check_registry.py`, and that script **has never existed**
-(PROGRESS 2026-09-18 already noticed). The spot-check comes first. Fixes come only against it.
+matcher change on the registry spot-check. **Correction, found in 25a:** the script *does*
+exist, at `backend/scripts/spot_check_registry.py` (since slice 2). PROGRESS 2026-09-18 and
+slice 24 looked in the repo-root `scripts/` and wrongly recorded it as missing. What it lacked
+was the ability to see real data: it read only the committed fixtures, and only seeds.
 
 **Measured 2026-10-09, PERM vs the 685 companies on this box: 27 matches exist only after
 token stripping.** They fall into three groups:
@@ -1649,10 +1651,12 @@ token stripping.** They fall into three groups:
 **Build order: 25a spot-check script → 25b the parenthetical rule → 25c the reviewed
 rejection table → 25d docs.** One TDD loop each, `make verify`, one `slice-25x:` commit, push.
 
-### 25a — `scripts/spot_check_registry.py`
+### 25a — `backend/scripts/spot_check_registry.py` sees real data ✅ 2026-10-09
 
-- Reads the seed list and every present snapshot through the **real ingesters** (no copy of
-  the matching logic), and prints one stable, sorted line per (company, registry) match:
+- Extended rather than written: `--snapshots` reads the present files through refresh's own
+  specs (`available_ingesters`, made public), `--from-db` matches every active company the way a
+  refresh does, not just the 81 seeds, and PERM joins the fixture run. One stable, sorted line per
+  (company, registry) match:
   `company | registry | entry | confidence | dropped tokens | evidence`.
 - `--only-stripped` narrows to confidence < 1.0 (the review set). `--baseline FILE` writes or
   diffs against a saved run, so a normalizer change is reviewed as a diff, which is what CLAUDE.md
@@ -1691,7 +1695,7 @@ matching is token-equality **plus a reviewed rejection table**. PROGRESS: status
 Decisions.
 
 Acceptance:
-- [ ] `scripts/spot_check_registry.py` runs against the present snapshots and diffs a baseline
+- [x] `scripts/spot_check_registry.py` runs against the present snapshots and diffs a baseline — *25a: on the FY2026 Q3 PERM file, `--from-db --only-stripped` lists 27 matches. Cohere, Linear, Vanguard, ABS and the two `(S)` → Group-S rows are among them*
 - [ ] No seed yields a single-letter or geography-only parenthetical variant
 - [ ] Cohere and Linear lose the PERM bit; every other 24c match is unchanged
 - [ ] `make verify` green on both stacks at every commit

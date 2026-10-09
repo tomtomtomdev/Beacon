@@ -159,7 +159,7 @@ def test_count_per_registry_splits_a_bitmask_histogram(
 # --- registries_needing_refresh (slice 23) ------------------------------------------------
 #
 # The monthly launchd agent is the wrong cadence for a snapshot that has never been ingested at
-# all: UK/NL/US sat un-ingested for sixteen slices while `_available_ingesters` printed a skip
+# all: UK/NL/US sat un-ingested for sixteen slices while `available_ingesters` printed a skip
 # line and returned. A snapshot that is present on disk and absent from registries_meta should
 # be picked up the next time Beacon starts, not on the 1st of next month.
 

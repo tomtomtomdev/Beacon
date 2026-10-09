@@ -178,6 +178,50 @@ def match_confidence(seed_name: str, entry: RegistryCompany) -> float | None:
     return best
 
 
+def dropped_tokens(seed_name: str, entry: RegistryCompany) -> frozenset[str] | None:
+    """The geo/structural tokens stripping removed to make this seed match this entry: empty
+    for a full-confidence hit, None when they do not match at all. This is what a reviewer
+    reads to tell a safe geography drop ("usa") from a structural one ("technologies")."""
+    seeds = [normalize_name(variant) for variant in seed_name_variants(seed_name)]
+    candidates = [normalize_name(name) for name in (entry.name, *entry.aliases)]
+    best: frozenset[str] | None = None
+    for seed in seeds:
+        for candidate in candidates:
+            if not seed.key or seed.key != candidate.key:
+                continue
+            dropped = seed.core ^ candidate.core
+            if best is None or len(dropped) < len(best):
+                best = dropped
+    return best
+
+
+@dataclass(frozen=True, slots=True)
+class RegistryEntryMatch:
+    """One registry's best entry for a seed: what the spot-check prints, one line each."""
+
+    registry: Registry
+    confidence: float
+    entry: RegistryCompany
+
+
+def registry_matches(
+    seed_name: str, entries_by_registry: Mapping[Registry, Sequence[RegistryCompany]]
+) -> list[RegistryEntryMatch]:
+    """The best-matching entry in each registry that has one, in the mapping's order.
+
+    Registry match is company-level: a registry contributes on its single best entry hit
+    (multi-entity companies are counted once)."""
+    matches: list[RegistryEntryMatch] = []
+    for registry, entries in entries_by_registry.items():
+        best = _best_entry(seed_name, entries)
+        if best is not None:
+            confidence, entry = best
+            matches.append(
+                RegistryEntryMatch(registry=registry, confidence=confidence, entry=entry)
+            )
+    return matches
+
+
 @dataclass(frozen=True, slots=True)
 class RegistryMatch:
     """The combined verdict for one company across every registry it was checked against."""
@@ -191,24 +235,15 @@ def match_company(
     seed_name: str, entries_by_registry: Mapping[Registry, Sequence[RegistryCompany]]
 ) -> RegistryMatch:
     """Match one seed name against every registry's entries, OR-ing the bits that hit.
-
-    Registry match is company-level: a registry contributes its bit on the single best
-    entry hit (multi-entity companies are counted once). Confidence is the best across
-    registries; evidence keeps a per-registry audit line."""
+    Confidence is the best across registries; evidence keeps a per-registry audit line."""
+    matches = registry_matches(seed_name, entries_by_registry)
     flags = Registry(0)
-    confidences: list[float] = []
-    reasons: list[str] = []
-    for registry, entries in entries_by_registry.items():
-        best_entry = _best_entry(seed_name, entries)
-        if best_entry is None:
-            continue
-        confidence, entry = best_entry
-        flags |= registry
-        confidences.append(confidence)
-        reasons.append(f"{registry.name} {entry.evidence or f'{confidence:.2f}'}")
+    for match in matches:
+        flags |= match.registry
+    reasons = [f"{m.registry.name} {m.entry.evidence or f'{m.confidence:.2f}'}" for m in matches]
     return RegistryMatch(
         flags=flags,
-        confidence=max(confidences) if confidences else None,
+        confidence=max((m.confidence for m in matches), default=None),
         evidence="; ".join(reasons) if reasons else None,
     )
 

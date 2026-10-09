@@ -1,6 +1,6 @@
 """Registry coverage: which sponsor registers actually have a snapshot on this box.
 
-SPEC §4 claimed the UK register was ingested; it never was. `_available_ingesters`
+SPEC §4 claimed the UK register was ingested; it never was. `available_ingesters`
 (`refresh.py`) skips a missing snapshot with a printed line and returns, so the absence was
 invisible for sixteen slices while every `registry_inferred` tier in the corpus came from the
 two registers that *had* been downloaded. This view exists so that the next missing snapshot
