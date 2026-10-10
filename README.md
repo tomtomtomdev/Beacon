@@ -32,6 +32,7 @@ Figures measured 2026-10-10.
 | 21 | The panel stops being a gate: all jobs by default, `?focus=` becomes a filter | ✅ |
 | 22 | Closed postings leave the default listing, behind a "Show closed" toggle | ✅ |
 | 23 | All of engineering: data, security, embedded, QA, eng. management, solutions + a `software` fallback; JobTech steered to Data/IT | ✅ 2026-10-10; wider board queries withdrawn (poll hit 2989s of a 3000s watchdog) |
+| 24 | `infra` (SRE, devops, platform, cloud) splits out of `backend`; `classify --reclassify` relabels stored rows | ✅ 2026-10-10 |
 
 `PROGRESS.md` is the live source of truth for what's built; `PLAN.md` is the slice order.
 
@@ -122,7 +123,7 @@ npm run dev
 |---|---|
 | `python -m beacon.notify` | send the current digest without polling |
 | `python -m beacon.refresh [--flag NAME --evidence TEXT]` | rematch seeds against the registry snapshots, or hand-flag one company as a manual sponsor |
-| `python -m beacon.classify [--upgrade-residue]` | classify rows that have never been classified; with `--upgrade-residue`, re-run the LLM on rows left with no category (needs a key) |
+| `python -m beacon.classify [--upgrade-residue \| --reclassify CATEGORY]` | classify rows that have never been classified; `--upgrade-residue` re-runs the classifier on rows left with no category (the LLM with a key, today's vocabulary without one); `--reclassify CATEGORY` re-reads every row stored with that category after a vocabulary split |
 | `python -m beacon.relocate` | re-parse the location of rows with no country (idempotent) |
 | `python -m beacon.retier` | move home-market rows onto their current tier (idempotent) |
 | `python -m beacon.maintenance {refresh-registries,refresh-registries-if-needed,backup,probe}` | the launchd jobs, run by hand |

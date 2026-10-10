@@ -4,6 +4,25 @@
 
 ## Current status
 
+**2026-10-10 (afternoon): slice 24, `infra` splits out of `backend`.** Also: launchd agents and
+the classifier spot-check.
+
+| what | result |
+|---|---|
+| launchd | `com.beacon.{refresh,backup,probe}` reinstalled and loaded (only `digest` had been). Backup kickstarted under launchd: `last exit code = 0`, `beacon-20261010-060909.db`. **No backup had been written since 2026-09-24** |
+| spot-check | `spot_check_classifier.py` live over Anthropic/Adyen/Agoda/Tines engineering titles: **64/67 categories right (95.5%, gate 90%)**. The 3 misses (CI/CD, sysadmin, BI developer) are now fixture rows |
+| 24a | new `infra` category: SRE, devops, kubernetes, networking, platform/cloud/release, and the spot-check misses. Bare `systems engineer` dropped; a guard on bare `infrastructure` for PM/TPM/sourcing/accounting titles |
+| 24b | `classify --reclassify CATEGORY` re-reads rows stored with one category. Live: 873 + 45 rows changed, 0 LLM calls, second run 0 |
+| 24c | Infra pill in the More row; `SCORING_VERSION` 4; a backend saved search no longer counts infra jobs (test) |
+
+**Open `backend` 956 → 365; `infra` 471 (18 both).** Both live alerts are backend + java/python,
+so SRE/devops postings no longer reach them: 189 open backend rows mention Java and 118 mention
+Python.
+
+**Next action:** time each source in the poll log, then budget the poll (it ran 2989s of 3000s
+at 12:00 with the wider queries; the queries are withdrawn but the headroom is thin). After
+that, the Swedish IT titles.
+
 **2026-10-10 — slice 23: all of engineering, not just iOS / backend / AI-ML.** Measured first:
 **7,651 of 8,918 open canonical postings (86%) carried no category**, so no category filter could
 reach them. About 2,200 of those were engineering titles the classifier had no word for (721 plain
@@ -85,10 +104,35 @@ the Swedish IT titles JobTech now brings ("Testare", "IT-arkitekt", "Systemingen
 | 21 | The panel stops being a gate: jobs by default, `?focus=` becomes a filter, derived total + paging, globe-only idle tour | ✅ done | 2026-09-18 |
 | 22 | Closed postings leave the default listing, behind a "Show closed" toggle | ✅ done | 2026-09-18 |
 | 23 | All of engineering, not just iOS / backend / AI-ML (taxonomy → offline residue backfill → UI → steered boards) | ✅ 23a–23c shipped; 23d kept the JobTech steer, board queries withdrawn (poll 2989s) | 2026-10-10 |
+| 24 | `infra` splits out of `backend` (vocabulary → `--reclassify` relabel → Infra pill, scoring v4) | ✅ done | 2026-10-10 |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (acceptance boxes checked)
 
 ## Decisions log
+
+- **2026-10-10 (infra-split)** — **`backend` now means building services; `infra` means running
+  them.** Slice 23 kept SRE/devops/platform inside `backend` so saved searches and resume scores
+  wouldn't shift. The user then asked for the split. **Deviates from SPEC §3**, which is
+  rewritten. Decisions:
+  - **Six slice-3/23 rows reversed, not deleted:** `backend-sre/infra/networking/platform-eng/
+    cloud-engineer/release` became `infra-*`, with the same titles and a new expectation.
+  - **Bare `systems engineer` is gone** from the vocabulary rather than moved. Live, it heads
+    Finance, ML, Design, Operating and Quote-to-Cash Systems titles far more often than
+    sysadmin ones. `it systems engineer` stays as infra, `operating systems engineer` as
+    backend, `software systems engineer` as software and `ai systems engineer` as ai-ml.
+  - **A guard on bare `infrastructure`/`infra`/`networking`** for PM/TPM/project manager,
+    sourcing, accounting, policy, supply chain, facilities and commissioning titles, unless an
+    engineer/developer/SRE/devops word corroborates it. That was about 35 of 506 open infra rows
+    on the first relabel; this noise had always sat in `backend`, and the split made it visible.
+  - **The relabel rewrites to `''` when the vocabulary no longer reads a row.** The PLAN box said
+    no row would lose its last category; it was revised, because 15 open rows did, and those
+    labels were wrong. A fresh ingest would store `''`, and the residue upgrader can revisit
+    them. This differs from 23b, which only ever filled `''` rows.
+  - **The relabel also closed 23b's gap:** rows labelled before slice 23 picked up their
+    eng-mgmt/solutions/security/data categories when re-read (e.g. "Engineering Manager –
+    Backend" → `backend,eng-mgmt`). Only rows carrying `backend` or `infra` were re-read; other
+    old labels may still lag the vocabulary. `--reclassify <category>` reaches them if wanted.
+  - `llm_usage` was empty, so every stored label was heuristic and re-reading lost nothing.
 
 - **2026-10-10 (board-queries-withdrawn)** — **Slice 23's kill criterion fired, and the wider
   Himalayas and MyCareersFuture queries are out.** The 12:00 fire, the first with them, ran

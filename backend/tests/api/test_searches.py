@@ -102,6 +102,21 @@ async def test_a_saved_search_on_a_slice_23_category_counts_its_jobs(
     assert listed[0]["new_count"] == 1
 
 
+async def test_a_backend_search_no_longer_counts_infra_jobs(
+    client: httpx.AsyncClient, db_path: Path
+) -> None:
+    """Slice 24: the point of the split — both live alerts are backend + a language, and an
+    SRE posting that mentions Python was matching them."""
+    _seed_ios_job(db_path, "1", country="SE", category=Category.BACKEND)
+    _seed_ios_job(db_path, "2", country="SE", category=Category.INFRA)
+
+    await client.post("/searches", json={"name": "BE", "filters": {"categories": ["backend"]}})
+    await client.post("/searches", json={"name": "Infra", "filters": {"categories": ["infra"]}})
+    listed = {s["name"]: s["new_count"] for s in (await client.get("/searches")).json()}
+
+    assert listed == {"BE": 1, "Infra": 1}
+
+
 async def test_delete_returns_204_then_404(client: httpx.AsyncClient) -> None:
     created = (await client.post("/searches", json=IOS_SE_SEARCH)).json()
 

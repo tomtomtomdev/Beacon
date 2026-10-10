@@ -29,7 +29,7 @@ This is a personal tool. Correctness of the *sponsorship signal* and *dedup* mat
 - Poll public ATS APIs (nine as of slice 14: Greenhouse, Lever, Ashby, SmartRecruiters, Workable, Workday, Teamtailor, Recruitee, Rippling) for a curated company list
 - Poll API/RSS-friendly boards (HN Who's Hiring, RemoteOK, We Work Remotely, Arbetsförmedlingen JobTech)
 - Normalize into one `jobs` table with dedup across sources
-- Classify: category (ios / android / flutter / backend / fullstack / frontend / ai-ml; since slice 23 also data / security / embedded / qa / eng-mgmt / solutions, with `software` as the fallback for an engineering title that names no specialism), level, remote-vs-onsite
+- Classify: category (ios / android / flutter / backend / fullstack / frontend / ai-ml; since slice 23 also data / security / embedded / qa / eng-mgmt / solutions, since slice 24 infra (SRE / devops / platform / cloud, split out of backend), with `software` as the fallback for an engineering title that names no specialism), level, remote-vs-onsite
 - Sponsorship signal, five tiers: `explicit_yes` / `not_required` / `registry_inferred` / `unknown` / `explicit_no` — surfaced as **badge + default sort key**, never a default exclusion
 - Cover the **home market (Indonesia)** alongside the relocation targets: iOS / backend (Java + Python) / AI-ML roles located in ID are ingested, classified and badged `not_required` — no visa needed — and rank below confirmed sponsors but above every speculative tier
 - Cross-reference official sponsor registries (UK, NL, SE) at the company level
@@ -50,7 +50,7 @@ This is a personal tool. Correctness of the *sponsorship signal* and *dedup* mat
 
 | Dimension | Values |
 |---|---|
-| Categories | iOS (primary), Backend, AI/ML (secondary: Android, Flutter, Fullstack). **Widened 2026-10-10 (slice 23) to all of engineering:** Data, Security, Embedded, QA, Eng. management, Solutions (customer-facing, kept apart so it can be filtered out), and Software as the no-specialism fallback. Non-engineering titles stay uncategorised. |
+| Categories | iOS (primary), Backend, AI/ML (secondary: Android, Flutter, Fullstack). **Widened 2026-10-10 (slice 23) to all of engineering:** Data, Security, Embedded, QA, Eng. management, Solutions (customer-facing, kept apart so it can be filtered out), and Software as the no-specialism fallback. **Slice 24 (2026-10-10)** split Infra (SRE, devops, platform, cloud, networking) out of Backend, which now means building services. Non-engineering titles stay uncategorised. |
 | Level | Senior / Staff / Lead (filter out junior-only postings) |
 | Primary countries | Singapore, Australia, Japan, Netherlands, US (SF Bay), Canada, Ireland |
 | Nice-to-have countries | Sweden, Norway, Denmark, Switzerland |

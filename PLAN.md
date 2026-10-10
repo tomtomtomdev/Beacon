@@ -1523,7 +1523,7 @@ Acceptance:
 
 ---
 
-## Slice 24 — `infra` splits out of `backend` — **IN PROGRESS 2026-10-10**
+## Slice 24 — `infra` splits out of `backend` — **DONE 2026-10-10**
 
 **Asked for 2026-10-10:** split infra and backend. Since slice 3, `backend` has also held
 SRE, devops, platform, cloud, release and networking titles. Slice 23 kept that on purpose
@@ -1550,12 +1550,22 @@ mentions Python matches a backend alert.
   because a resume's category set now reads differently.
 
 Acceptance:
-- [ ] Dry run over the open `backend` rows, eyeballed before relabelling: every row that
-      moves reads as infra
-- [ ] No open row loses its last category, and the `backend` count only moves to `infra` or
-      `backend,infra`
-- [ ] `?category=infra` works end to end (pill → `/jobs` → saved search)
-- [ ] `make verify` green; PROGRESS Decisions entry; SPEC §3 / DESIGN §2 name the category
+- [x] Dry run over the open `backend` rows, eyeballed before relabelling: every row that
+      moves reads as infra. It also found the bare `systems engineer` noise (Finance/ML/Design
+      Systems) and the PM/TPM/sourcing titles on bare `infrastructure`. Both are fixed by
+      vocabulary and a guard, test rows first
+- [x] **Revised (Decisions 2026-10-10 infra-split):** 15 open rows lose their last category, and that is right. A stale label is a
+      wrong one, and a fresh ingest of "Finance Systems Engineer" reads `''`. Two real misses in
+      that set got keywords (software/AI systems engineer). Everything else that moves goes to
+      infra or picks up the slice-23 categories that 23b's ''-only backfill never reached
+- [x] `?category=infra` works end to end: pill test, saved-search test (a backend search no
+      longer counts infra jobs)
+- [x] `make verify` green (1,099 backend, 123 frontend); PROGRESS Decisions entry; SPEC §3 /
+      DESIGN §2 name the category
+
+**Live result (backup `beacon-20261010-061507.db` first, 0 LLM calls):** `--reclassify backend`
+changed 873 rows, `--reclassify infra` (after the guard) 45 more, and a second run changes 0.
+Open `backend` went 956 → **365** and `infra` is **471**, with 18 carrying both.
 
 ---
 

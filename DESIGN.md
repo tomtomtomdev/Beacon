@@ -207,8 +207,9 @@ header is sticky.
     chip opens onto.
   - **Chip row:** "CATEGORY" label + 7 category pills (iOS, Backend, AI/ML, Android, Flutter,
     Fullstack, Frontend) · a quiet text toggle "More"/"Fewer" (no pill chrome; `--text-label`,
-    hover `--accent-soft-fg`) that reveals 7 more in the same pill style — Software, Data,
-    Security, Embedded, QA, Eng. management, Solutions (slice 23, 2026-10-10). Collapsed, the
+    hover `--accent-soft-fg`) that reveals 8 more in the same pill style — Software, Infra, Data,
+    Security, Embedded, QA, Eng. management, Solutions (slice 23, 2026-10-10; Infra slice 24).
+    Collapsed, the
     row still shows any of those that is active · divider · "LEVEL" + 3 pills (Senior, Staff,
     Lead). Pill styles as above.
 - **Job list** (pad `4×20×22`; a **stack of compact cards**, `flex-direction:column; gap:10px` — not
