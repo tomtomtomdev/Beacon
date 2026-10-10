@@ -25,6 +25,8 @@ class Category(StrEnum):
     QA = "qa"
     ENG_MGMT = "eng-mgmt"
     SOLUTIONS = "solutions"
+    # Slice 24 (2026-10-10): SRE/devops/platform/cloud split out of backend.
+    INFRA = "infra"
     # The fallback: an engineering title that names no specialism ("Software Engineer").
     SOFTWARE = "software"
 

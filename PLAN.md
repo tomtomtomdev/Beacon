@@ -1523,6 +1523,42 @@ Acceptance:
 
 ---
 
+## Slice 24 — `infra` splits out of `backend` — **IN PROGRESS 2026-10-10**
+
+**Asked for 2026-10-10:** split infra and backend. Since slice 3, `backend` has also held
+SRE, devops, platform, cloud, release and networking titles. Slice 23 kept that on purpose
+because existing saved searches and resume scores depended on it. Both live saved searches
+are `backend` + a language query (`java`, `python`), so an SRE or Kubernetes posting that
+mentions Python matches a backend alert.
+
+- **24a: vocabulary.** New `Category.INFRA = "infra"`. Move infrastructure, infra, site
+  reliability, sre, devops, kubernetes, networking, systems engineer, platform engineer, cloud
+  engineer and release engineer from `BACKEND` to `INFRA`. Add the spot-check misses: ci/cd,
+  system(s) administrator, sysadmin, storage engineer, network engineer, reliability
+  engineer, production engineer, build engineer, platform engineering. Languages, frameworks,
+  databases, distributed systems and kernel stay `backend`. A title naming both (e.g. "Backend
+  Engineer, Infrastructure") carries both.
+  - The existing `backend-sre/infra/networking/platform-eng/cloud-engineer/release` rows
+    become `infra-*`. They are reversed with a Decisions entry, as slice 23 did with its
+    reversed rows, not deleted.
+  - Fold in the other 2026-10-10 spot-check miss: "Business Intelligence Developer" → `data`.
+- **24b: relabel.** `classify --reclassify backend` re-runs the classifier over rows that
+  carry a category and rewrites only rows whose result differs and is non-empty.
+  `llm_usage` is empty, so every stored label is heuristic and re-running the heuristic loses
+  nothing. Back up first.
+- **24c: UI and scores.** Add an `Infra` pill to the "More" row. Bump `SCORING_VERSION` to 4,
+  because a resume's category set now reads differently.
+
+Acceptance:
+- [ ] Dry run over the open `backend` rows, eyeballed before relabelling: every row that
+      moves reads as infra
+- [ ] No open row loses its last category, and the `backend` count only moves to `infra` or
+      `backend,infra`
+- [ ] `?category=infra` works end to end (pill → `/jobs` → saved search)
+- [ ] `make verify` green; PROGRESS Decisions entry; SPEC §3 / DESIGN §2 name the category
+
+---
+
 ## Cross-cutting rules
 
 - Every network adapter is tested against recorded fixtures only; live calls happen solely in manual acceptance checks

@@ -42,12 +42,12 @@ CATEGORY_CASES = [
     # Spot-check misses (real Adyen/Agoda titles): space-form "Back End", Java, SRE, infra.
     ("backend-space", "Back End Software Engineer", "", {Category.BACKEND}),
     ("backend-java", "Software Engineer (Java)", "", {Category.BACKEND}),
-    ("backend-sre", "Senior Site Reliability Engineer", "", {Category.BACKEND}),
-    ("backend-infra", "Staff Infrastructure Engineer", "", {Category.BACKEND}),
+    ("infra-sre", "Senior Site Reliability Engineer", "", {Category.INFRA}),
+    ("infra-infrastructure", "Staff Infrastructure Engineer", "", {Category.INFRA}),
     # Coverage misses found in the 2026-08-18 corpus spot-check (real Databricks/Agoda/
     # OpenAI/Stripe titles): named backend specialisms the table did not carry.
     ("backend-distributed", "Software Engineer, Distributed Systems", "", {Category.BACKEND}),
-    ("backend-networking", "Senior Software Engineer - Networking", "", {Category.BACKEND}),
+    ("infra-networking", "Senior Software Engineer - Networking", "", {Category.INFRA}),
     (
         "backend-database",
         "Senior Software Engineer - Database Engine Internals",
@@ -56,7 +56,7 @@ CATEGORY_CASES = [
     ),
     ("backend-kernel", "TPU Kernel Engineer", "", {Category.BACKEND}),
     ("backend-python", "Agentic Python Engineer", "", {Category.BACKEND}),
-    ("backend-platform-eng", "Senior Data Platform Engineer", "", {Category.BACKEND}),
+    ("infra-platform-eng", "Senior Data Platform Engineer", "", {Category.INFRA}),
     ("aiml-applied-ai-engineer", "Senior Applied AI Engineer", "", {Category.AI_ML}),
     ("aiml-applied-ai-scientist", "Staff Applied AI Scientist", "", {Category.AI_ML}),
     ("frontend-title", "Frontend Engineer", "Build the web UI", {Category.FRONTEND}),
@@ -200,7 +200,7 @@ CATEGORY_CASES = [
         {Category.AI_ML},
     ),
     ("aiml-mle", "Research MLE (Training Optimization)", "", {Category.AI_ML}),
-    ("backend-cloud-engineer", "Senior Cloud Engineer, V&V Platform", "", {Category.BACKEND}),
+    ("infra-cloud-engineer", "Senior Cloud Engineer, V&V Platform", "", {Category.INFRA}),
     ("solutions-field", "Field Engineer, Data Engine", "", {Category.SOLUTIONS}),
     ("solutions-implementation", "Consultant Implementation Engineer", "", {Category.SOLUTIONS}),
     ("solutions-ps", "Professional Services Engineer II - West", "", {Category.SOLUTIONS}),
@@ -237,12 +237,46 @@ CATEGORY_CASES = [
     ),
     ("solutions-applied-ai-architects", "Manager, Applied AI Architects", "", {Category.SOLUTIONS}),
     ("solutions-deployment", "Software Deployment Engineer", "", {Category.SOLUTIONS}),
-    ("backend-release", "Release Engineer | Consumer Devices", "", {Category.BACKEND}),
+    ("infra-release", "Release Engineer | Consumer Devices", "", {Category.INFRA}),
     ("security-privacy", "Privacy Engineer", "", {Category.SECURITY}),
     ("data-bi-engineer", "Senior Business Intelligence Engineer", "", {Category.DATA}),
     ("eng-mgmt-team-lead", "(RD) Senior Engineering Team Lead", "", {Category.ENG_MGMT}),
     ("software-senior-engineer", "Senior Engineer, Finance Systems", "", {Category.SOFTWARE}),
     ("software-staff-engineers", "Staff Engineers (Elixir)", "", {Category.SOFTWARE}),
+    # Slice 24: infra splits out of backend. The six rows above that once read backend
+    # (sre, infrastructure, networking, platform, cloud, release) now read infra.
+    ("infra-devops", "DevOps Engineer", "", {Category.INFRA}),
+    ("infra-kubernetes", "Kubernetes Engineer", "", {Category.INFRA}),
+    (
+        "infra-systems-engineer",
+        "(Infra) Senior Systems Engineer - Contact Center",
+        "",
+        {Category.INFRA},
+    ),
+    ("infra-sre-acronym", "SRE, Payments", "", {Category.INFRA}),
+    ("infra-network-engineer", "Network Engineer", "", {Category.INFRA}),
+    ("infra-reliability", "Reliability Engineer, Storage", "", {Category.INFRA}),
+    ("infra-production", "Production Engineer", "", {Category.INFRA}),
+    ("infra-build", "Build Engineer, Developer Productivity", "", {Category.INFRA}),
+    ("infra-platform-engineering", "Manager, Platform Engineering", "", {Category.INFRA}),
+    # Live spot-check misses 2026-10-10 (real Adyen/Agoda titles).
+    ("infra-cicd", "Senior CI/CD Engineer", "", {Category.INFRA}),
+    ("infra-sysadmin", "Senior System Administrator (Storage Engineer)", "", {Category.INFRA}),
+    ("infra-sysadmin-short", "Linux Sysadmin", "", {Category.INFRA}),
+    ("data-bi-developer", "Business Intelligence Developer, RTA", "", {Category.DATA}),
+    # Backend keeps languages, frameworks, databases and systems internals...
+    ("backend-stays-golang", "Golang Engineer", "", {Category.BACKEND}),
+    ("backend-stays-distributed", "Distributed Systems Engineer", "", {Category.BACKEND}),
+    ("infra-it-systems", "IT Systems Engineer, Client Platform", "", {Category.INFRA}),
+    ("guard-finance-systems-not-infra", "Finance Systems Engineer, Tax", "", set()),
+    # ...and a title naming both carries both.
+    (
+        "backend-and-infra",
+        "Backend Engineer, Infrastructure",
+        "",
+        {Category.BACKEND, Category.INFRA},
+    ),
+    ("python-sre-is-infra-and-backend", "Python SRE", "", {Category.BACKEND, Category.INFRA}),
 ]
 
 

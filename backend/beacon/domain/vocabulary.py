@@ -90,29 +90,15 @@ CATEGORY_KEYWORDS: dict[Category, tuple[str, ...]] = {
         "golang",
         "rust",
         "java",
-        "kubernetes",
         "postgres",
         "postgresql",
         "microservice",
         "microservices",
         "spring boot",
-        "infrastructure",
-        "infra",
-        "site reliability",
-        "sre",
-        "devops",
-        "systems engineer",
         "distributed systems",
-        "networking",
         "database",
         "kernel",
         "python",
-        # The phrase only: bare "platform"/"cloud"/"aws" head go-to-market titles
-        # ("Cloud Partner Enablement Lead", "AWS Specialist Seller") far more often
-        # than engineering ones — see the rejected-candidate guards in test_classifier.
-        "platform engineer",
-        "cloud engineer",
-        "release engineer",
         # Symbol-edged stacks, in the form _SYMBOL_ALIASES rewrites them to (see below).
         "dotnet",
         "csharp",
@@ -145,11 +131,40 @@ CATEGORY_KEYWORDS: dict[Category, tuple[str, ...]] = {
     ),
     # --- Slice 23 (2026-10-10): the rest of engineering. Phrases, not bare nouns, wherever
     # the bare word heads non-engineering titles in the corpus ("embedded payments", "data").
+    # Slice 24: what backend held for slice 3–23 that runs systems rather than writes them.
+    Category.INFRA: (
+        "infrastructure",
+        "infra",
+        "site reliability",
+        "sre",
+        "devops",
+        "kubernetes",
+        "networking",
+        "network engineer",
+        # Not bare "systems engineer": Finance/ML/Design/Operating Systems Engineer all carry it.
+        "it systems engineer",
+        "system administrator",
+        "systems administrator",
+        "sysadmin",
+        "storage engineer",
+        "reliability engineer",
+        "production engineer",
+        "build engineer",
+        "ci/cd",
+        # The phrase only: bare "platform"/"cloud"/"aws" head go-to-market titles
+        # ("Cloud Partner Enablement Lead", "AWS Specialist Seller") far more often
+        # than engineering ones — see the rejected-candidate guards in test_classifier.
+        "platform engineer",
+        "platform engineering",
+        "cloud engineer",
+        "release engineer",
+    ),
     Category.DATA: (
         "data engineer",
         "data engineering",
         "analytics engineer",
         "business intelligence engineer",
+        "business intelligence developer",
         "data scientist",
         "data science",
         "etl",
