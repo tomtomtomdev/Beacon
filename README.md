@@ -12,7 +12,7 @@ It exists to answer one question that no job board answers directly: *which seni
 
 ## Status
 
-Shipped in vertical slices. Current: **slices 0–29 done** (24d open, waiting on API keys; 26 was
+Shipped in vertical slices. Current: **slices 0–30 done** (24d open, waiting on API keys; 26 was
 superseded by 27–28). Running against a live corpus — **24,478 postings, of which 8,918 are open
 and canonical** (measured 2026-10-10). The seed list is **81 companies** and there are **19 source
 adapters**: 10 per-company ATS types (Greenhouse, Greenhouse EU, Lever, Ashby, SmartRecruiters,
@@ -40,6 +40,7 @@ is set). Six sponsor registers are read: UK, NL IND, US H-1B LCA, US PERM, IE pe
 | 27 | All of engineering: data, security, embedded, QA, eng. management, solutions + a `software` fallback; JobTech steered to Data/IT | ✅ 2026-10-10; wider board queries withdrawn (poll hit 2989s of a 3000s watchdog) |
 | 28 | `infra` (SRE, devops, platform, cloud) splits out of `backend`; `classify --reclassify` relabels stored rows | ✅ 2026-10-10 |
 | 29 | The poll gets a time budget: `secs=` per source, sources poll concurrently (1758s → 757s) | ✅ 2026-10-10 |
+| 30 | SmartRecruiters re-fetches only new or reposted ads (Grab 469s → 4.4s); poll lines carry `unchanged=` | ✅ 2026-10-10 |
 
 `PROGRESS.md` is the live source of truth for what's built; `PLAN.md` is the slice order.
 

@@ -2063,7 +2063,7 @@ MyCareersFuture's detail fetches instead.
 
 ---
 
-## Slice 30 — SmartRecruiters stops re-fetching ads it already has — **IN PROGRESS 2026-10-10**
+## Slice 30 — SmartRecruiters stops re-fetching ads it already has — **DONE 2026-10-10**
 
 **Why:** slice 29 left the poll bounded by one host. SmartRecruiters' list endpoint carries no ad
 text, so every poll GETs every posting's detail at 1 rps: 704s of the 1758s sequential poll (Grab
@@ -2085,11 +2085,14 @@ the posting is reposted. Classification reads the title, and SmartRecruiters tit
 reposting in practice.
 
 Acceptance:
-- [ ] 30a sweep stamps `last_seen_at` on present rows (integration test)
-- [ ] 30b `stored_postings` (integration test)
-- [ ] 30c use case: `still_listed` ids are swept as seen, never upserted; result/log carry `unchanged=`
-- [ ] 30d adapter: details only for new or reposted ids (fixture test counts the detail GETs)
-- [ ] Live: a SmartRecruiters re-poll's `secs=` falls to roughly its list pages; `fetched=` unchanged; `make verify` green
+- [x] 30a sweep stamps `last_seen_at` on present rows (integration test)
+- [x] 30b `stored_postings` (integration test)
+- [x] 30c use case: `still_listed` ids are swept as seen, never upserted; result/log carry `unchanged=`
+- [x] 30d adapter: details only for new or reposted ids (fixture test counts the detail GETs)
+- [x] Live: a SmartRecruiters re-poll's `secs=` falls to roughly its list pages; `fetched=` unchanged; `make verify` green
+      (2026-10-10 evening, `--company` re-polls: Grab 469s → **4.4s** `fetched=463 unchanged=463`,
+      Canva 150s → **3.2s** (125/125), Carousell 86s → **0.4s** (85/85); 673 = the open SR rows;
+      1,176 backend / 124 frontend green). The poll's next long pole is Rippling (345s sequential).
 
 ---
 

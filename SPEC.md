@@ -97,7 +97,7 @@ This section is the decision record: which sources, why, and what was rejected. 
 | Greenhouse | `boards-api.greenhouse.io/v1/boards/{slug}/jobs?content=true` | Largest coverage of target companies |
 | Lever | `api.lever.co/v0/postings/{slug}?mode=json` | |
 | Ashby | `api.ashbyhq.com/posting-api/job-board/{slug}` | Growing among startups |
-| SmartRecruiters | `api.smartrecruiters.com/v1/companies/{slug}/postings` (+ `/{id}` per posting) | Public, no auth; the list carries no ad text → one detail GET per posting |
+| SmartRecruiters | `api.smartrecruiters.com/v1/companies/{slug}/postings` (+ `/{id}` per posting) | Public, no auth; the list carries no ad text → one detail GET per posting **not already stored** (slice 30: a stored id whose list `releasedDate` is unchanged is swept as seen, not re-fetched) |
 | Workable | `apply.workable.com/api/v1/widget/accounts/{slug}?details=true` | Whole board with descriptions in one call (the v3 accounts endpoint is not public) |
 | Workday CxS | `POST {tenant}.{wdN}.myworkdayjobs.com/wday/cxs/{tenant}/{site}/jobs` (+ GET `{externalPath}`) | Seed slug is `tenant/wdN/site`; search is POST-only and caps at 20 rows/page. Where enterprise Java backend lives |
 | Teamtailor | `{career-host}/jobs.json` (JSON Feed) | Dominant Nordic ATS (SE); slug is a career domain (`careers.voi.com`) or a bare tenant (`tibber`). Embedded schema.org address gives an ISO-2 country |

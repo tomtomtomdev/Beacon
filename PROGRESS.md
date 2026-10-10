@@ -4,6 +4,15 @@
 
 ## Current status
 
+**2026-10-10 (night): slice 30, SmartRecruiters stops re-reading ads it already has.** The list
+endpoint carries `releasedDate`, so a stored id whose date has not moved is reported as still
+listed and swept as seen, with no detail GET. Live `--company` re-polls: Grab 469s → **4.4s**,
+Canva 150s → **3.2s**, Carousell 86s → **0.4s**; every listed posting `unchanged`, and the 673
+open SmartRecruiters rows all accounted for.
+
+**Next action:** read the next 16:00 fire's `hourly_done secs=` (the first with slice 30 and with
+Arbeitnow/Bundesagentur on this box). The poll's next long pole is Rippling (345s sequential).
+
 **2026-10-10 (evening): two parallel sessions merged.** `origin/main` carried slices 23–26 from
 another session: Arbeitnow, Bundesagentur and DE (23), US PERM as a register (24), the registry
 spot-check (25), and a *plan* to widen to all software engineering (26). This box's slices 23–25
@@ -166,10 +175,20 @@ the Swedish IT titles JobTech now brings ("Testare", "IT-arkitekt", "Systemingen
 | 27 | All of engineering, not just iOS / backend / AI-ML (taxonomy → offline residue backfill → UI → steered boards) | ✅ 27a–27c shipped; 27d kept the JobTech steer, board queries withdrawn (poll 2989s) | 2026-10-10 |
 | 28 | `infra` splits out of `backend` (vocabulary → `--reclassify` relabel → Infra pill, scoring v4) | ✅ done | 2026-10-10 |
 | 29 | The poll gets a time budget (`secs=` per source → concurrent sources) | ✅ done, 1758s → 757s | 2026-10-10 |
+| 30 | SmartRecruiters skips the detail fetch for stored, un-reposted ads (`IncrementalSource` port) | ✅ done, SR ~704s → ~8s | 2026-10-10 |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (acceptance boxes checked)
 
 ## Decisions log
+
+- **2026-10-10 (incremental-source)** — **A source that pays per posting may skip the ones it
+  holds, through an optional port, not a per-source branch.** `IncrementalSource.fetch_new(stored)`
+  returns `Fetched(postings, still_listed)`; `_fetch` in the use case is the one resolver that
+  tells it from a plain `JobSource`. Still-listed ids join the sweep's seen set, so they stay open
+  and a closed one reopens; the sweep now stamps `last_seen_at`, so the column stays true for a
+  row it never upserted. **Accepted cost:** an ad edited in place (same id, same `releasedDate`)
+  is not re-read until it is reposted. `fetched=` stays the listed total so supply compares with
+  slice 29.
 
 - **2026-10-10 (merge-parallel-sessions)** — **Both histories kept; this box's slices renumbered
   27–29.** Rewriting either side's history to make numbers line up would lose nothing but cost a
