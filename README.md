@@ -12,10 +12,13 @@ It exists to answer one question that no job board answers directly: *which seni
 
 ## Status
 
-Shipped in vertical slices. Current: **slices 0–22 done, slice 23 in progress.** Running against
-a live corpus — **16,810 postings, of which 9,130 are open and canonical** (measured 2026-09-18).
-Since then the seed list has grown to **81 companies** (LinkedIn leads, 2026-09-30) and there are
-**19 source adapters**: 10 per-company ATS boards plus 9 company-less feeds.
+Shipped in vertical slices. Current: **slices 0–25 done** (24d open, waiting on API keys).
+Running against a live corpus — **16,810 postings, of which 9,130 are open and canonical**
+(measured 2026-09-18). The seed list is **81 companies** and there are **19 source adapters**:
+10 per-company ATS types (Greenhouse, Greenhouse EU, Lever, Ashby, SmartRecruiters, Workable,
+Workday, Teamtailor, Recruitee, Rippling) plus 9 company-less feeds (HN Who's Hiring, JobTech,
+RemoteOK, WWR, Himalayas, MyCareersFuture, Arbeitnow, Bundesagentur, and NAV when a token is
+set). Six sponsor registers are read: UK, NL IND, US H-1B LCA, US PERM, IE permits, CA LMIA.
 
 | # | Slice | Status |
 |---|---|---|
@@ -55,7 +58,7 @@ Adding a job source = a new adapter + fixture tests + one seed row, with **zero*
 ## Prerequisites
 
 - Python 3.12+ and [`uv`](https://docs.astral.sh/uv/)
-- Node.js 18+ and npm
+- Node.js 20.19+ (or 22.12+) and npm — Vite 8 requires it. `scripts/node-path.sh` finds an nvm install for `make`/launchd
 
 ## Setup
 
@@ -67,6 +70,15 @@ make verify         # full gate: ruff + mypy + pytest, then eslint + tsc + vites
 `make verify` must be green before every commit — it's the quality gate. If it fails to spawn `mypy`/`ruff` after moving or cloning the repo, recreate the venv (stale script shebangs): `cd backend && rm -rf .venv && uv sync`.
 
 ## Running
+
+**One step:** `./run.sh` (or `make run`) serves the cached `beacon.db` immediately — API on :8000,
+Vite in the foreground — and refreshes from the sources in the background (output in
+`.ingest.log`). Every launch also ingests any registry snapshot that is new or stale
+(`maintenance refresh-registries-if-needed`) and sends pending digests at launch and on close.
+Flags: `--no-ingest`, `--wait-ingest`, `--setup`, `--help`. On a first run with no `beacon.db`,
+the refresh blocks before serving.
+
+The steps it wraps, run by hand:
 
 **1. Ingest jobs** (polls seeded companies, upserts into `beacon.db`):
 
@@ -82,10 +94,12 @@ uv run python -m beacon.ingest --company tines     # just one, by ats_slug
 cd backend
 uv run uvicorn beacon.api.app:create_app --factory --port 8000
 # GET /healthz  → {"status":"ok"}
-# GET /jobs?q=&country=&posted_since=&limit=&offset=
+# GET /jobs?q=&country=&category=&level=&sponsor_tier=&status=&posted_since=
+#          &include_closed=&sort=tier|date|match&resume=&limit=&offset=
+# GET /jobs/{id}, PATCH /jobs/{id}/status, POST /jobs/{id}/match
 # GET /companies/health  → source-health rollup + per-company rows
 # GET /registries        → sponsor-registry coverage (incl. never-ingested)
-# GET /countries, /markets, /searches, /settings, /resumes
+# GET /countries, /markets, /searches, /resumes, /settings/telegram
 ```
 
 **3. Run the frontend** (Vite dev server; proxies the API routes to `localhost:8000`):
@@ -94,6 +108,39 @@ uv run uvicorn beacon.api.app:create_app --factory --port 8000
 cd frontend
 npm run dev
 ```
+
+**Other one-shot CLIs** (all `cd backend && uv run python -m …`, wiring only):
+
+| Command | What |
+|---|---|
+| `beacon.refresh` | Rematch every seed company against the registry snapshots; `--flag NAME --evidence TEXT` hand-flags a manual sponsor |
+| `beacon.maintenance {refresh-registries,refresh-registries-if-needed,backup,probe}` | The launchd jobs, runnable by hand |
+| `beacon.notify` | Send the current digest without polling |
+| `beacon.classify [--upgrade-residue]` | Classify never-classified rows; or re-run the LLM over the empty-category residue |
+| `beacon.relocate`, `beacon.retier` | Backfills: re-parse stored locations / re-tier home-market postings |
+
+Spot-check scripts for manual acceptance live in `backend/scripts/` (`spot_check_*.py`,
+`backup_db.py`).
+
+### Registry snapshots & review
+
+Sponsor registers are hand-downloaded into `data/registries/` (gitignored; file names in the
+config table below — US H-1B and PERM ship as XLSX and are converted to the CSV columns the
+adapters read; see `SOURCES.md`). A missing file is skipped and reported by `GET /registries`.
+
+Matching company names to registers is the highest-risk code in the repo, so any matcher
+change is reviewed against real data with `backend/scripts/spot_check_registry.py`:
+
+```bash
+cd backend
+uv run python scripts/spot_check_registry.py --snapshots --from-db --baseline before.txt   # before
+# …change the matcher…
+uv run python scripts/spot_check_registry.py --snapshots --from-db --baseline before.txt   # diff
+uv run python scripts/spot_check_registry.py --snapshots --from-db --only-stripped        # review set
+```
+
+A match reviewed and refused becomes a row in `seeds/registry_rejections.csv` (with a reason),
+honoured by both refresh and the spot-check — data, not a new matcher rule.
 
 ### Source health & recovery
 
@@ -128,14 +175,15 @@ un-quarantines, so routine runs don't disturb a genuine quarantine. Live accepta
 
 ### Configuration
 
-All env reads live in one place (`beacon/config.py`). Defaults work out of the box:
+All env reads live in one place (`beacon/config.py`). Defaults are relative to the repo root and work out of the box. Day/month boundaries (posted-since, digest, LLM budget month) use `Asia/Jakarta`; storage stays UTC.
 
 | Env var | Default | Purpose |
 |---|---|---|
-| `BEACON_DB_PATH` | `./beacon.db` | SQLite database file |
-| `BEACON_SEEDS_PATH` | `./seeds/companies.csv` | Curated company seed list |
-| `BEACON_BACKUPS_PATH` | `./backups` | Where `maintenance backup` writes snapshots |
-| `BEACON_{UK,IND,H1B,IE,CA,PERM}_REGISTRY_PATH` | `./data/registries/*.csv` | Sponsor-register snapshots (missing file → skipped) |
+| `BEACON_DB_PATH` | `<repo>/beacon.db` | SQLite database file |
+| `BEACON_SEEDS_PATH` | `<repo>/seeds/companies.csv` | Curated company seed list |
+| `BEACON_BACKUPS_PATH` | `<repo>/backups` | Where `maintenance backup` writes snapshots |
+| `BEACON_{UK,IND,H1B,IE,CA,PERM}_REGISTRY_PATH` | `<repo>/data/registries/{uk_sponsors,ind_sponsors,h1b_lca,us_perm,ie_permits,ca_lmia}.csv` | Sponsor-register snapshots (missing file → skipped) |
+| `BEACON_REGISTRY_REJECTIONS_PATH` | `<repo>/seeds/registry_rejections.csv` | Reviewed-and-refused registry matches |
 | `BEACON_TELEGRAM_BOT_TOKEN`, `BEACON_TELEGRAM_CHAT_ID` | unset | Digest delivery; unset → stdout (also settable in the UI) |
 | `BEACON_NAV_API_TOKEN` | unset | NAV Norway feed; unset → source not wired |
 | `BEACON_ANTHROPIC_API_KEY` | unset | LLM fallback classifier; unset → heuristic only |
@@ -191,15 +239,21 @@ backend/
   beacon/
     domain/           pure models + logic (job, sponsorship, location, visa, vocabulary, matching, dedup)
     application/      use cases + port protocols (ingest, queries, scoring, health, coverage)
-    adapters/         sources/ (19 boards + factory), persistence/, registries/, classify/, notify/, http/ (polite client + credentials)
+    adapters/         sources/ (19 boards + factory), persistence/, registries/ (6 registers + rejections), classify/, notify/, resume/, http/ (polite client + credentials)
     api/              app factory, eight routers, deps
-    maintenance.py    launchd one-shot entry points (refresh-registries, backup, probe)
+    maintenance.py    launchd one-shot entry points (refresh-registries[-if-needed], backup, probe)
+    ingest.py, refresh.py, notify.py, classify.py, relocate.py, retier.py   CLI composition roots
+    config.py         the only env reader (Settings)
   migrations/         001–010, numbered and forward-only
+  scripts/            spot_check_*.py manual acceptance checks, backup_db.py
   tests/              unit / adapters / api / integration, with fixtures/
 frontend/
   src/                jobs/, countries/, searches/, settings/, api/ (client + types), tokens.css
 seeds/companies.csv   81 companies (name,ats_type,ats_slug,country_hq,priority)
 seeds/registry_rejections.csv  registry matches reviewed and refused (spot-check → reason → row)
+data/registries/      hand-downloaded sponsor-register snapshots (gitignored)
+scripts/node-path.sh  puts nvm's node on PATH for make/launchd
+run.sh                one-step launcher (API + frontend + background refresh)
 deploy/               four launchd agents: digest window, registry refresh, backup, quarantine probe
 ```
 
