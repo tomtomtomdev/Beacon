@@ -4,6 +4,27 @@
 
 ## Current status
 
+**2026-10-10 — slice 23: all of engineering, not just iOS / backend / AI-ML.** Measured first:
+**7,651 of 8,918 open canonical postings (86%) carried no category**, so no category filter could
+reach them. About 2,200 of those were engineering titles the classifier had no word for (721 plain
+"Software Engineer"). The supply was already in the database, so classification came first.
+
+| step | what | result |
+|---|---|---|
+| 23a | 7 new categories (data, security, embedded, qa, eng-mgmt, solutions) + `software` as a no-specialism fallback; .NET/C#/C++ aliased before matching; guards for PM/TPM, business-developer, compliance-QA, sales-rep titles | 3 dry runs over the live residue, every misfire turned into a fixture row |
+| 23b | the keyless `classify --upgrade-residue` is the offline backfill (pinned by a test) | **open residue 7,651 → 5,673 (−1,978)**; 3,759 rows relabelled in all; **0 LLM calls**; backup taken first |
+| 23c | 7 pills behind a "More" toggle; saved searches pinned by a test; `SCORING_VERSION` 3 | cached fit scores recompute |
+| 23d | Himalayas +11 queries, MyCareersFuture +4, JobTech steered to Data/IT | each query probed live; JobTech's engineering share of 100 rows went 6 → 37 |
+
+**What the residue still holds:** ~300 engineering-ish titles in a long tail (mechanical,
+hardware, one-offs), and honest non-engineering (sales, legal, HR, care). No existing label was
+touched: 23b rewrites only `''` rows.
+
+**Next action:** read the first poll with the wider queries (12:00 fire, `/tmp/beacon.digest.out.log`
+`hourly_done secs=`) against the 50-min watchdog. That is the one acceptance box left open. Then
+the Swedish IT titles JobTech now brings ("Testare", "IT-arkitekt", "Systemingenjör",
+"testautomatiserare") are the next vocabulary rows.
+
 **2026-09-18 — the hand download is banked. All five sponsor registries are ingested for the first time.** The lever PROGRESS has called "the highest-value unbuilt item in the repo" since slice 18 is spent, and it needed no code — only the three files that had never been on this box.
 
 | register | rows | companies matched |
@@ -31,8 +52,6 @@
 **Note: the corpus moved mid-session.** A scheduled launchd poll landed at 05:00 and took `jobs` from 16,810 to 16,841 rows. Slices 20 and 21 keep their pre-poll figures with their own dates; slice 22's are post-poll.
 
 **Next: nothing chosen.** The hand download (UK/NL/US still "never ingested"; UK needs no conversion, GB is 480 open jobs at 66% `unknown`) remains the highest-value unbuilt lever and still needs no code. Prior slices below.
-
-**Next action (2026-10-10):** slice 23 — widen categories to all of engineering (PLAN.md). Start at 23a: append the guard rows to `test_classifier` first. Measured: 7,651 of 8,918 open canonical postings are uncategorised, ~2,200 of them engineering. *(Superseded below: the hand download was banked 2026-09-18.)*
 
 ~~**Next action:** bank the hand download — drop `uk_sponsors.csv` into `data/registries/` and run `refresh-registries`. It is unchanged by slices 20–22, needs no code, and is the only candidate on the board that buys new supply rather than making existing supply honest.~~
 
@@ -64,11 +83,39 @@
 | 20 | Other markets: the 47 countries with jobs and no way to ask for them (candidate B, shape 1); 20e exposed `closed_at` | ✅ done | 2026-09-18 |
 | 21 | The panel stops being a gate: jobs by default, `?focus=` becomes a filter, derived total + paging, globe-only idle tour | ✅ done | 2026-09-18 |
 | 22 | Closed postings leave the default listing, behind a "Show closed" toggle | ✅ done | 2026-09-18 |
-| 23 | All of engineering, not just iOS / backend / AI-ML (taxonomy → offline residue backfill → UI → steered boards) | ⬜ planned 2026-10-10 — see PLAN.md | |
+| 23 | All of engineering, not just iOS / backend / AI-ML (taxonomy → offline residue backfill → UI → steered boards) | 🟨 23a–23d built + verified; poll time under the wider queries still to be read | |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (acceptance boxes checked)
 
 ## Decisions log
+
+- **2026-10-10 (slice 23 — the category scope widens, deliberately)** — Asked for: search all
+  engineering, not just iOS / backend / Java / AI-ML. **This deviates from SPEC §1/§3 and DESIGN §2**,
+  and both are rewritten in the same slice. Four choices are worth recording:
+
+  - **`software` is a fallback, and the precedence is data.** It fires only when no specific
+    category matches, so "Senior Software Engineer, iOS" stays `ios`. The rule lives in
+    `FALLBACK_CATEGORY_KEYWORDS`, not in a branch. Its words are role nouns, so they stay out of
+    the skill vocabulary; "developer" on a resume would otherwise overlap with every posting.
+  - **Two slice-3 rows were reversed, not deleted.** `plain-swe-stays-empty` became
+    `plain-swe-is-software`: a bare SWE title was "honest residue for the LLM" because the
+    profile was narrow, and the profile is no longer narrow. The SWIFT-payments and
+    Applied-AI-Architect rows keep their intent (still not ios, still not ai-ml) and now read
+    `solutions`.
+  - **`backend` keeps its meaning.** It still holds infra/SRE/devops, so saved searches and
+    resume scores don't shift. Splitting out `infra` is a separate decision.
+  - **MyCareersFuture got four queries, not eight.** It fetches a detail page per hit and sources
+    poll sequentially, so each query can cost a minute against the 50-min watchdog. Himalayas
+    has no detail fetch and took eleven.
+
+  Separately, the session baseline was red: the 2026-09-22 move of the launchd fires to the
+  morning (box off 06:00–08:45) had been made in the plists but not in their tests. Fixed in
+  `e12d869`.
+
+  **Found while checking:** `backend/scripts/spot_check_registry.py` **does exist**. The
+  2026-09-18 entries below say it doesn't, because they looked only in the root `scripts/`.
+  `spot_check_classifier.py` was not run: it is a live Greenhouse fetch, and the 23a dry run over
+  all 7,651 live residue titles is a larger sample of the same check.
 
 - **2026-09-18 (registry snapshots downloaded — the lever is spent, and what it cost)** — All three missing registers ingested. **UK needed nothing but the file**, as recorded: the live header is byte-identical to the fixture, CRLF and all, and the leading-whitespace names (`" AaruvikA Limited"`) are the hazard `uk.py` already handles. **US needed the XLSX→CSV step** PROGRESS predicted; 595,239 of the 1.03M sheet rows are padding, which is the `max_row` lie the adapter docstring names. **NL was recorded as "blocked — no downloadable file", and that is half-right**: there is no export, but the register is server-rendered into the page HTML, so a one-off extraction produces the CSV the adapter already reads. That keeps the cross-cutting "no HTML parsing of hostile sites" rule intact — the *adapter* still reads CSV; the parsing was data prep, done once, by hand.
 

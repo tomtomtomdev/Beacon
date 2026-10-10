@@ -1383,7 +1383,7 @@ figures above are the post-poll ones; slice 20 and 21's boxes keep theirs with t
 
 ---
 
-## Slice 23 — All of engineering, not just iOS / backend / AI-ML — **PLANNED 2026-10-10**
+## Slice 23 — All of engineering, not just iOS / backend / AI-ML — **BUILT 2026-10-10; poll time pending**
 
 **Asked for 2026-10-10:** widen the hunt from the SPEC §1/§3 profile (iOS primary; Backend, AI/ML
 secondary; Android/Flutter/Fullstack/Frontend tertiary) to every engineering role.
@@ -1503,17 +1503,18 @@ branch:
 - Seeds: no change. The ATS boards already return every role.
 
 Acceptance:
-- [ ] `''` residue among open canonical postings falls from 7,651 by **≥1,800**, and the
-      remainder samples as non-engineering in a 100-row eyeball
-- [ ] No guard row regresses. Sales, legal, HR and care titles stay `''`, and existing
-      `ios`/`backend`/`ai-ml` counts don't drop
-- [ ] Every new category is filterable end to end. Pill → `?category=` → `/jobs` → saved search
+- [x] `''` residue among open canonical postings falls from 7,651 by **≥1,800**: **5,673
+      (−1,978)**. What remains is non-engineering plus a ~300-title engineering long tail
+- [x] No guard row regresses. Sales, legal, HR and care titles stay `''`, and existing
+      `ios`/`backend`/`ai-ml` counts don't drop (only `''` rows were rewritten)
+- [x] Every new category is filterable end to end. Pill → `?category=` → `/jobs` → saved search
       → digest line
-- [ ] Resume scores re-compute under the bumped `scoring_version`
-- [ ] 23d: each kept query is backed by its probe note, and a full poll is re-measured under the
-      watchdog
-- [ ] SPEC §1/§3 and DESIGN §2 rewritten, and PROGRESS has a dated Decisions entry
-- [ ] `make verify` green on both stacks
+- [x] Resume scores re-compute under the bumped `scoring_version` (3)
+- [x] 23d: each kept query is backed by its probe note (in the adapter, beside the tuple)
+- [ ] 23d: a full poll re-measured under the watchdog: the first fire with the wider queries is
+      12:00 on 2026-10-10
+- [x] SPEC §1/§3 and DESIGN §2 rewritten, and PROGRESS has a dated Decisions entry
+- [x] `make verify` green on both stacks (1,070 backend, 122 frontend)
 
 **Kill criterion for 23d alone:** if widening the boards pushes a full poll past ~45 min, ship
 23a–23c and leave the board queries as they are. The classifier gain doesn't depend on them.

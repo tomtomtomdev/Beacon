@@ -4,7 +4,7 @@
 
 Beacon polls public ATS APIs and API/RSS-friendly job boards on a schedule, normalizes every posting into a single local SQLite database, classifies them (category, level, sponsorship signal), cross-references official sponsor registries, and surfaces the result through a filterable web UI with new-match alerting.
 
-It exists to answer one question that no job board answers directly: *which senior iOS / backend / AI-ML roles, in my target countries, come from employers likely to sponsor a work visa?*
+It exists to answer one question that no job board answers directly: *which senior iOS / backend / AI-ML roles — and, since slice 23, any engineering role — in my target countries, come from employers likely to sponsor a work visa?*
 
 > **Scope:** personal tool — single user, self-hosted, no auth, no multi-tenancy, no cloud. This is deliberate and permanent; see `SPEC.md` §2 Non-Goals.
 
@@ -31,6 +31,7 @@ Figures measured 2026-10-10.
 | 20 | Other markets — the 47 countries with jobs and no way to ask for them; closed postings finally greyed | ✅ |
 | 21 | The panel stops being a gate: all jobs by default, `?focus=` becomes a filter | ✅ |
 | 22 | Closed postings leave the default listing, behind a "Show closed" toggle | ✅ |
+| 23 | All of engineering: data, security, embedded, QA, eng. management, solutions + a `software` fallback; wider board queries | 🟨 built and verified; poll time under the wider queries pending |
 
 `PROGRESS.md` is the live source of truth for what's built; `PLAN.md` is the slice order.
 

@@ -206,7 +206,11 @@ header is sticky.
     postings per market", and since closed rows left the default list that is exactly what the
     chip opens onto.
   - **Chip row:** "CATEGORY" label + 7 category pills (iOS, Backend, AI/ML, Android, Flutter,
-    Fullstack, Frontend) · divider · "LEVEL" + 3 pills (Senior, Staff, Lead). Pill styles as above.
+    Fullstack, Frontend) · a quiet text toggle "More"/"Fewer" (no pill chrome; `--text-label`,
+    hover `--accent-soft-fg`) that reveals 7 more in the same pill style — Software, Data,
+    Security, Embedded, QA, Eng. management, Solutions (slice 23, 2026-10-10). Collapsed, the
+    row still shows any of those that is active · divider · "LEVEL" + 3 pills (Senior, Staff,
+    Lead). Pill styles as above.
 - **Job list** (pad `4×20×22`; a **stack of compact cards**, `flex-direction:column; gap:10px` — not
   a wide table). Card: bg `#0a2028`, border `#123842`, radius 12px, pad `13×15`, cursor pointer, hover
   bg `#0d2a33` / border `#1a4650`, greyed (`opacity:0.55`) when hidden:
