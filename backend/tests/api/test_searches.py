@@ -105,7 +105,7 @@ async def test_a_saved_search_on_a_slice_23_category_counts_its_jobs(
 async def test_a_backend_search_no_longer_counts_infra_jobs(
     client: httpx.AsyncClient, db_path: Path
 ) -> None:
-    """Slice 24: the point of the split — both live alerts are backend + a language, and an
+    """Slice 28: the point of the split — both live alerts are backend + a language, and an
     SRE posting that mentions Python was matching them."""
     _seed_ios_job(db_path, "1", country="SE", category=Category.BACKEND)
     _seed_ios_job(db_path, "2", country="SE", category=Category.INFRA)

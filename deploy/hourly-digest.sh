@@ -7,7 +7,7 @@
 # same tail run.sh dispatches at launch and on close. No API, no Vite — the UI contributes
 # nothing to a digest, so a fire binds no ports and leaves nothing behind to kill.
 #
-# Two guards, because a full poll takes ~30-45 min against a 60 min gap between fires:
+# Two guards, because a full poll takes ~30-45 min (one fire a day now, but a hand-run can overlap):
 #   lock      a fire that finds the previous one still polling logs and skips (exit 0)
 #   watchdog  a run is capped at BEACON_HOURLY_TIMEOUT (default 50 min); on a kill the
 #             digest still goes out via `python -m beacon.notify`, which reports whatever

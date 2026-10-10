@@ -46,11 +46,11 @@ def test_stale_registries_returns_only_the_stale_ones() -> None:
 
 
 def test_registry_flags_bitmask() -> None:
-    # SPEC §5.3: IE + CA joined the mask in slice 14. No SE bit exists — the Swedish
+    # SPEC §5.3: IE + CA joined the mask in slice 14, PERM in slice 24. No SE bit exists — the Swedish
     # employer-certification scheme was discontinued Dec 2023. Members are additive and
     # their values are FROZEN: registry_flags is a stored integer, so renumbering an
     # existing bit would silently re-label every matched company already in the DB.
-    assert {r.name for r in Registry} == {"UK", "NL", "US", "MANUAL", "IE", "CA"}
+    assert {r.name for r in Registry} == {"UK", "NL", "US", "MANUAL", "IE", "CA", "PERM"}
     assert (int(Registry.UK), int(Registry.NL), int(Registry.US), int(Registry.MANUAL)) == (
         1,
         2,
@@ -124,7 +124,14 @@ def test_snapshot_registries_is_every_bit_except_the_hand_flag() -> None:
     # can go missing, and the coverage view must report it without anyone remembering to.
     # MANUAL is the --flag bit — there is no snapshot to be missing.
     assert set(SNAPSHOT_REGISTRIES) == set(Registry) - {Registry.MANUAL}
-    assert [r.name for r in SNAPSHOT_REGISTRIES] == ["UK", "NL", "US", "IE", "CA"]
+    assert [r.name for r in SNAPSHOT_REGISTRIES] == ["UK", "NL", "US", "IE", "CA", "PERM"]
+
+
+def test_perm_is_appended_as_bit_64() -> None:
+    # Slice 24a. Bits are frozen and append-only: registry_flags is a stored integer, so PERM
+    # takes the next free bit and every company already matched keeps its meaning.
+    assert int(Registry.PERM) == 64
+    assert registry_names(Registry.US | Registry.PERM) == ("US", "PERM")
 
 
 @pytest.mark.parametrize(
@@ -152,7 +159,7 @@ def test_count_per_registry_splits_a_bitmask_histogram(
 # --- registries_needing_refresh (slice 23) ------------------------------------------------
 #
 # The monthly launchd agent is the wrong cadence for a snapshot that has never been ingested at
-# all: UK/NL/US sat un-ingested for sixteen slices while `_available_ingesters` printed a skip
+# all: UK/NL/US sat un-ingested for sixteen slices while `available_ingesters` printed a skip
 # line and returned. A snapshot that is present on disk and absent from registries_meta should
 # be picked up the next time Beacon starts, not on the 1st of next month.
 

@@ -1,0 +1,12 @@
+company,registry,entry,reason,reviewed_at
+Cohere,PERM,Cohere Technologies Inc.,"Cohere Technologies is a wireless (OTFS/5G) company, not Cohere the AI lab; matched only by dropping ""Technologies""",2026-10-09
+Linear,PERM,Linear Solutions Inc,"Not Linear the issue tracker; one filing by an unrelated business, matched only by dropping ""Solutions""",2026-10-09
+VANGUARD SOFTWARE PTE. LTD.,PERM,The Vanguard Group,"The Vanguard Group is the US asset manager, not the Singapore software firm",2026-10-09
+Mercury Business Services,PERM,"Mercury Technologies, Inc.","Owner review: a Turkish employer, not the US fintech",2026-10-09
+Mercury Business Services,PERM,Mercury Financial LLC,"Owner review: a Turkish employer, not the US credit-card company",2026-10-09
+Evolve,PERM,"Evolve Technology Group, LLC","Owner review: not the same company",2026-10-09
+Avant Digital,PERM,"Avant, LLC.","Owner review: Avant, LLC is the consumer-lending fintech, not this GCP consultancy",2026-10-09
+American Bureau of Shipping (ABS),PERM,"ABS Digital Solutions, LLC","Owner review: not the same company",2026-10-09
+Fig,PERM,FIG LLC,"Owner review: a San Francisco startup, not this one-filing LLC",2026-10-09
+Avant Digital,PERM,"Avant, LLC","Owner review: the same lender as ""Avant, LLC."" filed without the period, not this GCP consultancy",2026-10-09
+American Bureau of Shipping (ABS),PERM,"ABS Global, Inc.","ABS Global is a cattle-genetics company, not the ship-classification society; next-best after the owner rejected ABS Digital Solutions",2026-10-09

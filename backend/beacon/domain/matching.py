@@ -69,6 +69,8 @@ GEO_TOKENS: frozenset[str] = frozenset(
         "netherlands",
         "ireland",
         "sweden",
+        # Slice 25b: MyCareersFuture names read "X (SINGAPORE) PTE. LTD."; SG is a §4 primary.
+        "singapore",
         "international",
         "global",
         "worldwide",
@@ -113,6 +115,8 @@ STRIPPED_CONFIDENCE = 0.9
 _TRADING_AS = re.compile(r"\s+(?:trading\s+as|t/a|dba)\s+", re.IGNORECASE)
 _PARENTHETICAL = re.compile(r"\(([^)]*)\)")
 _NON_ALNUM = re.compile(r"[^a-z0-9]+")
+# "(S)", "(SG)": a parenthetical this short is a place or form code, never a brand alias.
+_MAX_SHORTHAND_CHARS = 2
 
 
 @dataclass(frozen=True, slots=True)
@@ -151,10 +155,18 @@ def seed_name_variants(seed: str) -> tuple[str, ...]:
     """A seed's matchable names: the base name plus any parenthetical alias.
 
     "Bird (MessageBird)" → ("Bird", "MessageBird") — the register keeps the renamed
-    legal name, so both must be tried."""
-    aliases = [inner.strip() for inner in _PARENTHETICAL.findall(seed) if inner.strip()]
+    legal name, so both must be tried. A parenthetical that is only a place is not an alias
+    ("(SINGAPORE)", or the "(S)"/"(SG)" shorthand: two characters or fewer), because as a
+    variant it matches any registrant with that word in its name (slice 25b, "Group-S LLC")."""
+    aliases = [inner.strip() for inner in _PARENTHETICAL.findall(seed) if _is_alias(inner)]
     base = _PARENTHETICAL.sub("", seed).strip()
     return (base, *aliases)
+
+
+def _is_alias(parenthetical: str) -> bool:
+    if len(_NON_ALNUM.sub("", parenthetical.casefold())) <= _MAX_SHORTHAND_CHARS:
+        return False
+    return bool(normalize_name(parenthetical).key)
 
 
 def match_confidence(seed_name: str, entry: RegistryCompany) -> float | None:
@@ -178,6 +190,67 @@ def match_confidence(seed_name: str, entry: RegistryCompany) -> float | None:
     return best
 
 
+def dropped_tokens(seed_name: str, entry: RegistryCompany) -> frozenset[str] | None:
+    """The geo/structural tokens stripping removed to make this seed match this entry: empty
+    for a full-confidence hit, None when they do not match at all. This is what a reviewer
+    reads to tell a safe geography drop ("usa") from a structural one ("technologies")."""
+    seeds = [normalize_name(variant) for variant in seed_name_variants(seed_name)]
+    candidates = [normalize_name(name) for name in (entry.name, *entry.aliases)]
+    best: frozenset[str] | None = None
+    for seed in seeds:
+        for candidate in candidates:
+            if not seed.key or seed.key != candidate.key:
+                continue
+            dropped = seed.core ^ candidate.core
+            if best is None or len(dropped) < len(best):
+                best = dropped
+    return best
+
+
+@dataclass(frozen=True, slots=True)
+class RegistryRejection:
+    """One match a person reviewed and rejected (seeds/registry_rejections.csv, slice 25c):
+    this company is not this entry in this register. Scoped to all three, because the same
+    entry name in another register or for another company is a judgement nobody has made."""
+
+    company: str
+    registry: Registry
+    entry: str
+
+
+@dataclass(frozen=True, slots=True)
+class RegistryEntryMatch:
+    """One registry's best entry for a seed: what the spot-check prints, one line each."""
+
+    registry: Registry
+    confidence: float
+    entry: RegistryCompany
+
+
+def registry_matches(
+    seed_name: str,
+    entries_by_registry: Mapping[Registry, Sequence[RegistryCompany]],
+    *,
+    rejected: frozenset[RegistryRejection] = frozenset(),
+) -> list[RegistryEntryMatch]:
+    """The best-matching entry in each registry that has one, in the mapping's order.
+
+    Registry match is company-level: a registry contributes on its single best entry hit
+    (multi-entity companies are counted once). A rejected entry is skipped, not the whole
+    register, so the company's real entity there still matches."""
+    matches: list[RegistryEntryMatch] = []
+    for registry, entries in entries_by_registry.items():
+        refused = {r.entry for r in rejected if r.company == seed_name and r.registry == registry}
+        allowed = [e for e in entries if e.name not in refused] if refused else entries
+        best = _best_entry(seed_name, allowed)
+        if best is not None:
+            confidence, entry = best
+            matches.append(
+                RegistryEntryMatch(registry=registry, confidence=confidence, entry=entry)
+            )
+    return matches
+
+
 @dataclass(frozen=True, slots=True)
 class RegistryMatch:
     """The combined verdict for one company across every registry it was checked against."""
@@ -188,27 +261,21 @@ class RegistryMatch:
 
 
 def match_company(
-    seed_name: str, entries_by_registry: Mapping[Registry, Sequence[RegistryCompany]]
+    seed_name: str,
+    entries_by_registry: Mapping[Registry, Sequence[RegistryCompany]],
+    *,
+    rejected: frozenset[RegistryRejection] = frozenset(),
 ) -> RegistryMatch:
     """Match one seed name against every registry's entries, OR-ing the bits that hit.
-
-    Registry match is company-level: a registry contributes its bit on the single best
-    entry hit (multi-entity companies are counted once). Confidence is the best across
-    registries; evidence keeps a per-registry audit line."""
+    Confidence is the best across registries; evidence keeps a per-registry audit line."""
+    matches = registry_matches(seed_name, entries_by_registry, rejected=rejected)
     flags = Registry(0)
-    confidences: list[float] = []
-    reasons: list[str] = []
-    for registry, entries in entries_by_registry.items():
-        best_entry = _best_entry(seed_name, entries)
-        if best_entry is None:
-            continue
-        confidence, entry = best_entry
-        flags |= registry
-        confidences.append(confidence)
-        reasons.append(f"{registry.name} {entry.evidence or f'{confidence:.2f}'}")
+    for match in matches:
+        flags |= match.registry
+    reasons = [f"{m.registry.name} {m.entry.evidence or f'{m.confidence:.2f}'}" for m in matches]
     return RegistryMatch(
         flags=flags,
-        confidence=max(confidences) if confidences else None,
+        confidence=max((m.confidence for m in matches), default=None),
         evidence="; ".join(reasons) if reasons else None,
     )
 

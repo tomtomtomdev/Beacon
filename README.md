@@ -12,11 +12,13 @@ It exists to answer one question that no job board answers directly: *which seni
 
 ## Status
 
-Shipped in vertical slices. Current: **slices 0–22 done.** Running against a live
-corpus — **24,478 postings, of which 8,918 are open and canonical**, from 70 seeded companies plus
-the company-less boards, across 16 source adapters (15 of which have landed jobs; NAV has none).
-All five sponsor registries (UK, US H-1B, NL IND, IE, CA) have been ingested since 2026-09-18.
-Figures measured 2026-10-10.
+Shipped in vertical slices. Current: **slices 0–29 done** (24d open, waiting on API keys; 26 was
+superseded by 27–28). Running against a live corpus — **24,478 postings, of which 8,918 are open
+and canonical** (measured 2026-10-10). The seed list is **81 companies** and there are **19 source
+adapters**: 10 per-company ATS types (Greenhouse, Greenhouse EU, Lever, Ashby, SmartRecruiters,
+Workable, Workday, Teamtailor, Recruitee, Rippling) plus 9 company-less feeds (HN Who's Hiring,
+JobTech, RemoteOK, WWR, Himalayas, MyCareersFuture, Arbeitnow, Bundesagentur, and NAV when a token
+is set). Six sponsor registers are read: UK, NL IND, US H-1B LCA, US PERM, IE permits, CA LMIA.
 
 | # | Slice | Status |
 |---|---|---|
@@ -31,9 +33,13 @@ Figures measured 2026-10-10.
 | 20 | Other markets — the 47 countries with jobs and no way to ask for them; closed postings finally greyed | ✅ |
 | 21 | The panel stops being a gate: all jobs by default, `?focus=` becomes a filter | ✅ |
 | 22 | Closed postings leave the default listing, behind a "Show closed" toggle | ✅ |
-| 23 | All of engineering: data, security, embedded, QA, eng. management, solutions + a `software` fallback; JobTech steered to Data/IT | ✅ 2026-10-10; wider board queries withdrawn (poll hit 2989s of a 3000s watchdog) |
-| 24 | `infra` (SRE, devops, platform, cloud) splits out of `backend`; `classify --reclassify` relabels stored rows | ✅ 2026-10-10 |
-| 25 | The poll gets a time budget: `secs=` per source, sources poll concurrently (1758s → 757s) | ✅ 2026-10-10 |
+| 23 | Arbeitnow (visa-sponsorship subset), one credential door (bearer/basic/API-key), DE as a `nice_to_have` market, Bundesagentur Jobsuche, AU Core Skills list as reference text. Reed skipped (no key) | ✅ |
+| 24 | US PERM labor certifications as a sponsor register (green-card evidence, its own bit); Jooble/Careerjet probed, waiting on keys | ✅ (24d open) |
+| 25 | Registry spot-check sees real snapshots and every company; place-only parentheticals stop matching; reviewed rejection table | ✅ |
+| 26 | All of software engineering (planned in a parallel session) | superseded by 27–28 |
+| 27 | All of engineering: data, security, embedded, QA, eng. management, solutions + a `software` fallback; JobTech steered to Data/IT | ✅ 2026-10-10; wider board queries withdrawn (poll hit 2989s of a 3000s watchdog) |
+| 28 | `infra` (SRE, devops, platform, cloud) splits out of `backend`; `classify --reclassify` relabels stored rows | ✅ 2026-10-10 |
+| 29 | The poll gets a time budget: `secs=` per source, sources poll concurrently (1758s → 757s) | ✅ 2026-10-10 |
 
 `PROGRESS.md` is the live source of truth for what's built; `PLAN.md` is the slice order.
 
@@ -56,7 +62,7 @@ Adding a job source = a new adapter + fixture tests + one seed row, with **zero*
 ## Prerequisites
 
 - Python 3.12+ and [`uv`](https://docs.astral.sh/uv/)
-- Node.js 20.19+ (or 22.12+) and npm — Vite 8's floor. nvm works; `scripts/node-path.sh` puts it on PATH for `make` and `run.sh`
+- Node.js 20.19+ (or 22.12+) and npm — Vite 8 requires it. `scripts/node-path.sh` finds an nvm install for `make`/launchd
 
 ## Setup
 
@@ -69,20 +75,16 @@ make verify         # full gate: ruff + mypy + pytest, then eslint + tsc + vites
 
 ## Running
 
-**One step:** `./run.sh` (or `make run`). It serves the cached `beacon.db` right away and polls
-the sources in the background (log in `.ingest.log`). Before serving it:
+**One step:** `./run.sh` (or `make run`) serves the cached `beacon.db` immediately — API on :8000,
+Vite in the foreground — and refreshes from the sources in the background (output in
+`.ingest.log`). Every launch also ingests any registry snapshot that is new or stale
+(`maintenance refresh-registries-if-needed`) and sends pending digests at launch and on close.
+Flags: `--no-ingest`, `--wait-ingest`, `--setup`, `--help`. On a first run with no `beacon.db`,
+the refresh blocks before serving.
 
-- ingests any registry snapshot in `data/registries/` that is new or stale
-  (`maintenance refresh-registries-if-needed`), and names any snapshot that is missing, with
-  its download URL;
-- sends a launch digest.
+The steps it wraps, run by hand:
 
-A closing digest goes out on Ctrl-C. On the very first run, with no `beacon.db` yet, the poll
-blocks until it finishes. Flags: `--no-ingest`, `--wait-ingest`, `--setup`, `--help`.
-
-The same pieces, by hand:
-
-**1. Ingest jobs** (polls the seeded companies and company-less boards, upserts into `beacon.db`, then sends the digest):
+**1. Ingest jobs** (polls seeded companies, upserts into `beacon.db`):
 
 ```bash
 cd backend
@@ -97,6 +99,13 @@ uv run python -m beacon.ingest --source hn         # just one company-less sourc
 ```bash
 cd backend
 uv run uvicorn beacon.api.app:create_app --factory --port 8000
+# GET /healthz  → {"status":"ok"}
+# GET /jobs?q=&country=&category=&level=&sponsor_tier=&status=&posted_since=
+#          &include_closed=&sort=tier|date|match&resume=&limit=&offset=
+# GET /jobs/{id}, PATCH /jobs/{id}/status, POST /jobs/{id}/match
+# GET /companies/health  → source-health rollup + per-company rows
+# GET /registries        → sponsor-registry coverage (incl. never-ingested)
+# GET /countries, /markets, /searches, /resumes, /settings/telegram
 ```
 
 | Route | What |
@@ -118,19 +127,38 @@ cd frontend
 npm run dev
 ```
 
-**One-off CLIs** (all in `backend/`, all wiring only):
+**Other one-shot CLIs** (all `cd backend && uv run python -m …`, wiring only):
 
 | Command | What |
 |---|---|
-| `python -m beacon.notify` | send the current digest without polling |
-| `python -m beacon.refresh [--flag NAME --evidence TEXT]` | rematch seeds against the registry snapshots, or hand-flag one company as a manual sponsor |
-| `python -m beacon.classify [--upgrade-residue \| --reclassify CATEGORY]` | classify rows that have never been classified; `--upgrade-residue` re-runs the classifier on rows left with no category (the LLM with a key, today's vocabulary without one); `--reclassify CATEGORY` re-reads every row stored with that category after a vocabulary split |
-| `python -m beacon.relocate` | re-parse the location of rows with no country (idempotent) |
-| `python -m beacon.retier` | move home-market rows onto their current tier (idempotent) |
-| `python -m beacon.maintenance {refresh-registries,refresh-registries-if-needed,backup,probe}` | the launchd jobs, run by hand |
+| `beacon.refresh` | Rematch every seed company against the registry snapshots; `--flag NAME --evidence TEXT` hand-flags a manual sponsor |
+| `beacon.maintenance {refresh-registries,refresh-registries-if-needed,backup,probe}` | The launchd jobs, runnable by hand |
+| `beacon.notify` | Send the current digest without polling |
+| `beacon.classify [--upgrade-residue \| --reclassify CATEGORY]` | Classify never-classified rows; or re-run the classifier over the empty-category residue; or re-read rows stored with one category against the current vocabulary |
+| `beacon.relocate`, `beacon.retier` | Backfills: re-parse stored locations / re-tier home-market postings |
 
-Spot-check scripts for manual acceptance live in `backend/scripts/` (`spot_check_registry.py`,
-`spot_check_health.py`, `spot_check_classifier.py`, …).
+Spot-check scripts for manual acceptance live in `backend/scripts/` (`spot_check_*.py`,
+`backup_db.py`).
+
+### Registry snapshots & review
+
+Sponsor registers are hand-downloaded into `data/registries/` (gitignored; file names in the
+config table below — US H-1B and PERM ship as XLSX and are converted to the CSV columns the
+adapters read; see `SOURCES.md`). A missing file is skipped and reported by `GET /registries`.
+
+Matching company names to registers is the highest-risk code in the repo, so any matcher
+change is reviewed against real data with `backend/scripts/spot_check_registry.py`:
+
+```bash
+cd backend
+uv run python scripts/spot_check_registry.py --snapshots --from-db --baseline before.txt   # before
+# …change the matcher…
+uv run python scripts/spot_check_registry.py --snapshots --from-db --baseline before.txt   # diff
+uv run python scripts/spot_check_registry.py --snapshots --from-db --only-stripped        # review set
+```
+
+A match reviewed and refused becomes a row in `seeds/registry_rejections.csv` (with a reason),
+honoured by both refresh and the spot-check — data, not a new matcher rule.
 
 ### Source health & recovery
 
@@ -168,22 +196,19 @@ un-quarantines, so routine runs don't disturb a genuine quarantine. Live accepta
 
 ### Configuration
 
-All env reads live in one place (`beacon/config.py`). Defaults work out of the box:
+All env reads live in one place (`beacon/config.py`). Defaults are relative to the repo root and work out of the box. Day/month boundaries (posted-since, digest, LLM budget month) use `Asia/Jakarta`; storage stays UTC.
 
 | Env var | Default | Purpose |
 |---|---|---|
 | `BEACON_DB_PATH` | `<repo>/beacon.db` | SQLite database file |
 | `BEACON_SEEDS_PATH` | `<repo>/seeds/companies.csv` | Curated company seed list |
-| `BEACON_BACKUPS_PATH` | `<repo>/backups` | Where `maintenance backup` writes timestamped copies |
-| `BEACON_{UK,IND,H1B,IE,CA}_REGISTRY_PATH` | `<repo>/data/registries/{uk_sponsors,ind_sponsors,h1b_lca,ie_permits,ca_lmia}.csv` | Sponsor-registry snapshots |
-| `BEACON_TELEGRAM_BOT_TOKEN` / `BEACON_TELEGRAM_CHAT_ID` | unset → digest prints to stdout | Fallback Telegram creds; the Settings UI's creds take precedence |
-| `BEACON_ANTHROPIC_API_KEY` | unset → heuristic-only | Enables the LLM fallback classifier (slice 9, parked) |
-| `BEACON_LLM_MODEL` | `claude-haiku-4-5-20251001` | Model for the LLM classifier |
-| `BEACON_LLM_MONTHLY_BUDGET` | `500` | Hard cap on LLM calls per local month |
-| `BEACON_NAV_API_TOKEN` | unset → NAV source not wired | NAV Norway feed token |
-
-The scripts in `deploy/` also read `BEACON_UV`, `BEACON_HOURLY_TIMEOUT` (default 3000 s) and `BEACON_HOURLY_LOCK`.
-Day and month boundaries use `Asia/Jakarta` (`config.LOCAL_TZ`); everything is stored in UTC.
+| `BEACON_BACKUPS_PATH` | `<repo>/backups` | Where `maintenance backup` writes snapshots |
+| `BEACON_{UK,IND,H1B,IE,CA,PERM}_REGISTRY_PATH` | `<repo>/data/registries/{uk_sponsors,ind_sponsors,h1b_lca,us_perm,ie_permits,ca_lmia}.csv` | Sponsor-register snapshots (missing file → skipped) |
+| `BEACON_REGISTRY_REJECTIONS_PATH` | `<repo>/seeds/registry_rejections.csv` | Reviewed-and-refused registry matches |
+| `BEACON_TELEGRAM_BOT_TOKEN`, `BEACON_TELEGRAM_CHAT_ID` | unset | Digest delivery; unset → stdout (also settable in the UI) |
+| `BEACON_NAV_API_TOKEN` | unset | NAV Norway feed; unset → source not wired |
+| `BEACON_ANTHROPIC_API_KEY` | unset | LLM fallback classifier; unset → heuristic only |
+| `BEACON_LLM_MODEL`, `BEACON_LLM_MONTHLY_BUDGET` | Haiku 4.5, `500` | LLM model and hard monthly call cap |
 
 ### Scheduling
 
@@ -191,7 +216,7 @@ Four launchd agents, all installed from `deploy/`:
 
 | Agent | When | What |
 |---|---|---|
-| `com.beacon.digest` | 08:45, 12:00, 16:30 local | One fire of `deploy/hourly-digest.sh`: poll → dedup → Telegram digest, then exit. Lock-guarded (a fire that finds the previous one still polling skips) and capped at 50 min, after which the digest still goes out via `python -m beacon.notify`. Sources poll concurrently (one request per second per host), so a full poll runs about 13 min (757 s on 2026-10-10, down from 29–50 min sequential). |
+| `com.beacon.digest` | 16:00 local, once a day | One fire of `deploy/hourly-digest.sh`: poll → dedup → Telegram digest, then exit. Lock-guarded (a fire that finds the previous one still polling skips) and capped at 50 min, after which the digest still goes out via `python -m beacon.notify`. A full poll runs ~13 min (sources poll concurrently since slice 29). |
 | `com.beacon.refresh` | 1st of the month, 09:30 | `python -m beacon.maintenance refresh-registries` — rematch the seeds against the registry snapshots. |
 | `com.beacon.backup` | daily, 10:00 | `python -m beacon.maintenance backup` — timestamped SQLite copy, pruned to the newest 14. |
 | `com.beacon.probe` | Mondays, 10:30 | `python -m beacon.maintenance probe` — retry quarantined sources so a temporary outage self-heals. |
@@ -202,7 +227,7 @@ daemon until 2026-09-11. That daemon could never fire them here: a LaunchAgent l
 user's GUI domain, so it exists only while someone is logged in, and the Mac was asleep or
 logged out at 03:00–05:00. Nine days of it running produced zero backups. On 2026-09-22 the box
 was set to shut down at 06:00 and power on at 08:45 (`pmset repeat`), so the maintenance jobs
-moved out of the night into the morning, after the 08:45 digest. If a fire is missed during
+moved out of the night into the morning (the digest itself fires once, at 16:00). If a fire is missed during
 sleep, launchd runs it once at the next login/wake, so a late backup still happens. A fire
 still needs someone logged in to run.
 
@@ -238,21 +263,22 @@ backend/
   beacon/
     domain/           pure models + logic (job, sponsorship, location, visa, vocabulary, matching, dedup)
     application/      use cases + port protocols (ingest, queries, scoring, health, coverage)
-    adapters/         sources/ (16 boards + factory), persistence/, registries/ (UK, IND, H-1B, IE, CA),
-                      classify/, notify/, resume/, http/
+    adapters/         sources/ (19 boards + factory), persistence/, registries/ (6 registers + rejections), classify/, notify/, resume/, http/ (polite client + credentials)
     api/              app factory, eight routers, deps
-    ingest.py …       CLI entry points: ingest, notify, refresh, classify, relocate, retier
     maintenance.py    launchd one-shot entry points (refresh-registries[-if-needed], backup, probe)
+    ingest.py, refresh.py, notify.py, classify.py, relocate.py, retier.py   CLI composition roots
+    config.py         the only env reader (Settings)
   migrations/         001–010, numbered and forward-only
-  scripts/            manual spot-check scripts (registry, health, classifier, locations, …) + backup_db.py
+  scripts/            spot_check_*.py manual acceptance checks, backup_db.py
   tests/              unit / adapters / api / integration, with fixtures/
 frontend/
   src/                jobs/, countries/, searches/, settings/, api/ (client + types), tokens.css
-seeds/companies.csv   70 verified companies (name,ats_type,ats_slug,country_hq,priority)
-data/registries/      hand-downloaded sponsor-registry snapshots (CSV)
+seeds/companies.csv   81 companies (name,ats_type,ats_slug,country_hq,priority)
+seeds/registry_rejections.csv  registry matches reviewed and refused (spot-check → reason → row)
+data/registries/      hand-downloaded sponsor-register snapshots (gitignored)
+scripts/node-path.sh  puts nvm's node on PATH for make/launchd
+run.sh                one-step launcher (API + frontend + background refresh)
 deploy/               four launchd agents + hourly-digest.sh: digest window, registry refresh, backup, quarantine probe
-scripts/node-path.sh  puts nvm's node/npm on PATH for make and run.sh
-run.sh                one-step launcher (registry check → launch digest → API + background poll → Vite)
 ```
 
 ## Documentation map
@@ -265,4 +291,5 @@ run.sh                one-step launcher (registry check → launch digest → AP
 | `SOURCES.md` | Per-source operating reference — endpoint, auth, pagination, field normalization, quirks, for every polled source |
 | `DESIGN.md` | Visual source of truth — "Nordic Slate & Teal" tokens and views |
 | `CLAUDE.md` | Working conventions and architecture-boundary enforcement |
+| `SOURCES.md` | Operating detail per polled source — endpoint, auth, pagination, normalization quirks |
 | `VERIFY-COUNTRIES.md` | Checklist for re-verifying country/visa reference data |

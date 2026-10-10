@@ -542,7 +542,7 @@ describe('JobsPane', () => {
     })
   })
 
-  // Slice 23: the rest of engineering sits behind "More" so the DESIGN §2 row does not wrap.
+  // Slice 27: the rest of engineering sits behind "More" so the DESIGN §2 row does not wrap.
   it('keeps the wider engineering categories behind More until asked', async () => {
     const user = userEvent.setup()
     renderPage()
@@ -565,7 +565,7 @@ describe('JobsPane', () => {
     expect(screen.getByRole('button', { name: 'Security' })).toHaveAttribute('aria-pressed', 'true')
   })
 
-  // Slice 24: infra split out of backend; it filters on its own, behind More like slice 23's.
+  // Slice 28: infra split out of backend; it filters on its own, behind More like slice 27's.
   it('filters on infra from the More row', async () => {
     const user = userEvent.setup()
     renderPage()

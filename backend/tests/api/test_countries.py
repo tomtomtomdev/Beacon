@@ -9,6 +9,7 @@ import pytest
 
 from beacon.api.app import create_app
 from beacon.config import Settings
+from beacon.domain.visa import COUNTRY_REFERENCE
 
 
 @pytest.fixture
@@ -25,7 +26,8 @@ async def test_lists_every_market_including_the_home_row(client: httpx.AsyncClie
     resp = await client.get("/countries")
 
     assert resp.status_code == 200
-    assert len(resp.json()) == 16  # 15 relocation targets + the home market (SPEC §4)
+    # Derived, not typed: a frozen count broke on every §4 widening (slice 18, then 23c's DE).
+    assert sorted(c["code"] for c in resp.json()) == sorted(c.code for c in COUNTRY_REFERENCE)
 
 
 async def test_home_row_leads_then_primary_tier_countries(client: httpx.AsyncClient) -> None:

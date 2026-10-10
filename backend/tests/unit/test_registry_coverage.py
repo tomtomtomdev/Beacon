@@ -1,7 +1,7 @@
 """Registry coverage: which sponsor registers actually have a snapshot on this box.
 
 The bug this exists to make impossible: SPEC §4 claimed the UK register was ingested and it
-never was — `_available_ingesters` skips a missing snapshot with a print line, so the absence
+never was — `available_ingesters` skips a missing snapshot with a print line, so the absence
 was invisible for sixteen slices. Coverage therefore reports *every* bit, and an absent
 snapshot is a stated "never ingested", not a missing row.
 """

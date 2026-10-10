@@ -16,10 +16,10 @@ logger = logging.getLogger(__name__)
 
 # Wiring provides this: maps a company to its ATS adapter, or None when no adapter exists yet.
 type SourceFactory = Callable[[Company], JobSource | None]
-# Seconds from an arbitrary origin, monotonic. Injected so tests can step it (slice 25a).
+# Seconds from an arbitrary origin, monotonic. Injected so tests can step it (slice 29a).
 type Clock = Callable[[], float]
 
-# How many sources poll at once (slice 25b). Politeness does not depend on it: PoliteClient
+# How many sources poll at once (slice 29b). Politeness does not depend on it: PoliteClient
 # serialises same-host requests behind a per-host lock at 1 rps, so the bound only caps open
 # connections and memory. Sources on one host (every Greenhouse board) still queue.
 POLL_CONCURRENCY = 16
@@ -34,7 +34,7 @@ class IngestResult:
     # is fed to record_failure and — crucially — never runs the closed-sweep (SPEC §7).
     failure: FailureKind | None = None
     # Wall time of this one poll, failures included: a host timing out three times is exactly
-    # the source that costs minutes (slice 25a — the poll had no per-source timing at all).
+    # the source that costs minutes (slice 29a — the poll had no per-source timing at all).
     secs: float = 0.0
 
 
@@ -256,7 +256,7 @@ async def ingest_all(
     health outcome. One dead board never stops the run; a quarantined source is skipped
     entirely (no fetch, no sweep — its jobs stay frozen), only the weekly probe retries it.
 
-    Polls overlap, at most `concurrency` at a time (slice 25b: run sequentially, the poll's
+    Polls overlap, at most `concurrency` at a time (slice 29b: run sequentially, the poll's
     wall time was the sum of 60+ boards and reached 2989s of a 3000s watchdog). Results come
     back in company order whatever finishes first."""
     gate = asyncio.Semaphore(concurrency)

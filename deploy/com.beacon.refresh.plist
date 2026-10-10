@@ -16,7 +16,7 @@
      Times are local (Asia/Jakarta on this box; launchd reads the system zone, which is also
      config.LOCAL_TZ). Moved out of the 03:00-05:00 night slot on 2026-09-22: the box now
      shuts down 06:00 and powers on 08:45 (pmset repeat), so these fire in the morning
-     after it, staggered clear of the 08:45 digest run. One-shot: no RunAtLoad, no KeepAlive. Each job is safe to run late or
+     after it, well clear of the 16:00 digest run. One-shot: no RunAtLoad, no KeepAlive. Each job is safe to run late or
      twice, which is what makes the coalesced catch-up sound.
 
      TCC: keep the checkout OUT of ~/Documents, ~/Desktop and ~/Downloads. A launchd-started

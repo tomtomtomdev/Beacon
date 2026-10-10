@@ -3,6 +3,7 @@ exponential backoff. Time is injected (fake clock/sleep) so the suite never real
 """
 
 import json
+from base64 import b64encode
 from datetime import UTC, datetime
 from typing import Any
 
@@ -10,6 +11,7 @@ import httpx
 import pytest
 from pydantic import SecretStr
 
+from beacon.adapters.http.credentials import ApiKeyHeader, Basic, Bearer
 from beacon.adapters.http.polite import PoliteClient
 from beacon.application.errors import SourceUnavailable
 from beacon.domain.health import FailureKind
@@ -218,7 +220,7 @@ async def test_get_json_sends_the_configured_bearer_token_for_that_host() -> Non
     client = _client(
         httpx.MockTransport(handler),
         clock,
-        bearer_tokens={"pam-stilling-feed.nav.no": SecretStr("nav-secret")},
+        credentials={"pam-stilling-feed.nav.no": Bearer(SecretStr("nav-secret"))},
     )
 
     await client.get_json("https://pam-stilling-feed.nav.no/api/v1/feed")
@@ -237,7 +239,7 @@ async def test_a_credential_is_never_sent_to_another_host() -> None:
     client = _client(
         httpx.MockTransport(handler),
         clock,
-        bearer_tokens={"pam-stilling-feed.nav.no": SecretStr("nav-secret")},
+        credentials={"pam-stilling-feed.nav.no": Bearer(SecretStr("nav-secret"))},
     )
 
     await client.get_json("https://api.example.com/v1/jobs")
@@ -255,7 +257,7 @@ async def test_auth_credentials_never_appear_in_logs_or_reprs(
     client = _client(
         httpx.MockTransport(handler),
         clock,
-        bearer_tokens={"pam-stilling-feed.nav.no": SecretStr("nav-secret")},
+        credentials={"pam-stilling-feed.nav.no": Bearer(SecretStr("nav-secret"))},
     )
 
     with caplog.at_level("DEBUG"), pytest.raises(SourceUnavailable) as raised:
@@ -264,6 +266,66 @@ async def test_auth_credentials_never_appear_in_logs_or_reprs(
     assert "nav-secret" not in caplog.text
     assert "nav-secret" not in repr(client)
     assert "nav-secret" not in str(raised.value)  # the 401's message must not echo it back
+
+
+async def test_basic_credential_sends_key_as_username_with_empty_password() -> None:
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return httpx.Response(200, json={})
+
+    clock = FakeClock()
+    client = _client(
+        httpx.MockTransport(handler),
+        clock,
+        credentials={"www.reed.co.uk": Basic(SecretStr("reed-key"))},
+    )
+
+    await client.get_json("https://www.reed.co.uk/api/1.0/search")
+
+    # Reed's scheme: the API key is the username, the password is empty.
+    assert seen[0].headers["authorization"] == f"Basic {b64encode(b'reed-key:').decode()}"
+
+
+async def test_api_key_header_is_sent_only_to_its_host() -> None:
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return httpx.Response(200, json={})
+
+    clock = FakeClock()
+    client = _client(
+        httpx.MockTransport(handler),
+        clock,
+        min_interval=0.0,
+        credentials={"rest.arbeitsagentur.de": ApiKeyHeader("X-API-Key", SecretStr("de-key"))},
+    )
+
+    await client.get_json("https://rest.arbeitsagentur.de/jobboerse/jobsuche-service/pc/v4/jobs")
+    await client.get_json("https://api.example.com/v1/jobs")
+
+    assert seen[0].headers["x-api-key"] == "de-key"
+    assert "x-api-key" not in seen[1].headers
+
+
+def test_repr_names_hosts_never_secrets() -> None:
+    client = PoliteClient(
+        httpx.AsyncClient(),
+        credentials={
+            "nav.example": Bearer(SecretStr("bearer-secret")),
+            "reed.example": Basic(SecretStr("basic-secret")),
+            "de.example": ApiKeyHeader("X-API-Key", SecretStr("header-secret")),
+        },
+    )
+
+    rendered = repr(client)
+
+    assert all(host in rendered for host in ("nav.example", "reed.example", "de.example"))
+    assert not any(
+        secret in rendered for secret in ("bearer-secret", "basic-secret", "header-secret")
+    )
 
 
 # ── Pinned windows (slice 14e) ───────────────────────────────────────────────────

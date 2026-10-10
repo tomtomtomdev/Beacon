@@ -251,7 +251,7 @@ class JobRepo(Protocol):
         self, category: Category
     ) -> list[tuple[int, NormalizedJob, frozenset[Category]]]:
         """Persisted jobs whose stored categories include `category`, each as
-        (job_id, job, stored categories) — what a vocabulary split re-reads (slice 24b)."""
+        (job_id, job, stored categories) — what a vocabulary split re-reads (slice 28b)."""
         ...
 
     def set_classification(self, job_id: int, classification: Classification) -> None: ...

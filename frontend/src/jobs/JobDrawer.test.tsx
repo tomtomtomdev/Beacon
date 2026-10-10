@@ -46,6 +46,14 @@ const contactJob: JobDetail = {
   contact_email: 'careers@spotify.com',
 }
 
+// Every registry the backend can name (domain/registry.py), so no bitmask member renders as a
+// bare code. IE and CA had no label from slice 14 until 24a; PERM arrived in 24a.
+const everyRegistryJob: JobDetail = {
+  ...seJob,
+  id: 4,
+  registries: ['UK', 'NL', 'US', 'MANUAL', 'IE', 'CA', 'PERM'],
+}
+
 const sweden: Country = {
   code: 'SE',
   name: 'Sweden',
@@ -70,6 +78,7 @@ beforeEach(() => {
     if (u === '/countries') return ok([sweden])
     if (u === '/jobs/2') return ok(yesJob)
     if (u === '/jobs/3') return ok(contactJob)
+    if (u === '/jobs/4') return ok(everyRegistryJob)
     return ok(seJob)
   })
   vi.stubGlobal('fetch', fetchMock)
@@ -144,6 +153,16 @@ describe('JobDrawer', () => {
     expect(card.getByText(/UK Home Office/)).toBeInTheDocument()
     expect(card.getByText(/IND recognised/)).toBeInTheDocument()
     expect(card.getByText(/Match confidence 0\.94/)).toBeInTheDocument()
+  })
+
+  it('labels every registry in words, never as a bare code', async () => {
+    renderDrawer(4)
+
+    const card = within(await screen.findByTestId('sponsorship-card'))
+    const rows = card.getAllByRole('listitem').map((row) => row.textContent?.trim())
+    expect(rows).toHaveLength(7)
+    for (const code of everyRegistryJob.registries) expect(rows).not.toContain(code)
+    expect(card.getByText(/green card/i)).toBeInTheDocument()
   })
 
   it('quotes the evidence sentence for an explicit tier', async () => {

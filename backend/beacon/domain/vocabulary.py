@@ -131,9 +131,9 @@ CATEGORY_KEYWORDS: dict[Category, tuple[str, ...]] = {
         "full stack",
         "fullstackutvecklare",
     ),
-    # --- Slice 23 (2026-10-10): the rest of engineering. Phrases, not bare nouns, wherever
+    # --- Slice 27 (2026-10-10): the rest of engineering. Phrases, not bare nouns, wherever
     # the bare word heads non-engineering titles in the corpus ("embedded payments", "data").
-    # Slice 24: what backend held for slice 3–23 that runs systems rather than writes them.
+    # Slice 28: what backend held for slice 3–27 that runs systems rather than writes them.
     Category.INFRA: (
         "infrastructure",
         "infra",
@@ -336,7 +336,7 @@ _MANAGED_AREA_GUARD = HomographGuard(
     contexts=_MANAGES_ENGINEERING,
     corroborators=("engineering manager", "engineer"),
 )
-# Infrastructure is also what a PM, buyer, accountant or policy lead works on (slice 24's
+# Infrastructure is also what a PM, buyer, accountant or policy lead works on (slice 28's
 # relabel dry run: ~35 of 506 open infra rows). An engineer in the same area keeps it.
 _INFRA_AREA_GUARD = HomographGuard(
     contexts=(

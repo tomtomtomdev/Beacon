@@ -21,6 +21,8 @@ from beacon.adapters.persistence.jobs import SqliteJobRepo
 from beacon.adapters.persistence.registries_meta import SqliteRegistriesMetaRepo
 from beacon.adapters.registries.ca import CALMIARegistry
 from beacon.adapters.registries.h1b import H1BLCARegistry
+from beacon.adapters.registries.perm import PERMRegistry
+from beacon.adapters.registries.rejections import parse_rejections_csv
 from beacon.adapters.registries.ie import IEPermitsRegistry
 from beacon.adapters.registries.ind import INDRegistry
 from beacon.adapters.registries.uk import UKSponsorRegistry
@@ -44,6 +46,7 @@ _SNAPSHOT_SOURCES: dict[str, str] = {
     "US": "https://www.dol.gov/agencies/eta/foreign-labor/performance (XLSX, export to CSV)",
     "IE": "https://enterprise.gov.ie employment-permits-issued-to-companies-<year>.xlsx",
     "CA": "https://open.canada.ca TFWP positive-LMIA employers",
+    "PERM": "https://www.dol.gov/agencies/eta/foreign-labor/performance (PERM XLSX, export to CSV)",
 }
 
 
@@ -58,13 +61,14 @@ def _snapshot_specs(settings: Settings) -> tuple[_SnapshotSpec, ...]:
         ("US", settings.h1b_registry_path, H1BLCARegistry),
         ("IE", settings.ie_registry_path, IEPermitsRegistry),
         ("CA", settings.ca_registry_path, CALMIARegistry),
+        ("PERM", settings.perm_registry_path, PERMRegistry),
     )
 
 
 def report_missing_snapshots(settings: Settings) -> tuple[str, ...]:
     """Name every register whose file is absent, and where to get it.
 
-    Absence is the content. `_available_ingesters` skips a missing file by design, which is how
+    Absence is the content. `available_ingesters` skips a missing file by design, which is how
     SPEC §4 came to claim the UK register was ingested while its bit sat on zero companies for
     sixteen slices. No re-run fixes a missing file — it is a hand download — so the line says so.
     """
@@ -75,7 +79,7 @@ def report_missing_snapshots(settings: Settings) -> tuple[str, ...]:
     return missing
 
 
-def _available_ingesters(settings: Settings) -> list[RegistryIngester]:
+def available_ingesters(settings: Settings) -> list[RegistryIngester]:
     """Only the snapshots that are actually present — a missing register is skipped, not fatal."""
     report_missing_snapshots(settings)
     return [build(path) for _name, path, build in _snapshot_specs(settings) if path.exists()]
@@ -120,7 +124,7 @@ def _wire(settings: Settings) -> tuple[sqlite3.Connection, SqliteCompanyRepo, Sq
 
 def run_refresh(settings: Settings) -> int:
     conn, company_repo, jobs = _wire(settings)
-    ingesters = _available_ingesters(settings)
+    ingesters = available_ingesters(settings)
     if not ingesters:
         print("no registry snapshots available — nothing to match")
         return 1
@@ -131,6 +135,7 @@ def run_refresh(settings: Settings) -> int:
         jobs,
         meta_repo=SqliteRegistriesMetaRepo(conn),
         now=datetime.now(UTC),
+        rejected=parse_rejections_csv(settings.rejections_path.read_text()),
     )
     print(f"refresh companies={result.companies} matched={result.matched}")
     return 0

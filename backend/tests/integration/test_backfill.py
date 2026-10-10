@@ -133,7 +133,7 @@ def test_upgrade_reclassifies_only_the_empty_category_residue(
 def test_keyless_upgrade_relabels_the_residue_with_the_current_vocabulary(
     db: sqlite3.Connection, company_id: int
 ) -> None:
-    """Slice 23b: with no API key the classifier is the bare heuristic, so --upgrade-residue
+    """Slice 27b: with no API key the classifier is the bare heuristic, so --upgrade-residue
     applies a widened vocabulary to rows an older one left empty — offline, no LLM spend."""
     repo = SqliteJobRepo(db)
     repo.upsert(
@@ -172,7 +172,7 @@ def _labelled(repo: SqliteJobRepo, company_id: int, ext: str, title: str, *cats:
 def test_reclassify_relabels_rows_carrying_the_category_with_the_current_vocabulary(
     db: sqlite3.Connection, company_id: int
 ) -> None:
-    """Slice 24b: infra split out of backend after 956 open rows were stored as backend; the
+    """Slice 28b: infra split out of backend after 956 open rows were stored as backend; the
     content_hash gate would keep them backend forever without a re-read of exactly those rows."""
     repo = SqliteJobRepo(db)
     _labelled(repo, company_id, "S", "Senior DevOps Engineer", Category.BACKEND)

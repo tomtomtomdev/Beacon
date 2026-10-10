@@ -12,7 +12,7 @@ from datetime import datetime
 
 from beacon.application.ports import CompanyRepo, JobRepo, RegistriesMetaRepo, RegistryIngester
 from beacon.domain.company import Company
-from beacon.domain.matching import match_company
+from beacon.domain.matching import RegistryRejection, match_company
 from beacon.domain.registry import Registry
 from beacon.domain.sponsorship import resolve_tier
 
@@ -33,6 +33,7 @@ def refresh_registries(
     *,
     meta_repo: RegistriesMetaRepo | None = None,
     now: datetime | None = None,
+    rejected: frozenset[RegistryRejection] = frozenset(),
 ) -> RefreshResult:
     entries_by_registry = {ingester.registry: ingester.fetch() for ingester in ingesters}
 
@@ -46,7 +47,7 @@ def refresh_registries(
     for company in companies:
         if company.id is None:
             continue
-        result = match_company(company.name, entries_by_registry)
+        result = match_company(company.name, entries_by_registry, rejected=rejected)
         manual_bit = Registry(company.registry_flags) & Registry.MANUAL
         if not result.flags and manual_bit:
             continue  # MANUAL-only company: leave its bit, confidence and evidence intact

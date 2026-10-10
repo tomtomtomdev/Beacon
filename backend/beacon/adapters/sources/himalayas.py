@@ -31,7 +31,7 @@ ROLE_QUERIES: tuple[str, ...] = (
     "java backend engineer",
     "machine learning engineer",
 )
-# Slice 23 probed 11 wider queries live 2026-10-10 (software, backend, frontend, full stack,
+# Slice 27 probed 11 wider queries live 2026-10-10 (software, backend, frontend, full stack,
 # android, data, devops, SRE, security, qa, embedded — 15-20/20 read as engineering) and withdrew
 # them: with MyCareersFuture's four, the 12:00 poll ran 2989s against a 3000s watchdog, past
 # the slice's 45 min kill line (PROGRESS Decisions 2026-10-10 board-queries-withdrawn).

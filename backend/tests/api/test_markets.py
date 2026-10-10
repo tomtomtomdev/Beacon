@@ -73,13 +73,13 @@ async def _body(client: httpx.AsyncClient) -> dict[str, Any]:
 
 
 async def test_endpoint_reports_both_halves(client: httpx.AsyncClient, db_path: Path) -> None:
-    """NL is assessed (§4 row); DE is not, and holds the fourth-largest block in the corpus."""
-    _seed(db_path, {"NL": 2, "DE": 3})
+    """NL is assessed (§4 row); IN is not, and holds the largest block in the corpus."""
+    _seed(db_path, {"NL": 2, "IN": 3})
 
     body = await _body(client)
 
     assert {"code": "NL", "open_jobs": 2} in body["target_markets"]
-    assert body["other_markets"] == [{"code": "DE", "open_jobs": 3}]
+    assert body["other_markets"] == [{"code": "IN", "open_jobs": 3}]
 
 
 async def test_endpoint_reports_zero_other_markets_on_an_empty_corpus(
@@ -96,7 +96,7 @@ async def test_an_assessed_market_with_no_open_jobs_is_still_reported(
 ) -> None:
     """A target market is a reference fact. It keeps its menu row on a week with no postings,
     and the row states zero rather than disappearing."""
-    _seed(db_path, {"DE": 1})
+    _seed(db_path, {"IN": 1})
 
     body = await _body(client)
 
@@ -106,8 +106,8 @@ async def test_an_assessed_market_with_no_open_jobs_is_still_reported(
 async def test_other_markets_lead_with_the_largest(
     client: httpx.AsyncClient, db_path: Path
 ) -> None:
-    _seed(db_path, {"DE": 1, "IN": 3, "TH": 2})
+    _seed(db_path, {"PH": 1, "IN": 3, "TH": 2})
 
     body = await _body(client)
 
-    assert [row["code"] for row in body["other_markets"]] == ["IN", "TH", "DE"]
+    assert [row["code"] for row in body["other_markets"]] == ["IN", "TH", "PH"]

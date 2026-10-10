@@ -14,7 +14,7 @@ from beacon.domain.job import NormalizedJob
 
 _SEARCH_API = "https://jobsearch.api.jobtechdev.se/search"
 # The taxonomy concept id of the "Data/IT" occupation field. The board carries every kind of
-# Swedish job; unsteered, the newest 100 held 6 engineering titles, steered 37 (slice 23,
+# Swedish job; unsteered, the newest 100 held 6 engineering titles, steered 37 (slice 27,
 # probed live 2026-10-10 — the rest are mostly Swedish IT titles the vocabulary cannot read).
 DATA_IT_OCCUPATION_FIELD = "apaJ_2ja_LuF"
 _AD_URL = "https://arbetsformedlingen.se/platsbanken/annonser/{id}"

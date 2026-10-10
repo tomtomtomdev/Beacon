@@ -4,33 +4,44 @@
 
 ## Current status
 
-**2026-10-10 (late afternoon): slice 25, the poll gets a time budget.** Every poll line now
+**2026-10-10 (evening): two parallel sessions merged.** `origin/main` carried slices 23–26 from
+another session: Arbeitnow, Bundesagentur and DE (23), US PERM as a register (24), the registry
+spot-check (25), and a *plan* to widen to all software engineering (26). This box's slices 23–25
+(engineering widening, infra split, poll budget) are **renumbered 27–29**; their commits keep the
+`slice-23/24/25` prefixes. Slice 26 is superseded by 27–28. Owner calls at the merge: the digest
+fires **once a day at 16:00** (origin's schedule; the plist is reinstalled), and **`eng-mgmt`
+stays in scope** (reverses 26's Q2).
+
+**Next action:** after the next 16:00 fire, check `hourly_done secs=` (757s before the merge
+added Bundesagentur's detail calls) and source health for `arbeitnow` and `bundesagentur`.
+
+**2026-10-10 (late afternoon): slice 29, the poll gets a time budget.** Every poll line now
 carries `secs=`. A sequential poll measured **1758s**. With sources overlapping, a poll runs
 **757s (12.6 min)**, against the 2989s that came within 11 seconds of the watchdog at 12:00.
 
 | run | wall | where the time went |
 |---|---|---|
-| 13:29, sequential (25a) | 1758s | SmartRecruiters 704s (Grab 469, Canva 150, Carousell 86), Rippling 345s, HN 303s, MyCareersFuture 97s; everything else ≤ 60s |
-| 14:00, concurrent (25b) | **757s** | one host: SmartRecruiters' three boards queue on its per-host lock (Grab's `secs=704` now includes queue wait) |
+| 13:29, sequential (29a) | 1758s | SmartRecruiters 704s (Grab 469, Canva 150, Carousell 86), Rippling 345s, HN 303s, MyCareersFuture 97s; everything else ≤ 60s |
+| 14:00, concurrent (29b) | **757s** | one host: SmartRecruiters' three boards queue on its per-host lock (Grab's `secs=704` now includes queue wait) |
 
 Same supply: 9,440 fetched against 9,441, no `database is locked`, no 429. **Workday is down
 for maintenance:** all four Workday career sites 303 to `community.workday.com/maintenance-page`,
 correctly logged as `unreachable`. Not ours, but watch that their health recovers.
 
 **Next action:** nothing is forced. If the poll needs to shrink again, the lever is
-SmartRecruiters' per-posting detail fetch (PLAN slice 25, "Next lever"). Otherwise, the Swedish
+SmartRecruiters' per-posting detail fetch (PLAN slice 29, "Next lever"). Otherwise, the Swedish
 IT titles JobTech brings in.
 
-**2026-10-10 (afternoon): slice 24, `infra` splits out of `backend`.** Also: launchd agents and
+**2026-10-10 (afternoon): slice 28, `infra` splits out of `backend`.** Also: launchd agents and
 the classifier spot-check.
 
 | what | result |
 |---|---|
 | launchd | `com.beacon.{refresh,backup,probe}` reinstalled and loaded (only `digest` had been). Backup kickstarted under launchd: `last exit code = 0`, `beacon-20261010-060909.db`. **No backup had been written since 2026-09-24** |
 | spot-check | `spot_check_classifier.py` live over Anthropic/Adyen/Agoda/Tines engineering titles: **64/67 categories right (95.5%, gate 90%)**. The 3 misses (CI/CD, sysadmin, BI developer) are now fixture rows |
-| 24a | new `infra` category: SRE, devops, kubernetes, networking, platform/cloud/release, and the spot-check misses. Bare `systems engineer` dropped; a guard on bare `infrastructure` for PM/TPM/sourcing/accounting titles |
-| 24b | `classify --reclassify CATEGORY` re-reads rows stored with one category. Live: 873 + 45 rows changed, 0 LLM calls, second run 0 |
-| 24c | Infra pill in the More row; `SCORING_VERSION` 4; a backend saved search no longer counts infra jobs (test) |
+| 28a | new `infra` category: SRE, devops, kubernetes, networking, platform/cloud/release, and the spot-check misses. Bare `systems engineer` dropped; a guard on bare `infrastructure` for PM/TPM/sourcing/accounting titles |
+| 28b | `classify --reclassify CATEGORY` re-reads rows stored with one category. Live: 873 + 45 rows changed, 0 LLM calls, second run 0 |
+| 28c | Infra pill in the More row; `SCORING_VERSION` 4; a backend saved search no longer counts infra jobs (test) |
 
 **Open `backend` 956 → 365; `infra` 471 (18 both).** Both live alerts are backend + java/python,
 so SRE/devops postings no longer reach them: 189 open backend rows mention Java and 118 mention
@@ -40,27 +51,56 @@ Python.
 at 12:00 with the wider queries; the queries are withdrawn but the headroom is thin). After
 that, the Swedish IT titles.
 
-**2026-10-10 — slice 23: all of engineering, not just iOS / backend / AI-ML.** Measured first:
+**2026-10-10 — slice 27: all of engineering, not just iOS / backend / AI-ML.** Measured first:
 **7,651 of 8,918 open canonical postings (86%) carried no category**, so no category filter could
 reach them. About 2,200 of those were engineering titles the classifier had no word for (721 plain
 "Software Engineer"). The supply was already in the database, so classification came first.
 
 | step | what | result |
 |---|---|---|
-| 23a | 7 new categories (data, security, embedded, qa, eng-mgmt, solutions) + `software` as a no-specialism fallback; .NET/C#/C++ aliased before matching; guards for PM/TPM, business-developer, compliance-QA, sales-rep titles | 3 dry runs over the live residue, every misfire turned into a fixture row |
-| 23b | the keyless `classify --upgrade-residue` is the offline backfill (pinned by a test) | **open residue 7,651 → 5,673 (−1,978)**; 3,759 rows relabelled in all; **0 LLM calls**; backup taken first |
-| 23c | 7 pills behind a "More" toggle; saved searches pinned by a test; `SCORING_VERSION` 3 | cached fit scores recompute |
-| 23d | JobTech steered to Data/IT; Himalayas +11 / MyCareersFuture +4 queries **withdrawn** | JobTech's engineering share of 100 rows went 6 → 37; the 12:00 poll with the wider queries ran **2989s against a 3000s watchdog**, so the kill criterion took them back out |
+| 27a | 7 new categories (data, security, embedded, qa, eng-mgmt, solutions) + `software` as a no-specialism fallback; .NET/C#/C++ aliased before matching; guards for PM/TPM, business-developer, compliance-QA, sales-rep titles | 3 dry runs over the live residue, every misfire turned into a fixture row |
+| 27b | the keyless `classify --upgrade-residue` is the offline backfill (pinned by a test) | **open residue 7,651 → 5,673 (−1,978)**; 3,759 rows relabelled in all; **0 LLM calls**; backup taken first |
+| 27c | 7 pills behind a "More" toggle; saved searches pinned by a test; `SCORING_VERSION` 3 | cached fit scores recompute |
+| 27d | JobTech steered to Data/IT; Himalayas +11 / MyCareersFuture +4 queries **withdrawn** | JobTech's engineering share of 100 rows went 6 → 37; the 12:00 poll with the wider queries ran **2989s against a 3000s watchdog**, so the kill criterion took them back out |
 
 **What the residue still holds:** ~300 engineering-ish titles in a long tail (mechanical,
 hardware, one-offs), and honest non-engineering (sales, legal, HR, care). No existing label was
-touched: 23b rewrites only `''` rows.
+touched: 27b rewrites only `''` rows.
 
-**Slice 23 is DONE.** **Next action:** the poll itself is near its ceiling (2091s on
+**Slice 27 is DONE.** **Next action:** the poll itself is near its ceiling (2091s on
 2026-09-11, ~2989s with the wider queries), so a time budget for the sequential sources comes
 before any new board query: per-source timing in the log, then concurrency or a cap. After that,
 the Swedish IT titles JobTech now brings ("Testare", "IT-arkitekt", "Systemingenjör",
 "testautomatiserare") are the next vocabulary rows.
+**2026-10-10 — slice 26 planned (superseded by 27–28 at the merge): widen from iOS / backend / AI-ML to all software engineering.** Planned only, no code yet. PLAN.md slice 26 has the details. The scope is narrowed in three places: the 7-category title vocabulary (a plain "Software Engineer" gets `categories = ''`), the iOS/Java/ML `ROLE_QUERIES` in Himalayas, MyCareersFuture and Bundesagentur, and NAV's title pre-filter, which follows the vocabulary. Per-company ATS boards already ingest everything. A vocabulary change does not reach stored rows (the `content_hash` gate), so the plan includes a heuristic `--reclassify` backfill. Generic queries are added within the 45-min poll budget. Also README brought in line with the codebase.
+
+**Owner answers (same day):** Q1 split DevOps/SRE into `platform`: **yes**. Q2 engineering management: **no**. Q3 level pills unchanged: **yes**.
+
+**Next action:** run 26a on the Mac (`spot_check_classifier.py --from-db --residue`) and paste the output back; 26b's vocabulary rows come from it.
+
+**2026-10-09 — slice 25 done: the registry spot-check sees real data, and two kinds of false match are gone.** **25a** found that `backend/scripts/spot_check_registry.py` **had existed since slice 2**. The "does not exist" note (2026-09-18, repeated in slice 24) came from looking in the repo-root `scripts/`. The script only ever read fixtures and seeds, so it now has `--snapshots` (refresh's own file specs), `--from-db` (every company a refresh matches), `--only-stripped` and `--baseline` (write, then diff). Each line names the tokens stripping dropped. `match_company` is now the fold of a new `registry_matches()`. **25b:** a parenthetical of ≤2 characters, or one that is only a place, is no longer a match variant, and `singapore` joined GEO_TOKENS. The real-data diff: **−2** (`(S)` → "Group-S LLC" for two unrelated companies) and **+3** (Akkodis/Keysight/OmniVision Singapore → their US parents). **25c:** `seeds/registry_rejections.csv`, a reviewed table of refused matches (reason required), honoured by refresh and spot-check alike. It ships with Cohere/"Cohere Technologies Inc.", Linear/"Linear Solutions Inc" and VANGUARD SOFTWARE/"The Vanguard Group". The diff against the 25a baseline is exactly those changes and nothing else.
+
+**Measured on the same copy of this box's DB (PERM only):** companies matched 95 → **93**, and open `registry_inferred` 4,108 → **3,958**, as the 150 open jobs at the dropped companies (126 of them Cohere's) went back to `unknown`. **Still in the review set and left for the owner** (the spot-check prints them with `--from-db --only-stripped`): Mercury Business Services → Mercury Technologies, Evolve → Evolve Technology Group, Avant Digital → Avant LLC, American Bureau of Shipping (ABS) → ABS Digital Solutions, Fig → FIG LLC, Randstad/Experis/CGG → their US group companies. Each is one line in the rejection table if the answer is no.
+
+**Owner review answered (same day):** Mercury Business Services, Evolve, Avant Digital, American Bureau of Shipping (ABS) and Fig are **not** matches, and are now rejection rows. Two of them fell through to their next-best entry and were rejected there too: Avant Digital → `Avant, LLC` (the same lender without the period), and ABS → `ABS Global, Inc.` (cattle genetics). Mercury needed both of its entries. **Randstad, Experis and CGG are matches** (group-level: a sister subsidiary files the PERM) and stay, despite the note that the two agencies post for client employers. The review set (`--from-db --only-stripped`) is now 23 lines, all accepted.
+
+**Next action:** bring the other five registers back onto this box (`data/registries/`) and refresh with the PERM file in place; the spot-check `--snapshots --from-db --only-stripped` run is the review.
+
+**2026-10-09 — slice 24 done: US PERM is a sponsor register.** Built after auditing a pasted API reference list against the repo. Nearly everything on it was already shipped or recorded as rejected, and **DOL PERM disclosures** were the one real gap. **24a** appended `Registry.PERM = 64` (no migration) and gave the drawer labels for PERM, plus **IE and CA, which had rendered as bare codes since slice 14**. **24b** `PERMRegistry`, read against the **real FY2026 Q3 file**, not the record layout. The two disagree: the expired status is `Certified - Expired`, with spaces, and `N/A` sits in the trade-name column on 11,441 rows. Both are now tests. The H-1B and PERM readers were one algorithm, so they now share `_certified.certified_employers`. **24c** wired `BEACON_PERM_REGISTRY_PATH` and refresh, with a guard that every snapshot bit has a reader. **24d** (Jooble, Careerjet) is recorded open: both need keys.
+
+**Live on a copy of this box's `beacon.db`:** 95 of 685 companies matched, and open-job `unknown` went **7,782 → 3,674 (−53%)**. The real `beacon.db` was **not** refreshed in this session. The converted CSV (3 columns, 112,550 non-padding rows, gitignored) **is now at `data/registries/us_perm.csv`**, so the next launch's refresh ingests it into the real DB, Cohere false positive included (below).
+
+**Found, not fixed — the matcher's structural-token drop produces false positives:** **Cohere → "Cohere Technologies Inc."** (a wireless company; **126 open jobs**), Linear → "Linear Solutions Inc" (25), Fig → "FIG LLC", GMP Recruitment Services (S) → "Group-S LLC". Each matches at 0.9 because "Technologies"/"Solutions" are dropped as structural words. The defect is shared with the LCA ingest. Fixing it is a matcher change, which CLAUDE.md gates on the registry spot-check. **Correction (25a, same day): that script exists**, at `backend/scripts/spot_check_registry.py`, since slice 2. The 2026-09-18 entry looked in the repo-root `scripts/`, and slice 24 repeated the mistake. It read only fixtures and seeds, and 25a teaches it `--snapshots`, `--from-db`, `--only-stripped` and `--baseline`. **Also found:** this box's `beacon.db` has **no registry data at all** (`registries_meta` empty, every `registry_flags = 0`), and `data/registries/` does not exist. The 2026-09-18 ingest (419 companies flagged) happened on another checkout or database.
+
+**Next action:** slice 25 — the spot-check sees real data (25a), then fix the false positives against it (Cohere first). Also re-download the other five registers onto this box, or point it at the database that has them.
+
+**2026-10-09 — slice 23 done: two new sources, Germany as a market, the AU row re-verified.** Built in order, one commit each: **23a Arbeitnow** (the `visa_sponsorship=true` subset; live 318/318, 0 errors), **23b one credential door** (`Bearer | Basic | ApiKeyHeader` keyed by host; NAV migrated with behaviour unchanged), **23c Germany** as a `nice_to_have` market (figures read off official pages 2026-10-07), **23d Bundesagentur Jobsuche** (v6 list → v4 detail at `base64(refnr)`, public `X-API-Key` always on the door; live 231/231, 0 errors, 230 DE, page cap hit on Java Backend 100/323 and ML Engineer 100/124), and **23e the AU row** re-read in full on 2026-10-09. **Two of the AU figures had drifted:** the Core Skills floor is now **AU$79,423** and the specialist tier **AU$146,576** (indexed 1 July 2026; several law-firm summaries quote AU$79,499 / AU$146,717, and they are wrong — the Home Affairs salary-requirements page is the source). Software ANZSCO codes 261311–261317 and 261399 are on the Core Skills Occupation List per LIN 24/089 compilation 3 (7 Nov 2025). **23f Reed skipped** by owner decision (no key). **23g docs:** SPEC §5.2/§5.4/§5.5 record the three reversals and the re-confirmed rejections; SOURCES.md gains §4.8/§4.9 and the credential door.
+
+**Open from slice 23:** (1) the NAV acceptance box stays unticked for review — its assertions are untouched, but three slice-14e tests in `test_polite.py` had their constructor kwarg renamed when `bearer_tokens=` was removed. (2) **DE rows mostly read `unknown`**: Bundesagentur descriptions are German and the sponsorship regex is English. That is a vocabulary slice with spot-check rows, not a patch. (3) The new sources reach production only at the next 16:00 fire; nothing was polled into `beacon.db` here (live acceptance ran on temp DBs).
+
+**Next action:** after the next 16:00 fire, check source health for `arbeitnow` and `bundesagentur` and the `hourly_done secs=` duration — Bundesagentur adds up to ~250 detail calls at 1 rps (~4 min) to the poll.
+
+**2026-09-30 — the digest fires once a day, at 16:00.** `com.beacon.digest` narrowed from three fires (08:00/12:00/16:30) to one, on request. `test_digest_schedule.py` pins `{(16, 0)}`, and its no-collision check now counts the wrap to the next day's fire, which is the only gap a single fire has. **Not yet reinstalled on the Mac:** copy the plist into `~/Library/LaunchAgents/` and run `launchctl bootout`/`bootstrap` (commands are in the plist header). LinkedIn: asked for a headed-Chrome crawler, then withdrawn in favour of adding seeds for the companies found there (SPEC §2 non-goal unchanged). **First LinkedIn-sourced seed: `Ajaib,workable,ajaib,ID,1`**, an Indonesian investing app on the home market. The board is at `apply.workable.com/ajaib` according to web search (about 32 open roles, 12 in engineering). **Not live-verified:** this container's network policy blocks `apply.workable.com`, so the first poll on the Mac is the check. Source health will show a 404 if the slug is wrong. **Second LinkedIn seed: `OKX,greenhouse,okx,SG,2`**, the crypto exchange. The board is at `job-boards.greenhouse.io/okx` according to web search (about 500 roles worldwide). It is not live-verified either, for the same egress reason. **Binance needed code:** its board is on Greenhouse's EU host, which is now the `greenhouse_eu` ats_type (Decisions 2026-09-30 greenhouse-eu). **Also seeded:** Procreate (`lever/procreate`, AU, p1: iOS-first), DraftKings (`workday`, US; watch the poll duration), xAI (`greenhouse/xai`, US), Zopa (`lever/zopa`, GB), Grafana Labs (`greenhouse/grafanalabs`, US) and Wolt (`greenhouse/wolt`, FI), each confirmed from real job URLs, and Revolut (`workable/revolut`, GB), which is weaker evidence. The leads that were checked and not seeded are in Decisions 2026-09-30 (linkedin-leads). **Next action:** after the next 16:00 fire, confirm the new rows in source health, and compare Revolut's job count against the ~287 on revolut.com/careers.
 
 **2026-09-18 — the hand download is banked. All five sponsor registries are ingested for the first time.** The lever PROGRESS has called "the highest-value unbuilt item in the repo" since slice 18 is spent, and it needed no code — only the three files that had never been on this box.
 
@@ -120,13 +160,24 @@ the Swedish IT titles JobTech now brings ("Testare", "IT-arkitekt", "Systemingen
 | 20 | Other markets: the 47 countries with jobs and no way to ask for them (candidate B, shape 1); 20e exposed `closed_at` | ✅ done | 2026-09-18 |
 | 21 | The panel stops being a gate: jobs by default, `?focus=` becomes a filter, derived total + paging, globe-only idle tour | ✅ done | 2026-09-18 |
 | 22 | Closed postings leave the default listing, behind a "Show closed" toggle | ✅ done | 2026-09-18 |
-| 23 | All of engineering, not just iOS / backend / AI-ML (taxonomy → offline residue backfill → UI → steered boards) | ✅ 23a–23c shipped; 23d kept the JobTech steer, board queries withdrawn (poll 2989s) | 2026-10-10 |
-| 24 | `infra` splits out of `backend` (vocabulary → `--reclassify` relabel → Infra pill, scoring v4) | ✅ done | 2026-10-10 |
-| 25 | The poll gets a time budget (`secs=` per source → concurrent sources) | ✅ done, 1758s → 757s | 2026-10-10 |
+| 23 | Arbeitnow, one credential door, DE `nice_to_have`, Bundesagentur, AU Core Skills reference text; Reed skipped (no key) | ✅ done (NAV acceptance box left for review) | 2026-10-09 |
+| 24 | US PERM labor certifications as a sponsor register (bit 64); drawer labels IE/CA/PERM; Jooble/Careerjet recorded open (no keys) | ✅ done | 2026-10-09 |
+| 25 | Registry spot-check on real snapshots + every company; place-only parentheticals; reviewed rejection table | ✅ done | 2026-10-09 |
+| 27 | All of engineering, not just iOS / backend / AI-ML (taxonomy → offline residue backfill → UI → steered boards) | ✅ 27a–27c shipped; 27d kept the JobTech steer, board queries withdrawn (poll 2989s) | 2026-10-10 |
+| 28 | `infra` splits out of `backend` (vocabulary → `--reclassify` relabel → Infra pill, scoring v4) | ✅ done | 2026-10-10 |
+| 29 | The poll gets a time budget (`secs=` per source → concurrent sources) | ✅ done, 1758s → 757s | 2026-10-10 |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (acceptance boxes checked)
 
 ## Decisions log
+
+- **2026-10-10 (merge-parallel-sessions)** — **Both histories kept; this box's slices renumbered
+  27–29.** Rewriting either side's history to make numbers line up would lose nothing but cost a
+  force-push, so the docs carry the renumbering and the commits keep their original prefixes.
+  Where the two sides decided the same question differently, the owner chose: **one digest a day
+  at 16:00** (origin's 2026-09-30 decision stands; the three-fire schedule and its 08:45 move are
+  superseded), and **engineering management stays a category** (reverses slice 26's Q2). Slice
+  26's `platform` category is delivered as `infra`; its `mobile` and `games` rows were not built.
 
 - **2026-10-10 (poll-concurrency)** — **Sources poll concurrently.** The sequential loop made
   wall time the sum of 70 sources, while `PoliteClient` had held a per-host lock all along, so
@@ -144,10 +195,10 @@ Legend: ⬜ not started · 🟨 in progress · ✅ done (acceptance boxes checke
     (revert on `database is locked`, a 429 or a different fetched total) did not fire.
 
 - **2026-10-10 (infra-split)** — **`backend` now means building services; `infra` means running
-  them.** Slice 23 kept SRE/devops/platform inside `backend` so saved searches and resume scores
+  them.** Slice 27 kept SRE/devops/platform inside `backend` so saved searches and resume scores
   wouldn't shift. The user then asked for the split. **Deviates from SPEC §3**, which is
   rewritten. Decisions:
-  - **Six slice-3/23 rows reversed, not deleted:** `backend-sre/infra/networking/platform-eng/
+  - **Six slice-3/27 rows reversed, not deleted:** `backend-sre/infra/networking/platform-eng/
     cloud-engineer/release` became `infra-*`, with the same titles and a new expectation.
   - **Bare `systems engineer` is gone** from the vocabulary rather than moved. Live, it heads
     Finance, ML, Design, Operating and Quote-to-Cash Systems titles far more often than
@@ -160,14 +211,14 @@ Legend: ⬜ not started · 🟨 in progress · ✅ done (acceptance boxes checke
   - **The relabel rewrites to `''` when the vocabulary no longer reads a row.** The PLAN box said
     no row would lose its last category; it was revised, because 15 open rows did, and those
     labels were wrong. A fresh ingest would store `''`, and the residue upgrader can revisit
-    them. This differs from 23b, which only ever filled `''` rows.
-  - **The relabel also closed 23b's gap:** rows labelled before slice 23 picked up their
+    them. This differs from 27b, which only ever filled `''` rows.
+  - **The relabel also closed 27b's gap:** rows labelled before slice 27 picked up their
     eng-mgmt/solutions/security/data categories when re-read (e.g. "Engineering Manager –
     Backend" → `backend,eng-mgmt`). Only rows carrying `backend` or `infra` were re-read; other
     old labels may still lag the vocabulary. `--reclassify <category>` reaches them if wanted.
   - `llm_usage` was empty, so every stored label was heuristic and re-reading lost nothing.
 
-- **2026-10-10 (board-queries-withdrawn)** — **Slice 23's kill criterion fired, and the wider
+- **2026-10-10 (board-queries-withdrawn)** — **Slice 27's kill criterion fired, and the wider
   Himalayas and MyCareersFuture queries are out.** The 12:00 fire, the first with them, ran
   `hourly_done exit=0 secs=2989 killed=0`: 49.8 min against a 3000s watchdog, 11 seconds from
   being killed and past the 45 min line the slice set for itself. MyCareersFuture is the
@@ -181,7 +232,7 @@ Legend: ⬜ not started · 🟨 in progress · ✅ done (acceptance boxes checke
   that the poll has no headroom left:** 59 sources took 2091s on 2026-09-11, and the corpus has
   grown since. Any future board query needs a poll-time budget first.
 
-- **2026-10-10 (slice 23 — the category scope widens, deliberately)** — Asked for: search all
+- **2026-10-10 (slice 27 — the category scope widens, deliberately)** — Asked for: search all
   engineering, not just iOS / backend / Java / AI-ML. **This deviates from SPEC §1/§3 and DESIGN §2**,
   and both are rewritten in the same slice. Four choices are worth recording:
 
@@ -206,8 +257,28 @@ Legend: ⬜ not started · 🟨 in progress · ✅ done (acceptance boxes checke
 
   **Found while checking:** `backend/scripts/spot_check_registry.py` **does exist**. The
   2026-09-18 entries below say it doesn't, because they looked only in the root `scripts/`.
-  `spot_check_classifier.py` was not run: it is a live Greenhouse fetch, and the 23a dry run over
+  `spot_check_classifier.py` was not run: it is a live Greenhouse fetch, and the 27a dry run over
   all 7,651 live residue titles is a larger sample of the same check.
+- **2026-10-10 (slice-26 scope)** — **The target widens from iOS / backend / AI-ML to all software engineering (individual-contributor roles).** This deviates from SPEC §1/§3, which 26f will update. iOS / backend / AI-ML stay the *primary* profile and come first in the pill row. Every other SE family becomes classifiable and filterable, and is never filtered out by default (the same soft-signal stance as sponsorship). Owner answers: **(Q1)** DevOps/SRE/infrastructure move out of `backend` into a new `platform` category, because with every family present a Backend filter that returns SRE stops meaning anything. Accepted cost: saved searches on `backend` narrow, and 26c reports which ones. **(Q2)** Engineering management is **out**, so there is no `eng-management` category. **(Q3)** Level pills stay Senior / Staff / Lead.
+- **2026-10-09 (slice-25)** — **False matches are fixed with reviewed data, not a cleverer rule.** "Cohere Technologies" (wrong) and "Notion Labs" (right) reduce to the same shape: one brand token plus one structural word, matched at 0.9. Every token-level rule that kills the first kills the second. So the matcher stays as it is, and a person's verdict lives in `seeds/registry_rejections.csv`, scoped to (company, registry, entry) and carrying a reason. This is the "manual alias table" the pasted API reference recommended, used in the refusing direction. **Deviation from PLAN 25c:** no `RegistryRejections` port. The use case takes the rejections as a `frozenset` value parsed by an adapter, which keeps IO out of the application layer with less machinery. **One rule did change (25b), because it was a bug, not a judgement:** a parenthetical of two characters or fewer, or one that is only a place, is not an alias. `singapore` joined GEO_TOKENS for the same reason `ireland` and `netherlands` are there. Its real-data diff (+3 Singapore subsidiaries reaching their US parents) is recorded in the commit. **Correction on the record:** the spot-check script was never missing (see status).
+- **2026-10-09 (slice-24)** — **PERM gets its own bit rather than sharing `US`.** An H-1B LCA is temporary sponsorship and a certified PERM is the start of a green card. The drawer should say which, and `registry_inferred` is `flags != 0`, so tiering does not care. **The fixture and constants were read off the live file, overriding the record layout,** which is exactly what PLAN 24b required: the layout's `Certified-Expired` would have dropped 16,287 filings. **The file had to be fetched from inside a browser:** dol.gov answers scripted requests with 403, a plain browser download stalled at 91MB, and the remainder came over `Range` requests from the page (206). For a future refresh, download by hand, convert the three columns, and expect 150MB+. **Not taken up from the pasted list:** USAJOBS (federal jobs require citizenship), the USCIS H-1B Employer Data Hub (overlaps LCA), the Visa Bulletin and Express Entry draws (no employer or job signal), and travel-visa datasets (the wrong question). **Matcher false positives are recorded, not patched in this slice:** fixing them changes every register's matching, and CLAUDE.md requires the spot-check script before any such change.
+- **2026-10-09 (slice-23)** — **Owner decisions taken 2026-10-07, plus one on 2026-10-09.** (1) **DE joins §4 as `nice_to_have`; FR stays out.** DE was among the largest "other market" blocks, and that flips the 2026-08-23 rejection of Bundesagentur ("DE is not a §4 target"), which shipped as 23d. France Travail is recorded rejected for the same reason in reverse. (2) **Adzuna stays rejected**: the quota arithmetic (1,000 calls/month vs ~4,860) is unchanged. (3) **The AU Core Skills Occupation List is reference text, not an ingester**: it has no downloadable table (a legislative-instrument PDF plus a page whose table loads by script), and every software ANZSCO code is on it, so a per-job flag would carry no information. It lives in the AU row's visa copy, and `resolve_tier` is untouched (the TW Gold Card precedent). (4) **2026-10-09: Reed skipped.** It is buildable (GB is `primary`, the `Basic` credential exists), but there is no key, and a hand-built fixture must not be passed off as recorded. Recorded open in SPEC §5.4. **Arbeitnow** is a reversal too: rejected 2026-08-23 on geography, held "unless §4 adds the UK", and GB was added in slice 18 without anyone going back for it. **Bundesagentur's documented API has moved:** `pc/v4/jobs` (bund.dev) answers 403; `pc/v6/jobs` works, but the v6 detail is 403, so details still come from `pc/v4/jobdetails`. Expect it to move again; a 403 on either path will show in source health as `unreachable`.
+- **2026-09-30 (linkedin-leads)** — **Of the LinkedIn leads so far, five became seeds and nine did not.** Seeded: Ajaib (workable), OKX (greenhouse), Binance (greenhouse_eu), Zopa (lever, confirmed by many `jobs.lever.co/zopa/...` URLs). Airwallex and Mercari were **already seeded**. **Not seeded, recorded so nobody re-probes them:**
+  - **Self-hosted or unsupported ATS:** TikTok (`lifeattiktok.com`, ByteDance's in-house system), Bloomberg (Avature, `bloomberg.avature.net`), LINE / LY Corporation (`careers.linecorp.com`, in-house), Scoot (`careers.flyscoot.com`, Singapore Airlines group).
+  - **Board not found:** Rakuten Viki. Search surfaced only aggregators.
+  - **ATS known, slug not:** ASOS runs SmartRecruiters, according to its own recruiter job ads, but no board URL surfaced. **It was deliberately not guessed**, because SmartRecruiters answers an unknown company with 200 and an empty list rather than a 404, so a wrong slug would read as a healthy board with no jobs. Seed it only once the slug is confirmed by a real posting URL.
+  - **Second batch (same day):** Grafana Labs (`greenhouse/grafanalabs`) and Wolt (`greenhouse/wolt`) were both confirmed by real `job-boards.greenhouse.io/...` posting URLs. Grafana is remote-first, so `US` HQ only breaks city-name ties. **Revolut went in on weaker evidence:** `apply.workable.com/revolut` is titled "Revolut Ltd Careers", but revolut.com/careers lists about 287 roles on what looks like its own system, so the Workable board may be a partial or stale mirror. If its count is far below that, drop the row. Lovable was **already seeded**. **Flightradar24** runs `careers.flightradar24.com`. It *might* be a Teamtailor custom domain (the adapter accepts those), but nothing confirmed it, so it was not guessed. **"Adavo"** could not be identified and is waiting on the user.
+  - **Third batch:** **xAI seeded** (`greenhouse/xai`, about 292 roles incl. London, Dublin, Tokyo, Dubai and Singapore). **Held pending the user's call:** **SpaceX** (`greenhouse/spacex`, confirmed), because ITAR limits nearly every role to US persons, so for a sponsorship tool it is mostly noise. **Walmart** (Workday, about 4,763 postings): `WorkdayAdapter` walks every posting plus one detail GET each at 1 rps, which is about 83 min against the 50 min watchdog, so one row would kill every source polled after it. It needs a per-board cap or a `searchText` filter first.
+  - **Fourth batch:** **DraftKings seeded** (`workday/draftkings/wd1/DraftKings`, US, priority 3). About 170 postings, so about 3 min of the poll budget at one detail GET per posting. It fits the ~15 min headroom measured 2026-09-11, but **it is the first seed this session that costs real poll time**. Greenhouse, Lever and Workable boards are one request each. **Watch `hourly_done secs=`** after the next fire. **Not seedable:** Apple (`jobs.apple.com`) and Amazon (`amazon.jobs`) run in-house systems with no supported board. Bankjoy only surfaced on aggregators (Built In), so there is no board to point at.
+  - **Procreate seeded** (`lever/procreate`, AU, priority 1): the board is confirmed by `jobs.lever.co/procreate` posting URLs, with Hobart and Sydney roles. It is iOS/Swift-first (Senior Software Engineer: Swift/iOS/Rendering, EM: iOS), squarely on the iOS resume, hence priority 1. Its own careers page sometimes reads 0 open roles, so an empty board is plausible and not a slug error.
+  - Every slug above came from web search: this container's egress blocks the ATS APIs, so none was probed live.
+  - **HENNGE seeded** (`greenhouse/hdeen`, JP, priority 2), from a 2026-10-07 LinkedIn lead: a Build+ (Tokyo agency) post for an unnamed "B2B SaaS & cloud security" iOS role in Shibuya (¥8M–10.5M, Swift 6/SwiftUI, no Japanese, visa sponsorship). Its secure enterprise browser, IAM product and 2.8M users all match HENNGE. **Live-probed this time:** `recruit.hennge.com` embeds Greenhouse `for=hdeen`, and `boards-api.greenhouse.io/v1/boards/hdeen/jobs` returns 200 with 8 English-board roles (Python, Svelte, Platform/K8s, no iOS). **There is no iOS role on either HENNGE board**, so the agency role is unlisted or agency-exclusive. The Japanese board `hdejamidcareer` (38 roles, nearly all Japanese-required sales/corporate) was **left out on purpose** as noise.
+
+- **2026-09-30 (greenhouse-eu)** — **Greenhouse's EU region is its own `ats_type`, `greenhouse_eu`. The first row is Binance.** Binance's board is at `job-boards.eu.greenhouse.io/binance`. The adapter had the US host built in, so a plain `greenhouse/binance` row would have 404'd forever. Greenhouse does not encode the region in the slug, so there were two options: probe US then EU on every poll, or record the region on the seed row. **Recording it won.** It costs one request per poll instead of two, and a wrong region shows up as a 404 in source health instead of being hidden by a fallback. `GreenhouseEUAdapter` subclasses `GreenhouseAdapter` and overrides only `source_id` and the host, so parsing stays in one place, and `factory._ADAPTERS` remains the only list of ATS types (checked by grep). **Binance's `country_hq` is AE:** it has no official HQ, and the field only breaks ties between cities that share a name (`parse_location`'s `hq`), so a wrong guess costs little. **Not live-probed:** egress is blocked here, so the test reuses the Tines fixture and asserts the host and `source_id`. The EU payload is documented as identical, and the first real poll is the check.
+
+- **2026-09-30 (ajaib-seed)** — **Ajaib seeded as `workable/ajaib`, ID, priority 1. It is the second Indonesian board, and it came from a LinkedIn lead.** Web search found `apply.workable.com/ajaib`, titled "Ajaib Careers", listing about 32 roles across Compliance, Crypto, Investment and Engineering. That team mix is an Indonesian investing app's, which answers the name-collision check that caught `greenhouse/flip` on 2026-09-13. **Not probed live:** this container's egress policy blocks `apply.workable.com`, so the adapter has not yet read this board. The 2026-09-13 probe did not record which slugs it tried, so it is unknown whether `workable/ajaib` was among them. **Check at the next poll:** source health for `workable/ajaib` should read green with Jakarta postings. A 404, or postings from somewhere else, means delete the row. `test_home_market_is_seeded_like_any_other_row` now pins both ID rows.
+
+- **2026-09-30 (digest-one-fire)** — **The digest window narrowed from three fires to one: 16:00 Asia/Jakarta.** User request. Supersedes the *schedule* half of **2026-09-11 (digest-three-fires)**; the lock, the watchdog and the headless path are unchanged. What it costs: **closure is slower.** `CLOSE_AFTER_MISSES = 2` counts successful polls, so a delisted posting now leaves the default listing after about two days rather than within one. A stale row is still greyed once closed, and the digest sends at most one message a day, so the added lag is small. The no-collision test used to take `min(pairwise(...))` over the fires of a single day, and with only one fire that list would be empty. It now includes the midnight wrap. **Also considered and dropped the same day:** a headed-Chrome LinkedIn crawler with credentials in env. It was withdrawn before any code was written, so SPEC §2's non-goal stands, and LinkedIn is only used by hand to find companies whose ATS then gets a seed row.
 
 - **2026-09-18 (registry snapshots downloaded — the lever is spent, and what it cost)** — All three missing registers ingested. **UK needed nothing but the file**, as recorded: the live header is byte-identical to the fixture, CRLF and all, and the leading-whitespace names (`" AaruvikA Limited"`) are the hazard `uk.py` already handles. **US needed the XLSX→CSV step** PROGRESS predicted; 595,239 of the 1.03M sheet rows are padding, which is the `max_row` lie the adapter docstring names. **NL was recorded as "blocked — no downloadable file", and that is half-right**: there is no export, but the register is server-rendered into the page HTML, so a one-off extraction produces the CSV the adapter already reads. That keeps the cross-cutting "no HTML parsing of hostile sites" rule intact — the *adapter* still reads CSV; the parsing was data prep, done once, by hand.
 
@@ -490,6 +561,10 @@ silently (empty name → `continue`), not an error. Drop each file in `data/regi
 ## Session log
 
 *(newest first)*
+
+- **2026-09-30 (cont.)** — Seeded **OKX** (Greenhouse, `okx`, SG, priority 2, alongside Crypto.com). It is a LinkedIn lead, and the slug is not live-checked. With about 500 roles it will be one of the larger boards. SG is used as HQ because that is where the lead came from; OKX's postings span many countries, and each job carries its own country.
+- **2026-09-30 (cont.)** — Seeded **Ajaib** (Workable, `ajaib`, ID, priority 1), the first company found via LinkedIn. It is a data row only, and the slug is not live-checked because egress is blocked here.
+- **2026-09-30** — Digest schedule cut to one daily fire at 16:00 (plist, schedule test, README/SPEC §9/SOURCES/PLAN). The LinkedIn crawler request was withdrawn in favour of seed rows, and those wait on the company list. `make verify` green. See Decisions 2026-09-30 (digest-one-fire).
 
 - **2026-09-10 (last, cont.)** — **The hourly window shipped, then failed its first real fire, and the cause was the folder it lived in.** `exit 126 / Operation not permitted` at 16:30 → probed TCC from a launchd fire (Documents denied, home dir fine) → moved `~/Documents/beacon` → **`~/Projects/beacon`** (your suggestion; the dir already existed), repointed both plists, rebuilt the venv, reloaded both agents, and re-proved the wrapper from a launchd-started probe rather than by hand. `make verify` green at the new path. See Decisions 2026-09-10 (tcc-move).
 

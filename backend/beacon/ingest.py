@@ -9,9 +9,9 @@ import time
 from datetime import UTC, datetime
 
 import httpx
-from pydantic import SecretStr
 
 from beacon.adapters.classify.factory import make_classifier
+from beacon.adapters.http.credentials import ApiKeyHeader, Bearer, HostCredential
 from beacon.adapters.http.polite import PoliteClient
 from beacon.adapters.persistence.companies import SqliteCompanyRepo
 from beacon.adapters.persistence.countries import SqliteCountryRepo
@@ -20,6 +20,7 @@ from beacon.adapters.persistence.jobs import SqliteJobRepo
 from beacon.adapters.persistence.llm_budget import SqliteLLMBudget
 from beacon.adapters.seeds import parse_seed_csv
 from beacon.adapters.sources.factory import make_companyless_sources, make_source_factory
+from beacon.adapters.sources.bundesagentur import BUNDESAGENTUR_HOST, BUNDESAGENTUR_API_KEY
 from beacon.adapters.sources.nav import NAV_HOST
 from beacon.application.countries import seed_countries
 from beacon.application.dedup import dedupe_jobs
@@ -32,10 +33,16 @@ from beacon.notify import send_digest
 from beacon.logging_setup import configure_cli_logging
 
 
-def _bearer_tokens(settings: Settings) -> dict[str, SecretStr]:
+def host_credentials(settings: Settings) -> dict[str, HostCredential]:
     """Per-host credentials for the HTTP door. Only the hosts we actually have a token for,
-    so a missing credential means a source is not wired rather than a 401 every poll."""
-    return {NAV_HOST: settings.nav_api_token} if settings.nav_api_token else {}
+    so a missing credential means a source is not wired rather than a 401 every poll.
+    Bundesagentur's key is a published public constant, so it is always present."""
+    credentials: dict[str, HostCredential] = {
+        BUNDESAGENTUR_HOST: ApiKeyHeader("X-API-Key", BUNDESAGENTUR_API_KEY),
+    }
+    if settings.nav_api_token:
+        credentials[NAV_HOST] = Bearer(settings.nav_api_token)
+    return credentials
 
 
 async def run_ingest(
@@ -64,7 +71,7 @@ async def run_ingest(
 
     # Heuristic-only until an Anthropic key is set, else a budget-gated tiered classifier
     # (LLM on the ambiguous residue). The LLM client is sync (the Classifier port is sync), so
-    # since slice 25b a classify that calls the LLM briefly stalls the other sources' fetches —
+    # since slice 29b a classify that calls the LLM briefly stalls the other sources' fetches —
     # accepted: it is one call per unseen content_hash, under a monthly cap.
     with httpx.Client(timeout=30.0) as llm_client:
         classifier = make_classifier(
@@ -72,7 +79,7 @@ async def run_ingest(
         )
 
         async with httpx.AsyncClient(timeout=15.0) as client:
-            fetcher = PoliteClient(client, bearer_tokens=_bearer_tokens(settings))
+            fetcher = PoliteClient(client, credentials=host_credentials(settings))
 
             # ATS boards: one seed company each. Shadow rows (ats_type='none', left by a
             # prior company-less poll) are excluded — no adapter polls them.
@@ -122,7 +129,7 @@ async def run_ingest(
                     )
                 print(f"phase=boards secs={time.monotonic() - started:.1f}")
 
-            # Both families overlap (slice 25b); each phase is a no-op when its list is empty.
+            # Both families overlap (slice 29b); each phase is a no-op when its list is empty.
             started = time.monotonic()
             await asyncio.gather(poll_ats_phase(), poll_boards_phase())
             print(f"phase=poll secs={time.monotonic() - started:.1f}")
@@ -164,7 +171,7 @@ async def run_probe(settings: Settings) -> int:
             result = await probe_quarantined(
                 company_repo,
                 jobs,
-                make_source_factory(PoliteClient(client, bearer_tokens=_bearer_tokens(settings))),
+                make_source_factory(PoliteClient(client, credentials=host_credentials(settings))),
                 classifier,
                 now=now,
             )
@@ -181,7 +188,7 @@ def main(argv: list[str] | None = None) -> int:
         metavar="ID",
         help=(
             "only this company-less source (hn/jobtech/remoteok/weworkremotely/himalayas/"
-            "mycareersfuture/nav)"
+            "mycareersfuture/arbeitnow/bundesagentur/nav)"
         ),
     )
     args = parser.parse_args(argv)

@@ -18,14 +18,14 @@ class Category(StrEnum):
     BACKEND = "backend"
     FRONTEND = "frontend"
     FULLSTACK = "fullstack"
-    # Slice 23 (2026-10-10): all of engineering, not only the SPEC §1 profile.
+    # Slice 27 (2026-10-10): all of engineering, not only the SPEC §1 profile.
     DATA = "data"
     SECURITY = "security"
     EMBEDDED = "embedded"
     QA = "qa"
     ENG_MGMT = "eng-mgmt"
     SOLUTIONS = "solutions"
-    # Slice 24 (2026-10-10): SRE/devops/platform/cloud split out of backend.
+    # Slice 28 (2026-10-10): SRE/devops/platform/cloud split out of backend.
     INFRA = "infra"
     # The fallback: an engineering title that names no specialism ("Software Engineer").
     SOFTWARE = "software"

@@ -76,7 +76,7 @@ def test_swift_the_payment_network_is_not_the_swift_language(text: str, expected
     assert ("swift" in extract_skills(text)) is expected
 
 
-# --- Slice 23: symbol-edged stacks and the role-noun fallback --------------------------
+# --- Slice 27: symbol-edged stacks and the role-noun fallback --------------------------
 
 
 @pytest.mark.parametrize(

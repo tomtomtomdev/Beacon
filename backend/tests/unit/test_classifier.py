@@ -72,7 +72,7 @@ CATEGORY_CASES = [
         "Both platforms",
         {Category.IOS, Category.ANDROID},
     ),
-    # "ml" must fire on the word, never inside "html". (Slice 23: a developer is now software.)
+    # "ml" must fire on the word, never inside "html". (Slice 27: a developer is now software.)
     ("no-ml-in-html", "HTML Email Developer", "Hand-write HTML", {Category.SOFTWARE}),
     # Precision: description tech NEVER contaminates category — the title is a sales role.
     ("desc-ignored", "Account Executive", "We build LLMs with PyTorch and Django", set()),
@@ -86,14 +86,14 @@ CATEGORY_CASES = [
     ("bare-platform-not-backend", "Cloud Partner Enablement Lead", "", set()),
     ("bare-aws-not-backend", "AWS Specialist Seller, Strategic Pursuits", "", set()),
     ("bare-web-not-frontend", "Manager, Web Engineering", "", set()),
-    # A plain SWE title names no specialism. Until slice 23 that was honest residue for the
+    # A plain SWE title names no specialism. Until slice 27 that was honest residue for the
     # LLM tier; since 2026-10-10 it is the `software` fallback — every engineering role is in
     # scope, and 721 open postings were invisible to the category filter for want of it.
     ("plain-swe-is-software", "Senior Software Engineer", "", {Category.SOFTWARE}),
     # "Applied AI" is an org/team name at Anthropic and OpenAI, so it heads architect, GTM
     # and ops titles too — the same trap bare "ai" was removed for. Only the role-form
     # phrases ("applied ai engineer"/"scientist") are in the table.
-    # (Slice 23: still not ai-ml — an Applied AI Architect is customer-facing `solutions`.)
+    # (Slice 27: still not ai-ml — an Applied AI Architect is customer-facing `solutions`.)
     (
         "applied-ai-architect-not-aiml",
         "Applied AI Architect, Commercial",
@@ -104,7 +104,7 @@ CATEGORY_CASES = [
     # 2026-08-26 spot check: SWIFT the interbank network is not Swift the language. The
     # vocabulary's homograph guard drops it in a payments context with no iOS sibling
     # keyword, and keeps it when one is there.
-    # (Slice 23: still not ios — it is now `solutions`, via "integration engineer".)
+    # (Slice 27: still not ios — it is now `solutions`, via "integration engineer".)
     (
         "swift-the-payment-network-not-ios",
         "SWIFT Payments Integration Engineer",
@@ -112,7 +112,7 @@ CATEGORY_CASES = [
         {Category.SOLUTIONS},
     ),
     ("swift-in-an-ios-payments-title", "iOS Engineer, Payments (Swift)", "", {Category.IOS}),
-    # --- Slice 23 (2026-10-10): all of engineering. Real titles from the open '' residue. ---
+    # --- Slice 27 (2026-10-10): all of engineering. Real titles from the open '' residue. ---
     # Guards first: non-engineering stays honestly empty — the widening must not reach it.
     ("guard-counsel", "Corporate Counsel", "", set()),
     ("guard-ae", "Account Executive Enterprise EMEA", "", set()),
@@ -243,7 +243,7 @@ CATEGORY_CASES = [
     ("eng-mgmt-team-lead", "(RD) Senior Engineering Team Lead", "", {Category.ENG_MGMT}),
     ("software-senior-engineer", "Senior Engineer, Finance Systems", "", {Category.SOFTWARE}),
     ("software-staff-engineers", "Staff Engineers (Elixir)", "", {Category.SOFTWARE}),
-    # Slice 24: infra splits out of backend. The six rows above that once read backend
+    # Slice 28: infra splits out of backend. The six rows above that once read backend
     # (sre, infrastructure, networking, platform, cloud, release) now read infra.
     ("infra-devops", "DevOps Engineer", "", {Category.INFRA}),
     ("infra-kubernetes", "Kubernetes Engineer", "", {Category.INFRA}),

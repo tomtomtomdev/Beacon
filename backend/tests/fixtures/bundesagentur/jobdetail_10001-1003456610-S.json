@@ -1,0 +1,48 @@
+{
+  "stellenangebotsart": "ARBEIT",
+  "stellenangebotsTitel": "iOS-Entwickler (m/w/d)",
+  "quereinstiegGeeignet": true,
+  "stellenangebotsBeschreibung": "Wir sind ein dynamisches Unternehmen im Bereich Finanzdienstleistungen, das innovative und zuverlässige Lösungen für den Zahlungsverkehr anbietet. Unser Schwerpunkt liegt auf kundenorientierten Leistungen – dabei entwickeln wir in der Mobile Entwicklung mit viel Herzblut unsere Mobile Payment App VIMpay. Zur Verstärkung unseres Teams suchen wir eine engagierte und strategisch denkende Persönlichkeit – und dafür brauchen wir dich!\n\n# Das sind deine Aufgaben\n\n- Technische Planung und Entwicklung von Anwendungen für die iOS-Plattform im Bereich Mobile Payment\n- Pflege, Wartung und Dokumentation\n- Implementierung von Unit- und Integration Tests, um eine hohe Softwarequalität sicherzustellen\n- Fehlerbehebung und Verbesserung der Anwendungsleistung\n- Teilnahme an einem kontinuierlichen Verbesserungsprozess\n\n# Das bringst du mit\n\n- abgeschlossenes Studium oder Ausbildung in der Fachrichtung Informatik (kein Muss, aber wäre cool)\n- Erfahrung in der iOS-Entwicklung von Vorteil\n- Begeisterung für innovative Ideen in der App-Entwicklung\n- Fließende Deutschkenntnisse (B2 Niveau), wir bieten Kurse für das C1 Niveau\n\n# Das erwartet dich\n\n- ein freundliches und familiäres Team in sehr flachen Hierarchien\n- eine ausgezeichnete Arbeitsatmosphäre\n- eine abwechslungsreiche Tätigkeit in einem modernen und gut strukturierten Unternehmen\n- agile Softwareentwicklung durch Scrum\n- 31 Urlaubstage (bei einer Fünftagewoche)\n- Flexibles, hybrides Arbeiten – du bringst die Bereitschaft mit, mindestens 2 Tage pro Woche bei uns vor Ort in Freising zu arbeiten\n\n## Du hast Interesse?\n\nDann bewirb dich jetzt und sende uns deine Bewerbungsunterlagen (Lebenslauf, Zeugnisse) per eMail an [bewerbung@petaFuel.de](https://mailto:bewerbung@petaFuel.de \"mailto:bewerbung@petaFuel.de\")",
+  "arbeitszeitSchichtNachtWochenende": false,
+  "arbeitszeitTeilzeitAbend": false,
+  "arbeitszeitTeilzeitNachmittag": false,
+  "arbeitszeitTeilzeitVormittag": false,
+  "arbeitszeitTeilzeitFlexibel": false,
+  "arbeitszeitVollzeit": true,
+  "eintrittszeitraum": {
+    "von": "2026-09-02"
+  },
+  "verguetungsangabe": "KEINE_ANGABEN",
+  "vertragsdauer": "UNBEFRISTET",
+  "stellenlokationen": [
+    {
+      "adresse": {
+        "strasse": "Clemensänger-Ring",
+        "hausnummer": "24",
+        "plz": "85356",
+        "ort": "Freising, Oberbayern",
+        "region": "BAYERN",
+        "land": "DEUTSCHLAND"
+      },
+      "breite": 48.3780496,
+      "laenge": 11.7526704
+    }
+  ],
+  "homeofficemoeglich": true,
+  "homeofficetyp": "ANGABE_IN_PROZENT",
+  "homeofficeprozent": 60,
+  "veroeffentlichungszeitraum": {
+    "von": "2026-09-02"
+  },
+  "datumErsteVeroeffentlichung": "2026-07-28",
+  "aenderungsdatum": "2026-09-02T09:29:11.576",
+  "istBetreut": true,
+  "hauptberuf": "Softwareentwickler/in",
+  "alternativBeruf1": "Fachinformatiker/in - Anwendungsentwicklung",
+  "alternativBeruf2": "Informatiker/in",
+  "firma": "petaFuel GmbH",
+  "arbeitgeberKundennummerHash": "kK5F5JnM-P56JqX_3Wp0flSsai0Ku6aY8-RHC1uePbE=",
+  "allianzpartnerUrl": "http://www.arbeitsagentur.de",
+  "allianzpartnerName": "arbeitsagentur.de",
+  "referenznummer": "10001-1003456610-S"
+}

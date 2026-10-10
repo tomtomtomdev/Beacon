@@ -28,6 +28,7 @@ def make_company(ats_type: str) -> Company:
 def test_supported_ats_covers_every_seeded_ats_with_an_adapter() -> None:
     assert SUPPORTED_ATS == {
         "greenhouse",
+        "greenhouse_eu",
         "lever",
         "ashby",
         "smartrecruiters",
@@ -69,6 +70,8 @@ def test_companyless_sources_are_the_board_sources() -> None:
         "weworkremotely",
         "himalayas",
         "mycareersfuture",
+        "arbeitnow",
+        "bundesagentur",
     }
     assert all(callable(s.fetch) and callable(s.normalize) for s in sources)
 

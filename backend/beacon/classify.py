@@ -4,9 +4,9 @@ Wiring only. Default mode classifies every job never classified (categories IS N
 rows ingested before the classifier existed; --upgrade-residue instead re-runs the classifier
 over the empty-category residue (categories = ''): with a key, the LLM resolves titles the
 heuristic couldn't; without one, the heuristic re-reads them with today's vocabulary — the
-offline backfill after a vocabulary widening (slice 23b); --reclassify re-reads every row
+offline backfill after a vocabulary widening (slice 27b); --reclassify re-reads every row
 stored with one category and rewrites those whose categories changed — the backfill after a
-vocabulary split (slice 24b: `--reclassify backend` once infra left it).
+vocabulary split (slice 28b: `--reclassify backend` once infra left it).
 
 The classifier is heuristic-only until an Anthropic key is set, else a budget-gated tiered
 classifier — so a plain backfill works fully offline, and the LLM upgrade needs the key.

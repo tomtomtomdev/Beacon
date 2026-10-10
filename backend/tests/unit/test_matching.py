@@ -6,12 +6,16 @@ this table is append-only.
 import pytest
 
 from beacon.domain.matching import (
+    RegistryRejection,
+    dropped_tokens,
+    match_company,
     match_confidence,
     normalize_name,
+    registry_matches,
     seed_name_variants,
     split_trading_as,
 )
-from beacon.domain.registry import RegistryCompany
+from beacon.domain.registry import Registry, RegistryCompany
 
 
 # ── Normalization: legal-suffix and casing variants collapse to one key ──────────
@@ -156,6 +160,98 @@ def test_seed_parenthetical_becomes_an_alias_variant() -> None:
     assert seed_name_variants("Bird (MessageBird)") == ("Bird", "MessageBird")
 
 
+@pytest.mark.parametrize(
+    ("seed", "variants"),
+    [
+        # Singapore shorthand in MyCareersFuture employer names (slice 25b): geography, not a
+        # brand. "(S)" alone matched PERM's "Group-S LLC" for two unrelated companies.
+        ("GMP RECRUITMENT SERVICES (S) PTE LTD", ("GMP RECRUITMENT SERVICES  PTE LTD",)),
+        ("TRAINOCATE (S) PTE. LTD.", ("TRAINOCATE  PTE. LTD.",)),
+        ("SEATRIUM (SG) PTE. LTD.", ("SEATRIUM  PTE. LTD.",)),
+        ("AIRWALLEX (SINGAPORE) PTE. LTD.", ("AIRWALLEX  PTE. LTD.",)),
+        # Real aliases stay variants, acronyms included.
+        ("American Bureau of Shipping (ABS)", ("American Bureau of Shipping", "ABS")),
+        ("Procreate (Savage Interactive)", ("Procreate", "Savage Interactive")),
+    ],
+    ids=["s", "trainocate-s", "sg", "singapore", "acronym", "legal-name"],
+)
+def test_geography_and_single_letter_parentheticals_are_not_variants(
+    seed: str, variants: tuple[str, ...]
+) -> None:
+    assert seed_name_variants(seed) == variants
+
+
 def test_parenthetical_alias_matching() -> None:
     assert match_confidence("Bird (MessageBird)", RegistryCompany("Messagebird B.V.")) is not None
     assert match_confidence("Bird (MessageBird)", RegistryCompany("Q*BIRD B.V.")) is None
+
+
+# ── Spot-check support (slice 25a): per-registry matches, and why a match was stripped ──
+COHERE_TECH = RegistryCompany(name="Cohere Technologies Inc.", evidence="1 certified PERM filing")
+COHERE_US = RegistryCompany(name="Cohere US, Inc.", evidence="3 certified LCA filings")
+
+
+def test_registry_matches_reports_the_best_entry_per_registry() -> None:
+    entries = {Registry.US: [COHERE_US], Registry.PERM: [COHERE_TECH]}
+
+    matches = registry_matches("Cohere", entries)
+
+    assert [(m.registry, m.entry.name, m.confidence) for m in matches] == [
+        (Registry.US, "Cohere US, Inc.", 0.9),
+        (Registry.PERM, "Cohere Technologies Inc.", 0.9),
+    ]
+
+
+def test_match_company_is_the_fold_of_registry_matches() -> None:
+    entries = {Registry.US: [COHERE_US], Registry.PERM: [COHERE_TECH]}
+
+    result = match_company("Cohere", entries)
+
+    assert result.flags == Registry.US | Registry.PERM
+    assert result.evidence == "US 3 certified LCA filings; PERM 1 certified PERM filing"
+
+
+@pytest.mark.parametrize(
+    ("seed", "entry", "dropped"),
+    [
+        ("Cohere", "Cohere Technologies Inc.", {"technologies"}),  # structural: review it
+        ("Backbase", "Backbase U.S.A. Inc.", {"usa"}),  # geography: the safe kind
+        ("Stripe", "Stripe, Inc.", set()),  # suffix-only: a full-confidence hit
+    ],
+    ids=["structural", "geography", "suffix-only"],
+)
+def test_dropped_tokens_name_what_stripping_removed(
+    seed: str, entry: str, dropped: set[str]
+) -> None:
+    assert dropped_tokens(seed, RegistryCompany(name=entry)) == frozenset(dropped)
+
+
+# ── Reviewed rejections (slice 25c): a person looked, and said no ──────────────────
+COHERE_PERM_REJECTED = RegistryRejection(
+    company="Cohere", registry=Registry.PERM, entry="Cohere Technologies Inc."
+)
+
+
+def test_a_rejected_entry_does_not_match() -> None:
+    entries = {Registry.US: [COHERE_US], Registry.PERM: [COHERE_TECH]}
+
+    result = match_company("Cohere", entries, rejected=frozenset({COHERE_PERM_REJECTED}))
+
+    assert result.flags == Registry.US
+
+
+def test_a_rejection_skips_one_entry_and_the_next_best_still_matches() -> None:
+    cohere_inc = RegistryCompany(name="Cohere Inc.", evidence="4 certified PERM filings")
+    entries = {Registry.PERM: [COHERE_TECH, cohere_inc]}
+
+    matches = registry_matches("Cohere", entries, rejected=frozenset({COHERE_PERM_REJECTED}))
+
+    assert [m.entry.name for m in matches] == ["Cohere Inc."]
+
+
+def test_a_rejection_is_scoped_to_its_registry_and_company() -> None:
+    # The same entry name in another register, or for another company, is a separate
+    # judgement nobody has made yet.
+    entries = {Registry.US: [COHERE_TECH]}
+
+    assert match_company("Cohere", entries, rejected=frozenset({COHERE_PERM_REJECTED})).flags

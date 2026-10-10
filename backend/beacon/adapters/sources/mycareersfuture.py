@@ -33,7 +33,7 @@ ROLE_QUERIES: tuple[str, ...] = (
     "Java backend engineer",
     "machine learning engineer",
 )
-# Slice 23 probed software/data/engineering manager/devops live 2026-10-10 (19-20/20 on target)
+# Slice 27 probed software/data/engineering manager/devops live 2026-10-10 (19-20/20 on target)
 # and withdrew them: each costs ~60 detail fetches a poll, and the 12:00 poll with them ran
 # 2989s against a 3000s watchdog (PROGRESS Decisions 2026-10-10 board-queries-withdrawn).
 _PAGE_SIZE = 20

@@ -22,7 +22,7 @@ def upgrade_ambiguous_classifications(jobs: JobRepo, classifier: Classifier) -> 
     """Re-run the classifier over the empty-category residue and rewrite only the rows it
     actually improved (a now-non-empty category set); return that improved count. Keyless,
     the classifier is the bare heuristic, which makes this the offline backfill after a
-    vocabulary widening (slice 23b) — content_hash would otherwise keep old rows unread.
+    vocabulary widening (slice 27b) — content_hash would otherwise keep old rows unread.
 
     This is the slice-9 catch-up for the pre-LLM backlog — rows classified '' by the earlier
     heuristic-only ingests. Distinct from backfill_classifications (which handles NULL, i.e.
@@ -42,7 +42,7 @@ def upgrade_ambiguous_classifications(jobs: JobRepo, classifier: Classifier) -> 
 def reclassify_category(jobs: JobRepo, classifier: Classifier, category: Category) -> int:
     """Re-run the classifier over every row stored with `category`; rewrite the rows whose
     category set changed and return how many. The backfill for a vocabulary *split* (slice
-    24b: infra out of backend), which upgrade_ambiguous_classifications cannot reach because
+    28b: infra out of backend), which upgrade_ambiguous_classifications cannot reach because
     those rows are not empty. content_hash gates re-classification at ingest, so without this
     an old label outlives the vocabulary that produced it.
 

@@ -18,6 +18,16 @@ _AS_KNOWN = date(2026, 1, 15)
 # of _AS_KNOWN — backdating them to January would claim research that had not happened.
 _SLICE_18_VERIFIED = date(2026, 9, 15)
 
+# Slice 23's Germany row was read off official pages (the BMI's Bundesanzeiger notice of the
+# 2026 Blue Card floors, AufenthG §18c/§18g and StAG §10 as consolidated on
+# gesetze-im-internet.de, the Auswärtiges Amt on dual nationality) on this date.
+_SLICE_23_VERIFIED = date(2026, 10, 7)
+
+# Slice 23e re-read the whole Australia row on this date: the CSIT/SSIT indexed 1 July 2026
+# (Home Affairs salary requirements), the CSOL in LIN 24/089 compilation 3 (7 Nov 2025), the
+# 186 TRT stream and the citizenship general residence requirement.
+_SLICE_23E_VERIFIED = date(2026, 10, 9)
+
 
 class PriorityTier(StrEnum):
     """Target-geography weighting from SPEC §3 — drives the Countries-view legend/pins.
@@ -93,13 +103,16 @@ COUNTRY_REFERENCE: tuple[CountryReference, ...] = (
     CountryReference(
         code="AU",
         name="Australia",
-        visa_summary="Skills in Demand (~AU$76k floor; AU$141k specialist tier)",
-        pr_summary="2–3yr via employer 186 or points 189",
-        citizenship_summary="4yr residence",
+        visa_summary=(
+            "Skills in Demand, AU$79,423 floor (AU$146,576 specialist); "
+            "software roles on the Core Skills list"
+        ),
+        pr_summary="Employer 186 after 2yr sponsored work, or points-tested 189",
+        citizenship_summary="4yr lawful residence, the last 12mo as a permanent resident",
         registry_name="None public (sponsor status inferable from posting text)",
         priority_tier=PriorityTier.PRIMARY,
-        verified_at=_AS_KNOWN,
-        source_url="https://immi.homeaffairs.gov.au",
+        verified_at=_SLICE_23E_VERIFIED,
+        source_url="https://immi.homeaffairs.gov.au/visas/working-in-australia/skill-occupation-list",
     ),
     CountryReference(
         code="NL",
@@ -235,6 +248,20 @@ COUNTRY_REFERENCE: tuple[CountryReference, ...] = (
         priority_tier=PriorityTier.NICE_TO_HAVE,
         verified_at=_SLICE_18_VERIFIED,
         source_url="https://www.immd.gov.hk/eng/services/visas/GEP.html",
+    ),
+    # ---- Slice 23: Germany promoted from "other market" (fourth-largest open-job block).
+    # Reduced floor = shortage occupations, degree <3yr old, or IT specialists without a degree
+    # (3yr experience); those routes need Bundesagentur approval, the general one does not.
+    CountryReference(
+        code="DE",
+        name="Germany",
+        visa_summary="EU Blue Card, €50,700/yr (€45,934 shortage, new grad or IT w/o degree)",
+        pr_summary="Settlement permit after 21mo with B1 German, 27mo with A1",
+        citizenship_summary="5yr (3yr fast track abolished); dual allowed since 2024-06-27",
+        registry_name="None — no public sponsor register; the Bundesagentur approves per case",
+        priority_tier=PriorityTier.NICE_TO_HAVE,
+        verified_at=_SLICE_23_VERIFIED,
+        source_url="https://www.gesetze-im-internet.de/aufenthg_2004/__18g.html",
     ),
 )
 

@@ -131,7 +131,7 @@ async def test_mycareersfuture_fetch_stops_at_a_short_page(search_ios: dict[str,
     assert pages == ["0"]  # three results on a 20-row page → no page 1
 
 
-# Slice 23: the steered queries reach past the SPEC §1 profile to the rest of engineering.
+# Slice 27: the steered queries reach past the SPEC §1 profile to the rest of engineering.
 # Every query must name a role the classifier can read, or it buys only residue.
 
 

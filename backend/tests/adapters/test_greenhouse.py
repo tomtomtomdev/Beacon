@@ -6,7 +6,7 @@ import httpx
 import pytest
 
 from beacon.adapters.http.polite import PoliteClient
-from beacon.adapters.sources.greenhouse import GreenhouseAdapter
+from beacon.adapters.sources.greenhouse import GreenhouseAdapter, GreenhouseEUAdapter
 from beacon.domain.descriptions import content_hash, normalize_description
 
 
@@ -85,3 +85,22 @@ async def test_greenhouse_fetch_uses_slug(tines_jobs: dict[str, Any]) -> None:
     assert seen_urls == ["https://boards-api.greenhouse.io/v1/boards/tines/jobs?content=true"]
     assert len(raw_postings) == 15
     assert all("id" in raw and "title" in raw for raw in raw_postings)
+
+
+async def test_greenhouse_eu_board_is_read_from_the_eu_host(tines_jobs: dict[str, Any]) -> None:
+    """Greenhouse hosts EU-resident boards (Binance) on a separate API host; the slug alone
+    does not say which region, so the seed row's ats_type does."""
+    seen_urls: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen_urls.append(str(request.url))
+        return httpx.Response(200, json=tines_jobs)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    adapter = GreenhouseEUAdapter(slug="binance", fetcher=PoliteClient(client, min_interval=0.0))
+
+    raw_postings = await adapter.fetch()
+    job = adapter.normalize(raw_postings[0])
+
+    assert seen_urls == ["https://boards-api.eu.greenhouse.io/v1/boards/binance/jobs?content=true"]
+    assert job.source_id == "greenhouse_eu"

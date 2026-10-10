@@ -114,7 +114,7 @@ async def test_himalayas_fetch_pages_up_to_the_configured_maximum() -> None:
     assert len(raw_postings) == 40  # two full pages, then the cap stops the walk
 
 
-# Slice 23: the steered queries reach past the SPEC §1 profile to the rest of engineering.
+# Slice 27: the steered queries reach past the SPEC §1 profile to the rest of engineering.
 # Every query must name a role the classifier can read, or it buys only residue.
 
 

@@ -8,13 +8,13 @@
 |---|---|
 | Which sources exist, and why these? | **SPEC.md §5.1–§5.3** |
 | What was evaluated and rejected, with probe results? | **SPEC.md §5.4–§5.5** |
-| What are we building next, in what order? | **PLAN.md** (slice 14) |
+| What are we building next, in what order? | **PLAN.md** |
 | Why did a decision change? | **PROGRESS.md** Decisions log |
 | Exact request/response shapes and edge cases | **the adapter module + its docstring** — the code is authoritative over this file |
 
 Where this file and SPEC.md disagree, **SPEC.md wins** and this file is the bug.
 
-Compiled 2026-08-26 from `backend/beacon/adapters/`, `seeds/companies.csv`, and `backend/beacon/scheduler/schedule.py`. Covers sources shipped through **slice 14**.
+Compiled 2026-08-26 from `backend/beacon/adapters/`, `seeds/companies.csv`, and `backend/beacon/scheduler/schedule.py`; last updated 2026-10-09. Covers sources shipped through **slice 24c**.
 
 ---
 
@@ -24,16 +24,16 @@ Beacon consumes **four classes of external data**:
 
 | Class | Count | Direction | Port | Cadence |
 |---|---|---|---|---|
-| ATS adapters (per-company job boards) | 9 | Inbound, read | `JobSource` | every **4h** |
-| Board adapters (company-less job feeds) | 7 | Inbound, read | `JobSource` | every **6h** |
-| Registry ingesters (company-level sponsor signals) | 5 + 1 manual | Inbound, read (local snapshot files) | `RegistryIngester` | **monthly** (1st, 03:00 local) |
+| ATS adapters (per-company job boards) | 10 | Inbound, read | `JobSource` | daily, in the **16:00** digest fire (§7) |
+| Board adapters (company-less job feeds) | 9 | Inbound, read | `JobSource` | daily, in the **16:00** digest fire (§7) |
+| Registry ingesters (company-level sponsor signals) | 6 + 1 manual | Inbound, read (local snapshot files) | `RegistryIngester` | **monthly** (1st, 03:00 local) |
 | Outbound services | 2 | Outbound | `Classifier` / `Notifier` | on demand |
 
-**Total: 16 live job sources, 6 registry signals, 2 outbound APIs.**
+**Total: 19 live job sources (NAV only when its token is set), 7 registry signals, 2 outbound APIs.**
 
 All inbound HTTP goes through a single shared `PoliteClient` (`adapters/http/polite.py`). Registry snapshots are *files on disk*, manually refreshed — nothing scrapes a government site.
 
-**One source needs a credential.** NAV Norway (§4.7) is bearer-token authenticated; the token lives on the HTTP door keyed by host, never in an adapter, and without it NAV is not wired at all (§2).
+**Two sources send a credential**, both from the HTTP door keyed by host, never from an adapter (§2). NAV Norway (§4.7) needs a bearer token, and without one it is not wired at all. Bundesagentur (§4.9) sends a published public API key that is always present.
 
 ---
 
@@ -51,7 +51,7 @@ One instance is shared by every adapter so the per-host budget is global (all 24
 | Retry statuses | 429, 500, 502, 503, 504 |
 | Conditional GET | ETag / `If-Modified-Since`; 304 → served from in-process cache |
 | Methods | `get_json`, `get_text`, `post_json` |
-| Auth | `bearer_tokens={host: SecretStr}` — **per host, configured on the door**, so an adapter never holds a credential and a token can only reach the host it belongs to. `__repr__` renders authenticated *hosts*, never tokens |
+| Auth | `credentials={host: HostCredential}`, where `HostCredential = Bearer \| Basic \| ApiKeyHeader` (`adapters/http/credentials.py`, slice 23b), each holding `SecretStr` and rendering its own header. **Per host, configured on the door**, so an adapter never holds a credential and a credential can only reach its own host. Built by `ingest.host_credentials(settings)`. `__repr__` renders authenticated *hosts*, never secrets |
 | Pinned windows | `get_json(modified_since=…)` sends RFC-1123 `If-Modified-Since` as a **filter** (NAV's documented way to choose where a feed starts) and **bypasses the conditional-GET cache** — two windows are two questions sharing one url |
 | Failure taxonomy | 404/410 → `FailureKind.GONE`; all other HTTP/transport/timeout → `FailureKind.UNREACHABLE`; raised as `SourceUnavailable(kind)` |
 
@@ -88,6 +88,8 @@ Each takes a `(slug, fetcher)` pair. Slug comes from `seeds/companies.csv`. Addi
 | Location | `location.name` (free text → `parse_location`) |
 | Posted at | `first_published` (ISO-8601, tz-aware) — may be absent |
 | Seed rows | **24** (largest coverage) |
+
+**EU region — `source_id: greenhouse_eu`** (added 2026-09-30). The API and payload are identical, but EU-resident boards are served from `boards-api.eu.greenhouse.io`, and the public board URL is `job-boards.eu.greenhouse.io/{slug}`. Nothing in the slug says which region a board is in, so the seed row's `ats_type` carries it. `GreenhouseEUAdapter` subclasses the US adapter and changes only the host. First row: Binance.
 
 ### 3.2 Lever — `source_id: lever`
 | | |
@@ -218,6 +220,7 @@ Each takes a `(slug, fetcher)` pair. Slug comes from `seeds/companies.csv`. Addi
 | ats_type | Rows | Adapter |
 |---|---|---|
 | greenhouse | 24 | ✅ |
+| greenhouse_eu | 1 | ✅ (2026-09-30 — Binance) |
 | ashby | 11 | ✅ |
 | lever | 10 | ✅ |
 | workday | 4 | ✅ |
@@ -341,13 +344,48 @@ These are not tied to a seed company; each yields jobs across many employers, so
 | Posted at | `ad_content.published` — ISO-8601 with Norway's offset (`+02:00`), converted to UTC |
 | Company | `ad_content.employer.name` |
 
+### 4.8 Arbeitnow — `source_id: arbeitnow`
+| | |
+|---|---|
+| Endpoint | `GET https://www.arbeitnow.com/api/job-board-api?visa_sponsorship=true&page=N` |
+| Auth | None |
+| Shape | `{"data": [...], "links": {"next": …}}`, ~325 rows/page, newest `created_at` first |
+| `visa_sponsorship=true` | **Always sent. A fetch filter, never a tier claim** — rows carry no per-posting visa field, so the tier is resolved from text and registries like any other source |
+| Steering | None possible: `search=` is ignored (probed 2026-10-07) |
+| Page cap | Page number sent explicitly; stops at a null `links.next` or **3 pages**; the cap logs `arbeitnow_page_cap` |
+| Dedup | By `slug` (newest-first paging shifts under a mid-walk publish) |
+| ID | `slug` |
+| Title / URL | `title` / `url` — the arbeitnow.com link, as the API's terms ask |
+| Location | `location` (free text → `parse_location`) |
+| Posted at | `created_at` (unix epoch seconds) |
+| Company | `company_name` |
+
+### 4.9 Bundesagentur Jobsuche (DE) — `source_id: bundesagentur`
+| | |
+|---|---|
+| Endpoints | Search: `GET https://rest.arbeitsagentur.de/jobboerse/jobsuche-service/pc/v6/jobs?was={query}&size=50&page=N`<br>Detail: `GET …/pc/v4/jobdetails/{base64(referenznummer)}` |
+| Auth | `X-API-Key: jobboerse-jobsuche` — a **published public constant**, not a setting; always on the door for `rest.arbeitsagentur.de` |
+| Dead paths | `pc/v4/jobs` and `pc/v5/jobs` (what bund.dev documents) and `pc/v6/jobdetails` all answer **403** |
+| Two-step | **Yes** — list rows carry no ad text; the detail has `stellenangebotsBeschreibung` |
+| Role queries | `"iOS Entwickler"`, `"iOS Developer"`, `"Swift Entwickler"`, `"Java Backend"`, `"Machine Learning Engineer"`. The search is fuzzy, so counts are ceilings on spend, not relevance; per-phrasing counts measured 2026-10-07 are in the docstring |
+| Page size / cap | 50 × **2 pages** per query; stops at a short page or `maxErgebnisse`; the cap logs `bundesagentur_page_cap query= fetched= total=` |
+| Dedup | By `referenznummer` across queries, **before** the detail spend |
+| Failed detail | Skipped and logged (`bundesagentur_detail_skipped refnr= kind=`), never fatal |
+| ID | `referenznummer` |
+| Title / URL | `stellenangebotsTitel` / `https://www.arbeitsagentur.de/jobsuche/jobdetail/{refnr}` |
+| Location | `stellenlokationen[0].adresse`. **`country = DE` only when `land == "DEUTSCHLAND"`**; otherwise the town text decides (Wien → AT) or no country. City is the part of `ort` before the first comma (`"Freising, Oberbayern"` → Freising) |
+| Posted at | `datumErsteVeroeffentlichung` (bare date → midnight UTC) |
+| Company | `firma`, whitespace-stripped (the register pads some names) |
+| Known gap | Descriptions are German and the sponsorship regex is English, so DE rows mostly read `unknown` until a German-vocabulary slice |
+| Live 2026-10-09 | fetched=231 upserted=231 errors=0; page cap hit on Java Backend (100/323) and Machine Learning Engineer (100/124) |
+
 ---
 
 ## 5. Registry ingesters (§5.3) — company-level sponsorship signals
 
 Not job feeds. These set `companies.registry_flags` (a bitmask) via fuzzy company-name matching with a `match_confidence`.
 
-**Bitmask members: `UK | NL | US | MANUAL | IE | CA`.** Values are **frozen and only appended** — `registry_flags` is a stored integer, so renumbering a bit would silently re-label every company already matched (this is why MANUAL keeps bit 8 and IE/CA took 16/32). There is deliberately **no SE bit** — Sweden's Migrationsverket certified-employer scheme was **discontinued Dec 2023**; no Swedish employer register exists.
+**Bitmask members: `UK | NL | US | MANUAL | IE | CA | PERM`.** Values are **frozen and only appended** — `registry_flags` is a stored integer, so renumbering a bit would silently re-label every company already matched (this is why MANUAL keeps bit 8, IE/CA took 16/32 and PERM took 64). There is deliberately **no SE bit** — Sweden's Migrationsverket certified-employer scheme was **discontinued Dec 2023**; no Swedish employer register exists.
 
 All file-based registries read through one shared contract (`_csvfile.iter_rows`: `newline=""` for the csv module, `utf-8-sig` to drop a BOM). The CA export prints a title banner *above* its header row, so it reads through `iter_rows_below_banner(header_column="Employer")` instead — a file whose header is never found **raises**, rather than yielding rows keyed on junk. Snapshots are **downloaded by hand** and dropped in `data/registries/` — a missing snapshot is *skipped, not fatal*.
 
@@ -358,6 +396,7 @@ All file-based registries read through one shared contract (`_csvfile.iter_rows`
 | US H-1B LCA disclosures (DOL) | `Registry.US` | `data/registries/h1b_lca.csv` (`BEACON_H1B_REGISTRY_PATH`) | Quarterly XLSX → CSV | Quarterly |
 | IE DETE employment permits | `Registry.IE` | `data/registries/ie_permits.csv` (`BEACON_IE_REGISTRY_PATH`) | Monthly XLSX → CSV | Monthly |
 | CA TFWP positive LMIA employers | `Registry.CA` | `data/registries/ca_lmia.csv` (`BEACON_CA_REGISTRY_PATH`) | Quarterly XLSX → CSV | Quarterly |
+| US PERM labor certifications (DOL) | `Registry.PERM` | `data/registries/us_perm.csv` (`BEACON_PERM_REGISTRY_PATH`) | Quarterly XLSX → CSV | Quarterly |
 | MANUAL — curated sponsor boards | `Registry.MANUAL` | n/a (CLI) | Hand-entered | Ad hoc |
 
 ### 5.1 UK sponsor register
@@ -392,7 +431,16 @@ Columns `Province/Territory`, `Program Stream`, `Employer`, `Address`, `Occupati
 - **Publisher caveat, not hidden:** the list *excludes all personal names and business names built on personal names*, so it is incomplete by construction — **absence from it is not evidence of non-sponsorship**.
 - Reference scale: 2026Q1 XLSX = 8,797 rows / **7,884 employers**.
 
-### 5.6 MANUAL
+### 5.6 US PERM labor certifications
+Columns `EMP_BUSINESS_NAME`, `CASE_STATUS`, `EMP_TRADE_NAME` (the 137-column file converted to these three).
+- A certified PERM labor certification is the first step of an **employment-based green card**, so it is different evidence from an H-1B LCA and has its **own bit**. The drawer labels it "US PERM labor certifications (green card)".
+- **`Certified`** and **`Certified - Expired`** count; Denied/Withdrawn contribute nothing. **The live file spells it with spaces.** DOL's record layout says `Certified-Expired`, and code written from the layout would silently drop ~16k filings.
+- Shares `_certified.certified_employers` with the H-1B ingester (padding rows, per-employer counts, trade-name aliases); only the columns, statuses and placeholders differ.
+- **Placeholder trade names are not aliases**: `N/A` alone is the trade name on 11,441 rows, plus `n/a`, `NA`, `None`, `Not Applicable` (compared casefolded).
+- **Getting the file:** dol.gov's bot manager answers scripted requests with 403. The browser download of the FY2026 Q3 file (156MB, at `dol.gov/media/…`, not the older `/sites/dolgov/files/…` path) stalled twice. It was completed with byte-range requests made from inside the page (the server answers 206).
+- Reference scale: FY2026 Q3 XLSX = 925,430 rows, of which **812,880 are padding** / 112,550 filings (87,741 Certified, 16,287 Certified - Expired, 3,879 Denied, 4,643 Withdrawn) / **28,479 certified employers**.
+
+### 5.7 MANUAL
 Encodes human-verified sponsorship signals with no machine-readable register: a company listed on relocate.me / swedishtechjobs / jobbatical (posting there is a self-declaration), a confirmed sponsorship from an application, or direct knowledge.
 
 **Never scraped** — curated boards' lists are their product and off-limits per Non-Goals. Workflow:
@@ -403,7 +451,7 @@ python -m beacon.refresh --flag "Lovable" --evidence "listed on relocate.me"
 
 Sets the flag directly at confidence **1.0**, no fuzzy matching. Participates in `registry_inferred` exactly like the machine registries.
 
-### 5.7 Staleness
+### 5.8 Staleness
 `registries_meta` records each snapshot's ingest time. A snapshot older than **45 days** (`REGISTRY_STALE_AFTER_DAYS`) raises a `RegistryStale` alert in the Telegram digest. Registries **never quarantine** — they just nag.
 
 ---
@@ -447,7 +495,7 @@ Every scheduled job is a **launchd one-shot**, keyed to the system zone = **Asia
 
 | Agent | Fires | Notes |
 |---|---|---|
-| `com.beacon.digest` | **08:00, 12:00, 16:30** | Poll every source → dedup → Telegram digest, then exit. A full poll runs 30–45 min under a 50 min watchdog, which is why the gaps are hours. HN's daily-first-week cadence is folded in here — its per-thread unseen-kids cache makes frequent re-polls cheap |
+| `com.beacon.digest` | **16:00** daily | Poll every source → dedup → Telegram digest, then exit. A full poll runs 30–45 min under a 50 min watchdog. HN's daily-first-week cadence is folded in here — its per-thread unseen-kids cache makes frequent re-polls cheap |
 | `com.beacon.refresh` | **day 1 @ 03:00** | Match seeds against available snapshots; write `registries_meta` |
 | `com.beacon.backup` | **04:00 daily** | Timestamped SQLite copy to `backups/`, pruned to the newest 14 |
 | `com.beacon.probe` | **Mon @ 05:00** | One retry per quarantined source; success restores, failure does **not** inflate counters |
@@ -489,12 +537,12 @@ Slice 13 proved the port survives two shapes it was not designed around:
 - **Dedup key 2** (cross-source): normalized `(company_name, title, country)` + simhash(description) within a Hamming distance threshold. Duplicates link to a canonical job row; sources are listed on the detail view.
 - **`content_hash`** = sha256 of the normalized description. Gates re-classification and LLM spend. Changing the normalization requires a backfill plan.
 - **`posted_at` may be null** and is **never fabricated**. Explicitly refused: Workday's `postedOn` ("Posted 4 Days Ago") — relative prose with no anchor.
-- **Bare dates** (Workable `published_on`, Workday `startDate`, MyCareersFuture posting dates) are read as **midnight UTC**.
+- **Bare dates** (Workable `published_on`, Workday `startDate`, MyCareersFuture posting dates, Bundesagentur `datumErsteVeroeffentlichung`) are read as **midnight UTC**.
 - **Offset-less timestamps** get the source's real local zone: JobTech → `Europe/Stockholm` → UTC.
 - **Country codes are only trusted when they look like ISO-2** (Lever, SmartRecruiters, Workable all guard this); otherwise the shared string parser runs. JobTech's numeric taxonomy is mapped explicitly, never guessed.
 - **The pipeline never dies on one bad item**: per-posting try/except with a structured log line, then continue.
 - **Every poll logs** `source= company= fetched= upserted= errors=`.
-- **Fixtures over live calls**: every adapter is tested against recorded JSON/CSV/XML in `backend/tests/fixtures/{source}/` — 15 fixture directories, one per source plus `registries/` and `anthropic/`. Live network calls appear only in manual acceptance scripts.
+- **Fixtures over live calls**: every adapter is tested against recorded JSON/CSV/XML in `backend/tests/fixtures/{source}/` — 20 fixture directories: one per source (`greenhouse_eu` shares `greenhouse/`), plus `registries/` and `anthropic/`. Live network calls appear only in manual acceptance scripts.
 
 ---
 
@@ -518,7 +566,7 @@ Slice 13 proved the port survives two shapes it was not designed around:
 
 Three things deliberately live elsewhere, so there is exactly one copy of each:
 
-- **Candidate and rejected sources** (Arbeitnow, Reed, Adzuna; The Muse and Breezy, both built-or-listed then dropped) — **SPEC.md §5.4–§5.5**, with the live probe result for each and the §4 target-set decision that gates the UK/Mediterranean ones.
+- **Candidate and rejected sources** (Reed, buildable but skipped; Adzuna, Remotive, France Travail; The Muse and Breezy, both built-or-listed then dropped) — **SPEC.md §5.4–§5.5**, with the live probe result for each and the §4 target-set decision that gates the UK/Mediterranean ones.
 - **Rejected sources with their probe evidence** (Adzuna's quota arithmetic, EURES' input-only API, TokyoDev's Cloudflare wall, NZ's unpublished AEWV list) — **SPEC.md §5.5**. §10 above covers only the exclusions that predate slice 13.
 - **The two ranking defects** found by the 2026-08-26 resume-match spot check (`swift` matching SWIFT the payment network; one-skill jobs scoring 100% coverage) — **PLAN.md slice 14a**, with the failing-test names, and **PROGRESS.md** `2026-08-26 (14-survey)` for the evidence.
 

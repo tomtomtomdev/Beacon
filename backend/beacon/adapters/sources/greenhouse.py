@@ -6,10 +6,12 @@ from beacon.domain.job import NormalizedJob
 from beacon.domain.location import parse_location
 
 _BOARDS_API = "https://boards-api.greenhouse.io/v1/boards/{slug}/jobs"
+_EU_BOARDS_API = "https://boards-api.eu.greenhouse.io/v1/boards/{slug}/jobs"
 
 
 class GreenhouseAdapter:
     source_id = "greenhouse"
+    _boards_api = _BOARDS_API
 
     def __init__(self, slug: str, fetcher: Fetcher) -> None:
         self._slug = slug
@@ -17,7 +19,7 @@ class GreenhouseAdapter:
 
     async def fetch(self) -> list[RawPosting]:
         data = await self._fetcher.get_json(
-            _BOARDS_API.format(slug=self._slug), params={"content": "true"}
+            self._boards_api.format(slug=self._slug), params={"content": "true"}
         )
         jobs: list[RawPosting] = data["jobs"]
         return jobs
@@ -42,3 +44,11 @@ class GreenhouseAdapter:
             posted_at=posted_at,
             content_hash=content_hash(description),
         )
+
+
+class GreenhouseEUAdapter(GreenhouseAdapter):
+    """Same board API and payload, hosted in Greenhouse's EU region (e.g. Binance). The slug
+    does not say which region a board lives in, so the seed's ats_type does."""
+
+    source_id = "greenhouse_eu"
+    _boards_api = _EU_BOARDS_API

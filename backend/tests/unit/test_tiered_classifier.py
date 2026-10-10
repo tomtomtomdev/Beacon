@@ -14,7 +14,7 @@ from beacon.domain.job import NormalizedJob
 
 # The heuristic reads categories from the title only: a keyword title is confident, a title
 # naming no role it knows leaves categories empty → ambiguous → eligible for the LLM. (Until
-# slice 23 the example was "Software Engineer"; that is now the `software` fallback.)
+# slice 27 the example was "Software Engineer"; that is now the `software` fallback.)
 CONFIDENT = "Senior iOS Engineer"
 AMBIGUOUS = "Founding Engineer"
 

@@ -305,7 +305,7 @@ Tasks:
 3. **Countries view (DESIGN.md §4):** country cards grid + target-geography world-map (`<canvas>` dot-grid + lon/lat pins, primary vs nice-to-have colors, pin↔card cross-highlight). Sweden card surfaces "no sponsor registry" exactly as written.
 4. Job-detail drawer (DESIGN.md §2): slide-over with sponsorship-evidence card, chips, description, country panel, sources + CTA; opening a `new` job marks it `seen` (ties to slice 5.5)
 5. `RemoteOKAdapter` (JSON), `WWRAdapter` (RSS)
-4. launchd one-shots per SPEC §9 (`com.beacon.digest` for polls, `com.beacon.{refresh,backup,probe}` for maintenance — no always-on scheduler process); closed-posting sweep — **absence counts only on successful polls**: the sweep increments a per-job miss counter solely when its source's poll succeeded and the job wasn't in the response; failed polls leave counters untouched (test: `test_failed_poll_never_closes_jobs`)
+4. launchd one-shots per SPEC §9 (`com.beacon.digest` for polls — **once a day at 16:00** since 2026-09-30, `com.beacon.{refresh,backup,probe}` for maintenance — no always-on scheduler process); closed-posting sweep — **absence counts only on successful polls**: the sweep increments a per-job miss counter solely when its source's poll succeeded and the job wasn't in the response; failed polls leave counters untouched (test: `test_failed_poll_never_closes_jobs`)
 5. Nightly SQLite backup script
 
 Acceptance:
@@ -1383,7 +1383,461 @@ figures above are the post-poll ones; slice 20 and 21's boxes keep theirs with t
 
 ---
 
-## Slice 23 — All of engineering, not just iOS / backend / AI-ML — **DONE 2026-10-10 (23d's board queries withdrawn under the kill criterion)**
+## Slice 23 — Sources the GB/DE decisions unblock, and the AU occupation list as reference
+
+**Asked for 2026-10-07**, against two pasted lists (visa/sponsor data and job APIs). Audited
+first. All five sponsor registers that publish a file are already ingested (UK, US, NL, IE, CA).
+NZ was closed in 18e. **Three owner decisions taken 2026-10-07:** (1) **DE joins §4 as
+`nice_to_have`**; FR stays out. (2) **Adzuna stays rejected**, because its quota arithmetic is
+unchanged. (3) **The AU Core Skills Occupation List is reference text, not an ingester**: it has
+no downloadable table (a legislative-instrument PDF plus a web page), and every software ANZSCO
+code is on it, so a per-job flag would carry almost no information.
+
+**What 2026-09-15 already unblocked:** Arbeitnow and Reed were held only "iff §4 adds the UK".
+GB became `primary` in 18 and nobody went back for them.
+
+**Probed live 2026-10-07, and the results shape the sub-slices:**
+- **Arbeitnow** `GET /api/job-board-api`, no auth, 325 rows/page, `created_at`-ordered with
+  `links.next`. **`search=` is ignored** (identical page 1). **`visa_sponsorship=true` is
+  honoured** (a different 318-row set). So the firehose *can* be advanced but *cannot* be
+  steered by role. Page 1 geography: London 43 / Paris 31 / Berlin 25 / Zürich 17.
+- **Bundesagentur Jobsuche**: `pc/v4/jobs` (what bund.dev documents) now returns **403**.
+  **`pc/v6/jobs` returns 200** with the public `X-API-Key: jobboerse-jobsuche`. List rows have
+  no ad text, and **the detail lives at `pc/v4/jobdetails/{base64(refnr)}`** (v6 detail is
+  403), returning `stellenangebotsBeschreibung`. `was=iOS Entwickler` gives 21 results. Two
+  calls per posting, but a small steered set.
+- **Reed** cannot be probed without a key. HTTP Basic, key as username, empty password.
+  `search` returns a truncated `jobDescription`; `jobs/{id}` returns the full one. **Needs the
+  owner to register a free key** (reed.co.uk/developers) before its fixture can be recorded.
+
+**Build order: 23a Arbeitnow → 23b the credential door → 23c DE row → 23d Bundesagentur → 23e
+AU reference → 23f Reed (gated on the key) → 23g docs.** Each sub-slice is one TDD loop
+(RED → GREEN → REFACTOR scan), `make verify`, one `slice-23x:` commit, push.
+
+### 23a — Arbeitnow as a company-less source
+
+- `test_arbeitnow_normalizes_a_recorded_posting` (RED): a fixture recorded live 2026-10-07 under
+  `tests/fixtures/arbeitnow/`. `external_id = slug`, `posted_at` from epoch `created_at`,
+  country via `parse_location`, `company_name` from the row.
+- `test_arbeitnow_walks_links_next_up_to_the_page_cap_and_logs_it`: follows `links.next`, stops
+  at `max_pages` (default 3), and logs `arbeitnow_page_cap` like Himalayas.
+- `test_arbeitnow_requests_the_visa_sponsorship_subset`: the request carries
+  `visa_sponsorship=true`. **This is a fetch filter, not a tier claim.** The payload has no
+  per-row visa field (SPEC §5.4), and `resolve_tier` does not change. The filter only decides
+  which postings Beacon pays to ingest.
+- Wired into `make_companyless_sources`. Live acceptance on a temp DB, zero errors.
+
+### 23b — One credential door: bearer, basic, API-key header
+
+`PoliteClient(bearer_tokens=…)` becomes `PoliteClient(credentials={host: HostCredential})`, where
+`HostCredential = Bearer | Basic | ApiKeyHeader`, all holding `SecretStr`. NAV migrates to it as
+a no-behaviour-change refactor. **The `Fetcher` Protocol does not change.** Adapters still never
+hold a credential (the 14e decision, extended).
+
+- `test_basic_credential_sends_key_as_username_with_empty_password` (RED).
+- `test_api_key_header_is_sent_only_to_its_host`.
+- `test_repr_names_hosts_never_secrets`, extended to all three kinds.
+- The existing NAV bearer tests stay green, unedited, through the migration.
+
+### 23c — Germany as a §4 `nice_to_have` row (domain, pure)
+
+- **Verify before writing (the 18b rule):** each figure is read off the official page on the day
+  and carries that date, never `_AS_KNOWN`. Sources: make-it-in-germany.com / BAMF for the EU
+  Blue Card salary floors (general and shortage), the settlement permit (Blue Card months with
+  B1 vs A1), and citizenship (residence years after the 2025 change, dual nationality since
+  2024-06-27).
+- `test_germany_is_a_nice_to_have_market` (RED). `registry_name` states that there is **no public
+  sponsor register** (the Bundesagentur approves per case), the NZ/SE pattern.
+- Globe: a `DE` entry in `PIN_GEO` (Europe is already traced). `test_every_country_has_a_globe_pin`
+  is the guard.
+- **No migration**: `countries` is a seeded projection of `COUNTRY_REFERENCE` (the 15c/18 finding).
+
+### 23d — Bundesagentur Jobsuche as a company-less source
+
+- Credential: `ApiKeyHeader("X-API-Key", "jobboerse-jobsuche")` for `rest.arbeitsagentur.de`,
+  registered on the door from 23b. The key is a published public constant, so it is not a
+  setting and needs no gating.
+- `ROLE_QUERIES` as data. Each phrasing is measured live and the counts are recorded in the
+  docstring (the Himalayas precedent), e.g. `iOS Entwickler` 21.
+- Two-step: v6 list, then the v4 detail at `base64(refnr)`. Dedup by `referenznummer` before the
+  detail spend. A failed detail is skipped and logged, never fatal (rule 6).
+- Normalization: `country = "DE"` only when `land == "DEUTSCHLAND"`; city from `ort`; `posted_at`
+  from `datumErsteVeroeffentlichung` as midnight UTC (the date-only rule from slice 13); `url` is
+  the public jobdetail page.
+- **Known gap, recorded and not fixed here:** the descriptions are German, and the sponsorship
+  regex is English. DE rows will mostly read `unknown` unless the registry or English text says
+  otherwise. German phrasings belong in a later vocabulary slice with spot-check rows, not
+  smuggled in here.
+
+### 23e — The AU occupation list, as reference text
+
+- Re-verify the **whole AU row** on the day: the Core Skills Income Threshold (indexed 1 July),
+  the specialist tier, PR and citizenship. Bumping `verified_at` claims every column, so only
+  a full re-read earns it.
+- `visa_summary` gains one clause saying the software ANZSCO codes are on the Core Skills
+  Occupation List. The codes are read off the current instrument, never from memory.
+  `source_url` moves to the CSOL page on immi.homeaffairs.gov.au.
+- `test_australia_row_names_the_core_skills_list` (RED). `resolve_tier` stays byte-identical
+  (the TW Gold Card precedent: a visa fact lives in copy, not in tiering).
+
+### 23f — Reed as a company-less source (gated on the owner's key)
+
+**Skipped 2026-10-09 by owner decision** — no key registered. Recorded open in SPEC §5.4; the
+`Basic` credential from 23b stays ready for it.
+
+- `BEACON_REED_API_KEY` → `Settings.reed_api_key: SecretStr | None`. With no key the source is
+  not wired at all (the NAV/Telegram/LLM rule).
+- Fixture recorded live with the key. **If no key exists by the time 23a–23e are done, 23f
+  stops here and is recorded open.** No hand-built fixture is passed off as recorded.
+- Search per `ROLE_QUERIES`, then the `jobs/{id}` detail for the full description. Dedup by
+  `jobId`. `country = "GB"`. `date` is `dd/mm/yyyy`, so date-only becomes midnight UTC.
+
+### 23g — Docs ✅ 2026-10-09
+
+SPEC §5.4/§5.5: Arbeitnow, Reed and Bundesagentur become **reversals on the record**, with
+today's probes. Remotive (redundant), Adzuna (quota) and France Travail (FR not in §4) are
+re-confirmed as rejected with today's reasons. SPEC §4 gains the DE row. SOURCES.md gets the
+three adapters. PROGRESS: status plus a Decisions entry for the three owner decisions above.
+
+Acceptance:
+- [x] Arbeitnow, Bundesagentur (and Reed, if keyed) each poll live on a temp DB with zero errors,
+      with fetched/upserted counts recorded — *Arbeitnow done 2026-10-07 (23a): fetched=318
+      upserted=318 errors=0, one page (visa subset has no `links.next`); Bundesagentur done 2026-10-09 (23d): fetched=231 upserted=231 errors=0, 230 DE + 1 uncountried, page cap hit on Java Backend (100/323) and ML Engineer (100/124); Reed not keyed, skipped (23f)*
+- [ ] NAV behaves identically on the new credential door (its tests unedited) — 23b: behaviour identical and every assertion untouched (test_nav.py unedited), but the three slice-14e auth tests in test_polite.py had their constructor kwarg changed `bearer_tokens={h: SecretStr(..)}` → `credentials={h: Bearer(SecretStr(..))}` since the parameter was removed; left unticked for review
+- [x] DE renders as a `nice_to_have` market with a globe pin and dated figures
+- [x] The AU row names the Core Skills list with a fresh `verified_at`; `resolve_tier` is unchanged
+- [x] `make verify` green on both stacks at every commit — *every code commit 23a–23e; the docs-only commits change no code*
+
+---
+
+## Slice 24 — US PERM as a sponsor register; Jooble and Careerjet probed behind keys
+
+**Asked for 2026-10-09**, after auditing a pasted "Public Job & Visa API Reference" against the
+repo. Nearly every job source on that list is already shipped or recorded as rejected (SPEC
+§5.2/§5.5). Three gaps were never evaluated: **DOL PERM disclosures**, **Jooble** and
+**Careerjet**. USAJOBS was not taken up, because US federal jobs generally require citizenship,
+so there is no sponsorship to find. The USCIS H-1B Employer Data Hub overlaps the LCA data
+already ingested. The rules/quota sources (Visa Bulletin, Express Entry draws) carry no employer or
+job signal, and the travel-visa datasets answer a question Beacon does not ask.
+
+**Why PERM is worth a slice:** an H-1B LCA shows an employer *filed* for temporary sponsorship.
+A certified PERM labor certification is the first step of an **employment-based green card**, a
+stronger and rarer commitment. It also lines up with the PR path SPEC §4 already gives for
+the US ("GC ~1.5–3yr via PERM"). It reads like `H1BLCARegistry`: a quarterly DOL XLSX converted
+to CSV, aggregated per employer.
+
+**Probed 2026-10-09:**
+- **DOL** `dol.gov/agencies/eta/foreign-labor/performance` and the record-layout PDFs answer
+  **403** to scripted fetches (as with the LCA file), so the snapshot is a **hand download**.
+  Search snippets quoting DOL's record layouts (the PDFs themselves were not opened, so 24b
+  must confirm against the downloaded file): **`EMP_BUSINESS_NAME`** (legal name, 9089 §A.1),
+  **`EMP_TRADE_NAME`** (trade name, §A.2), and **`CASE_STATUS`** ∈ {`Certified`,
+  `Certified-Expired`, `Denied`, `Withdrawn`}. The spelling is not LCA's `Certified - Withdrawn`.
+  The FY2026 Q3 release is out.
+- **Careerjet**: v4 `search.api.careerjet.net/v4/query` → **401**. v3 → **403** with *"provide
+  your API key via HTTP Basic Auth as username value … password needs to be empty"*, which is
+  exactly the `Basic` credential from 23b.
+- **Jooble**: `POST jooble.org/api/` → **403** without a key (it also demands a `Referer`). The key
+  goes **in the URL path** (`/api/{key}`), which no `HostCredential` kind can express today.
+
+**Build order: 24a the PERM bit → 24b the PERM ingester → 24c wiring + hand download → 24d
+Jooble/Careerjet probes (gated on the owner's keys) → 24e docs.** Each sub-slice is one TDD loop,
+`make verify`, one `slice-24x:` commit, push.
+
+### 24a — `Registry.PERM`, appended (domain, pure)
+
+- `test_perm_is_appended_as_bit_64` (RED). The enum's values are frozen and append-only (its
+  docstring), so PERM takes **64**. `registry_flags` is a plain integer column, so **no migration**.
+- `SNAPSHOT_REGISTRIES` derives from the enum, so `/registries` coverage lists PERM, as never
+  ingested, with no further code. `test_snapshot_registries_cover_every_bit_but_manual` is the guard.
+- **The bit is separate from `US` on purpose.** They are different evidence (temporary vs
+  permanent sponsorship), and the drawer should be able to say which. `registry_inferred` is
+  `flags != 0`, so the tier logic and the hypothesis invariant are unchanged.
+- Frontend: the drawer's `REGISTRY_LABEL` gains `PERM: 'US PERM labor certifications (green
+  card)'`. **Found while planning:** it also lacks `IE` and `CA` (since slice 14), so those
+  registries render as bare codes. Add both with a test that every backend registry name has a
+  label.
+
+### 24b — `PERMRegistry` (adapter)
+
+- Fixture cut from the **real downloaded file**: its header row verbatim plus a handful of rows
+  (certified, certified-expired, denied, withdrawn, a trade name, a padding row). **No
+  hand-built header is passed off as recorded.** If the live header differs from the layout
+  above, the file wins.
+- `test_perm_counts_certified_and_certified_expired_filings` (RED). An expired certification was
+  still a sponsorship. Denied and Withdrawn count for nothing.
+- `test_perm_trade_name_becomes_an_alias`, `test_perm_skips_padding_rows`.
+- Evidence via `counted(n, "certified PERM filing")`.
+- **Refactor trigger, expected:** this is the second "aggregate certified rows per employer with
+  a DBA alias" ingester. On green, extract the shared aggregation from `h1b.py` rather than
+  carrying two copies. The column names and status sets stay per-register data.
+
+### 24c — Wiring and the hand download
+
+- `Settings.perm_registry_path` ← `BEACON_PERM_REGISTRY_PATH`, default
+  `data/registries/us_perm.csv`. `refresh.py` gains the spec row and a `_SNAPSHOT_SOURCES` line
+  (DOL performance page, "XLSX, export to CSV").
+- Hand step, recorded like the LCA one: download the FY2026 PERM XLSX and convert it to a CSV of
+  the three columns used. Run `refresh-registries`.
+- Live acceptance: record the companies matched, the overlap with `US`, and the tier movement on
+  open jobs (`unknown` → `registry_inferred`). Spot-check the **short-name hazard** (PROGRESS
+  2026-09-18: `Dart` matched "Dallas Area Rapid Transit"). Every match touching ≥50 open jobs
+  that rests on a single PERM filing gets eyeballed.
+
+### 24d — Jooble and Careerjet: probe with keys, then decide (gated on the owner)
+
+**Recorded open 2026-10-09**: no keys registered. The keyless probes are in SPEC §5.4.
+
+**Nothing is built here without a key and a recorded fixture.** If the owner registers neither
+key, 24d is recorded open, as 23f was. With a key, each one answers:
+1. **Quota.** Adzuna died on this (1,000/month vs ~4,860). One daily poll × role queries × pages
+   must fit.
+2. **Full text or snippet?** A snippet-only row means no `content_hash`, no tier and no resume
+   score (the Breezy rejection). A source with no detail call is rejected on that alone.
+3. **Steerable by role?** If `keywords` is ignored, it is a firehose (the Arbeitnow/Muse lesson).
+4. **Terms.** Careerjet is an affiliate programme: check whether results must be shown with its
+   tracking links.
+5. **Jooble only: the key-in-path problem.** No `HostCredential` kind can express it. Either add a
+   fourth kind that rewrites the path on the door, or reject Jooble. **The adapter never holds
+   the key** (the 14e/23b rule).
+
+Each source ends as an adapter (fixture tests + `make_companyless_sources` + live temp-DB poll)
+or as a SPEC §5.5 row with the probe that decided it.
+
+### 24e — Docs ✅ 2026-10-09
+
+SPEC §5.3 gains the PERM register and the `PERM` bitmask member. §5.4/§5.5 get the Jooble and
+Careerjet verdicts, plus one line each recording why USAJOBS and the USCIS Employer Data Hub were
+not taken up. SOURCES.md §5 gains PERM. PROGRESS: status, tracker row, Decisions entry.
+
+Acceptance:
+- [x] `Registry.PERM == 64`; `/registries` lists PERM; the drawer labels PERM, IE and CA
+- [x] PERM ingested from a real FY2026 file; companies matched and tier movement recorded; the
+      thinly-evidenced large matches eyeballed — *2026-10-09, FY2026 Q3 (156MB; 28,479 certified
+      employers), on a copy of this box's `beacon.db`: 95/685 companies matched; open-job
+      `unknown` 7,782 → 3,674. False positives found: **Cohere → "Cohere Technologies Inc."
+      (126 open jobs)**, Linear → "Linear Solutions Inc" (25), Fig → "FIG LLC", GMP Recruitment
+      → "Group-S LLC" — all the structural-token drop at 0.9, a matcher defect shared with LCA,
+      recorded in PROGRESS, not fixed here*
+- [x] Jooble and Careerjet each end as a shipped adapter or a §5.5 row (or recorded open, if no key) — *recorded open in SPEC §5.4, no keys*
+- [x] `make verify` green on both stacks at every commit
+
+---
+
+## Slice 25 — The registry spot-check, and the matcher's false positives
+
+**Why now:** slice 24's PERM ingest (measured on a copy of this box's DB) matched **Cohere →
+"Cohere Technologies Inc."**, a wireless company, which covers **126 open jobs**. CLAUDE.md gates every
+matcher change on the registry spot-check. **Correction, found in 25a:** the script *does*
+exist, at `backend/scripts/spot_check_registry.py` (since slice 2). PROGRESS 2026-09-18 and
+slice 24 looked in the repo-root `scripts/` and wrongly recorded it as missing. What it lacked
+was the ability to see real data: it read only the committed fixtures, and only seeds.
+
+**Measured 2026-10-09, PERM vs the 685 companies on this box: 27 matches exist only after
+token stripping.** They fall into three groups:
+- **Geography drops are right every time** (`Woven by Toyota, U.S.`, `Backbase U.S.A.`,
+  `SmartNews International`, `SPOTIFY USA`, `Atlassian US`, `DoiT International USA`).
+- **Structural drops are mixed, and token rules cannot separate them.** Right: `OpenAI OpCo`,
+  `Notion Labs`, `Faire Wholesale`, `Ripple Labs`, `Robinhood Markets`, `HealthEdge Software`.
+  Wrong: `Cohere Technologies` (Cohere), `Linear Solutions` (Linear), `The Vanguard Group` (Vanguard
+  Software Pte), `Avant, LLC` (Avant Digital). "Cohere Technologies" and "Notion Labs" have
+  the same shape. Only a person with the evidence can tell them apart, so the fix is
+  **data, not a smarter rule**.
+- **A real rule bug: single-letter parentheticals become seed variants.** `GMP RECRUITMENT
+  SERVICES (S) PTE LTD` and `TRAINOCATE (S) PTE. LTD.` yield the variant `S`, which matches
+  `Group-S LLC`. `(S)` is Singapore shorthand, not an alias. `American Bureau of Shipping (ABS)` →
+  `ABS Digital Solutions` is the same mechanism with a real acronym.
+
+**Build order: 25a spot-check script → 25b the parenthetical rule → 25c the reviewed
+rejection table → 25d docs.** One TDD loop each, `make verify`, one `slice-25x:` commit, push.
+
+### 25a — `backend/scripts/spot_check_registry.py` sees real data ✅ 2026-10-09
+
+- Extended rather than written: `--snapshots` reads the present files through refresh's own
+  specs (`available_ingesters`, made public), `--from-db` matches every active company the way a
+  refresh does, not just the 81 seeds, and PERM joins the fixture run. One stable, sorted line per
+  (company, registry) match:
+  `company | registry | entry | confidence | dropped tokens | evidence`.
+- `--only-stripped` narrows to confidence < 1.0 (the review set). `--baseline FILE` writes or
+  diffs against a saved run, so a normalizer change is reviewed as a diff, which is what CLAUDE.md
+  asks for.
+- The pure part (`dropped tokens` for a match, line formatting) lives in `domain/matching.py`
+  and is unit-tested. The script is wiring only.
+
+### 25b — Parentheticals that are not aliases (domain, pure) ✅ 2026-10-09
+
+- `test_single_letter_parenthetical_is_not_a_seed_variant` (RED): `seed_name_variants("GMP
+  RECRUITMENT SERVICES (S) PTE LTD")` has no `S` variant. Appended parametrized rows only.
+- Rule: a parenthetical shorter than **2 characters**, or one that normalizes to geography
+  only (e.g. `(Singapore)`), is not a variant. `(ABS)` stays a variant. Acronyms are real
+  aliases, and the ABS case goes to the 25c table instead.
+- Run the spot-check before and after. The diff is the review, and it goes in the commit message.
+
+### 25c — The reviewed rejection table (data) ✅ 2026-10-09
+
+- `seeds/registry_rejections.csv`: `company,registry,entry,reason,reviewed_at`. Each row is a
+  match a person looked at and rejected with a reason. `match_company` skips a rejected
+  (company, registry, entry) and nothing else.
+- Port: `RegistryRejections` is read by the refresh use case, and the adapter reads the CSV. The
+  domain receives a frozenset, never a path.
+- Seeded only with matches whose evidence is conclusive: Cohere/`Cohere Technologies Inc.`,
+  Linear/`Linear Solutions Inc`, `VANGUARD SOFTWARE PTE. LTD.`/`The Vanguard Group`, `American
+  Bureau of Shipping (ABS)`/`ABS Digital Solutions, LLC`. **Ambiguous ones (Mercury, Evolve,
+  Avant, Randstad) are left for the owner.** The spot-check prints them, and the table is where
+  the answer goes.
+- Acceptance: the PERM refresh on the DB copy no longer flags Cohere or Linear, and every other
+  match from 24c is unchanged (the spot-check diff proves it).
+
+### 25d — Docs ✅ 2026-10-09
+
+CLAUDE.md's "run the spot-check" line points at a script that now exists. SPEC §5.3 states that
+matching is token-equality **plus a reviewed rejection table**. PROGRESS: status, tracker,
+Decisions.
+
+Acceptance:
+- [x] `scripts/spot_check_registry.py` runs against the present snapshots and diffs a baseline — *25a: on the FY2026 Q3 PERM file, `--from-db --only-stripped` lists 27 matches. Cohere, Linear, Vanguard, ABS and the two `(S)` → Group-S rows are among them*
+- [x] No seed yields a single-letter or geography-only parenthetical variant — *25b: real-data diff −2 (both `(S)` → Group-S) +3 (Akkodis/Keysight/OmniVision Singapore → their US parents, via `singapore` joining GEO_TOKENS); fixture run unchanged*
+- [x] Cohere and Linear lose the PERM bit; every other 24c match is unchanged — *25c: the real-data spot-check diff is exactly 25b's five reviewed lines plus −Cohere, −Linear, −VANGUARD SOFTWARE; nothing else moved*
+- [x] `make verify` green on both stacks at every commit
+
+---
+
+## Slice 26 — All of software engineering, not just iOS / Java backend / AI-ML — **SUPERSEDED 2026-10-10 by slices 27–28**
+
+**Merge note (2026-10-10):** this plan and slices 27–28 were written in parallel sessions. 27–28 built
+it first, with differences: the SRE/DevOps family is `infra` (not `platform`); `mobile` and `games`
+were not added (no residue evidence); and **engineering management is in scope after all** — the
+owner reversed Q2 on 2026-10-10 and kept `eng-mgmt`. The widened board queries (26d) were tried in
+27d and withdrawn under the poll-budget kill criterion. The text below is kept as the record.
+
+**Why now:** the owner widened the target from "iOS / backend / AI-ML" to **every software
+engineering role**. This changes SPEC §1/§3, so it gets a dated Decisions entry. The code already
+reaches further than the spec says. What narrows it is **three specific places**, and each one is
+small:
+
+| Where scope is narrowed today | Effect | Already broad |
+|---|---|---|
+| **The category vocabulary** (`domain/vocabulary.py`, 7 categories, title-only) | A plain **"Senior Software Engineer"** matches *nothing* and lands in `categories = ''`. It is stored and listed, but no category filter, saved search, digest line or resume category-alignment can ever find it. This is the same for QA/SDET, data engineering, security, embedded/firmware, games and engineering management. React Native reads as `frontend`. German, Swedish and Norwegian titles (`Softwareentwickler`, `utvecklare`, `utvikler`) match nothing at all. | — |
+| **Role-scoped queries in three company-less sources**: `himalayas.py`, `mycareersfuture.py` and `bundesagentur.py` each run `ROLE_QUERIES` for iOS / Java backend / ML only | Generic SWE postings from those boards are never fetched | — |
+| **NAV's pre-filter** (`nav.py:135`) keeps only titles `extract_categories` recognises | NAV's scope *is* the vocabulary, so widening the vocabulary widens NAV automatically. That is both the benefit and the cost (one detail GET per kept title) | — |
+| — | — | The 10 per-company ATS types (81 seeds) ingest **every** posting. WWR, RemoteOK, JobTech, Arbeitnow and HN fetch everything. Only their *classification* is narrow |
+
+**Constraint that shapes the order:** `ingest_one` re-classifies a row only when its `content_hash`
+changes (`application/ingest.py:57`). **A vocabulary change therefore reaches no stored row on its
+own.** Without a backfill, the existing corpus would keep its old categories indefinitely.
+**Second constraint:** the 16:00 fire's poll already runs 30–45 min against a 50 min watchdog
+(2026-09-11: `secs=2091`). Bundesagentur (23d) and DraftKings have spent part of the headroom
+since then. Every added query on a detail-per-row source costs about 1 s per row.
+
+**Build order: 26a measure → 26b taxonomy + vocabulary → 26c reclassify backfill → 26d source
+queries → 26e UI → 26f docs.** One TDD loop per category family, `make verify`, one `slice-26x:`
+commit each, push.
+
+### 26a — Measure the residue first (script, no behaviour change)
+
+- `spot_check_classifier.py --from-db --residue`: open canonical jobs with `categories = ''`,
+  titles normalised (level tokens stripped) and grouped by frequency, top N, with a per-source
+  count. The vocabulary rows in 26b come **from this list, not from memory**. The same rule
+  applied to the registry matcher in slice 25.
+- Record the baseline in PROGRESS: residue share of open jobs, overall and per source. Also
+  record the latest `hourly_done secs=`.
+- Runs on the Mac (`beacon.db` is not in the container). Pure grouping goes in `domain/`, and
+  the script is wiring only.
+
+### 26b — The taxonomy and its vocabulary (domain, data)
+
+New `Category` members (**confirmed 2026-10-10**: Q1 yes, Q2 no, Q3 yes):
+
+| Code | Label | Seed keywords (phrases, per the bare-"ai" lesson) |
+|---|---|---|
+| `software` | Software (general) | software engineer, software developer, software development engineer, swe, programmer, softwareentwickler, mjukvaruutvecklare, systemutvecklare, systemutvikler, utvikler, utvecklare |
+| `mobile` | Mobile (cross-platform) | mobile engineer, mobile developer, react native, kotlin multiplatform |
+| `platform` | Platform / DevOps / SRE | devops, site reliability, sre, platform engineer, infrastructure engineer, cloud engineer, kubernetes (**moved out of `backend`**, see Q1) |
+| `data` | Data engineering | data engineer, analytics engineer, etl, data platform, dbt, airflow, spark engineer |
+| `qa` | QA / Test | qa engineer, sdet, test automation, quality engineer, test engineer, automation engineer |
+| `security` | Security | security engineer, application security, appsec, devsecops, product security |
+| `embedded` | Embedded / Firmware | embedded, firmware, rtos, fpga, embedded linux |
+| `games` | Games | game developer, game engineer, gameplay, unreal engine, unity developer |
+
+- The `software` category is multi-label like the rest: "Senior Software Engineer, iOS" is
+  `{ios, software}`. **No "only if nothing else matched" branch.** It stays a table row, so
+  `extract_categories` does not change.
+- **Homograph guards come before keywords:** bare `security`, `data`, `test`, `unity`, `spark`
+  and `platform` all head non-engineering titles. Each rejected bare form gets a
+  rejected-candidate row in `test_classifier.py`, the same treatment `cloud`/`aws` got.
+  Example: "Security Officer" and "Data Analyst" stay out.
+- `data scientist` joins `ai-ml`. `data analyst` stays out, since it is not SE.
+- One RED/GREEN/REFACTOR loop per family, parametrized rows appended. The LLM prompt reads the
+  enum, so it widens with no edit. Mirror the codes in `frontend/src/api/types.ts`.
+- `SCORING_VERSION` 2 → 3, because category alignment feeds the fit score and cached scores
+  must recompute.
+
+### 26c — Reclassify the stored corpus (use case + CLI)
+
+- `application/backfill.py`: `reclassify_all(jobs, classifier) -> ReclassifyReport`. It re-runs
+  the **heuristic** over every stored row and rewrites `categories`/`level` **only where they
+  changed**. It never touches `sponsor_tier` or `content_hash`, and it makes no LLM calls.
+  RED: a row ingested under the old vocabulary gains `software` after the run, and an unchanged
+  row is not written.
+- CLI: `python -m beacon.classify --reclassify`. The report gives
+  `scanned= changed= residue_before= residue_after=` plus per-category deltas.
+- Run it on a copy of `beacon.db` first. Then check the saved searches: with Q1 accepted, a
+  saved search on `backend` loses SRE/infra rows, so either add `platform` to it or record that
+  this is accepted.
+
+### 26d — Widen the role-scoped sources, within the poll budget
+
+- Add generic queries **alongside** the narrow ones. A generic "software engineer" query capped
+  at 60 newest rows would push iOS out of the cap, so the narrow queries stay.
+  - Himalayas: `software engineer`, `software developer`. These are list-only, so cheap.
+  - MyCareersFuture: `software engineer`. This costs ≤60 detail GETs, about 1 min.
+  - Bundesagentur: `Softwareentwickler`. This costs ≤100 detail GETs, about 2 min.
+- Fixture tests assert the query set, the same way the existing ones do.
+- **Budget gate:** after the first fire, `hourly_done secs=` must stay ≤ 2,700 (45 min, 5 min
+  under the watchdog). If it doesn't, drop the generic MCF/BA queries first and record that.
+- NAV widens through 26b. While NAV is unwired (no `BEACON_NAV_API_TOKEN`) this costs nothing.
+  Once wired, estimate the extra detail calls from the 26a residue before turning it on.
+- **Optional, measure-first:** JobTech pulls the latest `limit` ads across *all* occupations.
+  An occupation-field filter (Data/IT) would spend the same limit on SE instead of on nurses.
+  This is a fetch filter, not a tier claim, the same as Arbeitnow's.
+
+### 26e — UI
+
+- `CATEGORY_OPTIONS` grows from 7 to 15. DESIGN.md §2 specifies "7 category pills", so this is a
+  design change: the current 7 stay first (the profile categories), and the new ones follow in
+  the same pill row, which wraps. If 15 pills overflow at phone width, use a "More" disclosure.
+  DESIGN.md gets the amended line; no new colours.
+- Behavioural tests: picking a new pill puts `category=platform` in the URL and refetches.
+
+### 26f — Docs
+
+SPEC §1/§2/§3: "primary profile iOS / backend / AI-ML; **in scope: all software engineering**"
+(home-market sentence included). SPEC §6 gets the category list, and §5.2 the widened queries. CLAUDE.md is unchanged (the
+vocabulary rule already covers this). README gets the category list. PROGRESS gets the status
+and the tracker. The scope Decisions entry was logged 2026-10-10.
+
+**Owner decisions (answered 2026-10-10):**
+- **Q1 — Split `platform` (DevOps/SRE/infra) out of `backend`? → Yes.** With every
+  SE family present, a Backend filter that also returns SRE stops meaning anything. The cost is
+  that saved searches on `backend` narrow (see 26c).
+- **Q2 — Engineering management in scope? → No.** Software engineering here means IC roles. There
+  is no `eng-management` category, and EM titles stay unclassified unless they also name an
+  IC family.
+- **Q3 — Level pills stay Senior / Staff / Lead? → Yes, unchanged.** This slice widens
+  role families, not seniority.
+
+Acceptance:
+- [ ] 26a residue baseline recorded (share of open jobs with `categories = ''`, per source) and `hourly_done secs=` noted
+- [ ] Every new category has parametrized hit rows **and** rejected-candidate rows; existing classifier rows all still pass
+- [ ] `spot_check_classifier.py` on a live sample including the new families: category ≥ 90% correct (the slice-3 bar)
+- [ ] `--reclassify` on a DB copy: residue share drops, sponsor tiers are byte-identical before and after, and the report is in PROGRESS
+- [ ] First fire after 26d: new rows from the widened queries show in source health with `errors=0`, and `secs=` ≤ 2,700
+- [ ] New pills filter via the URL, and DESIGN.md is amended
+- [ ] `make verify` green on both stacks at every commit
+
+---
+
+## Slice 27 — All of engineering, not just iOS / backend / AI-ML — **DONE 2026-10-10 (27d's board queries withdrawn under the kill criterion)**
 
 **Asked for 2026-10-10:** widen the hunt from the SPEC §1/§3 profile (iOS primary; Backend, AI/ML
 secondary; Android/Flutter/Fullstack/Frontend tertiary) to every engineering role.
@@ -1411,8 +1865,8 @@ just can't see it.
   Himalayas and MyCareersFuture are steered by `ROLE_QUERIES` (iOS / Java backend / ML only),
   and JobTech takes the newest 100 ads of *all* Swedish jobs, unsteered.
 
-**So classification comes first and sources second.** 23a–23c buy ~2,000 visible engineering
-postings with no network, no key and no spend. 23d widens the two steered boards, which costs
+**So classification comes first and sources second.** 27a–27c buy ~2,000 visible engineering
+postings with no network, no key and no spend. 27d widens the two steered boards, which costs
 poll time against the 50-minute watchdog.
 
 **What does not change:**
@@ -1427,7 +1881,7 @@ poll time against the 50-minute watchdog.
 **Deviates from SPEC §1/§3 (Categories row) and DESIGN §2 (category pills).** Each gets a dated
 PROGRESS Decisions entry, and the SPEC rows are rewritten in the same slice.
 
-### 23a — The taxonomy (domain, pure; data, not branches)
+### 27a — The taxonomy (domain, pure; data, not branches)
 
 New `Category` values. Every keyword lives in the `CATEGORY_KEYWORDS` table in
 `domain/vocabulary.py`, with parametrized rows in `test_classifier`, and logic gets no new
@@ -1461,7 +1915,7 @@ branch:
   Either list the compounds as keywords, or record the residue and leave it alone. Don't relax
   the word boundary.
 
-### 23b — Backfill the residue (offline, no key, no spend)
+### 27b — Backfill the residue (offline, no key, no spend)
 
 `content_hash` gates re-classification, so new vocabulary never reaches a stored row on its own.
 
@@ -1474,7 +1928,7 @@ branch:
 - Run `backend/scripts/spot_check_classifier.py` before and after. Eyeball a random sample of 100
   newly-labelled rows per new category, and turn every misfire into a fixture row.
 
-### 23c — The UI and every reader of the vocabulary
+### 27c — The UI and every reader of the vocabulary
 
 - `frontend/src/jobs/taxonomy.ts` `CATEGORY_OPTIONS`: the seven current pills stay first in their
   current order. The new codes join behind a "More" overflow, so the DESIGN §2 pill row doesn't
@@ -1487,7 +1941,7 @@ branch:
   every category. Assert that the new categories round-trip through `to_job_filters` and the
   `match_reason` line.
 
-### 23d — Widen the steered boards (adapters; data edits plus a probe)
+### 27d — Widen the steered boards (adapters; data edits plus a probe)
 
 - Himalayas and MyCareersFuture `ROLE_QUERIES`: add `software engineer`, `data engineer`,
   `devops engineer`, `security engineer`, `embedded engineer`, `engineering manager`, `frontend
@@ -1510,28 +1964,28 @@ Acceptance:
 - [x] Every new category is filterable end to end. Pill → `?category=` → `/jobs` → saved search
       → digest line
 - [x] Resume scores re-compute under the bumped `scoring_version` (3)
-- [x] 23d: each kept query is backed by its probe note (in the adapter, beside the tuple)
-- [x] 23d: a full poll re-measured under the watchdog: the 12:00 fire on 2026-10-10 ran
+- [x] 27d: each kept query is backed by its probe note (in the adapter, beside the tuple)
+- [x] 27d: a full poll re-measured under the watchdog: the 12:00 fire on 2026-10-10 ran
       **2989s against 3000s** (`hourly_done exit=0 killed=0`), past the 45 min line. **Kill
       criterion applied:** the Himalayas and MyCareersFuture queries were withdrawn, their probe
       notes kept beside the tuples. The JobTech steer stays: it is still one 100-row request
 - [x] SPEC §1/§3 and DESIGN §2 rewritten, and PROGRESS has a dated Decisions entry
 - [x] `make verify` green on both stacks (1,070 backend, 122 frontend)
 
-**Kill criterion for 23d alone:** if widening the boards pushes a full poll past ~45 min, ship
-23a–23c and leave the board queries as they are. The classifier gain doesn't depend on them.
+**Kill criterion for 27d alone:** if widening the boards pushes a full poll past ~45 min, ship
+27a–27c and leave the board queries as they are. The classifier gain doesn't depend on them.
 
 ---
 
-## Slice 24 — `infra` splits out of `backend` — **DONE 2026-10-10**
+## Slice 28 — `infra` splits out of `backend` — **DONE 2026-10-10**
 
 **Asked for 2026-10-10:** split infra and backend. Since slice 3, `backend` has also held
-SRE, devops, platform, cloud, release and networking titles. Slice 23 kept that on purpose
+SRE, devops, platform, cloud, release and networking titles. Slice 27 kept that on purpose
 because existing saved searches and resume scores depended on it. Both live saved searches
 are `backend` + a language query (`java`, `python`), so an SRE or Kubernetes posting that
 mentions Python matches a backend alert.
 
-- **24a: vocabulary.** New `Category.INFRA = "infra"`. Move infrastructure, infra, site
+- **28a: vocabulary.** New `Category.INFRA = "infra"`. Move infrastructure, infra, site
   reliability, sre, devops, kubernetes, networking, systems engineer, platform engineer, cloud
   engineer and release engineer from `BACKEND` to `INFRA`. Add the spot-check misses: ci/cd,
   system(s) administrator, sysadmin, storage engineer, network engineer, reliability
@@ -1539,14 +1993,14 @@ mentions Python matches a backend alert.
   databases, distributed systems and kernel stay `backend`. A title naming both (e.g. "Backend
   Engineer, Infrastructure") carries both.
   - The existing `backend-sre/infra/networking/platform-eng/cloud-engineer/release` rows
-    become `infra-*`. They are reversed with a Decisions entry, as slice 23 did with its
+    become `infra-*`. They are reversed with a Decisions entry, as slice 27 did with its
     reversed rows, not deleted.
   - Fold in the other 2026-10-10 spot-check miss: "Business Intelligence Developer" → `data`.
-- **24b: relabel.** `classify --reclassify backend` re-runs the classifier over rows that
+- **28b: relabel.** `classify --reclassify backend` re-runs the classifier over rows that
   carry a category and rewrites only rows whose result differs and is non-empty.
   `llm_usage` is empty, so every stored label is heuristic and re-running the heuristic loses
   nothing. Back up first.
-- **24c: UI and scores.** Add an `Infra` pill to the "More" row. Bump `SCORING_VERSION` to 4,
+- **28c: UI and scores.** Add an `Infra` pill to the "More" row. Bump `SCORING_VERSION` to 4,
   because a resume's category set now reads differently.
 
 Acceptance:
@@ -1557,7 +2011,7 @@ Acceptance:
 - [x] **Revised (Decisions 2026-10-10 infra-split):** 15 open rows lose their last category, and that is right. A stale label is a
       wrong one, and a fresh ingest of "Finance Systems Engineer" reads `''`. Two real misses in
       that set got keywords (software/AI systems engineer). Everything else that moves goes to
-      infra or picks up the slice-23 categories that 23b's ''-only backfill never reached
+      infra or picks up the slice-27 categories that 27b's ''-only backfill never reached
 - [x] `?category=infra` works end to end: pill test, saved-search test (a backend search no
       longer counts infra jobs)
 - [x] `make verify` green (1,099 backend, 123 frontend); PROGRESS Decisions entry; SPEC §3 /
@@ -1569,20 +2023,20 @@ Open `backend` went 956 → **365** and `infra` is **471**, with 18 carrying bot
 
 ---
 
-## Slice 25 — The poll gets a time budget — **DONE 2026-10-10**
+## Slice 29 — The poll gets a time budget — **DONE 2026-10-10**
 
 **Why:** the 2026-10-10 12:00 poll ran `secs=2989` against a 3000s watchdog. Withdrawing slice
-23's board queries buys a few minutes back, but the poll had already grown from 2091s
+27's board queries buys a few minutes back, but the poll had already grown from 2091s
 (2026-09-11) with the corpus. Every source polls **sequentially**, so wall time is the *sum*
 of every source's time. `PoliteClient` already holds a lock per host, so its 1 rps limit is per
 host. Sources on different hosts could overlap without being any less polite. The log has no
 per-source timing, so where the 50 minutes go is a guess.
 
-- **25a: measure.** `secs=` on every `poll source=…` line (success and failure: a timing-out
+- **29a: measure.** `secs=` on every `poll source=…` line (success and failure: a timing-out
   host is exactly what costs minutes), carried on `IngestResult` and printed to the out-log.
   The clock is injected, never read inside the use case's logic. Then one full poll through the
   production path (`launchctl kickstart com.beacon.digest`: lock, watchdog, fallback digest).
-- **25b: budget.** Driven by 25a's numbers. Expected: run ATS companies and company-less
+- **29b: budget.** Driven by 29a's numbers. Expected: run ATS companies and company-less
   sources concurrently under a semaphore. Same-host requests still serialise on
   `PoliteClient`'s per-host lock, so wall time tends to the slowest *host*, not the sum. SQLite
   stays on one connection in one event loop; each repo call is synchronous, so no two writes
@@ -1593,7 +2047,7 @@ Acceptance:
 - [x] A measured full poll, with the slowest sources named in PROGRESS. 13:29 sequential:
       **1758s**; SmartRecruiters 704s (Grab 469, Canva 150, Carousell 86, all on one host),
       Rippling 345s, HN 303s, MyCareersFuture 97s
-- [x] 25b: a full poll ≤ **25 min** through the production path: 14:00 concurrent run
+- [x] 29b: a full poll ≤ **25 min** through the production path: 14:00 concurrent run
       **757s** (`hourly_done exit=0 killed=0`). 9,440 fetched against 9,441 sequential, no
       `database is locked`, no 429. 1 rps per host holds through the per-host lock
 - [x] `make verify` green (1,107 backend, 123 frontend); PROGRESS Decisions entry
@@ -1603,7 +2057,7 @@ detail page per posting every poll, about 670 requests at 1 rps. Skipping the de
 postings already stored would cut it to minutes, but it needs the adapter to know what is
 stored, which is a port change.
 
-**Kill criterion for 25b:** if concurrency produces any `database is locked`, a 429 from a
+**Kill criterion for 29b:** if concurrency produces any `database is locked`, a 429 from a
 board, or a different `fetched=` total for the same sources, revert to sequential and cap
 MyCareersFuture's detail fetches instead.
 

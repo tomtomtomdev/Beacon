@@ -5,23 +5,21 @@
        launchctl bootout  gui/$UID/com.beacon.digest 2>/dev/null
        launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.beacon.digest.plist
 
-     Three fires a day — 08:45, 12:00 and 16:30 local time (Asia/Jakarta on this box; launchd
-     reads the system zone, which is also config.LOCAL_TZ). Each fire polls the sources and
-     pushes the Telegram digest, then exits: no RunAtLoad, no KeepAlive, nothing to kill.
+     One fire a day — 16:00 local time (Asia/Jakarta on this box; launchd reads the system
+     zone, which is also config.LOCAL_TZ). The fire polls the sources and pushes the Telegram
+     digest, then exits: no RunAtLoad, no KeepAlive, nothing to kill.
      deploy/hourly-digest.sh holds the lock and watchdog that cap a run.
 
-     Why three and not eight: a full poll of ~59 pollable seeds at 1 rps runs 30-45 min, so the
-     old :30-past-every-hour window spent most of the day polling and the lock did real work
-     skipping collisions (changed 2026-09-11). The gaps here are 3h15/4.5h against a 50 min
-     watchdog, so a fire can never meet the next one. Nothing is lost to a skipped or killed
-     run either way: application/notify.py writes seen_matches only AFTER the notifier
-     succeeds, so unnotified matches roll into the next digest.
+     Why one: narrowed from three fires (08:00/12:00/16:30) on 2026-09-30 at the user's
+     request — one digest a day, late afternoon. A full poll runs ~13 min concurrent (slice 27;
+     29 min sequential) against a 50 min watchdog, so a fire can never meet the next one. Nothing
+     is lost to a skipped or killed run either way: application/notify.py writes seen_matches
+     only AFTER the notifier succeeds, so unnotified matches roll into the next digest.
 
-     08:45 is the fire most likely to land late. A LaunchAgent lives in the user's GUI domain,
-     so it only fires while logged in, and a sleeping Mac is not woken. launchd runs a missed
-     fire once on login/wake (they coalesce), so logging in at 08:20 gets the 08:00 fire at
-     08:20. The box now shuts down 06:00 and powers on 08:45 (pmset repeat, set 2026-09-22),
-     so this fire lands at power-on and still needs a login to actually run.
+     A LaunchAgent lives in the user's GUI domain, so it only fires while logged in, and a
+     sleeping Mac is not woken. launchd runs a missed fire once on login/wake (they coalesce),
+     so waking the Mac at 16:20 gets the 16:00 fire at 16:20.
+     `sudo pmset repeat wakeorpoweron MTWRFSU 15:59:00` if it must be guaranteed.
 
      TCC: keep the checkout OUT of ~/Documents, ~/Desktop and ~/Downloads. A launchd-started
      job has no access there and dies before it starts — `Operation not permitted`, exit 126
@@ -45,9 +43,7 @@
     <string>/Users/tomtomtomtom/Projects/beacon</string>
     <key>StartCalendarInterval</key>
     <array>
-        <dict><key>Hour</key><integer>8</integer><key>Minute</key><integer>45</integer></dict>
-        <dict><key>Hour</key><integer>12</integer><key>Minute</key><integer>0</integer></dict>
-        <dict><key>Hour</key><integer>16</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Hour</key><integer>16</integer><key>Minute</key><integer>0</integer></dict>
     </array>
     <key>StandardOutPath</key>
     <string>/tmp/beacon.digest.out.log</string>

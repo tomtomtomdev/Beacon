@@ -716,7 +716,7 @@ async def test_companyless_poll_sweeps_by_source_across_all_companies() -> None:
     assert jobs.sweeps == [("hn", None, {"1", "2"}, NOW, CLOSE_AFTER_MISSES)]
 
 
-# --- per-source timing (slice 25a) --------------------------------------------------------
+# --- per-source timing (slice 29a) --------------------------------------------------------
 
 
 class SteppingClock:
@@ -790,7 +790,7 @@ async def test_the_poll_line_carries_secs(caplog: pytest.LogCaptureFixture) -> N
     )
 
 
-# --- the poll overlaps its sources (slice 25b) ---------------------------------------------
+# --- the poll overlaps its sources (slice 29b) ---------------------------------------------
 # Same-host requests still serialise on PoliteClient's per-host lock, so overlapping sources
 # costs no politeness; wall time stops being the sum of every source.
 
