@@ -129,6 +129,26 @@ def test_upgrade_reclassifies_only_the_empty_category_residue(
     assert rows["C"] == ("", "unspecified")  # residue the LLM could not resolve → left as-is
 
 
+def test_keyless_upgrade_relabels_the_residue_with_the_current_vocabulary(
+    db: sqlite3.Connection, company_id: int
+) -> None:
+    """Slice 23b: with no API key the classifier is the bare heuristic, so --upgrade-residue
+    applies a widened vocabulary to rows an older one left empty — offline, no LLM spend."""
+    repo = SqliteJobRepo(db)
+    repo.upsert(
+        company_id, _job("S", "Senior Data Engineer", "..."), seen_at=POLL, classification=EMPTY
+    )
+    repo.upsert(
+        company_id, _job("C", "Corporate Counsel", "..."), seen_at=POLL, classification=EMPTY
+    )
+
+    upgraded = upgrade_ambiguous_classifications(repo, HeuristicClassifier())
+
+    rows = dict(db.execute("SELECT external_id, categories FROM jobs").fetchall())
+    assert upgraded == 1
+    assert rows == {"S": "data", "C": ""}
+
+
 def test_upgrade_ignores_never_classified_rows(db: sqlite3.Connection, company_id: int) -> None:
     repo = SqliteJobRepo(db)
     repo.upsert(company_id, _job("D", "Software Engineer", "..."), seen_at=POLL)  # categories NULL

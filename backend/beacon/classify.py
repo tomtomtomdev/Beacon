@@ -1,8 +1,10 @@
 """CLI composition root: python -m beacon.classify [--upgrade-residue].
 
 Wiring only. Default mode classifies every job never classified (categories IS NULL), e.g.
-rows ingested before the classifier existed; --upgrade-residue instead re-runs the LLM over
-the empty-category residue (categories = '') to resolve titles the heuristic couldn't.
+rows ingested before the classifier existed; --upgrade-residue instead re-runs the classifier
+over the empty-category residue (categories = ''): with a key, the LLM resolves titles the
+heuristic couldn't; without one, the heuristic re-reads them with today's vocabulary — the
+offline backfill after a vocabulary widening (slice 23b).
 
 The classifier is heuristic-only until an Anthropic key is set, else a budget-gated tiered
 classifier — so a plain backfill works fully offline, and the LLM upgrade needs the key.
@@ -52,7 +54,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--upgrade-residue",
         action="store_true",
-        help="re-run the LLM over empty-category rows instead of classifying NULL rows",
+        help=(
+            "re-run the classifier over empty-category rows instead of classifying NULL rows "
+            "(heuristic-only without a key: applies a widened vocabulary offline)"
+        ),
     )
     args = parser.parse_args(argv)
 

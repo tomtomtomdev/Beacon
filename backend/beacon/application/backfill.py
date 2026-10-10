@@ -18,8 +18,10 @@ def backfill_classifications(jobs: JobRepo, classifier: Classifier) -> int:
 
 
 def upgrade_ambiguous_classifications(jobs: JobRepo, classifier: Classifier) -> int:
-    """Re-run the (LLM-backed) classifier over the empty-category residue and rewrite only
-    the rows it actually improved (a now-non-empty category set); return that improved count.
+    """Re-run the classifier over the empty-category residue and rewrite only the rows it
+    actually improved (a now-non-empty category set); return that improved count. Keyless,
+    the classifier is the bare heuristic, which makes this the offline backfill after a
+    vocabulary widening (slice 23b) — content_hash would otherwise keep old rows unread.
 
     This is the slice-9 catch-up for the pre-LLM backlog — rows classified '' by the earlier
     heuristic-only ingests. Distinct from backfill_classifications (which handles NULL, i.e.
