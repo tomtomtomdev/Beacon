@@ -1740,7 +1740,7 @@ commit each, push.
 
 ### 26b — The taxonomy and its vocabulary (domain, data)
 
-New `Category` members. **Proposed; the owner confirms before the RED tests:**
+New `Category` members (**confirmed 2026-10-10**: Q1 yes, Q2 no, Q3 yes):
 
 | Code | Label | Seed keywords (phrases, per the bare-"ai" lesson) |
 |---|---|---|
@@ -1752,7 +1752,6 @@ New `Category` members. **Proposed; the owner confirms before the RED tests:**
 | `security` | Security | security engineer, application security, appsec, devsecops, product security |
 | `embedded` | Embedded / Firmware | embedded, firmware, rtos, fpga, embedded linux |
 | `games` | Games | game developer, game engineer, gameplay, unreal engine, unity developer |
-| `eng-management` | Eng. management | engineering manager, head of engineering, vp engineering, director of engineering (see Q2) |
 
 - The `software` category is multi-label like the rest: "Senior Software Engineer, iOS" is
   `{ios, software}`. **No "only if nothing else matched" branch.** It stays a table row, so
@@ -1798,9 +1797,9 @@ New `Category` members. **Proposed; the owner confirms before the RED tests:**
 
 ### 26e — UI
 
-- `CATEGORY_OPTIONS` grows from 7 to 16. DESIGN.md §2 specifies "7 category pills", so this is a
+- `CATEGORY_OPTIONS` grows from 7 to 15. DESIGN.md §2 specifies "7 category pills", so this is a
   design change: the current 7 stay first (the profile categories), and the new ones follow in
-  the same pill row, which wraps. If 16 pills overflow at phone width, use a "More" disclosure.
+  the same pill row, which wraps. If 15 pills overflow at phone width, use a "More" disclosure.
   DESIGN.md gets the amended line; no new colours.
 - Behavioural tests: picking a new pill puts `category=platform` in the URL and refetches.
 
@@ -1808,17 +1807,17 @@ New `Category` members. **Proposed; the owner confirms before the RED tests:**
 
 SPEC §1/§2/§3: "primary profile iOS / backend / AI-ML; **in scope: all software engineering**"
 (home-market sentence included). SPEC §6 gets the category list, and §5.2 the widened queries. CLAUDE.md is unchanged (the
-vocabulary rule already covers this). README gets the category list. PROGRESS gets the status,
-the tracker and a Decisions entry (scope widening, Q1–Q3 answers).
+vocabulary rule already covers this). README gets the category list. PROGRESS gets the status
+and the tracker. The scope Decisions entry was logged 2026-10-10.
 
-**Open questions for the owner (answer before 26b):**
-- **Q1 — Split `platform` (DevOps/SRE/infra) out of `backend`?** *Recommended: yes.* With every
+**Owner decisions (answered 2026-10-10):**
+- **Q1 — Split `platform` (DevOps/SRE/infra) out of `backend`? → Yes.** With every
   SE family present, a Backend filter that also returns SRE stops meaning anything. The cost is
   that saved searches on `backend` narrow (see 26c).
-- **Q2 — Engineering management in scope?** *Recommended: yes*, as its own category, so it is
-  filterable and off by default in saved searches. Leave it out if "software engineering"
-  means IC roles only.
-- **Q3 — Level pills stay Senior / Staff / Lead?** *Recommended: unchanged.* This slice widens
+- **Q2 — Engineering management in scope? → No.** Software engineering here means IC roles. There
+  is no `eng-management` category, and EM titles stay unclassified unless they also name an
+  IC family.
+- **Q3 — Level pills stay Senior / Staff / Lead? → Yes, unchanged.** This slice widens
   role families, not seniority.
 
 Acceptance:
