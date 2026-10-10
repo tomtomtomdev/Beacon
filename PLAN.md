@@ -1702,6 +1702,136 @@ Acceptance:
 
 ---
 
+## Slice 26 — All of software engineering, not just iOS / Java backend / AI-ML — **PLANNED 2026-10-10**
+
+**Why now:** the owner widened the target from "iOS / backend / AI-ML" to **every software
+engineering role**. This changes SPEC §1/§3, so it gets a dated Decisions entry. The code already
+reaches further than the spec says. What narrows it is **three specific places**, and each one is
+small:
+
+| Where scope is narrowed today | Effect | Already broad |
+|---|---|---|
+| **The category vocabulary** (`domain/vocabulary.py`, 7 categories, title-only) | A plain **"Senior Software Engineer"** matches *nothing* and lands in `categories = ''`. It is stored and listed, but no category filter, saved search, digest line or resume category-alignment can ever find it. This is the same for QA/SDET, data engineering, security, embedded/firmware, games and engineering management. React Native reads as `frontend`. German, Swedish and Norwegian titles (`Softwareentwickler`, `utvecklare`, `utvikler`) match nothing at all. | — |
+| **Role-scoped queries in three company-less sources**: `himalayas.py`, `mycareersfuture.py` and `bundesagentur.py` each run `ROLE_QUERIES` for iOS / Java backend / ML only | Generic SWE postings from those boards are never fetched | — |
+| **NAV's pre-filter** (`nav.py:135`) keeps only titles `extract_categories` recognises | NAV's scope *is* the vocabulary, so widening the vocabulary widens NAV automatically. That is both the benefit and the cost (one detail GET per kept title) | — |
+| — | — | The 10 per-company ATS types (81 seeds) ingest **every** posting. WWR, RemoteOK, JobTech, Arbeitnow and HN fetch everything. Only their *classification* is narrow |
+
+**Constraint that shapes the order:** `ingest_one` re-classifies a row only when its `content_hash`
+changes (`application/ingest.py:57`). **A vocabulary change therefore reaches no stored row on its
+own.** Without a backfill, the existing corpus would keep its old categories indefinitely.
+**Second constraint:** the 16:00 fire's poll already runs 30–45 min against a 50 min watchdog
+(2026-09-11: `secs=2091`). Bundesagentur (23d) and DraftKings have spent part of the headroom
+since then. Every added query on a detail-per-row source costs about 1 s per row.
+
+**Build order: 26a measure → 26b taxonomy + vocabulary → 26c reclassify backfill → 26d source
+queries → 26e UI → 26f docs.** One TDD loop per category family, `make verify`, one `slice-26x:`
+commit each, push.
+
+### 26a — Measure the residue first (script, no behaviour change)
+
+- `spot_check_classifier.py --from-db --residue`: open canonical jobs with `categories = ''`,
+  titles normalised (level tokens stripped) and grouped by frequency, top N, with a per-source
+  count. The vocabulary rows in 26b come **from this list, not from memory**. The same rule
+  applied to the registry matcher in slice 25.
+- Record the baseline in PROGRESS: residue share of open jobs, overall and per source. Also
+  record the latest `hourly_done secs=`.
+- Runs on the Mac (`beacon.db` is not in the container). Pure grouping goes in `domain/`, and
+  the script is wiring only.
+
+### 26b — The taxonomy and its vocabulary (domain, data)
+
+New `Category` members. **Proposed; the owner confirms before the RED tests:**
+
+| Code | Label | Seed keywords (phrases, per the bare-"ai" lesson) |
+|---|---|---|
+| `software` | Software (general) | software engineer, software developer, software development engineer, swe, programmer, softwareentwickler, mjukvaruutvecklare, systemutvecklare, systemutvikler, utvikler, utvecklare |
+| `mobile` | Mobile (cross-platform) | mobile engineer, mobile developer, react native, kotlin multiplatform |
+| `platform` | Platform / DevOps / SRE | devops, site reliability, sre, platform engineer, infrastructure engineer, cloud engineer, kubernetes (**moved out of `backend`**, see Q1) |
+| `data` | Data engineering | data engineer, analytics engineer, etl, data platform, dbt, airflow, spark engineer |
+| `qa` | QA / Test | qa engineer, sdet, test automation, quality engineer, test engineer, automation engineer |
+| `security` | Security | security engineer, application security, appsec, devsecops, product security |
+| `embedded` | Embedded / Firmware | embedded, firmware, rtos, fpga, embedded linux |
+| `games` | Games | game developer, game engineer, gameplay, unreal engine, unity developer |
+| `eng-management` | Eng. management | engineering manager, head of engineering, vp engineering, director of engineering (see Q2) |
+
+- The `software` category is multi-label like the rest: "Senior Software Engineer, iOS" is
+  `{ios, software}`. **No "only if nothing else matched" branch.** It stays a table row, so
+  `extract_categories` does not change.
+- **Homograph guards come before keywords:** bare `security`, `data`, `test`, `unity`, `spark`
+  and `platform` all head non-engineering titles. Each rejected bare form gets a
+  rejected-candidate row in `test_classifier.py`, the same treatment `cloud`/`aws` got.
+  Example: "Security Officer" and "Data Analyst" stay out.
+- `data scientist` joins `ai-ml`. `data analyst` stays out, since it is not SE.
+- One RED/GREEN/REFACTOR loop per family, parametrized rows appended. The LLM prompt reads the
+  enum, so it widens with no edit. Mirror the codes in `frontend/src/api/types.ts`.
+- `SCORING_VERSION` 2 → 3, because category alignment feeds the fit score and cached scores
+  must recompute.
+
+### 26c — Reclassify the stored corpus (use case + CLI)
+
+- `application/backfill.py`: `reclassify_all(jobs, classifier) -> ReclassifyReport`. It re-runs
+  the **heuristic** over every stored row and rewrites `categories`/`level` **only where they
+  changed**. It never touches `sponsor_tier` or `content_hash`, and it makes no LLM calls.
+  RED: a row ingested under the old vocabulary gains `software` after the run, and an unchanged
+  row is not written.
+- CLI: `python -m beacon.classify --reclassify`. The report gives
+  `scanned= changed= residue_before= residue_after=` plus per-category deltas.
+- Run it on a copy of `beacon.db` first. Then check the saved searches: with Q1 accepted, a
+  saved search on `backend` loses SRE/infra rows, so either add `platform` to it or record that
+  this is accepted.
+
+### 26d — Widen the role-scoped sources, within the poll budget
+
+- Add generic queries **alongside** the narrow ones. A generic "software engineer" query capped
+  at 60 newest rows would push iOS out of the cap, so the narrow queries stay.
+  - Himalayas: `software engineer`, `software developer`. These are list-only, so cheap.
+  - MyCareersFuture: `software engineer`. This costs ≤60 detail GETs, about 1 min.
+  - Bundesagentur: `Softwareentwickler`. This costs ≤100 detail GETs, about 2 min.
+- Fixture tests assert the query set, the same way the existing ones do.
+- **Budget gate:** after the first fire, `hourly_done secs=` must stay ≤ 2,700 (45 min, 5 min
+  under the watchdog). If it doesn't, drop the generic MCF/BA queries first and record that.
+- NAV widens through 26b. While NAV is unwired (no `BEACON_NAV_API_TOKEN`) this costs nothing.
+  Once wired, estimate the extra detail calls from the 26a residue before turning it on.
+- **Optional, measure-first:** JobTech pulls the latest `limit` ads across *all* occupations.
+  An occupation-field filter (Data/IT) would spend the same limit on SE instead of on nurses.
+  This is a fetch filter, not a tier claim, the same as Arbeitnow's.
+
+### 26e — UI
+
+- `CATEGORY_OPTIONS` grows from 7 to 16. DESIGN.md §2 specifies "7 category pills", so this is a
+  design change: the current 7 stay first (the profile categories), and the new ones follow in
+  the same pill row, which wraps. If 16 pills overflow at phone width, use a "More" disclosure.
+  DESIGN.md gets the amended line; no new colours.
+- Behavioural tests: picking a new pill puts `category=platform` in the URL and refetches.
+
+### 26f — Docs
+
+SPEC §1/§2/§3: "primary profile iOS / backend / AI-ML; **in scope: all software engineering**"
+(home-market sentence included). SPEC §6 gets the category list, and §5.2 the widened queries. CLAUDE.md is unchanged (the
+vocabulary rule already covers this). README gets the category list. PROGRESS gets the status,
+the tracker and a Decisions entry (scope widening, Q1–Q3 answers).
+
+**Open questions for the owner (answer before 26b):**
+- **Q1 — Split `platform` (DevOps/SRE/infra) out of `backend`?** *Recommended: yes.* With every
+  SE family present, a Backend filter that also returns SRE stops meaning anything. The cost is
+  that saved searches on `backend` narrow (see 26c).
+- **Q2 — Engineering management in scope?** *Recommended: yes*, as its own category, so it is
+  filterable and off by default in saved searches. Leave it out if "software engineering"
+  means IC roles only.
+- **Q3 — Level pills stay Senior / Staff / Lead?** *Recommended: unchanged.* This slice widens
+  role families, not seniority.
+
+Acceptance:
+- [ ] 26a residue baseline recorded (share of open jobs with `categories = ''`, per source) and `hourly_done secs=` noted
+- [ ] Every new category has parametrized hit rows **and** rejected-candidate rows; existing classifier rows all still pass
+- [ ] `spot_check_classifier.py` on a live sample including the new families: category ≥ 90% correct (the slice-3 bar)
+- [ ] `--reclassify` on a DB copy: residue share drops, sponsor tiers are byte-identical before and after, and the report is in PROGRESS
+- [ ] First fire after 26d: new rows from the widened queries show in source health with `errors=0`, and `secs=` ≤ 2,700
+- [ ] New pills filter via the URL, and DESIGN.md is amended
+- [ ] `make verify` green on both stacks at every commit
+
+---
+
 ## Cross-cutting rules
 
 - Every network adapter is tested against recorded fixtures only; live calls happen solely in manual acceptance checks
