@@ -13,9 +13,10 @@ It exists to answer one question that no job board answers directly: *which seni
 ## Status
 
 Shipped in vertical slices. Current: **slices 0–22 done.** Running against a live
-corpus — **16,810 postings, of which 9,130 are open and canonical**, from 70 seeded companies across
-16 source adapters (15 of which have landed jobs). Corpus figures measured 2026-09-18; the company
-and adapter counts are carried from 2026-09-15 and were not re-measured.
+corpus — **24,478 postings, of which 8,918 are open and canonical**, from 70 seeded companies plus
+the company-less boards, across 16 source adapters (15 of which have landed jobs; NAV has none).
+All five sponsor registries (UK, US H-1B, NL IND, IE, CA) have been ingested since 2026-09-18.
+Figures measured 2026-10-10.
 
 | # | Slice | Status |
 |---|---|---|
@@ -52,7 +53,7 @@ Adding a job source = a new adapter + fixture tests + one seed row, with **zero*
 ## Prerequisites
 
 - Python 3.12+ and [`uv`](https://docs.astral.sh/uv/)
-- Node.js 18+ and npm
+- Node.js 20.19+ (or 22.12+) and npm — Vite 8's floor. nvm works; `scripts/node-path.sh` puts it on PATH for `make` and `run.sh`
 
 ## Setup
 
@@ -65,12 +66,27 @@ make verify         # full gate: ruff + mypy + pytest, then eslint + tsc + vites
 
 ## Running
 
-**1. Ingest jobs** (polls seeded companies, upserts into `beacon.db`):
+**One step:** `./run.sh` (or `make run`). It serves the cached `beacon.db` right away and polls
+the sources in the background (log in `.ingest.log`). Before serving it:
+
+- ingests any registry snapshot in `data/registries/` that is new or stale
+  (`maintenance refresh-registries-if-needed`), and names any snapshot that is missing, with
+  its download URL;
+- sends a launch digest.
+
+A closing digest goes out on Ctrl-C. On the very first run, with no `beacon.db` yet, the poll
+blocks until it finishes. Flags: `--no-ingest`, `--wait-ingest`, `--setup`, `--help`.
+
+The same pieces, by hand:
+
+**1. Ingest jobs** (polls the seeded companies and company-less boards, upserts into `beacon.db`, then sends the digest):
 
 ```bash
 cd backend
-uv run python -m beacon.ingest                    # all active seeded companies
-uv run python -m beacon.ingest --company tines     # just one, by ats_slug
+uv run python -m beacon.ingest                    # everything active
+uv run python -m beacon.ingest --company tines     # just one ATS company, by ats_slug
+uv run python -m beacon.ingest --source hn         # just one company-less source
+                                                   # (hn/jobtech/remoteok/weworkremotely/himalayas/mycareersfuture/nav)
 ```
 
 **2. Serve the API** (port 8000):
@@ -78,11 +94,19 @@ uv run python -m beacon.ingest --company tines     # just one, by ats_slug
 ```bash
 cd backend
 uv run uvicorn beacon.api.app:create_app --factory --port 8000
-# GET /healthz  → {"status":"ok"}
-# GET /jobs?q=&country=&posted_since=&limit=&offset=
-# GET /companies/health  → source-health rollup + per-company rows
-# GET /registries        → sponsor-registry coverage (incl. never-ingested)
 ```
+
+| Route | What |
+|---|---|
+| `GET /healthz` | `{"status":"ok"}` |
+| `GET /jobs` | filtered listing: `q`, `country`, `category`, `level`, `sponsor_tier`, `status`, `posted_since`, `include_closed`, `sort` (`tier`/`date`/`match`), `resume`, `limit` (≤200), `offset` |
+| `GET /jobs/{id}` · `PATCH /jobs/{id}/status` · `POST /jobs/{id}/match` | one posting, its seen/hidden/starred status, an on-demand fit score |
+| `GET/POST /searches` · `DELETE /searches/{id}` | saved searches that drive the digest |
+| `GET /countries` · `GET /markets` | country visa reference; per-country open-job counts, target and other markets |
+| `GET /companies/health` | source-health rollup + per-company rows |
+| `GET /registries` | sponsor-registry coverage, including never-ingested registers |
+| `GET/POST /resumes` · `PUT /resumes/{id}/active` · `DELETE /resumes/{id}` | resume upload for fit scoring |
+| `GET/PUT /settings/telegram` · `POST /settings/telegram/test` | digest credentials, plus a test send |
 
 **3. Run the frontend** (Vite dev server; proxies the API routes to `localhost:8000`):
 
@@ -90,6 +114,20 @@ uv run uvicorn beacon.api.app:create_app --factory --port 8000
 cd frontend
 npm run dev
 ```
+
+**One-off CLIs** (all in `backend/`, all wiring only):
+
+| Command | What |
+|---|---|
+| `python -m beacon.notify` | send the current digest without polling |
+| `python -m beacon.refresh [--flag NAME --evidence TEXT]` | rematch seeds against the registry snapshots, or hand-flag one company as a manual sponsor |
+| `python -m beacon.classify [--upgrade-residue]` | classify rows that have never been classified; with `--upgrade-residue`, re-run the LLM on rows left with no category (needs a key) |
+| `python -m beacon.relocate` | re-parse the location of rows with no country (idempotent) |
+| `python -m beacon.retier` | move home-market rows onto their current tier (idempotent) |
+| `python -m beacon.maintenance {refresh-registries,refresh-registries-if-needed,backup,probe}` | the launchd jobs, run by hand |
+
+Spot-check scripts for manual acceptance live in `backend/scripts/` (`spot_check_registry.py`,
+`spot_check_health.py`, `spot_check_classifier.py`, …).
 
 ### Source health & recovery
 
@@ -107,7 +145,10 @@ Beside it, **registry coverage** (`GET /registries`) reports which sponsor regis
 have a snapshot here, how old it is, how many rows it held and how many companies it matched —
 and names the ones that have **never been ingested**. A missing snapshot is skipped silently by
 `refresh.py`, so without this it is invisible: the UK register was named in the spec as ingested
-for sixteen slices while no `uk_sponsors.csv` had ever been downloaded onto this box.
+for sixteen slices while no `uk_sponsors.csv` had ever been downloaded onto this box. (It, and
+the US and NL snapshots, were downloaded and ingested on 2026-09-18.) Snapshots are hand
+downloads into `data/registries/`; the US H-1B file has to be converted from XLSX to CSV, and the
+NL register from the page's HTML to CSV. `PROGRESS.md` records both steps.
 
 **Recovering a moved board is a data edit, no code:** a company that switched ATS provider or
 renamed its slug just needs its row in `seeds/companies.csv` updated —
@@ -128,8 +169,18 @@ All env reads live in one place (`beacon/config.py`). Defaults work out of the b
 
 | Env var | Default | Purpose |
 |---|---|---|
-| `BEACON_DB_PATH` | `./beacon.db` | SQLite database file |
-| `BEACON_SEEDS_PATH` | `./seeds/companies.csv` | Curated company seed list |
+| `BEACON_DB_PATH` | `<repo>/beacon.db` | SQLite database file |
+| `BEACON_SEEDS_PATH` | `<repo>/seeds/companies.csv` | Curated company seed list |
+| `BEACON_BACKUPS_PATH` | `<repo>/backups` | Where `maintenance backup` writes timestamped copies |
+| `BEACON_{UK,IND,H1B,IE,CA}_REGISTRY_PATH` | `<repo>/data/registries/{uk_sponsors,ind_sponsors,h1b_lca,ie_permits,ca_lmia}.csv` | Sponsor-registry snapshots |
+| `BEACON_TELEGRAM_BOT_TOKEN` / `BEACON_TELEGRAM_CHAT_ID` | unset → digest prints to stdout | Fallback Telegram creds; the Settings UI's creds take precedence |
+| `BEACON_ANTHROPIC_API_KEY` | unset → heuristic-only | Enables the LLM fallback classifier (slice 9, parked) |
+| `BEACON_LLM_MODEL` | `claude-haiku-4-5-20251001` | Model for the LLM classifier |
+| `BEACON_LLM_MONTHLY_BUDGET` | `500` | Hard cap on LLM calls per local month |
+| `BEACON_NAV_API_TOKEN` | unset → NAV source not wired | NAV Norway feed token |
+
+The scripts in `deploy/` also read `BEACON_UV`, `BEACON_HOURLY_TIMEOUT` (default 3000 s) and `BEACON_HOURLY_LOCK`.
+Day and month boundaries use `Asia/Jakarta` (`config.LOCAL_TZ`); everything is stored in UTC.
 
 ### Scheduling
 
@@ -137,17 +188,20 @@ Four launchd agents, all installed from `deploy/`:
 
 | Agent | When | What |
 |---|---|---|
-| `com.beacon.digest` | 08:00, 12:00, 16:30 local | One fire of `deploy/hourly-digest.sh`: poll → dedup → Telegram digest, then exit. Lock-guarded (a fire that finds the previous one still polling skips) and capped at 50 min, after which the digest still goes out via `python -m beacon.notify`. A full poll runs 30–45 min, which is why the gaps are hours and not one hour. |
-| `com.beacon.refresh` | 1st of the month, 03:00 | `python -m beacon.maintenance refresh-registries` — rematch the seeds against the registry snapshots. |
-| `com.beacon.backup` | daily, 04:00 | `python -m beacon.maintenance backup` — timestamped SQLite copy, pruned to the newest 14. |
-| `com.beacon.probe` | Mondays, 05:00 | `python -m beacon.maintenance probe` — retry quarantined sources so a temporary outage self-heals. |
+| `com.beacon.digest` | 08:45, 12:00, 16:30 local | One fire of `deploy/hourly-digest.sh`: poll → dedup → Telegram digest, then exit. Lock-guarded (a fire that finds the previous one still polling skips) and capped at 50 min, after which the digest still goes out via `python -m beacon.notify`. A full poll runs 30–45 min, which is why the gaps are hours and not one hour. |
+| `com.beacon.refresh` | 1st of the month, 09:30 | `python -m beacon.maintenance refresh-registries` — rematch the seeds against the registry snapshots. |
+| `com.beacon.backup` | daily, 10:00 | `python -m beacon.maintenance backup` — timestamped SQLite copy, pruned to the newest 14. |
+| `com.beacon.probe` | Mondays, 10:30 | `python -m beacon.maintenance probe` — retry quarantined sources so a temporary outage self-heals. |
 
 Every agent is a **one-shot**: no `RunAtLoad`, no `KeepAlive`, nothing running between fires.
 The maintenance three ran as APScheduler crons inside an always-on `com.beacon.scheduler`
-daemon until 2026-09-11, which could never fire them here — a LaunchAgent lives in the user's
-GUI domain, so it exists only while logged in, and at 03:00–05:00 this Mac is asleep or logged
-out. Nine days of it running produced zero backups. launchd coalesces a fire missed during
-sleep into a single run at login/wake, so a late backup still happens.
+daemon until 2026-09-11. That daemon could never fire them here: a LaunchAgent lives in the
+user's GUI domain, so it exists only while someone is logged in, and the Mac was asleep or
+logged out at 03:00–05:00. Nine days of it running produced zero backups. On 2026-09-22 the box
+was set to shut down at 06:00 and power on at 08:45 (`pmset repeat`), so the maintenance jobs
+moved out of the night into the morning, after the 08:45 digest. If a fire is missed during
+sleep, launchd runs it once at the next login/wake, so a late backup still happens. A fire
+still needs someone logged in to run.
 
 ```bash
 for agent in digest refresh backup probe; do
@@ -181,15 +235,21 @@ backend/
   beacon/
     domain/           pure models + logic (job, sponsorship, location, visa, vocabulary, matching, dedup)
     application/      use cases + port protocols (ingest, queries, scoring, health, coverage)
-    adapters/         sources/ (16 boards + factory), persistence/, registries/, classify/, notify/, http/
-    api/              app factory, seven routers, deps
-    maintenance.py    launchd one-shot entry points (refresh-registries, backup, probe)
+    adapters/         sources/ (16 boards + factory), persistence/, registries/ (UK, IND, H-1B, IE, CA),
+                      classify/, notify/, resume/, http/
+    api/              app factory, eight routers, deps
+    ingest.py …       CLI entry points: ingest, notify, refresh, classify, relocate, retier
+    maintenance.py    launchd one-shot entry points (refresh-registries[-if-needed], backup, probe)
   migrations/         001–010, numbered and forward-only
+  scripts/            manual spot-check scripts (registry, health, classifier, locations, …) + backup_db.py
   tests/              unit / adapters / api / integration, with fixtures/
 frontend/
   src/                jobs/, countries/, searches/, settings/, api/ (client + types), tokens.css
 seeds/companies.csv   70 verified companies (name,ats_type,ats_slug,country_hq,priority)
-deploy/               four launchd agents: digest window, registry refresh, backup, quarantine probe
+data/registries/      hand-downloaded sponsor-registry snapshots (CSV)
+deploy/               four launchd agents + hourly-digest.sh: digest window, registry refresh, backup, quarantine probe
+scripts/node-path.sh  puts nvm's node/npm on PATH for make and run.sh
+run.sh                one-step launcher (registry check → launch digest → API + background poll → Vite)
 ```
 
 ## Documentation map
@@ -199,6 +259,7 @@ deploy/               four launchd agents: digest window, registry refresh, back
 | `SPEC.md` | The *what* — problem, goals/non-goals, data sources, schema, country/visa reference |
 | `PLAN.md` | The *order* — vertical slices and the TDD loop |
 | `PROGRESS.md` | Live state — slice tracker, decisions log, open items (update every session) |
+| `SOURCES.md` | Per-source operating reference — endpoint, auth, pagination, field normalization, quirks, for every polled source |
 | `DESIGN.md` | Visual source of truth — "Nordic Slate & Teal" tokens and views |
 | `CLAUDE.md` | Working conventions and architecture-boundary enforcement |
 | `VERIFY-COUNTRIES.md` | Checklist for re-verifying country/visa reference data |

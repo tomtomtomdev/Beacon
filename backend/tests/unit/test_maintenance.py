@@ -16,10 +16,12 @@ from beacon.config import Settings
 DEPLOY = Path(__file__).parents[3] / "deploy"
 
 # plist filename -> (job argument it passes, the calendar entry launchd fires it on)
+# Morning slots since 2026-09-22: the box is off 06:00-08:45, so the old 03:00-05:00 night
+# slots could only ever fire as coalesced catch-ups.
 PLISTS: dict[str, tuple[str, dict[str, int]]] = {
-    "com.beacon.refresh.plist": ("refresh-registries", {"Day": 1, "Hour": 3, "Minute": 0}),
-    "com.beacon.backup.plist": ("backup", {"Hour": 4, "Minute": 0}),
-    "com.beacon.probe.plist": ("probe", {"Weekday": 1, "Hour": 5, "Minute": 0}),
+    "com.beacon.refresh.plist": ("refresh-registries", {"Day": 1, "Hour": 9, "Minute": 30}),
+    "com.beacon.backup.plist": ("backup", {"Hour": 10, "Minute": 0}),
+    "com.beacon.probe.plist": ("probe", {"Weekday": 1, "Hour": 10, "Minute": 30}),
 }
 
 

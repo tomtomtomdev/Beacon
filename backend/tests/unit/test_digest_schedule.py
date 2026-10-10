@@ -11,8 +11,9 @@ PLIST = Path(__file__).parents[3] / "deploy" / "com.beacon.digest.plist"
 
 # Three fires a day, local time (SPEC §9, narrowed from eight on 2026-09-11): a full poll of
 # the pollable seeds at 1 rps runs 30-45 min, so :30-past-every-working-hour spent most of the
-# day polling and leaned on the lock to skip collisions.
-FIRES = {(8, 0), (12, 0), (16, 30)}
+# day polling and leaned on the lock to skip collisions. The first fire moved 08:00 -> 08:45 on
+# 2026-09-22, when the box began powering on at 08:45 (pmset repeat).
+FIRES = {(8, 45), (12, 0), (16, 30)}
 
 # deploy/hourly-digest.sh caps a run at BEACON_HOURLY_TIMEOUT, default 3000s.
 WATCHDOG_MINUTES = 50

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- Beacon maintenance: retry quarantined sources so a temporary outage self-heals (Mondays, 05:00). Install + load with:
+<!-- Beacon maintenance: retry quarantined sources so a temporary outage self-heals (Mondays, 10:30). Install + load with:
        cp deploy/com.beacon.probe.plist ~/Library/LaunchAgents/
        launchctl bootout  gui/$UID/com.beacon.probe 2>/dev/null
        launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.beacon.probe.plist
@@ -14,7 +14,9 @@
      backup still happens instead of silently not happening.
 
      Times are local (Asia/Jakarta on this box; launchd reads the system zone, which is also
-     config.LOCAL_TZ). One-shot: no RunAtLoad, no KeepAlive. Each job is safe to run late or
+     config.LOCAL_TZ). Moved out of the 03:00-05:00 night slot on 2026-09-22: the box now
+     shuts down 06:00 and powers on 08:45 (pmset repeat), so these fire in the morning
+     after it, staggered clear of the 08:45 digest run. One-shot: no RunAtLoad, no KeepAlive. Each job is safe to run late or
      twice, which is what makes the coalesced catch-up sound.
 
      TCC: keep the checkout OUT of ~/Documents, ~/Desktop and ~/Downloads. A launchd-started
@@ -42,7 +44,7 @@
     <string>/Users/tomtomtomtom/Projects/beacon/backend</string>
     <key>StartCalendarInterval</key>
     <array>
-        <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>5</integer><key>Minute</key><integer>0</integer></dict>
+        <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>10</integer><key>Minute</key><integer>30</integer></dict>
     </array>
     <key>StandardOutPath</key>
     <string>/tmp/com.beacon.probe.out.log</string>
