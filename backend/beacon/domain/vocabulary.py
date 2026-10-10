@@ -54,6 +54,7 @@ CATEGORY_KEYWORDS: dict[Category, tuple[str, ...]] = {
         "ml",
         "ml engineer",
         "ai engineer",
+        "ai systems engineer",
         "ai/ml",
         "machine learning",
         "deep learning",
@@ -280,6 +281,7 @@ CATEGORY_KEYWORDS: dict[Category, tuple[str, ...]] = {
 FALLBACK_CATEGORY_KEYWORDS: dict[Category, tuple[str, ...]] = {
     Category.SOFTWARE: (
         "software engineer",
+        "software systems engineer",
         "software engineering",
         "software developer",
         "software development",

@@ -273,6 +273,8 @@ CATEGORY_CASES = [
         "",
         {Category.BACKEND},
     ),
+    ("software-systems-engineer", "Principal Software Systems Engineer", "", {Category.SOFTWARE}),
+    ("aiml-ai-systems-engineer", "AI Systems Engineer, Codex Agents", "", {Category.AI_ML}),
     ("infra-it-systems", "IT Systems Engineer, Client Platform", "", {Category.INFRA}),
     ("guard-finance-systems-not-infra", "Finance Systems Engineer, Tax", "", set()),
     # ...and a title naming both carries both.
