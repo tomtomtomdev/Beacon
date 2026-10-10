@@ -4,6 +4,23 @@
 
 ## Current status
 
+**2026-10-10 (late afternoon): slice 25, the poll gets a time budget.** Every poll line now
+carries `secs=`. A sequential poll measured **1758s**. With sources overlapping, a poll runs
+**757s (12.6 min)**, against the 2989s that came within 11 seconds of the watchdog at 12:00.
+
+| run | wall | where the time went |
+|---|---|---|
+| 13:29, sequential (25a) | 1758s | SmartRecruiters 704s (Grab 469, Canva 150, Carousell 86), Rippling 345s, HN 303s, MyCareersFuture 97s; everything else ≤ 60s |
+| 14:00, concurrent (25b) | **757s** | one host: SmartRecruiters' three boards queue on its per-host lock (Grab's `secs=704` now includes queue wait) |
+
+Same supply: 9,440 fetched against 9,441, no `database is locked`, no 429. **Workday is down
+for maintenance:** all four Workday career sites 303 to `community.workday.com/maintenance-page`,
+correctly logged as `unreachable`. Not ours, but watch that their health recovers.
+
+**Next action:** nothing is forced. If the poll needs to shrink again, the lever is
+SmartRecruiters' per-posting detail fetch (PLAN slice 25, "Next lever"). Otherwise, the Swedish
+IT titles JobTech brings in.
+
 **2026-10-10 (afternoon): slice 24, `infra` splits out of `backend`.** Also: launchd agents and
 the classifier spot-check.
 
@@ -105,10 +122,26 @@ the Swedish IT titles JobTech now brings ("Testare", "IT-arkitekt", "Systemingen
 | 22 | Closed postings leave the default listing, behind a "Show closed" toggle | ✅ done | 2026-09-18 |
 | 23 | All of engineering, not just iOS / backend / AI-ML (taxonomy → offline residue backfill → UI → steered boards) | ✅ 23a–23c shipped; 23d kept the JobTech steer, board queries withdrawn (poll 2989s) | 2026-10-10 |
 | 24 | `infra` splits out of `backend` (vocabulary → `--reclassify` relabel → Infra pill, scoring v4) | ✅ done | 2026-10-10 |
+| 25 | The poll gets a time budget (`secs=` per source → concurrent sources) | ✅ done, 1758s → 757s | 2026-10-10 |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (acceptance boxes checked)
 
 ## Decisions log
+
+- **2026-10-10 (poll-concurrency)** — **Sources poll concurrently.** The sequential loop made
+  wall time the sum of 70 sources, while `PoliteClient` had held a per-host lock all along, so
+  1 rps per host never depended on the loop being sequential.
+  - Decisions: `POLL_CONCURRENCY = 16` in the use case, which bounds open connections, not
+    politeness. Results come back in input order. The ATS and board phases run together.
+  - The company-less loop moved out of the composition root into `ingest_companyless_all`. It
+    held try/except and logging policy, which is logic and doesn't belong in wiring.
+  - **`secs=` under concurrency includes time queued for a shared host**, so it measures how
+    long the source took to finish, not its own cost. The sequential 13:29 run is the per-source
+    cost baseline.
+  - Accepted: with an LLM key, a sync classify call briefly stalls other sources' fetches. It is
+    one call per unseen content_hash, under a monthly cap.
+  - Measured 1758s → 757s with the same supply and no lock or 429 errors. The kill criterion
+    (revert on `database is locked`, a 429 or a different fetched total) did not fire.
 
 - **2026-10-10 (infra-split)** — **`backend` now means building services; `infra` means running
   them.** Slice 23 kept SRE/devops/platform inside `backend` so saved searches and resume scores

@@ -1569,7 +1569,7 @@ Open `backend` went 956 → **365** and `infra` is **471**, with 18 carrying bot
 
 ---
 
-## Slice 25 — The poll gets a time budget — **IN PROGRESS 2026-10-10**
+## Slice 25 — The poll gets a time budget — **DONE 2026-10-10**
 
 **Why:** the 2026-10-10 12:00 poll ran `secs=2989` against a 3000s watchdog. Withdrawing slice
 23's board queries buys a few minutes back, but the poll had already grown from 2091s
@@ -1589,11 +1589,19 @@ per-source timing, so where the 50 minutes go is a guess.
   interleave.
 
 Acceptance:
-- [ ] Every poll line carries `secs=`; the out-log prints it per company and per source
-- [ ] A measured full poll, with the slowest sources named in PROGRESS
-- [ ] 25b: a full poll ≤ **25 min** (half the watchdog) through the production path, and still 1
-      rps per host (pinned by the existing `PoliteClient` tests)
-- [ ] `make verify` green; PROGRESS Decisions entry
+- [x] Every poll line carries `secs=`; the out-log prints it per company and per source
+- [x] A measured full poll, with the slowest sources named in PROGRESS. 13:29 sequential:
+      **1758s**; SmartRecruiters 704s (Grab 469, Canva 150, Carousell 86, all on one host),
+      Rippling 345s, HN 303s, MyCareersFuture 97s
+- [x] 25b: a full poll ≤ **25 min** through the production path: 14:00 concurrent run
+      **757s** (`hourly_done exit=0 killed=0`). 9,440 fetched against 9,441 sequential, no
+      `database is locked`, no 429. 1 rps per host holds through the per-host lock
+- [x] `make verify` green (1,107 backend, 123 frontend); PROGRESS Decisions entry
+
+**Next lever, not needed yet:** the poll is now bounded by one host. SmartRecruiters fetches a
+detail page per posting every poll, about 670 requests at 1 rps. Skipping the detail fetch for
+postings already stored would cut it to minutes, but it needs the adapter to know what is
+stored, which is a port change.
 
 **Kill criterion for 25b:** if concurrency produces any `database is locked`, a 429 from a
 board, or a different `fetched=` total for the same sources, revert to sequential and cap

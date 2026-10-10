@@ -33,6 +33,7 @@ Figures measured 2026-10-10.
 | 22 | Closed postings leave the default listing, behind a "Show closed" toggle | ✅ |
 | 23 | All of engineering: data, security, embedded, QA, eng. management, solutions + a `software` fallback; JobTech steered to Data/IT | ✅ 2026-10-10; wider board queries withdrawn (poll hit 2989s of a 3000s watchdog) |
 | 24 | `infra` (SRE, devops, platform, cloud) splits out of `backend`; `classify --reclassify` relabels stored rows | ✅ 2026-10-10 |
+| 25 | The poll gets a time budget: `secs=` per source, sources poll concurrently (1758s → 757s) | ✅ 2026-10-10 |
 
 `PROGRESS.md` is the live source of truth for what's built; `PLAN.md` is the slice order.
 
@@ -190,7 +191,7 @@ Four launchd agents, all installed from `deploy/`:
 
 | Agent | When | What |
 |---|---|---|
-| `com.beacon.digest` | 08:45, 12:00, 16:30 local | One fire of `deploy/hourly-digest.sh`: poll → dedup → Telegram digest, then exit. Lock-guarded (a fire that finds the previous one still polling skips) and capped at 50 min, after which the digest still goes out via `python -m beacon.notify`. A full poll runs 30–45 min, which is why the gaps are hours and not one hour. |
+| `com.beacon.digest` | 08:45, 12:00, 16:30 local | One fire of `deploy/hourly-digest.sh`: poll → dedup → Telegram digest, then exit. Lock-guarded (a fire that finds the previous one still polling skips) and capped at 50 min, after which the digest still goes out via `python -m beacon.notify`. Sources poll concurrently (one request per second per host), so a full poll runs about 13 min (757 s on 2026-10-10, down from 29–50 min sequential). |
 | `com.beacon.refresh` | 1st of the month, 09:30 | `python -m beacon.maintenance refresh-registries` — rematch the seeds against the registry snapshots. |
 | `com.beacon.backup` | daily, 10:00 | `python -m beacon.maintenance backup` — timestamped SQLite copy, pruned to the newest 14. |
 | `com.beacon.probe` | Mondays, 10:30 | `python -m beacon.maintenance probe` — retry quarantined sources so a temporary outage self-heals. |
