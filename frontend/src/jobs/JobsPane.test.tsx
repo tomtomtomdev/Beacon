@@ -565,6 +565,20 @@ describe('JobsPane', () => {
     expect(screen.getByRole('button', { name: 'Security' })).toHaveAttribute('aria-pressed', 'true')
   })
 
+  // Slice 24: infra split out of backend; it filters on its own, behind More like slice 23's.
+  it('filters on infra from the More row', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByText('Swift Engineer')
+
+    await user.click(screen.getByRole('button', { name: /more categories/i }))
+    await user.click(screen.getByRole('button', { name: 'Infra' }))
+
+    await waitFor(() => {
+      expect(jobListUrls().some((u) => u.includes('category=infra'))).toBe(true)
+    })
+  })
+
   it('selecting a level pill refetches with the level param', async () => {
     const user = userEvent.setup()
     renderPage()

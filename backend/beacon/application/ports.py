@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Protocol
 
-from beacon.domain.classification import Classification
+from beacon.domain.classification import Category, Classification
 from beacon.domain.company import Company
 from beacon.domain.dedup import DedupRow
 from beacon.domain.digest import Digest
@@ -245,6 +245,13 @@ class JobRepo(Protocol):
         """Persisted jobs classified but with no category (categories = ''), each as
         (job_id, job) — the empty residue the LLM upgrader revisits. Distinct from
         list_unclassified (NULL = never classified)."""
+        ...
+
+    def list_with_category(
+        self, category: Category
+    ) -> list[tuple[int, NormalizedJob, frozenset[Category]]]:
+        """Persisted jobs whose stored categories include `category`, each as
+        (job_id, job, stored categories) — what a vocabulary split re-reads (slice 24b)."""
         ...
 
     def set_classification(self, job_id: int, classification: Classification) -> None: ...

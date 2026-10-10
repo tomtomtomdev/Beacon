@@ -120,6 +120,11 @@ class FakeJobRepo:
     def list_ambiguous(self) -> list[tuple[int, NormalizedJob]]:
         raise NotImplementedError("ingest never backfills")
 
+    def list_with_category(
+        self, category: Category
+    ) -> list[tuple[int, NormalizedJob, frozenset[Category]]]:
+        raise NotImplementedError("ingest never backfills")
+
     def set_classification(self, job_id: int, classification: Classification) -> None:
         raise NotImplementedError("ingest never backfills")
 

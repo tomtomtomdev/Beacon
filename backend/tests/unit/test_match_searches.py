@@ -11,7 +11,7 @@ from beacon.application.ports import (
     JobPage,
     JobScoringInput,
 )
-from beacon.domain.classification import Classification
+from beacon.domain.classification import Category, Classification
 from beacon.domain.dedup import DedupRow
 from beacon.domain.digest import Digest, HealthAlert
 from beacon.domain.sponsorship import SponsorTier
@@ -81,6 +81,11 @@ class FakeJobRepo:
         raise NotImplementedError
 
     def list_ambiguous(self) -> list[tuple[int, NormalizedJob]]:
+        raise NotImplementedError
+
+    def list_with_category(
+        self, category: Category
+    ) -> list[tuple[int, NormalizedJob, frozenset[Category]]]:
         raise NotImplementedError
 
     def set_classification(self, job_id: int, classification: Classification) -> None:

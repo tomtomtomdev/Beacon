@@ -17,6 +17,7 @@ from beacon.application.backfill import (
     backfill_classifications,
     backfill_home_market,
     backfill_locations,
+    reclassify_category,
     upgrade_ambiguous_classifications,
 )
 from beacon.domain.classification import Category, Classification, Level
@@ -161,6 +162,43 @@ def test_upgrade_ignores_never_classified_rows(db: sqlite3.Connection, company_i
     assert upgraded == 0  # NULL is 'never classified', not the empty residue
     row = db.execute("SELECT categories FROM jobs WHERE external_id = 'D'").fetchone()
     assert row["categories"] is None
+
+
+def _labelled(repo: SqliteJobRepo, company_id: int, ext: str, title: str, *cats: Category) -> None:
+    labels = Classification(frozenset(cats), Level.UNSPECIFIED)
+    repo.upsert(company_id, _job(ext, title, "..."), seen_at=POLL, classification=labels)
+
+
+def test_reclassify_relabels_rows_carrying_the_category_with_the_current_vocabulary(
+    db: sqlite3.Connection, company_id: int
+) -> None:
+    """Slice 24b: infra split out of backend after 956 open rows were stored as backend; the
+    content_hash gate would keep them backend forever without a re-read of exactly those rows."""
+    repo = SqliteJobRepo(db)
+    _labelled(repo, company_id, "S", "Senior DevOps Engineer", Category.BACKEND)
+    _labelled(repo, company_id, "B", "Backend Engineer (Go)", Category.BACKEND)
+    _labelled(repo, company_id, "I", "Senior DevOps Engineer, iOS CI", Category.IOS)
+
+    changed = reclassify_category(repo, HeuristicClassifier(), Category.BACKEND)
+
+    rows = dict(db.execute("SELECT external_id, categories FROM jobs").fetchall())
+    assert changed == 1
+    assert rows == {"S": "infra", "B": "backend", "I": "ios"}
+
+
+def test_reclassify_clears_a_label_the_vocabulary_no_longer_supports(
+    db: sqlite3.Connection, company_id: int
+) -> None:
+    """A stale label is a wrong label: a fresh ingest of the same title reads '', so the
+    relabel does too, and the residue upgrader can revisit it."""
+    repo = SqliteJobRepo(db)
+    _labelled(repo, company_id, "F", "Finance Systems Engineer, Tax", Category.BACKEND)
+
+    changed = reclassify_category(repo, HeuristicClassifier(), Category.BACKEND)
+
+    row = db.execute("SELECT categories FROM jobs WHERE external_id = 'F'").fetchone()
+    assert changed == 1
+    assert row["categories"] == ""
 
 
 # --- the home-market retier (slice 15b) --------------------------------------------------

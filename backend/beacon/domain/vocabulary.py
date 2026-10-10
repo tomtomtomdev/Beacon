@@ -98,6 +98,7 @@ CATEGORY_KEYWORDS: dict[Category, tuple[str, ...]] = {
         "distributed systems",
         "database",
         "kernel",
+        "operating systems engineer",
         "python",
         # Symbol-edged stacks, in the form _SYMBOL_ALIASES rewrites them to (see below).
         "dotnet",

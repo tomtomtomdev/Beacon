@@ -31,11 +31,13 @@ export const CATEGORY_OPTIONS: ReadonlyArray<{ value: string; label: string }> =
 ]
 
 // Slice 23 (2026-10-10): the rest of engineering. Behind the row's "More" toggle so the seven
-// SPEC §3 profile pills keep their place and the DESIGN §2 row does not wrap. `software` is the
+// SPEC §3 profile pills keep their place and the DESIGN §2 row does not wrap. `infra` (SRE,
+// devops, platform, cloud) joined in slice 24 when it split out of backend. `software` is the
 // backend's fallback for a title that names no specialism; `solutions` is kept apart so
 // customer-facing engineering can be left out.
 export const MORE_CATEGORY_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: 'software', label: 'Software' },
+  { value: 'infra', label: 'Infra' },
   { value: 'data', label: 'Data' },
   { value: 'security', label: 'Security' },
   { value: 'embedded', label: 'Embedded' },

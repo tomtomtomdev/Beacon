@@ -5,6 +5,7 @@ Same caching contract as the pipeline — only rows that actually need it are to
 from dataclasses import dataclass
 
 from beacon.application.ports import Classifier, JobRepo
+from beacon.domain.classification import Category
 from beacon.domain.location import parse_location
 from beacon.domain.sponsorship import HOME_COUNTRY, resolve_tier
 
@@ -36,6 +37,25 @@ def upgrade_ambiguous_classifications(jobs: JobRepo, classifier: Classifier) -> 
             jobs.set_classification(job_id, result)
             improved += 1
     return improved
+
+
+def reclassify_category(jobs: JobRepo, classifier: Classifier, category: Category) -> int:
+    """Re-run the classifier over every row stored with `category`; rewrite the rows whose
+    category set changed and return how many. The backfill for a vocabulary *split* (slice
+    24b: infra out of backend), which upgrade_ambiguous_classifications cannot reach because
+    those rows are not empty. content_hash gates re-classification at ingest, so without this
+    an old label outlives the vocabulary that produced it.
+
+    A row the classifier now reads as empty is rewritten to '': a fresh ingest of the same
+    title would store '', and a stale label is a wrong one. Run keyless, the classifier is the
+    bare heuristic, so this spends no LLM calls."""
+    changed = 0
+    for job_id, job, stored in jobs.list_with_category(category):
+        result = classifier.classify(job)
+        if result.categories != stored:
+            jobs.set_classification(job_id, result)
+            changed += 1
+    return changed
 
 
 def backfill_home_market(jobs: JobRepo) -> int:

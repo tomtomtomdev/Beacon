@@ -10,7 +10,12 @@ from beacon.application.ports import (
     JobPage,
     JobScoringInput,
 )
-from beacon.domain.classification import Classification, format_categories
+from beacon.domain.classification import (
+    Category,
+    Classification,
+    format_categories,
+    parse_categories,
+)
 from beacon.domain.contact import extract_contact_email
 from beacon.domain.resume import SCORING_VERSION
 from beacon.domain.dedup import DedupRow
@@ -212,6 +217,22 @@ class SqliteJobRepo:
             """
         ).fetchall()
         return [(row["id"], _row_to_normalized(row)) for row in rows]
+
+    def list_with_category(
+        self, category: Category
+    ) -> list[tuple[int, NormalizedJob, frozenset[Category]]]:
+        rows = self._conn.execute(
+            """
+            SELECT id, source_id, external_id, title, url, description, location_raw,
+                   country, city, posted_at, content_hash, categories
+            FROM jobs WHERE (',' || categories || ',') LIKE ?
+            """,
+            (f"%,{category.value},%",),
+        ).fetchall()
+        return [
+            (row["id"], _row_to_normalized(row), parse_categories(row["categories"]))
+            for row in rows
+        ]
 
     def set_classification(self, job_id: int, classification: Classification) -> None:
         self._conn.execute(

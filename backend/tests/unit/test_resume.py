@@ -316,8 +316,10 @@ def test_scoring_version_pins_behavior() -> None:
     # 3 (slice 23) moved EXTRACTION, not this arithmetic: the cached score is keyed on the
     # posting's content_hash, and a widened vocabulary changes the skills and categories read
     # from the same text — so the table below is unchanged while the version still had to move.
+    # 4 (slice 24) is the same kind: infra split out of backend, so a resume naming devops or
+    # kubernetes now reads infra, and the relabel moved stored job categories.
     assert (SCORING_VERSION, scored) == (
-        3,
+        4,
         {
             # 3/3 skills, category hit, exact level, sponsored in a target country
             "aligned_senior_ios_on_strategy": 100,
