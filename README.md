@@ -31,7 +31,7 @@ Figures measured 2026-10-10.
 | 20 | Other markets — the 47 countries with jobs and no way to ask for them; closed postings finally greyed | ✅ |
 | 21 | The panel stops being a gate: all jobs by default, `?focus=` becomes a filter | ✅ |
 | 22 | Closed postings leave the default listing, behind a "Show closed" toggle | ✅ |
-| 23 | All of engineering: data, security, embedded, QA, eng. management, solutions + a `software` fallback; wider board queries | 🟨 built and verified; poll time under the wider queries pending |
+| 23 | All of engineering: data, security, embedded, QA, eng. management, solutions + a `software` fallback; JobTech steered to Data/IT | ✅ 2026-10-10; wider board queries withdrawn (poll hit 2989s of a 3000s watchdog) |
 
 `PROGRESS.md` is the live source of truth for what's built; `PLAN.md` is the slice order.
 

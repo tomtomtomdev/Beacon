@@ -1383,7 +1383,7 @@ figures above are the post-poll ones; slice 20 and 21's boxes keep theirs with t
 
 ---
 
-## Slice 23 — All of engineering, not just iOS / backend / AI-ML — **BUILT 2026-10-10; poll time pending**
+## Slice 23 — All of engineering, not just iOS / backend / AI-ML — **DONE 2026-10-10 (23d's board queries withdrawn under the kill criterion)**
 
 **Asked for 2026-10-10:** widen the hunt from the SPEC §1/§3 profile (iOS primary; Backend, AI/ML
 secondary; Android/Flutter/Fullstack/Frontend tertiary) to every engineering role.
@@ -1511,8 +1511,10 @@ Acceptance:
       → digest line
 - [x] Resume scores re-compute under the bumped `scoring_version` (3)
 - [x] 23d: each kept query is backed by its probe note (in the adapter, beside the tuple)
-- [ ] 23d: a full poll re-measured under the watchdog: the first fire with the wider queries is
-      12:00 on 2026-10-10
+- [x] 23d: a full poll re-measured under the watchdog: the 12:00 fire on 2026-10-10 ran
+      **2989s against 3000s** (`hourly_done exit=0 killed=0`), past the 45 min line. **Kill
+      criterion applied:** the Himalayas and MyCareersFuture queries were withdrawn, their probe
+      notes kept beside the tuples. The JobTech steer stays: it is still one 100-row request
 - [x] SPEC §1/§3 and DESIGN §2 rewritten, and PROGRESS has a dated Decisions entry
 - [x] `make verify` green on both stacks (1,070 backend, 122 frontend)
 

@@ -14,14 +14,15 @@ reach them. About 2,200 of those were engineering titles the classifier had no w
 | 23a | 7 new categories (data, security, embedded, qa, eng-mgmt, solutions) + `software` as a no-specialism fallback; .NET/C#/C++ aliased before matching; guards for PM/TPM, business-developer, compliance-QA, sales-rep titles | 3 dry runs over the live residue, every misfire turned into a fixture row |
 | 23b | the keyless `classify --upgrade-residue` is the offline backfill (pinned by a test) | **open residue 7,651 → 5,673 (−1,978)**; 3,759 rows relabelled in all; **0 LLM calls**; backup taken first |
 | 23c | 7 pills behind a "More" toggle; saved searches pinned by a test; `SCORING_VERSION` 3 | cached fit scores recompute |
-| 23d | Himalayas +11 queries, MyCareersFuture +4, JobTech steered to Data/IT | each query probed live; JobTech's engineering share of 100 rows went 6 → 37 |
+| 23d | JobTech steered to Data/IT; Himalayas +11 / MyCareersFuture +4 queries **withdrawn** | JobTech's engineering share of 100 rows went 6 → 37; the 12:00 poll with the wider queries ran **2989s against a 3000s watchdog**, so the kill criterion took them back out |
 
 **What the residue still holds:** ~300 engineering-ish titles in a long tail (mechanical,
 hardware, one-offs), and honest non-engineering (sales, legal, HR, care). No existing label was
 touched: 23b rewrites only `''` rows.
 
-**Next action:** read the first poll with the wider queries (12:00 fire, `/tmp/beacon.digest.out.log`
-`hourly_done secs=`) against the 50-min watchdog. That is the one acceptance box left open. Then
+**Slice 23 is DONE.** **Next action:** the poll itself is near its ceiling (2091s on
+2026-09-11, ~2989s with the wider queries), so a time budget for the sequential sources comes
+before any new board query: per-source timing in the log, then concurrency or a cap. After that,
 the Swedish IT titles JobTech now brings ("Testare", "IT-arkitekt", "Systemingenjör",
 "testautomatiserare") are the next vocabulary rows.
 
@@ -83,11 +84,25 @@ the Swedish IT titles JobTech now brings ("Testare", "IT-arkitekt", "Systemingen
 | 20 | Other markets: the 47 countries with jobs and no way to ask for them (candidate B, shape 1); 20e exposed `closed_at` | ✅ done | 2026-09-18 |
 | 21 | The panel stops being a gate: jobs by default, `?focus=` becomes a filter, derived total + paging, globe-only idle tour | ✅ done | 2026-09-18 |
 | 22 | Closed postings leave the default listing, behind a "Show closed" toggle | ✅ done | 2026-09-18 |
-| 23 | All of engineering, not just iOS / backend / AI-ML (taxonomy → offline residue backfill → UI → steered boards) | 🟨 23a–23d built + verified; poll time under the wider queries still to be read | |
+| 23 | All of engineering, not just iOS / backend / AI-ML (taxonomy → offline residue backfill → UI → steered boards) | ✅ 23a–23c shipped; 23d kept the JobTech steer, board queries withdrawn (poll 2989s) | 2026-10-10 |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (acceptance boxes checked)
 
 ## Decisions log
+
+- **2026-10-10 (board-queries-withdrawn)** — **Slice 23's kill criterion fired, and the wider
+  Himalayas and MyCareersFuture queries are out.** The 12:00 fire, the first with them, ran
+  `hourly_done exit=0 secs=2989 killed=0`: 49.8 min against a 3000s watchdog, 11 seconds from
+  being killed and past the 45 min line the slice set for itself. MyCareersFuture is the
+  expensive half (5 of its queries hit the 60-row page cap, one detail fetch per hit), and the log
+  has no per-source timestamps, so the split between the two boards is estimated, not measured.
+  Both came out because that is what the criterion says; the classifier gain (−1,978 residue) never
+  depended on them. **The JobTech steer stays:** it changes which 100 ads one request returns, not
+  how many requests there are. Its first steered poll logged `closed=100`, which is the old
+  unsteered 100 leaving the feed, not a fault. Kept: each withdrawn query's probe result, in a
+  comment beside its tuple, so re-adding one later doesn't start from zero. **The real finding is
+  that the poll has no headroom left:** 59 sources took 2091s on 2026-09-11, and the corpus has
+  grown since. Any future board query needs a poll-time budget first.
 
 - **2026-10-10 (slice 23 — the category scope widens, deliberately)** — Asked for: search all
   engineering, not just iOS / backend / Java / AI-ML. **This deviates from SPEC §1/§3 and DESIGN §2**,

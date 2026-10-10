@@ -11,7 +11,6 @@ import httpx
 import pytest
 
 from beacon.adapters.http.polite import PoliteClient
-from beacon.domain.classification import Category
 from beacon.domain.vocabulary import extract_categories
 from beacon.adapters.sources.himalayas import HimalayasAdapter, ROLE_QUERIES
 
@@ -123,15 +122,3 @@ def test_every_role_query_names_a_role_the_classifier_recognises() -> None:
     unread = [query for query in ROLE_QUERIES if not extract_categories(query)]
 
     assert unread == []
-
-
-def test_role_queries_reach_the_wider_engineering_families() -> None:
-    covered = {category for query in ROLE_QUERIES for category in extract_categories(query)}
-
-    assert covered >= {
-        Category.SOFTWARE,
-        Category.DATA,
-        Category.SECURITY,
-        Category.QA,
-        Category.EMBEDDED,
-    }
