@@ -6,6 +6,7 @@ Wiring only — connects settings, DB, seeds, adapters and the ingest use case.
 import argparse
 import asyncio
 import logging
+import time
 from datetime import UTC, datetime
 
 import httpx
@@ -81,14 +82,16 @@ async def run_ingest(
                     if not ats:
                         print(f"no active company with ats_slug={only_company!r}")
                         return 1
+                phase_started = time.monotonic()
                 results = await ingest_all(
                     ats, jobs, make_source_factory(fetcher), classifier, company_repo, now=now
                 )
                 for name, result in results.items():
                     print(
                         f"company={name} fetched={result.fetched}"
-                        f" upserted={result.upserted} errors={result.errors}"
+                        f" upserted={result.upserted} errors={result.errors} secs={result.secs}"
                     )
+                print(f"phase=ats secs={time.monotonic() - phase_started:.1f}")
 
             # Company-less sources (HN, JobTech, Himalayas, MyCareersFuture, …): one source,
             # many employers per posting.
@@ -101,7 +104,9 @@ async def run_ingest(
                     if not sources:
                         print(f"no company-less source with id={only_source!r}")
                         return 1
+                phase_started = time.monotonic()
                 for source in sources:
+                    source_started = time.monotonic()
                     try:
                         result = await ingest_companyless_source(
                             source, jobs, company_repo, classifier, now=now
@@ -110,13 +115,16 @@ async def run_ingest(
                         # A dead board never stops the run (rule 6); company-less sources have
                         # no per-company health, so we just log and move on.
                         logging.getLogger(__name__).exception(
-                            "companyless_poll_failed source=%s", source.source_id
+                            "companyless_poll_failed source=%s secs=%.1f",
+                            source.source_id,
+                            time.monotonic() - source_started,
                         )
                         continue
                     print(
                         f"source={source.source_id} fetched={result.fetched}"
-                        f" upserted={result.upserted} errors={result.errors}"
+                        f" upserted={result.upserted} errors={result.errors} secs={result.secs}"
                     )
+                print(f"phase=boards secs={time.monotonic() - phase_started:.1f}")
 
             # Cross-source dedup runs once after every board is upserted (SPEC §5 pipeline).
             dedup = dedupe_jobs(jobs)

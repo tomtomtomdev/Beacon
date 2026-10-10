@@ -712,3 +712,77 @@ async def test_companyless_poll_sweeps_by_source_across_all_companies() -> None:
     await ingest_companyless_source(source, jobs, companies, CountingClassifier(), now=NOW)
 
     assert jobs.sweeps == [("hn", None, {"1", "2"}, NOW, CLOSE_AFTER_MISSES)]
+
+
+# --- per-source timing (slice 25a) --------------------------------------------------------
+
+
+class SteppingClock:
+    """A monotonic clock that advances by `step` seconds on every read."""
+
+    def __init__(self, step: float) -> None:
+        self._now = 100.0
+        self._step = step
+
+    def __call__(self) -> float:
+        reading = self._now
+        self._now += self._step
+        return reading
+
+
+async def test_a_poll_reports_how_long_it_took() -> None:
+    result = await ingest_source(
+        FakeSource([{"id": 1}]),
+        COMPANY,
+        FakeJobRepo(),
+        CountingClassifier(),
+        now=NOW,
+        clock=SteppingClock(2.5),
+    )
+
+    assert result.secs == 2.5
+
+
+async def test_a_failed_poll_still_reports_its_time() -> None:
+    """A host that times out three times is exactly the source that costs minutes."""
+    result = await ingest_source(
+        UnavailableSource(FailureKind.UNREACHABLE),
+        COMPANY,
+        FakeJobRepo(),
+        CountingClassifier(),
+        now=NOW,
+        clock=SteppingClock(45.0),
+    )
+
+    assert (result.failure, result.secs) == (FailureKind.UNREACHABLE, 45.0)
+
+
+async def test_a_companyless_poll_reports_how_long_it_took() -> None:
+    result = await ingest_companyless_source(
+        CompanylessSource([companyless_job("1", "BrandNewCo")]),
+        FakeJobRepo(),
+        FakeCompanyRepo(),
+        CountingClassifier(),
+        now=NOW,
+        clock=SteppingClock(7.0),
+    )
+
+    assert result.secs == 7.0
+
+
+async def test_the_poll_line_carries_secs(caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level("INFO", logger="beacon.application.ingest")
+
+    await ingest_source(
+        FakeSource([{"id": 1}]),
+        COMPANY,
+        FakeJobRepo(),
+        CountingClassifier(),
+        now=NOW,
+        clock=SteppingClock(2.5),
+    )
+
+    assert any(
+        r.getMessage().startswith("poll source=") and r.getMessage().endswith(" secs=2.5")
+        for r in caplog.records
+    )

@@ -1,4 +1,5 @@
 import logging
+import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -14,6 +15,8 @@ logger = logging.getLogger(__name__)
 
 # Wiring provides this: maps a company to its ATS adapter, or None when no adapter exists yet.
 type SourceFactory = Callable[[Company], JobSource | None]
+# Seconds from an arbitrary origin, monotonic. Injected so tests can step it (slice 25a).
+type Clock = Callable[[], float]
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,6 +27,9 @@ class IngestResult:
     # None on a successful poll; the health FailureKind when the poll failed. A failed poll
     # is fed to record_failure and — crucially — never runs the closed-sweep (SPEC §7).
     failure: FailureKind | None = None
+    # Wall time of this one poll, failures included: a host timing out three times is exactly
+    # the source that costs minutes (slice 25a — the poll had no per-source timing at all).
+    secs: float = 0.0
 
 
 def _resolve_sponsorship(job: NormalizedJob, registry_flags: int) -> SponsorSignal:
@@ -66,8 +72,19 @@ def _upsert_posting(
     )
 
 
+def _stopwatch(clock: Clock) -> Callable[[], float]:
+    started = clock()
+    return lambda: round(clock() - started, 1)
+
+
 async def ingest_source(
-    source: JobSource, company: Company, jobs: JobRepo, classifier: Classifier, *, now: datetime
+    source: JobSource,
+    company: Company,
+    jobs: JobRepo,
+    classifier: Classifier,
+    *,
+    now: datetime,
+    clock: Clock = time.monotonic,
 ) -> IngestResult:
     """Fetch → normalize → classify → upsert one board. One bad posting never kills the poll.
 
@@ -79,17 +96,28 @@ async def ingest_source(
     if company.id is None:
         raise ValueError(f"company {company.name!r} must be persisted before ingest")
 
+    elapsed = _stopwatch(clock)
     try:
         raw_postings = await source.fetch()
     except SourceUnavailable as exc:
+        secs = elapsed()
         logger.warning(
-            "poll_failed source=%s company=%s kind=%s", source.source_id, company.name, exc.kind
+            "poll_failed source=%s company=%s kind=%s secs=%.1f",
+            source.source_id,
+            company.name,
+            exc.kind,
+            secs,
         )
-        return IngestResult(fetched=0, upserted=0, errors=1, failure=exc.kind)
+        return IngestResult(fetched=0, upserted=0, errors=1, failure=exc.kind, secs=secs)
     except Exception:
         # Fetched bytes but couldn't even build the posting list → the response shape changed.
-        logger.exception("poll_schema_drift source=%s company=%s", source.source_id, company.name)
-        return IngestResult(fetched=0, upserted=0, errors=1, failure=FailureKind.SCHEMA_DRIFT)
+        secs = elapsed()
+        logger.exception(
+            "poll_schema_drift source=%s company=%s secs=%.1f", source.source_id, company.name, secs
+        )
+        return IngestResult(
+            fetched=0, upserted=0, errors=1, failure=FailureKind.SCHEMA_DRIFT, secs=secs
+        )
 
     upserted = errors = 0
     seen: set[str] = set()
@@ -118,7 +146,11 @@ async def ingest_source(
             len(raw_postings),
         )
         return IngestResult(
-            fetched=len(raw_postings), upserted=0, errors=errors, failure=FailureKind.SCHEMA_DRIFT
+            fetched=len(raw_postings),
+            upserted=0,
+            errors=errors,
+            failure=FailureKind.SCHEMA_DRIFT,
+            secs=elapsed(),
         )
 
     # Genuine success (fetch returned and at least one posting normalized, or the board is
@@ -127,16 +159,18 @@ async def ingest_source(
     closed = jobs.sweep_absent_jobs(
         source.source_id, company.id, seen, now, threshold=CLOSE_AFTER_MISSES
     )
+    secs = elapsed()
     logger.info(
-        "poll source=%s company=%s fetched=%d upserted=%d errors=%d closed=%d",
+        "poll source=%s company=%s fetched=%d upserted=%d errors=%d closed=%d secs=%.1f",
         source.source_id,
         company.name,
         len(raw_postings),
         upserted,
         errors,
         closed,
+        secs,
     )
-    return IngestResult(fetched=len(raw_postings), upserted=upserted, errors=errors)
+    return IngestResult(fetched=len(raw_postings), upserted=upserted, errors=errors, secs=secs)
 
 
 def _shadow_company(job: NormalizedJob) -> Company:
@@ -160,12 +194,14 @@ async def ingest_companyless_source(
     classifier: Classifier,
     *,
     now: datetime,
+    clock: Clock = time.monotonic,
 ) -> IngestResult:
     """Ingest a source whose postings each name their own employer (HN, JobTech).
 
     One source yields jobs across many companies; each posting resolves-or-creates its
     employer (a known seed is reused, so its registry flags carry through). One bad posting
     never kills the poll."""
+    elapsed = _stopwatch(clock)
     raw_postings = await source.fetch()
     upserted = errors = 0
     seen: set[str] = set()
@@ -187,15 +223,17 @@ async def ingest_companyless_source(
     # Successful poll → sweep this source's postings across every employer it spans
     # (company_id=None: a company-less source isn't scoped to one company).
     closed = jobs.sweep_absent_jobs(source.source_id, None, seen, now, threshold=CLOSE_AFTER_MISSES)
+    secs = elapsed()
     logger.info(
-        "poll source=%s fetched=%d upserted=%d errors=%d closed=%d",
+        "poll source=%s fetched=%d upserted=%d errors=%d closed=%d secs=%.1f",
         source.source_id,
         len(raw_postings),
         upserted,
         errors,
         closed,
+        secs,
     )
-    return IngestResult(fetched=len(raw_postings), upserted=upserted, errors=errors)
+    return IngestResult(fetched=len(raw_postings), upserted=upserted, errors=errors, secs=secs)
 
 
 async def ingest_all(

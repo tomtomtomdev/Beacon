@@ -1569,6 +1569,38 @@ Open `backend` went 956 → **365** and `infra` is **471**, with 18 carrying bot
 
 ---
 
+## Slice 25 — The poll gets a time budget — **IN PROGRESS 2026-10-10**
+
+**Why:** the 2026-10-10 12:00 poll ran `secs=2989` against a 3000s watchdog. Withdrawing slice
+23's board queries buys a few minutes back, but the poll had already grown from 2091s
+(2026-09-11) with the corpus. Every source polls **sequentially**, so wall time is the *sum*
+of every source's time. `PoliteClient` already holds a lock per host, so its 1 rps limit is per
+host. Sources on different hosts could overlap without being any less polite. The log has no
+per-source timing, so where the 50 minutes go is a guess.
+
+- **25a: measure.** `secs=` on every `poll source=…` line (success and failure: a timing-out
+  host is exactly what costs minutes), carried on `IngestResult` and printed to the out-log.
+  The clock is injected, never read inside the use case's logic. Then one full poll through the
+  production path (`launchctl kickstart com.beacon.digest`: lock, watchdog, fallback digest).
+- **25b: budget.** Driven by 25a's numbers. Expected: run ATS companies and company-less
+  sources concurrently under a semaphore. Same-host requests still serialise on
+  `PoliteClient`'s per-host lock, so wall time tends to the slowest *host*, not the sum. SQLite
+  stays on one connection in one event loop; each repo call is synchronous, so no two writes
+  interleave.
+
+Acceptance:
+- [ ] Every poll line carries `secs=`; the out-log prints it per company and per source
+- [ ] A measured full poll, with the slowest sources named in PROGRESS
+- [ ] 25b: a full poll ≤ **25 min** (half the watchdog) through the production path, and still 1
+      rps per host (pinned by the existing `PoliteClient` tests)
+- [ ] `make verify` green; PROGRESS Decisions entry
+
+**Kill criterion for 25b:** if concurrency produces any `database is locked`, a 429 from a
+board, or a different `fetched=` total for the same sources, revert to sequential and cap
+MyCareersFuture's detail fetches instead.
+
+---
+
 ## Cross-cutting rules
 
 - Every network adapter is tested against recorded fixtures only; live calls happen solely in manual acceptance checks
