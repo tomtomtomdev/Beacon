@@ -88,6 +88,20 @@ async def test_list_returns_created_searches(client: httpx.AsyncClient) -> None:
     assert listed[1]["notify_channel"] == "telegram"  # server default when omitted
 
 
+async def test_a_saved_search_on_a_slice_23_category_counts_its_jobs(
+    client: httpx.AsyncClient, db_path: Path
+) -> None:
+    """The wider categories need no search-side code — the category is a plain string from
+    pill to SQL — but that is a claim worth one test, not an assumption."""
+    _seed_ios_job(db_path, "1", country="SE", category=Category.ENG_MGMT)
+    _seed_ios_job(db_path, "2", country="SE", category=Category.SOFTWARE)
+
+    await client.post("/searches", json={"name": "EMs", "filters": {"categories": ["eng-mgmt"]}})
+    listed = (await client.get("/searches")).json()
+
+    assert listed[0]["new_count"] == 1
+
+
 async def test_delete_returns_204_then_404(client: httpx.AsyncClient) -> None:
     created = (await client.post("/searches", json=IOS_SE_SEARCH)).json()
 

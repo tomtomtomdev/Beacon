@@ -30,6 +30,20 @@ export const CATEGORY_OPTIONS: ReadonlyArray<{ value: string; label: string }> =
   { value: 'frontend', label: 'Frontend' },
 ]
 
+// Slice 23 (2026-10-10): the rest of engineering. Behind the row's "More" toggle so the seven
+// SPEC §3 profile pills keep their place and the DESIGN §2 row does not wrap. `software` is the
+// backend's fallback for a title that names no specialism; `solutions` is kept apart so
+// customer-facing engineering can be left out.
+export const MORE_CATEGORY_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: 'software', label: 'Software' },
+  { value: 'data', label: 'Data' },
+  { value: 'security', label: 'Security' },
+  { value: 'embedded', label: 'Embedded' },
+  { value: 'qa', label: 'QA' },
+  { value: 'eng-mgmt', label: 'Eng. management' },
+  { value: 'solutions', label: 'Solutions' },
+]
+
 // DESIGN.md §2 surfaces only the three target-profile levels as filter pills.
 export const LEVEL_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: 'senior', label: 'Senior' },
@@ -37,7 +51,9 @@ export const LEVEL_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: 'lead', label: 'Lead' },
 ]
 
-const CATEGORY_LABELS = new Map(CATEGORY_OPTIONS.map(({ value, label }) => [value, label]))
+const CATEGORY_LABELS = new Map(
+  [...CATEGORY_OPTIONS, ...MORE_CATEGORY_OPTIONS].map(({ value, label }) => [value, label]),
+)
 
 // Unknown codes (e.g. a new backend category not yet in the table) fall back to the raw code.
 export const categoryLabel = (value: string): string => CATEGORY_LABELS.get(value) ?? value

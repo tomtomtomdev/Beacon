@@ -542,6 +542,29 @@ describe('JobsPane', () => {
     })
   })
 
+  // Slice 23: the rest of engineering sits behind "More" so the DESIGN §2 row does not wrap.
+  it('keeps the wider engineering categories behind More until asked', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByText('Swift Engineer')
+    expect(screen.queryByRole('button', { name: 'Data' })).toBeNull()
+
+    await user.click(screen.getByRole('button', { name: /more categories/i }))
+    await user.click(screen.getByRole('button', { name: 'Data' }))
+
+    await waitFor(() => {
+      expect(jobListUrls().some((u) => u.includes('category=data'))).toBe(true)
+    })
+  })
+
+  it('shows an active wider category without opening More', async () => {
+    renderPage('/?category=security')
+
+    await screen.findByText('Swift Engineer')
+
+    expect(screen.getByRole('button', { name: 'Security' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
   it('selecting a level pill refetches with the level param', async () => {
     const user = userEvent.setup()
     renderPage()

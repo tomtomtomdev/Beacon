@@ -176,7 +176,10 @@ SKILL_COVERAGE_FLOOR = 3
 #    and is exempt from OFF_STRATEGY_FACTOR. The bump is load-bearing, not bookkeeping — the
 #    backfill moves existing ID rows to the new tier WITHOUT touching content_hash, so the
 #    cache would otherwise keep serving every Jakarta job the 0.40 it scored as `unknown`.
-SCORING_VERSION = 2
+# 3: 2026-10-10. Slice 23 widened the shared vocabulary (seven categories, .NET/C#/C++ as
+#    skills) that build_profile and score_match both read. Category alignment and skill
+#    overlap move for any resume or posting that names them, with no content_hash change.
+SCORING_VERSION = 3
 
 
 def build_profile(text: str, *, target_countries: frozenset[str] = frozenset()) -> ResumeProfile:

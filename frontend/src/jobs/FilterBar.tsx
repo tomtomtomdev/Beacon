@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import type { SortBy } from '../api/jobs'
 import type { Country, MarketCoverage, PriorityTier, SponsorTier } from '../api/types'
 import styles from './FilterBar.module.css'
-import { CATEGORY_OPTIONS, LEVEL_OPTIONS, regionName } from './taxonomy'
+import { CATEGORY_OPTIONS, LEVEL_OPTIONS, MORE_CATEGORY_OPTIONS, regionName } from './taxonomy'
 
 // DESIGN.md §1 sponsor-tier dropdown; dot colors reuse the tier tokens.
 const TIER_OPTIONS: ReadonlyArray<{ value: SponsorTier; label: string; dot: string }> = [
@@ -71,6 +71,12 @@ export function FilterBar({
   showFitSort,
 }: FilterBarProps) {
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null)
+  // Closed, the overflow still shows any wider category that is active — derived, not synced,
+  // so a shared ?category=security link renders its pill pressed without a click.
+  const [moreOpen, setMoreOpen] = useState(false)
+  const visibleMore = moreOpen
+    ? MORE_CATEGORY_OPTIONS
+    : MORE_CATEGORY_OPTIONS.filter(({ value }) => categories.includes(value))
   // Derived during render from the one response — no state, no effect.
   const openJobs = useMemo(
     () => new Map(coverage?.target_markets.map((market) => [market.code, market.open_jobs])),
@@ -225,7 +231,7 @@ export function FilterBar({
 
       <div className={styles.chipRow}>
         <span className={styles.chipLabel}>Category</span>
-        {CATEGORY_OPTIONS.map(({ value, label }) => (
+        {[...CATEGORY_OPTIONS, ...visibleMore].map(({ value, label }) => (
           <button
             key={value}
             type="button"
@@ -236,6 +242,15 @@ export function FilterBar({
             {label}
           </button>
         ))}
+        <button
+          type="button"
+          className={styles.chipMore}
+          aria-expanded={moreOpen}
+          aria-label={moreOpen ? 'Fewer categories' : 'More categories'}
+          onClick={() => setMoreOpen((open) => !open)}
+        >
+          {moreOpen ? 'Fewer' : 'More'}
+        </button>
         <span className={styles.chipDivider} aria-hidden />
         <span className={styles.chipLabel}>Level</span>
         {LEVEL_OPTIONS.map(({ value, label }) => (

@@ -44,6 +44,21 @@
   font-weight: 600;
 }
 
+/* "More"/"Fewer" for the slice-23 categories: a text toggle in the chip row, quieter than a
+   pill so it does not read as a category itself. Existing tokens only. */
+.chipMore {
+  padding: 5px 6px;
+  border: none;
+  background: none;
+  color: var(--text-label);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.chipMore:hover {
+  color: var(--accent-soft-fg);
+}
+
 .chipDivider {
   width: 1px;
   height: 18px;

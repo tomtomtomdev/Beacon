@@ -313,8 +313,11 @@ def test_scoring_version_pins_behavior() -> None:
     """
     scored = {name: score_match(*case).overall for name, case in GOLDEN_CASES.items()}
 
+    # 3 (slice 23) moved EXTRACTION, not this arithmetic: the cached score is keyed on the
+    # posting's content_hash, and a widened vocabulary changes the skills and categories read
+    # from the same text — so the table below is unchanged while the version still had to move.
     assert (SCORING_VERSION, scored) == (
-        2,
+        3,
         {
             # 3/3 skills, category hit, exact level, sponsored in a target country
             "aligned_senior_ios_on_strategy": 100,
