@@ -5,7 +5,6 @@ Wiring only — connects settings, DB, seeds, adapters and the ingest use case.
 
 import argparse
 import asyncio
-import logging
 import time
 from datetime import UTC, datetime
 
@@ -24,10 +23,11 @@ from beacon.adapters.sources.factory import make_companyless_sources, make_sourc
 from beacon.adapters.sources.nav import NAV_HOST
 from beacon.application.countries import seed_countries
 from beacon.application.dedup import dedupe_jobs
-from beacon.application.ingest import ingest_all, ingest_companyless_source
+from beacon.application.ingest import ingest_all, ingest_companyless_all
+from beacon.application.ports import JobSource
 from beacon.application.probe import probe_quarantined
 from beacon.config import Settings
-from beacon.domain.company import SHADOW_ATS_TYPE
+from beacon.domain.company import SHADOW_ATS_TYPE, Company
 from beacon.notify import send_digest
 from beacon.logging_setup import configure_cli_logging
 
@@ -63,8 +63,9 @@ async def run_ingest(
     budget = SqliteLLMBudget(conn, cap=settings.llm_monthly_budget)
 
     # Heuristic-only until an Anthropic key is set, else a budget-gated tiered classifier
-    # (LLM on the ambiguous residue). The LLM client is sync (the Classifier port is sync);
-    # ingest is sequential, so a blocking classify stalls nothing that could run concurrently.
+    # (LLM on the ambiguous residue). The LLM client is sync (the Classifier port is sync), so
+    # since slice 25b a classify that calls the LLM briefly stalls the other sources' fetches —
+    # accepted: it is one call per unseen content_hash, under a monthly cap.
     with httpx.Client(timeout=30.0) as llm_client:
         classifier = make_classifier(
             llm_client, api_key=api_key, model=settings.llm_model, budget=budget
@@ -75,6 +76,7 @@ async def run_ingest(
 
             # ATS boards: one seed company each. Shadow rows (ats_type='none', left by a
             # prior company-less poll) are excluded — no adapter polls them.
+            ats: list[Company] = []
             if only_source is None and poll_ats:
                 ats = [c for c in company_repo.list_active() if c.ats_type != SHADOW_ATS_TYPE]
                 if only_company is not None:
@@ -82,7 +84,22 @@ async def run_ingest(
                     if not ats:
                         print(f"no active company with ats_slug={only_company!r}")
                         return 1
-                phase_started = time.monotonic()
+
+            # Company-less sources (HN, JobTech, Himalayas, MyCareersFuture, …): one source,
+            # many employers per posting.
+            boards: list[JobSource] = []
+            if only_company is None and poll_boards:
+                boards = make_companyless_sources(
+                    fetcher, nav_authenticated=settings.nav_api_token is not None
+                )
+                if only_source is not None:
+                    boards = [s for s in boards if s.source_id == only_source]
+                    if not boards:
+                        print(f"no company-less source with id={only_source!r}")
+                        return 1
+
+            async def poll_ats_phase() -> None:
+                started = time.monotonic()
                 results = await ingest_all(
                     ats, jobs, make_source_factory(fetcher), classifier, company_repo, now=now
                 )
@@ -91,40 +108,24 @@ async def run_ingest(
                         f"company={name} fetched={result.fetched}"
                         f" upserted={result.upserted} errors={result.errors} secs={result.secs}"
                     )
-                print(f"phase=ats secs={time.monotonic() - phase_started:.1f}")
+                print(f"phase=ats secs={time.monotonic() - started:.1f}")
 
-            # Company-less sources (HN, JobTech, Himalayas, MyCareersFuture, …): one source,
-            # many employers per posting.
-            if only_company is None and poll_boards:
-                sources = make_companyless_sources(
-                    fetcher, nav_authenticated=settings.nav_api_token is not None
+            async def poll_boards_phase() -> None:
+                started = time.monotonic()
+                results = await ingest_companyless_all(
+                    boards, jobs, company_repo, classifier, now=now
                 )
-                if only_source is not None:
-                    sources = [s for s in sources if s.source_id == only_source]
-                    if not sources:
-                        print(f"no company-less source with id={only_source!r}")
-                        return 1
-                phase_started = time.monotonic()
-                for source in sources:
-                    source_started = time.monotonic()
-                    try:
-                        result = await ingest_companyless_source(
-                            source, jobs, company_repo, classifier, now=now
-                        )
-                    except Exception:
-                        # A dead board never stops the run (rule 6); company-less sources have
-                        # no per-company health, so we just log and move on.
-                        logging.getLogger(__name__).exception(
-                            "companyless_poll_failed source=%s secs=%.1f",
-                            source.source_id,
-                            time.monotonic() - source_started,
-                        )
-                        continue
+                for source_id, result in results.items():
                     print(
-                        f"source={source.source_id} fetched={result.fetched}"
+                        f"source={source_id} fetched={result.fetched}"
                         f" upserted={result.upserted} errors={result.errors} secs={result.secs}"
                     )
-                print(f"phase=boards secs={time.monotonic() - phase_started:.1f}")
+                print(f"phase=boards secs={time.monotonic() - started:.1f}")
+
+            # Both families overlap (slice 25b); each phase is a no-op when its list is empty.
+            started = time.monotonic()
+            await asyncio.gather(poll_ats_phase(), poll_boards_phase())
+            print(f"phase=poll secs={time.monotonic() - started:.1f}")
 
             # Cross-source dedup runs once after every board is upserted (SPEC §5 pipeline).
             dedup = dedupe_jobs(jobs)

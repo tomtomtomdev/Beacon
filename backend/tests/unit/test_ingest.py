@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -7,6 +8,7 @@ import pytest
 from beacon.application.errors import SourceUnavailable
 from beacon.application.ingest import (
     ingest_all,
+    ingest_companyless_all,
     ingest_companyless_source,
     ingest_source,
 )
@@ -786,3 +788,111 @@ async def test_the_poll_line_carries_secs(caplog: pytest.LogCaptureFixture) -> N
         r.getMessage().startswith("poll source=") and r.getMessage().endswith(" secs=2.5")
         for r in caplog.records
     )
+
+
+# --- the poll overlaps its sources (slice 25b) ---------------------------------------------
+# Same-host requests still serialise on PoliteClient's per-host lock, so overlapping sources
+# costs no politeness; wall time stops being the sum of every source.
+
+
+class RendezvousSource(FakeSource):
+    """A fetch that cannot finish until `barrier.parties` fetches are in flight at once —
+    a sequential poll times out on it."""
+
+    def __init__(self, barrier: asyncio.Barrier) -> None:
+        super().__init__([{"id": 1}])
+        self._barrier = barrier
+
+    async def fetch(self) -> list[RawPosting]:
+        await asyncio.wait_for(self._barrier.wait(), timeout=1.0)
+        return await super().fetch()
+
+
+class InFlightSource(FakeSource):
+    """Records the most fetches it ever saw in flight together."""
+
+    def __init__(self, gauge: list[int]) -> None:
+        super().__init__([{"id": 1}])
+        self._gauge = gauge  # [current, peak]
+
+    async def fetch(self) -> list[RawPosting]:
+        self._gauge[0] += 1
+        self._gauge[1] = max(self._gauge[1], self._gauge[0])
+        await asyncio.sleep(0)
+        self._gauge[0] -= 1
+        return await super().fetch()
+
+
+async def test_ingest_all_polls_companies_concurrently() -> None:
+    companies = [make_company(name, "greenhouse", i) for i, name in enumerate("ABC", 1)]
+    barrier = asyncio.Barrier(3)
+
+    results = await ingest_all(
+        companies,
+        FakeJobRepo(),
+        lambda _: RendezvousSource(barrier),
+        CountingClassifier(),
+        FakeCompanyRepo(existing=companies),
+        now=NOW,
+    )
+
+    assert {name: r.failure for name, r in results.items()} == {"A": None, "B": None, "C": None}
+
+
+async def test_ingest_all_bounds_how_many_polls_overlap() -> None:
+    companies = [make_company(f"C{i}", "greenhouse", i) for i in range(1, 7)]
+    gauge = [0, 0]
+
+    await ingest_all(
+        companies,
+        FakeJobRepo(),
+        lambda _: InFlightSource(gauge),
+        CountingClassifier(),
+        FakeCompanyRepo(existing=companies),
+        now=NOW,
+        concurrency=2,
+    )
+
+    assert gauge[1] == 2
+
+
+async def test_ingest_all_reports_in_company_order_whatever_finishes_first() -> None:
+    companies = [make_company(name, "greenhouse", i) for i, name in enumerate("ZYX", 1)]
+
+    results = await ingest_all(
+        companies,
+        FakeJobRepo(),
+        lambda _: FakeSource([{"id": 1}]),
+        CountingClassifier(),
+        FakeCompanyRepo(existing=companies),
+        now=NOW,
+    )
+
+    assert list(results) == ["Z", "Y", "X"]
+
+
+class CrashingCompanylessSource(CompanylessSource):
+    async def fetch(self) -> list[RawPosting]:
+        raise RuntimeError("board down")
+
+
+async def test_companyless_sources_poll_concurrently_and_one_crash_never_stops_the_rest() -> None:
+    barrier = asyncio.Barrier(2)
+
+    class Meeting(CompanylessSource):
+        async def fetch(self) -> list[RawPosting]:
+            await asyncio.wait_for(barrier.wait(), timeout=1.0)
+            return await super().fetch()
+
+    first = Meeting([companyless_job("1", "Aco")])
+    first.source_id = "hn"
+    second = Meeting([companyless_job("2", "Bco")])
+    second.source_id = "jobtech"
+    broken = CrashingCompanylessSource([])
+    broken.source_id = "remoteok"
+
+    results = await ingest_companyless_all(
+        [first, broken, second], FakeJobRepo(), FakeCompanyRepo(), CountingClassifier(), now=NOW
+    )
+
+    assert {sid: r.upserted for sid, r in results.items()} == {"hn": 1, "jobtech": 1}

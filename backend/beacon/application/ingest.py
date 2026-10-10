@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import time
 from collections.abc import Callable, Sequence
@@ -17,6 +18,11 @@ logger = logging.getLogger(__name__)
 type SourceFactory = Callable[[Company], JobSource | None]
 # Seconds from an arbitrary origin, monotonic. Injected so tests can step it (slice 25a).
 type Clock = Callable[[], float]
+
+# How many sources poll at once (slice 25b). Politeness does not depend on it: PoliteClient
+# serialises same-host requests behind a per-host lock at 1 rps, so the bound only caps open
+# connections and memory. Sources on one host (every Greenhouse board) still queue.
+POLL_CONCURRENCY = 16
 
 
 @dataclass(frozen=True, slots=True)
@@ -244,36 +250,85 @@ async def ingest_all(
     company_repo: CompanyRepo,
     *,
     now: datetime,
+    concurrency: int = POLL_CONCURRENCY,
 ) -> dict[str, IngestResult]:
     """Poll every company that has an adapter and isn't quarantined, recording each poll's
     health outcome. One dead board never stops the run; a quarantined source is skipped
-    entirely (no fetch, no sweep — its jobs stay frozen), only the weekly probe retries it."""
-    results: dict[str, IngestResult] = {}
-    for company in companies:
+    entirely (no fetch, no sweep — its jobs stay frozen), only the weekly probe retries it.
+
+    Polls overlap, at most `concurrency` at a time (slice 25b: run sequentially, the poll's
+    wall time was the sum of 60+ boards and reached 2989s of a 3000s watchdog). Results come
+    back in company order whatever finishes first."""
+    gate = asyncio.Semaphore(concurrency)
+
+    async def poll(company: Company) -> IngestResult | None:
         source = source_for(company)
         if source is None:
             logger.info(
                 "skip company=%s ats_type=%s reason=no_adapter", company.name, company.ats_type
             )
-            continue
+            return None
         if company.id is None:
-            continue  # seed rows are always persisted; guard narrows the type
+            return None  # seed rows are always persisted; guard narrows the type
         state = company_repo.get_health(company.id)
         if not should_poll(state):
             logger.info(
                 "skip company=%s reason=quarantined since=%s", company.name, state.last_success_at
             )
-            continue
+            return None
         try:
-            result = await ingest_source(source, company, jobs, classifier, now=now)
+            async with gate:
+                result = await ingest_source(source, company, jobs, classifier, now=now)
         except Exception:
             logger.exception("poll_crashed source=%s company=%s", source.source_id, company.name)
-            continue
+            return None
         updated = (
             record_success(state, now=now)
             if result.failure is None
             else record_failure(state, result.failure)
         )
         company_repo.set_health(company.id, updated)
-        results[company.name] = result
-    return results
+        return result
+
+    outcomes = await asyncio.gather(*(poll(company) for company in companies))
+    return {
+        company.name: result
+        for company, result in zip(companies, outcomes, strict=True)
+        if result is not None
+    }
+
+
+async def ingest_companyless_all(
+    sources: Sequence[JobSource],
+    jobs: JobRepo,
+    companies: CompanyRepo,
+    classifier: Classifier,
+    *,
+    now: datetime,
+    concurrency: int = POLL_CONCURRENCY,
+    clock: Clock = time.monotonic,
+) -> dict[str, IngestResult]:
+    """Poll every company-less source, overlapping like ingest_all. A source that crashes is
+    logged with its time and skipped (rule 6): company-less sources have no per-company health
+    to record. Results come back in source order."""
+    gate = asyncio.Semaphore(concurrency)
+
+    async def poll(source: JobSource) -> IngestResult | None:
+        async with gate:
+            elapsed = _stopwatch(clock)
+            try:
+                return await ingest_companyless_source(
+                    source, jobs, companies, classifier, now=now, clock=clock
+                )
+            except Exception:
+                logger.exception(
+                    "companyless_poll_failed source=%s secs=%.1f", source.source_id, elapsed()
+                )
+                return None
+
+    outcomes = await asyncio.gather(*(poll(source) for source in sources))
+    return {
+        source.source_id: result
+        for source, result in zip(sources, outcomes, strict=True)
+        if result is not None
+    }
