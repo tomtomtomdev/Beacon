@@ -30,6 +30,23 @@ ROLE_QUERIES: tuple[str, ...] = (
     "swift engineer",
     "java backend engineer",
     "machine learning engineer",
+    # Slice 23: the rest of engineering. Each probed live 2026-10-10 (page 1 of 20, titles run
+    # through the classifier): software 19/20 read as engineering, backend 19/19, frontend
+    # 20/20, full stack 20/20, android 18/18, data 15/20, devops 20/20, site reliability 20/20,
+    # security 19/20, qa 18/18, embedded 17/20. Rejected: "engineering manager" (11/19 — mostly
+    # electrical/project-management titles), "python developer"/"golang developer" (subsets of
+    # backend). The board needs no detail fetch, so each query costs at most 3 requests.
+    "software engineer",
+    "backend engineer",
+    "frontend engineer",
+    "full stack engineer",
+    "android engineer",
+    "data engineer",
+    "devops engineer",
+    "site reliability engineer",
+    "security engineer",
+    "qa engineer",
+    "embedded engineer",
 )
 _PAGE_SIZE = 20  # the search endpoint's maximum
 _MAX_PAGES = 3  # 60 newest matches per query per poll; the rest arrive on later polls

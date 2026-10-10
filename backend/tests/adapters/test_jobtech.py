@@ -80,5 +80,9 @@ async def test_jobtech_fetch_requests_the_search_endpoint(jobtech_search: dict[s
 
     raw_hits = await make_adapter(handler).fetch()
 
-    assert seen_urls == ["https://jobsearch.api.jobtechdev.se/search?limit=100"]
+    # Steered to the Data/IT occupation field (slice 23): unsteered, the newest 100 of ~42k
+    # Swedish ads held 6 engineering titles; steered, 37 (probed live 2026-10-10).
+    assert seen_urls == [
+        "https://jobsearch.api.jobtechdev.se/search?limit=100&occupation-field=apaJ_2ja_LuF"
+    ]
     assert len(raw_hits) == 4

@@ -32,6 +32,15 @@ ROLE_QUERIES: tuple[str, ...] = (
     "mobile engineer",
     "Java backend engineer",
     "machine learning engineer",
+    # Slice 23, probed live 2026-10-10 (page 1, classified): software 20/20, data 20/20,
+    # engineering manager 19/20, devops 20/20. Held to four because this board costs one
+    # detail fetch per hit and sources poll sequentially — up to ~60s a query against the 50
+    # min watchdog. Rejected: qa (13/20), embedded (10 total), android (10 total), and
+    # python/golang/backend/frontend/full stack (small, or already reached by the queries above).
+    "software engineer",
+    "data engineer",
+    "engineering manager",
+    "devops engineer",
 )
 _PAGE_SIZE = 20
 _MAX_PAGES = 3

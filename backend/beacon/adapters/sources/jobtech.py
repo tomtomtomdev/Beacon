@@ -13,6 +13,10 @@ from beacon.domain.descriptions import content_hash, normalize_description
 from beacon.domain.job import NormalizedJob
 
 _SEARCH_API = "https://jobsearch.api.jobtechdev.se/search"
+# The taxonomy concept id of the "Data/IT" occupation field. The board carries every kind of
+# Swedish job; unsteered, the newest 100 held 6 engineering titles, steered 37 (slice 23,
+# probed live 2026-10-10 — the rest are mostly Swedish IT titles the vocabulary cannot read).
+DATA_IT_OCCUPATION_FIELD = "apaJ_2ja_LuF"
 _AD_URL = "https://arbetsformedlingen.se/platsbanken/annonser/{id}"
 _DEFAULT_COUNTRY = "SE"
 # country_code is JobTech's numeric taxonomy, not ISO-2. Sweden (199) dominates this board;
@@ -30,7 +34,10 @@ class JobTechAdapter:
         self._limit = limit
 
     async def fetch(self) -> list[RawPosting]:
-        data = await self._fetcher.get_json(_SEARCH_API, params={"limit": str(self._limit)})
+        data = await self._fetcher.get_json(
+            _SEARCH_API,
+            params={"limit": str(self._limit), "occupation-field": DATA_IT_OCCUPATION_FIELD},
+        )
         hits: list[RawPosting] = data["hits"]
         return hits
 

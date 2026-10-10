@@ -13,7 +13,9 @@ import httpx
 import pytest
 
 from beacon.adapters.http.polite import PoliteClient
-from beacon.adapters.sources.mycareersfuture import MyCareersFutureAdapter
+from beacon.domain.classification import Category
+from beacon.domain.vocabulary import extract_categories
+from beacon.adapters.sources.mycareersfuture import MyCareersFutureAdapter, ROLE_QUERIES
 
 
 @pytest.fixture
@@ -128,3 +130,19 @@ async def test_mycareersfuture_fetch_stops_at_a_short_page(search_ios: dict[str,
     await make_adapter(handler=handler, max_pages=4).fetch()
 
     assert pages == ["0"]  # three results on a 20-row page → no page 1
+
+
+# Slice 23: the steered queries reach past the SPEC §1 profile to the rest of engineering.
+# Every query must name a role the classifier can read, or it buys only residue.
+
+
+def test_every_role_query_names_a_role_the_classifier_recognises() -> None:
+    unread = [query for query in ROLE_QUERIES if not extract_categories(query)]
+
+    assert unread == []
+
+
+def test_role_queries_reach_the_wider_engineering_families() -> None:
+    covered = {category for query in ROLE_QUERIES for category in extract_categories(query)}
+
+    assert covered >= {Category.SOFTWARE, Category.DATA, Category.ENG_MGMT}

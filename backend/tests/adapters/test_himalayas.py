@@ -11,7 +11,9 @@ import httpx
 import pytest
 
 from beacon.adapters.http.polite import PoliteClient
-from beacon.adapters.sources.himalayas import HimalayasAdapter
+from beacon.domain.classification import Category
+from beacon.domain.vocabulary import extract_categories
+from beacon.adapters.sources.himalayas import HimalayasAdapter, ROLE_QUERIES
 
 
 @pytest.fixture
@@ -111,3 +113,25 @@ async def test_himalayas_fetch_pages_up_to_the_configured_maximum() -> None:
     raw_postings = await make_adapter(handler=handler, max_pages=2).fetch()
 
     assert len(raw_postings) == 40  # two full pages, then the cap stops the walk
+
+
+# Slice 23: the steered queries reach past the SPEC §1 profile to the rest of engineering.
+# Every query must name a role the classifier can read, or it buys only residue.
+
+
+def test_every_role_query_names_a_role_the_classifier_recognises() -> None:
+    unread = [query for query in ROLE_QUERIES if not extract_categories(query)]
+
+    assert unread == []
+
+
+def test_role_queries_reach_the_wider_engineering_families() -> None:
+    covered = {category for query in ROLE_QUERIES for category in extract_categories(query)}
+
+    assert covered >= {
+        Category.SOFTWARE,
+        Category.DATA,
+        Category.SECURITY,
+        Category.QA,
+        Category.EMBEDDED,
+    }
