@@ -2063,6 +2063,36 @@ MyCareersFuture's detail fetches instead.
 
 ---
 
+## Slice 30 — SmartRecruiters stops re-fetching ads it already has — **IN PROGRESS 2026-10-10**
+
+**Why:** slice 29 left the poll bounded by one host. SmartRecruiters' list endpoint carries no ad
+text, so every poll GETs every posting's detail at 1 rps: 704s of the 1758s sequential poll (Grab
+469s alone), almost all of it for postings stored on an earlier poll.
+
+**Shape (a port addition, not a use-case special case per source):**
+- `JobRepo.stored_postings(source_id, company_id) -> dict[external_id, posted_at]`.
+- An optional `IncrementalSource` port: `fetch_new(stored) -> Fetched(postings, still_listed)`.
+  The adapter lists the board, GETs details only for ids it has not stored **or whose list
+  `releasedDate` differs from the stored `posted_at`** (a repost refreshes), and reports the rest
+  as `still_listed`. One resolver in the use case picks `fetch_new` over `fetch`.
+- `still_listed` ids join the sweep's seen set, so they stay open (and a closed one reopens).
+  The sweep stamps `last_seen_at` on every present row, so a skipped row's column stays true.
+- The poll line gains `unchanged=`; `fetched=` stays the board's listed total, so supply compares
+  with slice 29's numbers.
+
+**Accepted cost:** an in-place edit of a stored ad (same id, same `releasedDate`) is not seen until
+the posting is reposted. Classification reads the title, and SmartRecruiters titles change by
+reposting in practice.
+
+Acceptance:
+- [ ] 30a sweep stamps `last_seen_at` on present rows (integration test)
+- [ ] 30b `stored_postings` (integration test)
+- [ ] 30c use case: `still_listed` ids are swept as seen, never upserted; result/log carry `unchanged=`
+- [ ] 30d adapter: details only for new or reposted ids (fixture test counts the detail GETs)
+- [ ] Live: a SmartRecruiters re-poll's `secs=` falls to roughly its list pages; `fetched=` unchanged; `make verify` green
+
+---
+
 ## Cross-cutting rules
 
 - Every network adapter is tested against recorded fixtures only; live calls happen solely in manual acceptance checks

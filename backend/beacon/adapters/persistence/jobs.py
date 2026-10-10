@@ -344,6 +344,18 @@ class SqliteJobRepo:
             ),
         )
 
+    def stored_postings(self, source_id: str, company_id: int) -> dict[str, datetime | None]:
+        rows = self._conn.execute(
+            "SELECT external_id, posted_at FROM jobs WHERE source_id = ? AND company_id = ?",
+            (source_id, company_id),
+        ).fetchall()
+        return {
+            row["external_id"]: datetime.fromisoformat(row["posted_at"])
+            if row["posted_at"]
+            else None
+            for row in rows
+        }
+
     def sweep_absent_jobs(
         self,
         source_id: str,
@@ -372,11 +384,13 @@ class SqliteJobRepo:
         ).fetchone()[0]
 
         # Present again → reset misses and reopen (a closed posting that reappears is live).
+        # Stamping last_seen_at here, not only in upsert, keeps it true for a posting an
+        # incremental source listed but did not re-fetch (slice 30).
         if seen:
             self._conn.execute(
-                f"UPDATE jobs SET consecutive_misses = 0, closed_at = NULL"
+                f"UPDATE jobs SET consecutive_misses = 0, closed_at = NULL, last_seen_at = ?"
                 f" WHERE {scope} AND external_id IN ({placeholders})",
-                (*scope_params, *seen),
+                (now.isoformat(), *scope_params, *seen),
             )
         # Absent → one more miss; close once the counter reaches the threshold.
         self._conn.execute(

@@ -13,6 +13,7 @@ import pytest
 
 from beacon.adapters.http.polite import PoliteClient
 from beacon.adapters.sources.smartrecruiters import SmartRecruitersAdapter
+from beacon.application.ports import IncrementalSource
 
 
 @pytest.fixture
@@ -127,3 +128,55 @@ async def test_smartrecruiters_fetch_pages_until_total_found_is_covered() -> Non
 
     assert requested_offsets == ["0", "2"]
     assert [raw["id"] for raw in raw_postings] == ["1", "2", "3"]
+
+
+# --- slice 30: stored ads are not re-fetched -----------------------------------------------
+
+STORED_AT = datetime(2026, 8, 23, 10, 44, 36, 88000, tzinfo=UTC)  # 744000145032469's releasedDate
+
+
+def recording_handler(
+    grab_postings: dict[str, Any], grab_details: list[dict[str, Any]], details: list[str]
+) -> Callable[[httpx.Request], httpx.Response]:
+    def handler(request: httpx.Request) -> httpx.Response:
+        posting_id = request.url.path.rsplit("/", 1)[-1]
+        if posting_id == "postings":
+            return httpx.Response(200, json=grab_postings)
+        details.append(posting_id)
+        return httpx.Response(200, json=detail(grab_details, posting_id))
+
+    return handler
+
+
+async def test_fetch_new_skips_the_detail_of_a_posting_already_stored(
+    grab_postings: dict[str, Any], grab_details: list[dict[str, Any]]
+) -> None:
+    details: list[str] = []
+    adapter = make_adapter(handler=recording_handler(grab_postings, grab_details, details))
+
+    fetched = await adapter.fetch_new({"744000145032469": STORED_AT})
+
+    assert "744000145032469" not in details
+    assert len(details) == 3
+    assert [raw["id"] for raw in fetched.postings] == details
+    assert fetched.still_listed == frozenset({"744000145032469"})
+
+
+async def test_fetch_new_refetches_a_stored_posting_whose_released_date_moved(
+    grab_postings: dict[str, Any], grab_details: list[dict[str, Any]]
+) -> None:
+    """A repost keeps its id but gets a new releasedDate — the one cheap signal the list
+    carries that the ad may have changed."""
+    details: list[str] = []
+    adapter = make_adapter(handler=recording_handler(grab_postings, grab_details, details))
+
+    fetched = await adapter.fetch_new({"744000145032469": datetime(2026, 1, 1, tzinfo=UTC)})
+
+    assert "744000145032469" in details
+    assert fetched.still_listed == frozenset()
+
+
+def test_smartrecruiters_is_an_incremental_source() -> None:
+    """The use case picks fetch_new by this check; if it ever fails, the poll silently goes
+    back to re-fetching every ad."""
+    assert isinstance(make_adapter(), IncrementalSource)

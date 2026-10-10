@@ -63,6 +63,9 @@ class FakeJobRepo:
     def upsert(self, *args: object, **kwargs: object) -> None:
         raise NotImplementedError
 
+    def stored_postings(self, source_id: str, company_id: int) -> dict[str, datetime | None]:
+        raise NotImplementedError
+
     def content_hash_for(self, source_id: str, external_id: str) -> str | None:
         raise NotImplementedError
 

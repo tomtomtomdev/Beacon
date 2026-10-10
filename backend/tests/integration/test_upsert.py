@@ -208,3 +208,24 @@ def test_company_upsert_is_idempotent_and_returns_id(db: sqlite3.Connection) -> 
 
     assert first.id is not None and first.id == second.id
     assert db.execute("SELECT COUNT(*) AS n FROM companies").fetchone()["n"] == 1
+
+
+def test_stored_postings_maps_each_external_id_to_its_posted_at(
+    db: sqlite3.Connection, company_id: int
+) -> None:
+    """Slice 30: what an incremental source needs to skip a detail fetch — scoped to one
+    company on a shared ATS source, closed rows included (a reappearing one reopens)."""
+    repo = SqliteJobRepo(db)
+    other = SqliteCompanyRepo(db).upsert(
+        Company(name="Grab", ats_type="greenhouse", ats_slug="grab", country_hq="SG", priority=1)
+    )
+    assert other.id is not None
+    repo.upsert(company_id, make_job(), seen_at=FIRST_POLL)
+    repo.upsert(
+        company_id, replace(make_job(), external_id="2", posted_at=None), seen_at=FIRST_POLL
+    )
+    repo.upsert(other.id, replace(make_job(), external_id="3"), seen_at=FIRST_POLL)
+
+    stored = repo.stored_postings("greenhouse", company_id)
+
+    assert stored == {"6000558004": datetime(2026, 5, 20, 0, 17, 51, tzinfo=UTC), "2": None}

@@ -81,6 +81,20 @@ def test_absent_job_closes_after_threshold_consecutive_misses(db: sqlite3.Connec
     assert closed_at(db, "1") is None  # present every poll
 
 
+def test_sweep_stamps_last_seen_on_present_rows(db: sqlite3.Connection) -> None:
+    """Slice 30: a posting whose detail fetch was skipped is never upserted, so the sweep is
+    the only write that proves it was still listed."""
+    company_id = seed_company(db)
+    jobs = SqliteJobRepo(db)
+    jobs.upsert(company_id, make_job("1"), seen_at=POLL_AT)
+    later = datetime(2026, 7, 5, 6, 0, tzinfo=UTC)
+
+    jobs.sweep_absent_jobs("greenhouse", company_id, {"1"}, later, threshold=2)
+
+    row = db.execute("SELECT last_seen_at FROM jobs WHERE external_id = '1'").fetchone()
+    assert row["last_seen_at"] == later.isoformat()
+
+
 def test_reappearing_job_resets_misses_and_reopens(db: sqlite3.Connection) -> None:
     company_id = seed_company(db)
     jobs = SqliteJobRepo(db)

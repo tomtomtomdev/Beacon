@@ -18,8 +18,10 @@ from beacon.application.ports import (
     JobFilters,
     JobPage,
     JobScoringInput,
+    Fetched,
     JobSource,
     RawPosting,
+    StoredPostings,
 )
 from beacon.domain.classification import Category, Classification, Level
 from beacon.domain.company import SHADOW_ATS_TYPE, Company
@@ -88,6 +90,12 @@ class FakeJobRepo:
         self.sponsorships: list[SponsorSignal | None] = []
         self.sweeps: list[tuple[str, int | None, set[str], datetime, int]] = []
         self._hashes: dict[tuple[str, str], str] = {}
+        self.stored: dict[str, datetime | None] = {}
+        self.stored_asked: list[tuple[str, int]] = []
+
+    def stored_postings(self, source_id: str, company_id: int) -> dict[str, datetime | None]:
+        self.stored_asked.append((source_id, company_id))
+        return self.stored
 
     def upsert(
         self,
@@ -896,3 +904,75 @@ async def test_companyless_sources_poll_concurrently_and_one_crash_never_stops_t
     )
 
     assert {sid: r.upserted for sid, r in results.items()} == {"hn": 1, "jobtech": 1}
+
+
+# --- incremental sources skip ads they already have (slice 30) -----------------------------
+
+
+class IncrementalFakeSource(FakeSource):
+    """Lists ids 1 and 2; reports every id it was told is stored as still listed, and hands
+    back only the rest for normalizing — the shape SmartRecruiters' adapter returns."""
+
+    def __init__(self, listed: list[str]) -> None:
+        super().__init__([{"id": i} for i in listed])
+        self.received: StoredPostings | None = None
+
+    async def fetch(self) -> list[RawPosting]:
+        raise AssertionError("an incremental source is fetched through fetch_new")
+
+    async def fetch_new(self, stored: StoredPostings) -> Fetched:
+        self.received = stored
+        new = [raw for raw in self._raws if str(raw["id"]) not in stored]
+        return Fetched(
+            postings=new,
+            still_listed=frozenset(str(r["id"]) for r in self._raws if str(r["id"]) in stored),
+        )
+
+
+async def test_an_incremental_source_is_told_what_its_company_has_stored() -> None:
+    repo = FakeJobRepo()
+    repo.stored = {"1": None}
+    source = IncrementalFakeSource(["1", "2"])
+
+    await ingest_source(source, COMPANY, repo, CountingClassifier(), now=NOW)
+
+    assert repo.stored_asked == [("greenhouse", 7)]
+    assert source.received == {"1": None}
+
+
+async def test_still_listed_postings_are_swept_as_seen_and_never_upserted() -> None:
+    repo = FakeJobRepo()
+    repo.stored = {"1": None}
+
+    result = await ingest_source(
+        IncrementalFakeSource(["1", "2"]), COMPANY, repo, CountingClassifier(), now=NOW
+    )
+
+    assert [job.external_id for _, job, _, _ in repo.upserts] == ["2"]
+    assert repo.sweeps == [("greenhouse", 7, {"1", "2"}, NOW, CLOSE_AFTER_MISSES)]
+    # fetched stays the board's listed total, so supply compares across slices
+    assert (result.fetched, result.upserted, result.unchanged) == (2, 1, 1)
+
+
+async def test_a_board_where_every_posting_is_already_stored_is_a_success_not_drift() -> None:
+    repo = FakeJobRepo()
+    repo.stored = {"1": None, "2": None}
+
+    result = await ingest_source(
+        IncrementalFakeSource(["1", "2"]), COMPANY, repo, CountingClassifier(), now=NOW
+    )
+
+    assert result.failure is None
+    assert repo.sweeps == [("greenhouse", 7, {"1", "2"}, NOW, CLOSE_AFTER_MISSES)]
+
+
+async def test_the_poll_line_reports_unchanged(caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level("INFO", logger="beacon.application.ingest")
+    repo = FakeJobRepo()
+    repo.stored = {"1": None}
+
+    await ingest_source(
+        IncrementalFakeSource(["1", "2"]), COMPANY, repo, CountingClassifier(), now=NOW
+    )
+
+    assert any(" unchanged=1 " in r.getMessage() for r in caplog.records)

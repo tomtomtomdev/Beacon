@@ -6,7 +6,14 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from beacon.application.errors import SourceUnavailable
-from beacon.application.ports import Classifier, CompanyRepo, JobRepo, JobSource
+from beacon.application.ports import (
+    Classifier,
+    CompanyRepo,
+    Fetched,
+    IncrementalSource,
+    JobRepo,
+    JobSource,
+)
 from beacon.domain.company import SHADOW_ATS_TYPE, Company
 from beacon.domain.health import FailureKind, record_failure, record_success, should_poll
 from beacon.domain.job import CLOSE_AFTER_MISSES, NormalizedJob
@@ -36,6 +43,9 @@ class IngestResult:
     # Wall time of this one poll, failures included: a host timing out three times is exactly
     # the source that costs minutes (slice 29a — the poll had no per-source timing at all).
     secs: float = 0.0
+    # Postings still on the board whose ad was not re-fetched, because it is stored (slice 30).
+    # Counted in `fetched`, never in `upserted`.
+    unchanged: int = 0
 
 
 def _resolve_sponsorship(job: NormalizedJob, registry_flags: int) -> SponsorSignal:
@@ -78,6 +88,14 @@ def _upsert_posting(
     )
 
 
+async def _fetch(source: JobSource, company_id: int, jobs: JobRepo) -> Fetched:
+    """The one place a plain source and an incremental one differ: the incremental source is
+    told what this company already has stored, and skips re-fetching those ads."""
+    if isinstance(source, IncrementalSource):
+        return await source.fetch_new(jobs.stored_postings(source.source_id, company_id))
+    return Fetched(postings=await source.fetch(), still_listed=frozenset())
+
+
 def _stopwatch(clock: Clock) -> Callable[[], float]:
     started = clock()
     return lambda: round(clock() - started, 1)
@@ -104,7 +122,7 @@ async def ingest_source(
 
     elapsed = _stopwatch(clock)
     try:
-        raw_postings = await source.fetch()
+        fetched = await _fetch(source, company.id, jobs)
     except SourceUnavailable as exc:
         secs = elapsed()
         logger.warning(
@@ -125,8 +143,11 @@ async def ingest_source(
             fetched=0, upserted=0, errors=1, failure=FailureKind.SCHEMA_DRIFT, secs=secs
         )
 
+    raw_postings = fetched.postings
+    listed = len(raw_postings) + len(fetched.still_listed)
     upserted = errors = 0
-    seen: set[str] = set()
+    # Still-listed postings are present on the board: they must reach the sweep as seen.
+    seen: set[str] = set(fetched.still_listed)
     for raw in raw_postings:
         try:
             job = source.normalize(raw)
@@ -152,7 +173,7 @@ async def ingest_source(
             len(raw_postings),
         )
         return IngestResult(
-            fetched=len(raw_postings),
+            fetched=listed,
             upserted=0,
             errors=errors,
             failure=FailureKind.SCHEMA_DRIFT,
@@ -167,16 +188,24 @@ async def ingest_source(
     )
     secs = elapsed()
     logger.info(
-        "poll source=%s company=%s fetched=%d upserted=%d errors=%d closed=%d secs=%.1f",
+        "poll source=%s company=%s fetched=%d upserted=%d errors=%d closed=%d unchanged=%d"
+        " secs=%.1f",
         source.source_id,
         company.name,
-        len(raw_postings),
+        listed,
         upserted,
         errors,
         closed,
+        len(fetched.still_listed),
         secs,
     )
-    return IngestResult(fetched=len(raw_postings), upserted=upserted, errors=errors, secs=secs)
+    return IngestResult(
+        fetched=listed,
+        upserted=upserted,
+        errors=errors,
+        secs=secs,
+        unchanged=len(fetched.still_listed),
+    )
 
 
 def _shadow_company(job: NormalizedJob) -> Company:

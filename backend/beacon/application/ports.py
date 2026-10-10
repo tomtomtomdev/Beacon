@@ -3,7 +3,7 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Protocol
+from typing import Any, Protocol, runtime_checkable
 
 from beacon.domain.classification import Category, Classification
 from beacon.domain.company import Company
@@ -55,6 +55,28 @@ class JobSource(Protocol):
     async def fetch(self) -> list[RawPosting]: ...
 
     def normalize(self, raw: RawPosting) -> NormalizedJob: ...
+
+
+# What an incremental source already has stored: external_id -> posted_at (None when the
+# board omitted it). Scoped to one company on the source.
+type StoredPostings = Mapping[str, datetime | None]
+
+
+@dataclass(frozen=True, slots=True)
+class Fetched:
+    """An incremental fetch: the postings that need normalizing, and the ids still on the
+    board whose ad was not re-fetched because it is already stored (slice 30)."""
+
+    postings: list[RawPosting]
+    still_listed: frozenset[str]
+
+
+@runtime_checkable
+class IncrementalSource(JobSource, Protocol):
+    """A source that pays one request per posting for its ad text (SmartRecruiters) and can
+    skip the ones it already has. Optional: the use case falls back to fetch()."""
+
+    async def fetch_new(self, stored: StoredPostings) -> Fetched: ...
 
 
 class RegistryIngester(Protocol):
@@ -229,6 +251,11 @@ class JobRepo(Protocol):
         stored values intact (an unchanged re-poll keeps its earlier classification).
         sponsorship writes sponsor_tier/sponsor_evidence; None leaves them intact (so a
         registry-derived tier survives an unchanged re-poll)."""
+        ...
+
+    def stored_postings(self, source_id: str, company_id: int) -> dict[str, datetime | None]:
+        """Every stored posting of one company on a source, closed ones included, with its
+        posted_at — what an IncrementalSource compares the board's list against."""
         ...
 
     def content_hash_for(self, source_id: str, external_id: str) -> str | None:

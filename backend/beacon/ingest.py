@@ -113,7 +113,8 @@ async def run_ingest(
                 for name, result in results.items():
                     print(
                         f"company={name} fetched={result.fetched}"
-                        f" upserted={result.upserted} errors={result.errors} secs={result.secs}"
+                        f" upserted={result.upserted} errors={result.errors}"
+                        f" unchanged={result.unchanged} secs={result.secs}"
                     )
                 print(f"phase=ats secs={time.monotonic() - started:.1f}")
 

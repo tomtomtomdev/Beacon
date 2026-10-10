@@ -5,11 +5,15 @@ pages the list and then GETs each posting's detail. normalize() therefore reads 
 payload, which is self-sufficient (location, releasedDate, jobAd sections). Detail calls go
 through the shared polite door, so a large board (Grab: ~380 postings) spends its poll inside
 the 1 rps per-host budget rather than bursting.
+
+fetch_new() is the incremental form the use case prefers (slice 30): a posting already stored,
+whose list releasedDate still equals the stored posted_at, is reported as still listed instead
+of re-fetched. That was ~700s of a 1758s poll, nearly all of it re-reading ads already held.
 """
 
 from datetime import UTC, datetime
 
-from beacon.application.ports import Fetcher, RawPosting
+from beacon.application.ports import Fetched, Fetcher, RawPosting, StoredPostings
 from beacon.domain.descriptions import content_hash, normalize_description
 from beacon.domain.job import NormalizedJob
 from beacon.domain.location import parse_location
@@ -29,7 +33,21 @@ class SmartRecruitersAdapter:
         self._page_limit = page_limit
 
     async def fetch(self) -> list[RawPosting]:
-        return [await self._detail(str(row["id"])) for row in await self._list_postings()]
+        return (await self.fetch_new({})).postings
+
+    async def fetch_new(self, stored: StoredPostings) -> Fetched:
+        rows = await self._list_postings()
+        unchanged = frozenset(
+            str(row["id"])
+            for row in rows
+            if str(row["id"]) in stored and stored[str(row["id"])] == _released(row)
+        )
+        return Fetched(
+            postings=[
+                await self._detail(str(r["id"])) for r in rows if str(r["id"]) not in unchanged
+            ],
+            still_listed=unchanged,
+        )
 
     async def _list_postings(self) -> list[RawPosting]:
         url = _POSTINGS.format(slug=self._slug)
@@ -53,7 +71,6 @@ class SmartRecruitersAdapter:
         location_raw = str(location.get("fullLocation") or "")
         country, city = _place(location, location_raw)
         description = normalize_description(_ad_text(raw))
-        released = raw.get("releasedDate")  # ISO-8601, UTC 'Z'
         return NormalizedJob(
             source_id=self.source_id,
             external_id=str(raw["id"]),
@@ -63,9 +80,15 @@ class SmartRecruitersAdapter:
             location_raw=location_raw,
             country=country,
             city=city,
-            posted_at=datetime.fromisoformat(released).astimezone(UTC) if released else None,
+            posted_at=_released(raw),
             content_hash=content_hash(description),
         )
+
+
+def _released(raw: RawPosting) -> datetime | None:
+    """releasedDate (ISO-8601, UTC 'Z'), on both the list row and the detail payload."""
+    released = raw.get("releasedDate")
+    return datetime.fromisoformat(released).astimezone(UTC) if released else None
 
 
 def _place(location: RawPosting, location_raw: str) -> tuple[str | None, str | None]:
