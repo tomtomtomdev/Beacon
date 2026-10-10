@@ -32,7 +32,9 @@
 
 **Next: nothing chosen.** The hand download (UK/NL/US still "never ingested"; UK needs no conversion, GB is 480 open jobs at 66% `unknown`) remains the highest-value unbuilt lever and still needs no code. Prior slices below.
 
-**Next action:** bank the hand download — drop `uk_sponsors.csv` into `data/registries/` and run `refresh-registries`. It is unchanged by slices 20–22, needs no code, and is the only candidate on the board that buys new supply rather than making existing supply honest.
+**Next action (2026-10-10):** slice 23 — widen categories to all of engineering (PLAN.md). Start at 23a: append the guard rows to `test_classifier` first. Measured: 7,651 of 8,918 open canonical postings are uncategorised, ~2,200 of them engineering. *(Superseded below: the hand download was banked 2026-09-18.)*
+
+~~**Next action:** bank the hand download — drop `uk_sponsors.csv` into `data/registries/` and run `refresh-registries`. It is unchanged by slices 20–22, needs no code, and is the only candidate on the board that buys new supply rather than making existing supply honest.~~
 
 ## Slice tracker
 
@@ -62,6 +64,7 @@
 | 20 | Other markets: the 47 countries with jobs and no way to ask for them (candidate B, shape 1); 20e exposed `closed_at` | ✅ done | 2026-09-18 |
 | 21 | The panel stops being a gate: jobs by default, `?focus=` becomes a filter, derived total + paging, globe-only idle tour | ✅ done | 2026-09-18 |
 | 22 | Closed postings leave the default listing, behind a "Show closed" toggle | ✅ done | 2026-09-18 |
+| 23 | All of engineering, not just iOS / backend / AI-ML (taxonomy → offline residue backfill → UI → steered boards) | ⬜ planned 2026-10-10 — see PLAN.md | |
 
 Legend: ⬜ not started · 🟨 in progress · ✅ done (acceptance boxes checked)
 

@@ -1383,6 +1383,143 @@ figures above are the post-poll ones; slice 20 and 21's boxes keep theirs with t
 
 ---
 
+## Slice 23 — All of engineering, not just iOS / backend / AI-ML — **PLANNED 2026-10-10**
+
+**Asked for 2026-10-10:** widen the hunt from the SPEC §1/§3 profile (iOS primary; Backend, AI/ML
+secondary; Android/Flutter/Fullstack/Frontend tertiary) to every engineering role.
+
+**Measured first (2026-10-10, live `beacon.db`).** The supply is already here; the classifier
+just can't see it.
+
+- **7,651 of 8,918 open canonical postings (86%) have `categories = ''`.** No category pill
+  can reach them.
+- Title sampling of that residue:
+  - ~2,200 read as engineering (`engineer|developer|architect|sre|devops|…`).
+  - **721 are plain "Software Engineer/Developer"** with no stack token: "Software Engineer,
+    Payments and Risk", "Staff Software Engineer, RL Environments".
+  - The rest by kind:
+    - engineering management: ~160
+    - security: ~140
+    - data engineering: ~60
+    - embedded/hardware: ~50
+    - solutions/sales/support/forward-deployed engineering: ~240
+  - `.NET`/`C++` titles miss as well. CLAUDE.md's word-boundary rule means a keyword can't end
+    in a symbol.
+- The rest of the residue is honest non-engineering (sales, legal, HR, Swedish care roles) and
+  must **stay** `''`.
+- The ATS boards (greenhouse 3,851 residue, ashby 1,661, …) already fetch whole boards. Only
+  Himalayas and MyCareersFuture are steered by `ROLE_QUERIES` (iOS / Java backend / ML only),
+  and JobTech takes the newest 100 ads of *all* Swedish jobs, unsteered.
+
+**So classification comes first and sources second.** 23a–23c buy ~2,000 visible engineering
+postings with no network, no key and no spend. 23d widens the two steered boards, which costs
+poll time against the 50-minute watchdog.
+
+**What does not change:**
+- Sponsorship stays a soft signal, and the default listing stays "all jobs".
+- Non-engineering stays `''`. Empty means "no engineering role named", and it is still not a
+  filter.
+- Existing category meanings stay as they are. `backend` keeps its infra/SRE/devops keywords,
+  so saved searches and resume scores don't shift under the owner. Splitting `infra` out of
+  `backend` is a separate, later decision.
+- The level pills stay Senior/Staff/Lead.
+
+**Deviates from SPEC §1/§3 (Categories row) and DESIGN §2 (category pills).** Each gets a dated
+PROGRESS Decisions entry, and the SPEC rows are rewritten in the same slice.
+
+### 23a — The taxonomy (domain, pure; data, not branches)
+
+New `Category` values. Every keyword lives in the `CATEGORY_KEYWORDS` table in
+`domain/vocabulary.py`, with parametrized rows in `test_classifier`, and logic gets no new
+branch:
+
+| Code | Catches (title, word-boundary) |
+|---|---|
+| `software` | `software engineer`, `software developer`, `swe`, `developer`, `programmer`, `utvecklare` — **fallback only**: fires when no specific category does (see below) |
+| `data` | `data engineer`, `analytics engineer`, `data platform`, `etl`, `spark`, `dbt`, `data scientist` |
+| `security` | `security engineer`, `appsec`, `application security`, `detection engineer`, `penetration`, `security operations` |
+| `embedded` | `embedded`, `firmware`, `fpga`, `asic`, `hardware engineer`, `robotics`, `rtos` |
+| `qa` | `qa engineer`, `test engineer`, `sdet`, `quality assurance`, `test automation` |
+| `eng-mgmt` | `engineering manager`, `head of engineering`, `vp engineering`, `director of engineering`, `cto` |
+| `solutions` | `solutions engineer`, `sales engineer`, `forward deployed`, `support engineer`, `customer engineer` — engineering-adjacent and kept **separate**, so it can be filtered out rather than polluting the core |
+
+- **The `software` fallback is precedence, and it lives in data.** The table carries a
+  `FALLBACK_CATEGORIES` entry, and `extract_categories` applies it in one place. A "Senior
+  Software Engineer, iOS" stays `ios` and never becomes `ios,software`.
+- **Symbol-edged stacks** (`.NET`, `C#`, `C++`):
+  - Either add a normalisation step in the shared primitive that maps them to `dotnet`,
+    `csharp` and `cpp` before matching,
+  - or carry the spelled-out aliases.
+  - RED on "Senior .NET Software Engineer" → `backend` first, then choose the smaller change.
+    The primitive is shared with the resume matcher, so whichever wins applies to both.
+- **Guard rows are appended first, before any keyword lands:**
+  - "Account Executive", "Corporate Counsel" and "Förskollärare" stay `''`.
+  - "Sr. Solutions Engineer" is `solutions` and never `backend`.
+  - "Partner Development Manager" is not `eng-mgmt`.
+  - "IT Support Engineer" → `solutions` is decided by a fixture row, not by taste.
+- **Swedish compounds:** "systemutvecklare" and "mjukvaruutvecklare" don't hit `\butvecklare\b`.
+  Either list the compounds as keywords, or record the residue and leave it alone. Don't relax
+  the word boundary.
+
+### 23b — Backfill the residue (offline, no key, no spend)
+
+`content_hash` gates re-classification, so new vocabulary never reaches a stored row on its own.
+
+- `python -m beacon.classify --upgrade-residue` already re-runs the classifier over `''`, and
+  with no API key that classifier is heuristic-only. Confirm with a test that the keyless
+  factory path rewrites residue rows. **No new CLI** unless that test says otherwise.
+- `llm_usage` holds 0 rows, so no stored classification came from the LLM. A full heuristic
+  re-run over already-categorised rows is also safe, if adding `software`/`data` beside an
+  existing category is wanted. Default: **residue only**; existing labels are left alone.
+- Run `backend/scripts/spot_check_classifier.py` before and after. Eyeball a random sample of 100
+  newly-labelled rows per new category, and turn every misfire into a fixture row.
+
+### 23c — The UI and every reader of the vocabulary
+
+- `frontend/src/jobs/taxonomy.ts` `CATEGORY_OPTIONS`: the seven current pills stay first in their
+  current order. The new codes join behind a "More" overflow, so the DESIGN §2 pill row doesn't
+  wrap. That needs a DESIGN.md note, matching existing pill tokens, with no new colours.
+  `categoryLabel` already falls back to the raw code, so nothing breaks in between.
+- **Resume matcher:** `build_profile` reads the same table, so a resume now infers the new
+  categories as well. Category alignment moves, so bump `scoring_version` and stale scores
+  re-compute (the existing slice-12 mechanism).
+- Saved searches and digest: no code change. A search with no category filter already matches
+  every category. Assert that the new categories round-trip through `to_job_filters` and the
+  `match_reason` line.
+
+### 23d — Widen the steered boards (adapters; data edits plus a probe)
+
+- Himalayas and MyCareersFuture `ROLE_QUERIES`: add `software engineer`, `data engineer`,
+  `devops engineer`, `security engineer`, `embedded engineer`, `engineering manager`, `frontend
+  engineer`, `android engineer`, each **probed live first**, as slice 16 did. Keep a query only
+  if its page-1 sample reads as the role it names, and drop a query that returns nothing
+  (MCF's "Swift engineer" precedent).
+- **Poll-time budget:** every query costs ≤3 pages at 1 rps. Re-measure a full poll and keep it
+  under the 50-minute watchdog with margin. If it doesn't fit, raise the page cap on the best
+  queries before adding weak ones.
+- JobTech: probe the occupation-field filter (Data/IT) against today's unsteered newest-100.
+  Steering it should *raise* the engineering share of a fixed 100-row budget. Fixture-test the
+  param.
+- Seeds: no change. The ATS boards already return every role.
+
+Acceptance:
+- [ ] `''` residue among open canonical postings falls from 7,651 by **≥1,800**, and the
+      remainder samples as non-engineering in a 100-row eyeball
+- [ ] No guard row regresses. Sales, legal, HR and care titles stay `''`, and existing
+      `ios`/`backend`/`ai-ml` counts don't drop
+- [ ] Every new category is filterable end to end. Pill → `?category=` → `/jobs` → saved search
+      → digest line
+- [ ] Resume scores re-compute under the bumped `scoring_version`
+- [ ] 23d: each kept query is backed by its probe note, and a full poll is re-measured under the
+      watchdog
+- [ ] SPEC §1/§3 and DESIGN §2 rewritten, and PROGRESS has a dated Decisions entry
+- [ ] `make verify` green on both stacks
+
+**Kill criterion for 23d alone:** if widening the boards pushes a full poll past ~45 min, ship
+23a–23c and leave the board queries as they are. The classifier gain doesn't depend on them.
+
+---
+
 ## Cross-cutting rules
 
 - Every network adapter is tested against recorded fixtures only; live calls happen solely in manual acceptance checks
