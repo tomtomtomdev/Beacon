@@ -285,6 +285,20 @@ CATEGORY_CASES = [
         {Category.BACKEND, Category.INFRA},
     ),
     ("python-sre-is-infra-and-backend", "Python SRE", "", {Category.BACKEND, Category.INFRA}),
+    # Relabel dry run 2026-10-10: bare "infrastructure" also names what a PM, buyer or
+    # accountant works on. Live Anthropic/OpenAI titles.
+    ("guard-infra-tpm", "Technical Program Manager, Compute Infrastructure", "", set()),
+    ("guard-infra-pm", "Group Product Manager, Core Infrastructure & Reliability", "", set()),
+    (
+        "guard-infra-sourcing",
+        "Strategic Sourcing Manager, Data Center Infrastructure, Electrical",
+        "",
+        set(),
+    ),
+    ("guard-infra-accounting", "Senior Manager, Infrastructure Lease Accounting", "", set()),
+    ("guard-infra-tpm-acronym", "TPM Manager, Infrastructure", "", set()),
+    # ...while an engineer in the same area keeps it.
+    ("infra-kept-with-engineer", "Infrastructure Engineer, Program Delivery", "", {Category.INFRA}),
 ]
 
 

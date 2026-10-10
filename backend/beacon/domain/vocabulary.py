@@ -336,6 +336,22 @@ _MANAGED_AREA_GUARD = HomographGuard(
     contexts=_MANAGES_ENGINEERING,
     corroborators=("engineering manager", "engineer"),
 )
+# Infrastructure is also what a PM, buyer, accountant or policy lead works on (slice 24's
+# relabel dry run: ~35 of 506 open infra rows). An engineer in the same area keeps it.
+_INFRA_AREA_GUARD = HomographGuard(
+    contexts=(
+        *_MANAGES_ENGINEERING,
+        "tpm",
+        "project manager",
+        "sourcing",
+        "accounting",
+        "policy",
+        "supply chain",
+        "facilities",
+        "commissioning",
+    ),
+    corroborators=("engineer", "engineers", "developer", "sre", "devops"),
+)
 
 # DATA, like every other table here: a new collision is a new row plus a parametrized test
 # row, never a branch in extract_skills or in a caller.
@@ -371,6 +387,9 @@ HOMOGRAPH_GUARDS: dict[str, HomographGuard] = {
     "data engineering": _MANAGED_AREA_GUARD,
     "security engineering": _MANAGED_AREA_GUARD,
     "software engineering": _MANAGED_AREA_GUARD,
+    "infrastructure": _INFRA_AREA_GUARD,
+    "infra": _INFRA_AREA_GUARD,
+    "networking": _INFRA_AREA_GUARD,
 }
 
 # Level title tokens. Ranked most-senior-wins when several appear ("Senior Staff" → staff).
