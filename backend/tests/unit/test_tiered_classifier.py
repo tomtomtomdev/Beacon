@@ -12,10 +12,11 @@ from beacon.adapters.classify.tiered import TieredClassifier
 from beacon.domain.classification import Category, Classification, Level
 from beacon.domain.job import NormalizedJob
 
-# The heuristic reads categories from the title only: a keyword title is confident, a bare
-# "Software Engineer" title leaves categories empty → ambiguous → eligible for the LLM.
+# The heuristic reads categories from the title only: a keyword title is confident, a title
+# naming no role it knows leaves categories empty → ambiguous → eligible for the LLM. (Until
+# slice 23 the example was "Software Engineer"; that is now the `software` fallback.)
 CONFIDENT = "Senior iOS Engineer"
-AMBIGUOUS = "Software Engineer"
+AMBIGUOUS = "Founding Engineer"
 
 
 def _job(title: str, description: str = "Build things.") -> NormalizedJob:
@@ -96,12 +97,12 @@ def test_llm_failure_falls_back_to_the_heuristic_result() -> None:
 
 
 def test_llm_upgrade_keeps_a_level_the_heuristic_was_sure_of() -> None:
-    # "Senior Software Engineer": heuristic gives empty categories but a sure SENIOR level.
+    # "Senior Founding Engineer": empty categories but a sure SENIOR level.
     # The LLM fills categories but returns an unspecified level — we must not lose SENIOR.
     llm = FakeLLMClassifier(Classification(frozenset({Category.BACKEND}), Level.UNSPECIFIED))
     tiered = TieredClassifier(HeuristicClassifier(), llm, FakeBudget())
 
-    result = tiered.classify(_job("Senior Software Engineer"))
+    result = tiered.classify(_job("Senior Founding Engineer"))
 
     assert result == Classification(frozenset({Category.BACKEND}), Level.SENIOR)
 

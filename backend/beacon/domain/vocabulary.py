@@ -72,6 +72,11 @@ CATEGORY_KEYWORDS: dict[Category, tuple[str, ...]] = {
         "generative ai",
         "genai",
         "large language model",
+        # At the AI labs that make up most of the seed list, a research engineer/scientist
+        # IS the ML role (2026-10-10 residue: "Research Engineer, Production Model ...").
+        "research engineer",
+        "research scientist",
+        "mle",
     ),
     Category.BACKEND: (
         "backend",
@@ -106,6 +111,15 @@ CATEGORY_KEYWORDS: dict[Category, tuple[str, ...]] = {
         # ("Cloud Partner Enablement Lead", "AWS Specialist Seller") far more often
         # than engineering ones — see the rejected-candidate guards in test_classifier.
         "platform engineer",
+        "cloud engineer",
+        "release engineer",
+        # Symbol-edged stacks, in the form _SYMBOL_ALIASES rewrites them to (see below).
+        "dotnet",
+        "csharp",
+        "cpp",
+        # Swedish compounds (JobTech): \b never splits a compound, so each is its own word.
+        "javautvecklare",
+        "backendutvecklare",
     ),
     Category.FRONTEND: (
         "frontend",
@@ -127,8 +141,159 @@ CATEGORY_KEYWORDS: dict[Category, tuple[str, ...]] = {
         "fullstack",
         "full-stack",
         "full stack",
+        "fullstackutvecklare",
+    ),
+    # --- Slice 23 (2026-10-10): the rest of engineering. Phrases, not bare nouns, wherever
+    # the bare word heads non-engineering titles in the corpus ("embedded payments", "data").
+    Category.DATA: (
+        "data engineer",
+        "data engineering",
+        "analytics engineer",
+        "business intelligence engineer",
+        "data scientist",
+        "data science",
+        "etl",
+        "dbt",
+        "data pipeline",
+        "data pipelines",
+        "data warehouse",
+        "airflow",
+        "spark",
+    ),
+    Category.SECURITY: (
+        "security engineer",
+        "security engineering",
+        "security architect",
+        "security operations",
+        "appsec",
+        "application security",
+        "product security",
+        "offensive security",
+        "detection engineer",
+        "detection and response",
+        "penetration tester",
+        "pentester",
+        "threat intelligence",
+        "red team",
+        "privacy engineer",
+    ),
+    Category.EMBEDDED: (
+        "embedded software",
+        "embedded engineer",
+        "embedded systems",
+        "embedded linux",
+        "embedded developer",
+        "firmware",
+        "fpga",
+        "asic",
+        "rtos",
+        "verilog",
+        "hardware engineer",
+        "robotics engineer",
+        "robotics software",
+        "silicon",
+        "signal integrity",
+    ),
+    # Never bare "qa"/"quality assurance": compliance and AI-training titles carry both.
+    Category.QA: (
+        "qa engineer",
+        "qa lead",
+        "qa tester",
+        "qa analyst",
+        "qa automation",
+        "sdet",
+        "quality engineer",
+        "quality assurance engineer",
+        "software quality assurance",
+        "test engineer",
+        "test automation",
+        "software tester",
+    ),
+    Category.ENG_MGMT: (
+        "engineering manager",
+        "head of engineering",
+        "vp of engineering",
+        "vp engineering",
+        "director of engineering",
+        "engineering director",
+        "director, software engineering",
+        "director, engineering",
+        "manager, engineering",
+        "engineering lead",
+        "engineering leader",
+        "engineering team lead",
+        "cto",
+        "chief technology officer",
+    ),
+    # Engineering-adjacent, customer-facing. Its own category so it can be filtered OUT —
+    # and because these titles say "engineer" and would otherwise land in `software`.
+    Category.SOLUTIONS: (
+        "solutions engineer",
+        "solution engineer",
+        "solutions architect",
+        "solution architect",
+        "sales engineer",
+        "forward deployed",
+        "forward-deployed",
+        "support engineer",
+        "customer engineer",
+        "developer advocate",
+        "developer relations",
+        "devrel",
+        "field engineer",
+        "field engineering",
+        "implementation engineer",
+        "integration engineer",
+        "professional services engineer",
+        "pre-sales engineer",
+        "pre-sales engineering",
+        "presales engineer",
+        "solutions architects",
+        "solutions architecture",
+        "applied ai architect",
+        "applied ai architects",
+        "deployment engineer",
     ),
 }
+
+# Applied only when NO category above matched: a title that names an engineering role but
+# no specialism ("Software Engineer, Payments and Risk"). Precedence lives here, as data, so
+# "Senior Software Engineer, iOS" stays ios and never becomes ios+software. These are role
+# nouns, not skills, so they stay out of extract_skills — "developer" on a resume would
+# otherwise overlap with every posting that says it.
+FALLBACK_CATEGORY_KEYWORDS: dict[Category, tuple[str, ...]] = {
+    Category.SOFTWARE: (
+        "software engineer",
+        "software engineering",
+        "software developer",
+        "software development",
+        "swe",
+        "developer",
+        "developers",
+        "programmer",
+        "product engineer",
+        "mobile engineer",
+        "mobile developer",
+        "staff engineer",
+        "staff engineers",
+        "senior engineer",
+        "principal engineer",
+        "utvecklare",
+        "systemutvecklare",
+        "mjukvaruutvecklare",
+        "mjukvaruingenjör",
+        "programmerare",
+    ),
+}
+
+# Stack names whose edge is a symbol: \b cannot sit against "+" or "#", so the text is
+# rewritten to a word form before any matching. Data like the tables: a new one is a row.
+# The .net lookbehind keeps "jane@example.net" from reading as the stack.
+_SYMBOL_ALIASES: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"(?<![\w.])c\+\+(?!\w)"), " cpp "),
+    (re.compile(r"(?<![\w.])c#(?![\w#])"), " csharp "),
+    (re.compile(r"(?<![\w@.])\.net\b|\basp\.net\b"), " dotnet "),
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -141,6 +306,18 @@ class HomographGuard:
     contexts: tuple[str, ...]
     corroborators: tuple[str, ...]
 
+
+# Product/program-management titles name the engineering area they manage, not a role in it.
+_MANAGES_ENGINEERING = ("product manager", "program manager", "program management")
+
+_DEVELOPER_GUARD = HomographGuard(
+    contexts=("business", "marketing", "sales", "partner", "account", *_MANAGES_ENGINEERING),
+    corroborators=("software", "web", "app", "mobile", "game"),
+)
+_MANAGED_AREA_GUARD = HomographGuard(
+    contexts=_MANAGES_ENGINEERING,
+    corroborators=("engineering manager", "engineer"),
+)
 
 # DATA, like every other table here: a new collision is a new row plus a parametrized test
 # row, never a branch in extract_skills or in a caller.
@@ -170,6 +347,12 @@ HOMOGRAPH_GUARDS: dict[str, HomographGuard] = {
         ),
         corroborators=("ios", "swiftui", "uikit", "xcode", "objective-c", "cocoa", "app store"),
     ),
+    # "Developer" is also a business role ("Business Developer", "Developer Marketing").
+    "developer": _DEVELOPER_GUARD,
+    "developers": _DEVELOPER_GUARD,
+    "data engineering": _MANAGED_AREA_GUARD,
+    "security engineering": _MANAGED_AREA_GUARD,
+    "software engineering": _MANAGED_AREA_GUARD,
 }
 
 # Level title tokens. Ranked most-senior-wins when several appear ("Senior Staff" → staff).
@@ -208,6 +391,9 @@ def _compile(keywords: tuple[str, ...]) -> re.Pattern[str]:
 _CATEGORY_PATTERNS: dict[Category, re.Pattern[str]] = {
     category: _compile(keywords) for category, keywords in CATEGORY_KEYWORDS.items()
 }
+_FALLBACK_PATTERNS: dict[Category, re.Pattern[str]] = {
+    category: _compile(keywords) for category, keywords in FALLBACK_CATEGORY_KEYWORDS.items()
+}
 _LEVEL_PATTERNS: dict[Level, re.Pattern[str]] = {
     level: _compile(keywords) for level, keywords in LEVEL_KEYWORDS.items()
 }
@@ -220,6 +406,14 @@ _GUARD_PATTERNS: dict[str, tuple[re.Pattern[str], re.Pattern[str]]] = {
     keyword: (_compile(guard.contexts), _compile(guard.corroborators))
     for keyword, guard in HOMOGRAPH_GUARDS.items()
 }
+
+
+def _prepare(text: str) -> str:
+    """Casefold, then rewrite symbol-edged stack names (_SYMBOL_ALIASES) to word form."""
+    prepared = text.casefold()
+    for pattern, alias in _SYMBOL_ALIASES:
+        prepared = pattern.sub(alias, prepared)
+    return prepared
 
 
 def _is_homograph(keyword: str, lowered: str) -> bool:
@@ -240,13 +434,18 @@ def _keywords_present(pattern: re.Pattern[str], lowered: str) -> frozenset[str]:
     )
 
 
-def extract_categories(text: str) -> frozenset[Category]:
-    """The categories whose keywords appear in text (word-boundary matched, case-insensitive)."""
-    lowered = text.casefold()
+def _categories_in(patterns: dict[Category, re.Pattern[str]], prepared: str) -> frozenset[Category]:
     return frozenset(
-        category
-        for category, pattern in _CATEGORY_PATTERNS.items()
-        if _keywords_present(pattern, lowered)
+        category for category, pattern in patterns.items() if _keywords_present(pattern, prepared)
+    )
+
+
+def extract_categories(text: str) -> frozenset[Category]:
+    """The categories whose keywords appear in text (word-boundary matched, case-insensitive);
+    the fallback categories only when none of the specific ones do."""
+    prepared = _prepare(text)
+    return _categories_in(_CATEGORY_PATTERNS, prepared) or _categories_in(
+        _FALLBACK_PATTERNS, prepared
     )
 
 
@@ -254,7 +453,7 @@ def extract_skills(text: str) -> frozenset[str]:
     """The category keyword tokens present in text — the comparable skill set shared by
     build_profile (over resume text) and score_match (over a job's title+description). The
     tokens are the vocabulary's own casefolded form, so the two sides intersect cleanly."""
-    return _keywords_present(_ALL_SKILLS, text.casefold())
+    return _keywords_present(_ALL_SKILLS, _prepare(text))
 
 
 def match_level(text: str) -> Level | None:

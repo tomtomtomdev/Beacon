@@ -18,6 +18,15 @@ class Category(StrEnum):
     BACKEND = "backend"
     FRONTEND = "frontend"
     FULLSTACK = "fullstack"
+    # Slice 23 (2026-10-10): all of engineering, not only the SPEC §1 profile.
+    DATA = "data"
+    SECURITY = "security"
+    EMBEDDED = "embedded"
+    QA = "qa"
+    ENG_MGMT = "eng-mgmt"
+    SOLUTIONS = "solutions"
+    # The fallback: an engineering title that names no specialism ("Software Engineer").
+    SOFTWARE = "software"
 
 
 class Level(StrEnum):

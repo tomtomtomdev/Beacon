@@ -72,8 +72,8 @@ CATEGORY_CASES = [
         "Both platforms",
         {Category.IOS, Category.ANDROID},
     ),
-    # "ml" must fire on the word, never inside "html".
-    ("no-ml-in-html", "HTML Email Developer", "Hand-write HTML", set()),
+    # "ml" must fire on the word, never inside "html". (Slice 23: a developer is now software.)
+    ("no-ml-in-html", "HTML Email Developer", "Hand-write HTML", {Category.SOFTWARE}),
     # Precision: description tech NEVER contaminates category — the title is a sales role.
     ("desc-ignored", "Account Executive", "We build LLMs with PyTorch and Django", set()),
     # Bare "ai" was removed so AI-company sales titles don't read as ML roles.
@@ -86,18 +86,163 @@ CATEGORY_CASES = [
     ("bare-platform-not-backend", "Cloud Partner Enablement Lead", "", set()),
     ("bare-aws-not-backend", "AWS Specialist Seller, Strategic Pursuits", "", set()),
     ("bare-web-not-frontend", "Manager, Web Engineering", "", set()),
-    # A plain SWE title names no specialism — honest residue for the LLM tier, not a guess.
-    ("plain-swe-stays-empty", "Senior Software Engineer", "", set()),
+    # A plain SWE title names no specialism. Until slice 23 that was honest residue for the
+    # LLM tier; since 2026-10-10 it is the `software` fallback — every engineering role is in
+    # scope, and 721 open postings were invisible to the category filter for want of it.
+    ("plain-swe-is-software", "Senior Software Engineer", "", {Category.SOFTWARE}),
     # "Applied AI" is an org/team name at Anthropic and OpenAI, so it heads architect, GTM
     # and ops titles too — the same trap bare "ai" was removed for. Only the role-form
     # phrases ("applied ai engineer"/"scientist") are in the table.
-    ("applied-ai-architect-not-aiml", "Applied AI Architect, Commercial", "", set()),
+    # (Slice 23: still not ai-ml — an Applied AI Architect is customer-facing `solutions`.)
+    (
+        "applied-ai-architect-not-aiml",
+        "Applied AI Architect, Commercial",
+        "",
+        {Category.SOLUTIONS},
+    ),
     ("applied-ai-ops-not-aiml", "Strategy & Operations, Applied AI - AMER", "", set()),
     # 2026-08-26 spot check: SWIFT the interbank network is not Swift the language. The
     # vocabulary's homograph guard drops it in a payments context with no iOS sibling
     # keyword, and keeps it when one is there.
-    ("swift-the-payment-network-not-ios", "SWIFT Payments Integration Engineer", "", set()),
+    # (Slice 23: still not ios — it is now `solutions`, via "integration engineer".)
+    (
+        "swift-the-payment-network-not-ios",
+        "SWIFT Payments Integration Engineer",
+        "",
+        {Category.SOLUTIONS},
+    ),
     ("swift-in-an-ios-payments-title", "iOS Engineer, Payments (Swift)", "", {Category.IOS}),
+    # --- Slice 23 (2026-10-10): all of engineering. Real titles from the open '' residue. ---
+    # Guards first: non-engineering stays honestly empty — the widening must not reach it.
+    ("guard-counsel", "Corporate Counsel", "", set()),
+    ("guard-ae", "Account Executive Enterprise EMEA", "", set()),
+    ("guard-preschool-teacher", "Förskollärare till Parkdala förskola", "", set()),
+    ("guard-partner-dev", "Partner Development Manager, Strategic Payment Partnerships", "", set()),
+    ("guard-designer", "Product Designer", "", set()),
+    ("guard-training", "Head of Technical Training", "", set()),
+    ("guard-finance-data-ai", "Senior Finance Specialist (Data & AI)", "", set()),
+    ("guard-business-developer", "Business Developer, Nordics", "", set()),
+    ("guard-affarsutvecklare", "Affärsutvecklare", "", set()),
+    ("guard-abuse", "Abuse Investigator", "", set()),
+    # software — the fallback: fires only when no specific category does.
+    ("software-plain", "Software Engineer, Payments and Risk", "", {Category.SOFTWARE}),
+    ("software-staff", "Staff Software Engineer, RL Environments", "", {Category.SOFTWARE}),
+    ("software-developer", "Software Developer", "", {Category.SOFTWARE}),
+    ("software-swe-fellow", "SWE Fellow - Human Frontier Collective (US)", "", {Category.SOFTWARE}),
+    ("software-yields-to-ios", "Senior Software Engineer, iOS", "", {Category.IOS}),
+    ("software-mjukvaruutvecklare", "Mjukvaruutvecklare", "", {Category.SOFTWARE}),
+    ("software-utvecklare", "Utvecklare till vårt team i Malmö", "", {Category.SOFTWARE}),
+    ("software-systemutvecklare-java", "Systemutvecklare Java", "", {Category.BACKEND}),
+    # Symbol-edged stacks: aliased before matching, since \b cannot sit against "+" or "#".
+    ("backend-dotnet", "Senior .NET Software Engineer", "", {Category.BACKEND}),
+    ("backend-csharp", "C# Engineer", "", {Category.BACKEND}),
+    ("backend-cpp", "C++ Developer, Low Latency", "", {Category.BACKEND}),
+    # data
+    ("data-engineer", "Data Engineer", "", {Category.DATA}),
+    ("data-analytics-engineer", "Senior Analytics Engineer", "", {Category.DATA}),
+    ("data-scientist", "Data Scientist, Growth", "", {Category.DATA}),
+    # security
+    ("security-ops", "Security Operations Engineer II", "", {Category.SECURITY}),
+    ("security-appsec", "Senior Application Security Engineer", "", {Category.SECURITY}),
+    ("security-detection", "Detection Engineer", "", {Category.SECURITY}),
+    # embedded
+    ("embedded-software", "Embedded Software Engineer", "", {Category.EMBEDDED}),
+    ("embedded-firmware", "Firmware Engineer", "", {Category.EMBEDDED}),
+    ("embedded-fpga", "FPGA Design Engineer", "", {Category.EMBEDDED}),
+    # qa
+    ("qa-engineer", "QA Engineer", "", {Category.QA}),
+    ("qa-sdet", "SDET II", "", {Category.QA}),
+    ("qa-automation", "Senior Test Automation Engineer", "", {Category.QA}),
+    # eng-mgmt
+    (
+        "eng-mgmt-em",
+        "Engineering Manager, Payments (AirCover Insurance Platform)",
+        "",
+        {Category.ENG_MGMT},
+    ),
+    ("eng-mgmt-head", "Head of Engineering", "", {Category.ENG_MGMT}),
+    ("eng-mgmt-vp", "VP of Engineering", "", {Category.ENG_MGMT}),
+    ("eng-mgmt-ios", "Engineering Manager, iOS", "", {Category.ENG_MGMT, Category.IOS}),
+    # solutions — engineering-adjacent, kept separate so it can be filtered out.
+    ("solutions-se", "Sr. Solutions Engineer", "", {Category.SOLUTIONS}),
+    (
+        "solutions-fde",
+        "Forward Deployed Engineer, Agentic Platform (Europe)",
+        "",
+        {Category.SOLUTIONS},
+    ),
+    ("solutions-it-support", "IT Support Engineer, Executive Support", "", {Category.SOLUTIONS}),
+    ("solutions-devrel", "Developer Advocate", "", {Category.SOLUTIONS}),
+    # 2026-10-10 dry run over the live residue: misfires the first table made...
+    (
+        "guard-tpm-developer-experience",
+        "Senior Manager, Technical Program Management (Data, Reliability & Developer Experience)",
+        "",
+        set(),
+    ),
+    ("guard-pm-data-engineering", "Sr. Product Manager, Data Engineering", "", set()),
+    ("guard-pm-robotics", "Senior Product Manager, Robotics Operations", "", set()),
+    (
+        "guard-compliance-qa",
+        "Senior Manager, Global Quality Assurance (AML/KYC/TM/Fraud Risk)",
+        "",
+        set(),
+    ),
+    ("guard-qa-evaluator", "AI Trainer Image QA Evaluator", "", set()),
+    # ...and engineering families it missed.
+    ("software-product-engineer", "Senior / Staff Product Engineer", "", {Category.SOFTWARE}),
+    ("software-mobile-engineer", "Senior Mobile Engineer", "", {Category.SOFTWARE}),
+    ("software-staff-engineer", "Staff Engineer - Business Spend", "", {Category.SOFTWARE}),
+    (
+        "aiml-research-engineer",
+        "Research Engineer, Production Model Post-Training",
+        "",
+        {Category.AI_ML},
+    ),
+    ("aiml-mle", "Research MLE (Training Optimization)", "", {Category.AI_ML}),
+    ("backend-cloud-engineer", "Senior Cloud Engineer, V&V Platform", "", {Category.BACKEND}),
+    ("solutions-field", "Field Engineer, Data Engine", "", {Category.SOLUTIONS}),
+    ("solutions-implementation", "Consultant Implementation Engineer", "", {Category.SOLUTIONS}),
+    ("solutions-ps", "Professional Services Engineer II - West", "", {Category.SOLUTIONS}),
+    ("solutions-integration", "Integration Engineer, Metronome", "", {Category.SOLUTIONS}),
+    (
+        "solutions-presales-em",
+        "Pre-sales Engineering Manager (Retail & CPG)",
+        "",
+        {Category.ENG_MGMT, Category.SOLUTIONS},
+    ),
+    ("eng-mgmt-manager-comma", "Sr. Manager, Engineering - Search", "", {Category.ENG_MGMT}),
+    ("eng-mgmt-lead-manager", "Engineering Lead/Manager, Risk", "", {Category.ENG_MGMT}),
+    ("eng-mgmt-leader", "Engineering Leader -  Payments APAC", "", {Category.ENG_MGMT}),
+    (
+        "eng-mgmt-director-swe",
+        "Director, Software Engineering (AI Workflows & Ecosystem)",
+        "",
+        {Category.ENG_MGMT},
+    ),
+    ("qa-quality-engineer", "Staff Quality Engineer", "", {Category.QA}),
+    ("qa-sqa", "Software Quality Assurance Engineer", "", {Category.QA}),
+    ("qa-lead", "Lead QA Engineer", "", {Category.QA}),
+    ("security-threat-intel", "Senior Threat Intelligence Engineer", "", {Category.SECURITY}),
+    ("embedded-silicon", "Silicon Engineer", "", {Category.EMBEDDED}),
+    ("embedded-signal-integrity", "Signal Integrity Engineer", "", {Category.EMBEDDED}),
+    # Second dry run: a distributor's sales rep is not pre-sales engineering...
+    ("guard-presales-rep", "Pre-Sales (FMCG - Ninja Mart) - Seremban", "", set()),
+    # ...and the clusters still left in the residue.
+    (
+        "solutions-sa-plural",
+        "Manager, Delivery Solutions Architects - Toronto, ON",
+        "",
+        {Category.SOLUTIONS},
+    ),
+    ("solutions-applied-ai-architects", "Manager, Applied AI Architects", "", {Category.SOLUTIONS}),
+    ("solutions-deployment", "Software Deployment Engineer", "", {Category.SOLUTIONS}),
+    ("backend-release", "Release Engineer | Consumer Devices", "", {Category.BACKEND}),
+    ("security-privacy", "Privacy Engineer", "", {Category.SECURITY}),
+    ("data-bi-engineer", "Senior Business Intelligence Engineer", "", {Category.DATA}),
+    ("eng-mgmt-team-lead", "(RD) Senior Engineering Team Lead", "", {Category.ENG_MGMT}),
+    ("software-senior-engineer", "Senior Engineer, Finance Systems", "", {Category.SOFTWARE}),
+    ("software-staff-engineers", "Staff Engineers (Elixir)", "", {Category.SOFTWARE}),
 ]
 
 

@@ -74,3 +74,30 @@ HOMOGRAPH_CASES = [
 )
 def test_swift_the_payment_network_is_not_the_swift_language(text: str, expected: bool) -> None:
     assert ("swift" in extract_skills(text)) is expected
+
+
+# --- Slice 23: symbol-edged stacks and the role-noun fallback --------------------------
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Senior C++ engineer", "cpp"),
+        ("C# and .NET services", "csharp"),
+        ("C# and .NET services", "dotnet"),
+        ("ASP.NET Core", "dotnet"),
+    ],
+    ids=["cpp", "csharp", "dotnet", "asp-dotnet"],
+)
+def test_symbol_edged_stacks_are_skills(text: str, expected: str) -> None:
+    assert expected in extract_skills(text)
+
+
+def test_a_dot_net_domain_is_not_the_dotnet_stack() -> None:
+    assert "dotnet" not in extract_skills("reach me at jane@example.net")
+
+
+def test_fallback_role_nouns_are_not_skills() -> None:
+    """`software engineer`/`developer` name a role, not a skill: counting them would give
+    every resume a free overlap with every posting."""
+    assert extract_skills("Software developer and programmer") == frozenset()
